@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ek_asu_opb_mobile/homeScreen.dart';
+import 'package:ek_asu_opb_mobile/testScreen.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -102,15 +103,6 @@ class _LoginPage extends State<LoginPage> {
     }
   }
 
-  void performLogin() {
-    hideKeyboard();
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => HomeScreen()),
-    );
- 
-  }
-
   void hideKeyboard() {
     SystemChannels.textInput.invokeMethod('TextInput.hide');
   }
@@ -148,9 +140,13 @@ class _LoginPage extends State<LoginPage> {
     
     await storage.write(key: "user_info", value: jsonEncode(user_info));
     await storage.write(key: "auth_token", value: 'auth_token');
-    Navigator.of(_context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (BuildContext context) => HomeScreen()),
-        (Route<dynamic> route) => false);
+     Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) =>  //TestScreen()
+      HomeScreen()
+      ),
+    );
+ 
     /*  }
     }
     else {

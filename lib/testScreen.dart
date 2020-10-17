@@ -6,20 +6,22 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'src/fileStorage.dart';
 import 'src/db.dart';
 import 'models/dog.dart';
+import 'utils/config.dart' as config;
 
-class HomeScreen extends StatefulWidget {
+class TestScreen extends StatefulWidget {
   final FileStorage storage = new FileStorage('test.txt');
-  final DB db = new DB();
+
   @override
-  State<HomeScreen> createState() => _HomeScreen();
+  State<TestScreen> createState() => _TestScreen();
 }
 
-class _HomeScreen extends State<HomeScreen> {
+class _TestScreen extends State<TestScreen> {
   String _email;
   String _password;
-  var _user_info;
-  var _pred_id;
+  var _userInfo;
+  var _predId;
   String _data;
+  String _baseUrl;
   final storage = FlutterSecureStorage();
   final _sizeTextBlack = const TextStyle(fontSize: 20.0, color: Colors.black);
 
@@ -27,9 +29,11 @@ class _HomeScreen extends State<HomeScreen> {
   void initState() {
     super.initState();
     checkLoginStatus();
+   
     widget.storage.readData().then((String data) {
       setState(() {
         _data = data;
+        _baseUrl = config.getItem("ServiceRootUrl");
       });
     });
   }
@@ -45,10 +49,10 @@ class _HomeScreen extends State<HomeScreen> {
           MaterialPageRoute(builder: (BuildContext context) => LoginPage()),
           (Route<dynamic> route) => false);
     } else {
-      storage.read(key: "user_info").then((user_info) => {
+      storage.read(key: "user_info").then((userInfo) => {
             setState(() {
-              _user_info = jsonDecode(user_info);
-              _pred_id = _user_info["pred_id"];
+              _userInfo = jsonDecode(userInfo);
+              _predId = _userInfo["pred_id"];
             })
           });
     }
@@ -65,21 +69,20 @@ class _HomeScreen extends State<HomeScreen> {
   Future<File> writeFile() {
     widget.storage.readData().then((String data) {
       setState(() {
-        _data = data + '28.09.2017';
+        _data = data + 'test';
       });
-      return widget.storage.writeData('28.09.2017');
+      return widget.storage.writeData('test');
     });
   }
 
   testDB() async {
-
     var fido = Dog(
       id: 3,
-      name: 'Fid1o',
-      age: 135,
+      name: 'Fido',
+      age: 15,
     );
-    await widget.db.insertDog(fido);
-    print(await widget.db.dogs());
+    await DBProvider.db.insertDog(fido);
+    print(await DBProvider.db.dogs());
   }
 
   @override
@@ -109,7 +112,8 @@ class _HomeScreen extends State<HomeScreen> {
                   height: 50.0,
                   minWidth: 150.0,
                   child: new Text("testDB")),
-              new Text('data:$_data')
+              new Text('data:$_data'),
+              new Text('baseUrl:$_baseUrl'),
             ])));
   }
 }

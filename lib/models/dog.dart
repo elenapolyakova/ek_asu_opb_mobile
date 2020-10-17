@@ -1,3 +1,15 @@
+import "dart:convert";
+
+Dog dogFromJson(String str) {
+  final jsonData = json.decode(str);
+  return Dog.fromJson(jsonData);
+}
+
+String dogToJson(Dog data) {
+  final dyn = data.toJson();
+  return json.encode(dyn);
+}
+
 class Dog {
   final int id;
   final String name;
@@ -5,7 +17,13 @@ class Dog {
 
   Dog({this.id, this.name, this.age});
 
-  Map<String, dynamic> toMap() {
+  factory Dog.fromJson(Map<String, dynamic> json) => new Dog(
+        id: json["id"],
+        name: json["name"],
+        age: json["age"],
+      );
+
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
       'name': name,
