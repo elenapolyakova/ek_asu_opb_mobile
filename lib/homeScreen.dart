@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/loginPage.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
+import 'package:ek_asu_opb_mobile/planCbtScreen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -15,7 +16,7 @@ class _HomeScreen extends State<HomeScreen> {
   String _supportPhoneNumber = "123456";
   final storage = FlutterSecureStorage();
 
-  @override
+  @override 
   void initState() {
     super.initState();
     checkLoginStatus();
@@ -48,7 +49,7 @@ class _HomeScreen extends State<HomeScreen> {
   void planScreen() {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
+        MaterialPageRoute(builder: (context) => PlanCbtScreen()),
       );
   }
   void emptyRoute(){
@@ -60,11 +61,8 @@ class _HomeScreen extends State<HomeScreen> {
     return new Scaffold(
         appBar: new AppBar(
             title: new Text("ЕК АСУ ОПБ"),
-            leading: new IconButton(
-              icon: const Icon(Icons.home),
-              tooltip: 'Главное окно',
-              onPressed: () {},
-            ),
+            leading: null,
+            automaticallyImplyLeading: false,
             actions: <Widget>[
               new IconButton(
                   icon: const Icon(Icons.help_outline),
@@ -90,7 +88,7 @@ class _HomeScreen extends State<HomeScreen> {
                   child: new Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      new TileButton("Планирование", emptyRoute),
+                      new TileButton("Планирование", planScreen),
                       new TileButton("Учёт первичных сведений", emptyRoute),
                     ],
                   ),
