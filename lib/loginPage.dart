@@ -26,69 +26,121 @@ class _LoginPage extends State<LoginPage> {
 
     return new MaterialApp(
       home: new Scaffold(
-        body: new Center(
-          child: new Form(
-              key: formKey,
-              child: new Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  new Container(
-                    child: new TextFormField(
-                      decoration: new InputDecoration(labelText: "Логин"),
-                      keyboardType: TextInputType.emailAddress,
-                      maxLines: 1,
-                      style: _sizeTextBlack,
-                      onSaved: (val) => _email = val,
-                      onTap: () => setState(() {
-                        _errorUser = false;
-                      }),
-                      validator: (val) => val.length < 1
-                          ? "Имя пользователя не может быть пустым"
-                          : null,
-                      // validator: (val) =>
-                      //     !val.contains("@") ? 'Not a valid email.' : null,
-                    ),
-                    width: 400.0,
-                  ),
-                  new Container(
-                    child: new TextFormField(
-                      decoration: new InputDecoration(labelText: "Пароль"),
-                      obscureText: true,
-                      maxLines: 1,
-                      validator: (val) =>
-                          val.length < 1 ? "Пароль не может быть пустым" : null,
-                      onSaved: (val) => _password = val,
-                      onTap: () => setState(() {
-                        _errorUser = false;
-                      }),
-                      style: _sizeTextBlack,
-                    ),
-                    width: 400.0,
-                    padding: new EdgeInsets.only(top: 10.0),
-                  ),
-                  new Padding(
-                      padding: new EdgeInsets.only(top: 15.0, left: 5.0),
-                      child: new Align(
-                          alignment: Alignment.topLeft,
-                          child: new Text(
-                              _errorUser ? "Неверный логин или пароль" : '',
-                              style: TextStyle(
-                                  color: Colors.redAccent, fontSize: 12)))),
-                  new Padding(
-                    padding: new EdgeInsets.only(top: 25.0),
-                    child: new MaterialButton(
-                      onPressed: submit,
-                      color: Theme.of(context).accentColor,
-                      height: 50.0,
-                      minWidth: 150.0,
-                      child: new Text(
-                        "ВХОД",
-                        style: _sizeTextWhite,
+        body: new Container(
+          color: Theme.of(context).backgroundColor,
+          child: new Center(
+            child: new Form(
+                key: formKey,
+                child: new Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    new Container(
+                        child: new Text(
+                      "Авторизация",
+                      style: TextStyle(
+                          color: Theme.of(context).accentColor,
+                          fontSize: 35.0,
+                          fontWeight: FontWeight.w700),
+                      textAlign: TextAlign.center,
+                    )),
+                    new Container(
+                      decoration: new BoxDecoration(
+                        border: Border.all(
+                            color: Colors.white, //Theme.of(context).accentColor,
+                             width: 1.5),
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                        color: Colors.white,
                       ),
+                      padding: EdgeInsets.symmetric(horizontal: 10.0),
+                      margin: EdgeInsets.all(10),
+                      child: new TextFormField(
+                        decoration: new InputDecoration(
+                          prefixIcon: Icon(Icons.mail_outline,
+                              color: Theme.of(context).accentColor),
+                          border:
+                              OutlineInputBorder(borderSide: BorderSide.none),
+                              
+                          //helperText: ''
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                        maxLines: 1,
+                        cursorColor: Theme.of(context).cursorColor,
+                        style: _sizeTextBlack,
+                        onSaved: (val) => _email = val,
+                        onTap: () => setState(() {
+                          _errorUser = false;
+                        }),
+                        /* validator: (val) => val.length < 1
+                          ? "Имя пользователя не может быть пустым"
+                          : null,*/
+                      ),
+                      width: 400.0,
                     ),
-                  )
-                ],
-              )),
+                    new Container(
+                      decoration: new BoxDecoration(
+                        border: Border.all(
+                            color: Colors.white, //Theme.of(context).accentColor,
+                             width: 1.5),
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                        color: Colors.white,
+                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 10.0),
+                      margin: EdgeInsets.all(10),
+                      child: new TextFormField(
+                        decoration: new InputDecoration(
+                          prefixIcon: Icon(Icons.vpn_key,
+                              color: Theme.of(context).accentColor),
+                          border:
+                              OutlineInputBorder(borderSide: BorderSide.none),
+                        ),
+                        obscureText: true,
+                        maxLines: 1,
+                       // cursorColor: Theme.of(context).cursorColor,
+                        style: _sizeTextBlack,
+                        onSaved: (val) => _password = val,
+                        onTap: () => setState(() {
+                          _errorUser = false;
+                        }),
+                        validator: (val) => val.length < 1
+                            ? "Пароль не может быть пустым"
+                            : null,
+                        // validator: (val) =>
+                        //     !val.contains("@") ? 'Not a valid email.' : null,
+                      ),
+                      width: 400.0,
+                    ),
+                    new Container(
+                        padding: new EdgeInsets.all(10.0),
+                        child: new Text(
+                          _errorUser
+                              ? "Неверное имя пользователя или пароль"
+                              : '',
+                          style:
+                              TextStyle(color: Colors.redAccent, fontSize: 17),
+                          textAlign: TextAlign.left,
+                        )),
+                    new Container(
+                      width: 400,
+                      height: 50.0,
+                      margin: new EdgeInsets.only(top: 15.0),
+                      decoration: new BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                        color: Theme.of(context).accentColor,
+                      ),
+                      child: new MaterialButton(
+                        onPressed: submit,
+                        /*color: Theme.of(context).accentColor,
+                      height: 50.0,
+                      minWidth: 400.0,*/
+                        child: new Text(
+                          "ВОЙТИ",
+                          style: _sizeTextWhite,
+                        ),
+                      ),
+                    )
+                  ],
+                )),
+          ),
         ),
       ),
     );
@@ -136,17 +188,21 @@ class _LoginPage extends State<LoginPage> {
     }
 
     setState(() {});
-    var user_info = {'role_id': _roleId, 'pred_id': _predId, 'username': _email};
-    
+    var user_info = {
+      'role_id': _roleId,
+      'pred_id': _predId,
+      'username': _email
+    };
+
     await storage.write(key: "user_info", value: jsonEncode(user_info));
     await storage.write(key: "auth_token", value: 'auth_token');
-     Navigator.push(
+    Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) =>  //TestScreen()
-      HomeScreen()
-      ),
+      MaterialPageRoute(
+          builder: (context) => //TestScreen()
+              HomeScreen()),
     );
- 
+
     /*  }
     }
     else {

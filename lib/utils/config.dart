@@ -1,5 +1,6 @@
 Map<String, dynamic> _config = {
   "ServiceRootUrl": "http://ekasuopb.svrw.oao.rzd/",
+  "port": "8069",
   "clientId": "fd9dd42e-f50e-4d15-be78-f3c76ad4bb95"
 };
 

@@ -33,6 +33,8 @@ dependencies:
   path_provider: ^1.6.0
   connectivity: ^0.4.2
   url_launcher: ^4.0.0
+  flutter_xmlrpc: ^0.0.2
+  http: ^0.12.2
 
 dev_dependencies:
   flutter_test:

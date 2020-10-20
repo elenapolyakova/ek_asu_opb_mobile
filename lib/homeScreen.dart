@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/loginPage.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
-import 'package:ek_asu_opb_mobile/planCbtScreen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -47,9 +46,9 @@ class _HomeScreen extends State<HomeScreen> {
   }
 
   void planScreen() {
-      Navigator.push(
+      Navigator.pushNamed(
         context,
-        MaterialPageRoute(builder: (context) => PlanCbtScreen()),
+        '/planCbt',
       );
   }
   void emptyRoute(){

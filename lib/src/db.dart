@@ -50,6 +50,7 @@ class DBProvider {
     );
   }
 
+
   Future<void> insertDog(Dog dog) async {
     final Database db = await database;
 
