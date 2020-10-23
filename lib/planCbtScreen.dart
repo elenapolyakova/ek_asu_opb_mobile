@@ -1,9 +1,8 @@
-import 'dart:convert';
+
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:ek_asu_opb_mobile/loginPage.dart';
-import 'package:ek_asu_opb_mobile/homeScreen.dart';
+import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
+
 // import 'package:ek_asu_opb_mobile/planCbtEditScreen.dart';
 
 class PlanCbtScreen extends StatefulWidget {
@@ -12,8 +11,7 @@ class PlanCbtScreen extends StatefulWidget {
 }
 
 class _PlanCbtScreen extends State<PlanCbtScreen> {
-  var _userInfo;
-  var _predId;
+  UserInfo _userInfo;
   var test;
   var _headers = [
     {
@@ -50,34 +48,21 @@ class _PlanCbtScreen extends State<PlanCbtScreen> {
         auditor_name: 'ЦБТ'),
   ];
 
-  final storage = FlutterSecureStorage();
-
   @override
   void initState() {
     super.initState();
-    checkLoginStatus();
+    auth.checkLoginStatus(context).then((isLogin) => {
+          if (isLogin)
+            {
+              auth.getUserInfo().then((userInfo) => setState(() {
+                    _userInfo = userInfo;
+                  }))
+            }
+        });
   }
 
-  checkLoginStatus() async {
-    String value = await storage.read(key: 'auth_token');
-    if (value == null) {
-      LogOut();
-    } else {
-      storage.read(key: "user_info").then((userInfo) => {
-            setState(() {
-              _userInfo = jsonDecode(userInfo);
-              _predId = _userInfo["pred_id"];
-            })
-          });
-    }
-  }
-
-  void LogOut() {
-    storage.delete(key: 'user_info');
-    storage.delete(key: 'auth_token');
-    Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (BuildContext context) => LoginPage()),
-        (Route<dynamic> route) => false);
+  void LogOut(context) {
+    auth.LogOut(context);
   }
 
   void editInspection(Inspection inspection, BuildContext context) async {
@@ -85,8 +70,8 @@ class _PlanCbtScreen extends State<PlanCbtScreen> {
         arguments: inspection);
     Inspection newInspection = result as Inspection;
     setState(() => {test = newInspection.auditor_name});
-    Scaffold.of(context)
-      ..showSnackBar(SnackBar(content: Text('newInspection.auditor_name')));
+    // Scaffold.of(context)
+    //   ..showSnackBar(SnackBar(content: Text('newInspection.auditor_name')));
   }
 
   List<Widget> generateTableData(BuildContext context,
@@ -175,8 +160,7 @@ class _PlanCbtScreen extends State<PlanCbtScreen> {
             icon: const Icon(Icons.home),
             tooltip: 'Главное окно',
             onPressed: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => HomeScreen()));
+              Navigator.pushNamed(context, "/home");
             },
           ),
           actions: <Widget>[
@@ -187,7 +171,7 @@ class _PlanCbtScreen extends State<PlanCbtScreen> {
             new IconButton(
                 icon: const Icon(Icons.logout),
                 tooltip: 'Выход',
-                onPressed: LogOut),
+                onPressed: () => LogOut(context),)
           ]),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => editInspection(new Inspection(), context),
@@ -197,6 +181,7 @@ class _PlanCbtScreen extends State<PlanCbtScreen> {
       ),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Text('test:$test'),
+       // Text(_userInfo.userFullName),
         Column(children: generateTableData(context, _headers, _rows))
       ]),
     );

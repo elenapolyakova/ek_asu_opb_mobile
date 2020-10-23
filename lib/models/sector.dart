@@ -1,11 +1,11 @@
 import "dart:convert";
 
-Sector inspectionFromJson(String str) {
+Sector sectorFromJson(String str) {
   final jsonData = json.decode(str);
   return Sector.fromJson(jsonData);
 }
 
-String inspectionToJson(Sector data) {
+String sectorToJson(Sector data) {
   final dyn = data.toJson();
   return json.encode(dyn);
 }

@@ -78,6 +78,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.1"
+  crypto:
+    dependency: "direct main"
+    description:
+      name: crypto
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.1.5"
   cupertino_icons:
     dependency: "direct main"
     description:
@@ -128,13 +135,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_xmlrpc:
-    dependency: "direct main"
-    description:
-      name: flutter_xmlrpc
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.0.2"
   http:
     dependency: "direct main"
     description:
@@ -356,7 +356,14 @@ packages:
       name: xml
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.7.0"
+    version: "4.5.1"
+  xml_rpc:
+    dependency: "direct main"
+    description:
+      name: xml_rpc
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.3.0"
 sdks:
   dart: ">=2.10.0-110 <2.11.0"
   flutter: ">=1.12.13+hotfix.5 <2.0.0"

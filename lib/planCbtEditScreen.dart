@@ -1,10 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:ek_asu_opb_mobile/loginPage.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:ek_asu_opb_mobile/planCbtScreen.dart';
 import 'package:ek_asu_opb_mobile/models/models.dart';
-//import 'package:ek_asu_opb_mobile/models/inspection.dart';
+import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
+
 
 class PlanCbtEditScreen extends StatefulWidget {
   static const routeName = '/planCbtEdit';
@@ -15,36 +13,23 @@ class PlanCbtEditScreen extends StatefulWidget {
 
 class _PlanCbtEditScreen extends State<PlanCbtEditScreen> {
   var _userInfo;
-  var _predId;
 
-  final storage = FlutterSecureStorage();
 
-  @override
+ @override
   void initState() {
     super.initState();
-    checkLoginStatus();
+    auth.checkLoginStatus(context).then((isLogin) => {
+          if (isLogin)
+            {
+              auth.getUserInfo().then((userInfo) => setState(() {
+                    _userInfo = userInfo;
+                  }))
+            }
+        });
   }
 
-  checkLoginStatus() async {
-    String value = await storage.read(key: 'auth_token');
-    if (value == null) {
-      LogOut();
-    } else {
-      storage.read(key: "user_info").then((userInfo) => {
-            setState(() {
-              _userInfo = jsonDecode(userInfo);
-              _predId = _userInfo["pred_id"];
-            })
-          });
-    }
-  }
-
-  void LogOut() {
-    storage.delete(key: 'user_info');
-    storage.delete(key: 'auth_token');
-    Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (BuildContext context) => LoginPage()),
-        (Route<dynamic> route) => false);
+  void LogOut(context) {
+    auth.LogOut(context);
   }
 
   @override
@@ -72,7 +57,7 @@ class _PlanCbtEditScreen extends State<PlanCbtEditScreen> {
               new IconButton(
                   icon: const Icon(Icons.logout),
                   tooltip: 'Выход',
-                  onPressed: LogOut),
+                  onPressed: () => LogOut(context)),
             ]),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () => {Navigator.pop(context, newInspection)},

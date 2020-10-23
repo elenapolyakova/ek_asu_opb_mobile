@@ -16,54 +16,17 @@ class TestScreen extends StatefulWidget {
 }
 
 class _TestScreen extends State<TestScreen> {
-  String _email;
-  String _password;
-  var _userInfo;
-  var _predId;
   String _data;
-  String _baseUrl;
-  final storage = FlutterSecureStorage();
-  final _sizeTextBlack = const TextStyle(fontSize: 20.0, color: Colors.black);
 
   @override
   void initState() {
     super.initState();
-    checkLoginStatus();
-   
+
     widget.storage.readData().then((String data) {
       setState(() {
         _data = data;
-        _baseUrl = config.getItem("ServiceRootUrl");
       });
     });
-  }
-
-  checkLoginStatus() async {
-    String value = await storage.read(key: 'auth_token');
-    if (value == null) {
-      /* Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
-      );*/
-      Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (BuildContext context) => LoginPage()),
-          (Route<dynamic> route) => false);
-    } else {
-      storage.read(key: "user_info").then((userInfo) => {
-            setState(() {
-              _userInfo = jsonDecode(userInfo);
-              _predId = _userInfo["pred_id"];
-            })
-          });
-    }
-  }
-
-  void LogOut() {
-    storage.delete(key: 'user_info');
-    storage.delete(key: 'auth_token');
-    Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (BuildContext context) => LoginPage()),
-        (Route<dynamic> route) => false);
   }
 
   Future<File> writeFile() {
@@ -92,7 +55,7 @@ class _TestScreen extends State<TestScreen> {
           title: new Text("ЕК АСУ ОПБ"),
         ),
         floatingActionButton: FloatingActionButton.extended(
-          onPressed: LogOut,
+          onPressed: () => {},
           label: Text('Выход'),
           icon: Icon(Icons.logout),
           backgroundColor: Theme.of(context).accentColor,
@@ -113,7 +76,6 @@ class _TestScreen extends State<TestScreen> {
                   minWidth: 150.0,
                   child: new Text("testDB")),
               new Text('data:$_data'),
-              new Text('baseUrl:$_baseUrl'),
             ])));
   }
 }

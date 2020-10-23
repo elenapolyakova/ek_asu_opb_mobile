@@ -1,10 +1,10 @@
-import 'dart:convert';
+import 'package:ek_asu_opb_mobile/main.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ek_asu_opb_mobile/homeScreen.dart';
 import 'package:ek_asu_opb_mobile/testScreen.dart';
+import 'utils/authenticate.dart' as auth;
 
 class LoginPage extends StatefulWidget {
   @override
@@ -14,15 +14,15 @@ class LoginPage extends StatefulWidget {
 class _LoginPage extends State<LoginPage> {
   String _email;
   String _password;
-  bool _errorUser = false;
+  String _pin;
+  bool _showErrorUser = false;
   final _sizeTextBlack = const TextStyle(fontSize: 20.0, color: Colors.black);
   final _sizeTextWhite = const TextStyle(fontSize: 20.0, color: Colors.white);
   final formKey = new GlobalKey<FormState>();
-  BuildContext _context;
+  final pinFormKey = new GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
-    _context = context;
 
     return new MaterialApp(
       home: new Scaffold(
@@ -46,8 +46,9 @@ class _LoginPage extends State<LoginPage> {
                     new Container(
                       decoration: new BoxDecoration(
                         border: Border.all(
-                            color: Colors.white, //Theme.of(context).accentColor,
-                             width: 1.5),
+                            color:
+                                Colors.white, //Theme.of(context).accentColor,
+                            width: 1.5),
                         borderRadius: BorderRadius.all(Radius.circular(10)),
                         color: Colors.white,
                       ),
@@ -59,7 +60,7 @@ class _LoginPage extends State<LoginPage> {
                               color: Theme.of(context).accentColor),
                           border:
                               OutlineInputBorder(borderSide: BorderSide.none),
-                              
+
                           //helperText: ''
                         ),
                         keyboardType: TextInputType.emailAddress,
@@ -68,7 +69,7 @@ class _LoginPage extends State<LoginPage> {
                         style: _sizeTextBlack,
                         onSaved: (val) => _email = val,
                         onTap: () => setState(() {
-                          _errorUser = false;
+                          _showErrorUser = false;
                         }),
                         /* validator: (val) => val.length < 1
                           ? "Имя пользователя не может быть пустым"
@@ -79,8 +80,9 @@ class _LoginPage extends State<LoginPage> {
                     new Container(
                       decoration: new BoxDecoration(
                         border: Border.all(
-                            color: Colors.white, //Theme.of(context).accentColor,
-                             width: 1.5),
+                            color:
+                                Colors.white, //Theme.of(context).accentColor,
+                            width: 1.5),
                         borderRadius: BorderRadius.all(Radius.circular(10)),
                         color: Colors.white,
                       ),
@@ -95,24 +97,22 @@ class _LoginPage extends State<LoginPage> {
                         ),
                         obscureText: true,
                         maxLines: 1,
-                       // cursorColor: Theme.of(context).cursorColor,
+                        cursorColor: Theme.of(context).cursorColor,
                         style: _sizeTextBlack,
                         onSaved: (val) => _password = val,
                         onTap: () => setState(() {
-                          _errorUser = false;
+                          _showErrorUser = false;
                         }),
-                        validator: (val) => val.length < 1
+                        /* validator: (val) => val.length < 1
                             ? "Пароль не может быть пустым"
-                            : null,
-                        // validator: (val) =>
-                        //     !val.contains("@") ? 'Not a valid email.' : null,
+                            : null,*/
                       ),
                       width: 400.0,
                     ),
                     new Container(
                         padding: new EdgeInsets.all(10.0),
                         child: new Text(
-                          _errorUser
+                          _showErrorUser
                               ? "Неверное имя пользователя или пароль"
                               : '',
                           style:
@@ -160,56 +160,65 @@ class _LoginPage extends State<LoginPage> {
   }
 
   signIn() async {
-    final storage = new FlutterSecureStorage();
-    var _roleId = 0, _predId = 0;
-    Map data = {'email': _email, 'password': _password};
-    /* var jsonResponse = null;
-    var response = await http.post("http://192.168.0.104:8000/api/v1/auth_token/token/login/", body: data);
-    if(response.statusCode == 200) {
-      jsonResponse = json.decode(response.body);
-      if(jsonResponse != null) {*/
-    switch (_email.toUpperCase()) {
-      case 'ЦБТ':
-      case 'CBT':
-        _roleId = 1;
-        _predId = 1;
-        break;
-      case 'НЦОП':
-      case 'NCOP':
-        _roleId = 2;
-        _predId = 2;
-        break;
-    }
-    if (_roleId == 0) {
+    bool isAuthorize = await auth.authorize(_email, _password);
+
+    if (!isAuthorize) {
       setState(() {
-        _errorUser = true;
+        _showErrorUser = true;
       });
       return;
     }
+    showSetPinDialog();
+  }
 
-    setState(() {});
-    var user_info = {
-      'role_id': _roleId,
-      'pred_id': _predId,
-      'username': _email
-    };
+  pinConfirm() async {
+    final form = pinFormKey.currentState;
+    if (form.validate()) {
+      form.save();
+      await auth.setPinCode(_pin);
 
-    await storage.write(key: "user_info", value: jsonEncode(user_info));
-    await storage.write(key: "auth_token", value: 'auth_token');
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context) => //TestScreen()
-              HomeScreen()),
-    );
+      //loadData
+      bool result = await auth.setUserData(_email, _password);
 
-    /*  }
+      Navigator.pushNamed(context, "/home");
     }
-    else {
-      setState(() {
+  }
 
-      });
-      print(response.body);
-    }*/
+  showSetPinDialog() {
+    showDialog(
+        context: context,
+        builder: (_) {
+          return AlertDialog(
+            title: Text("Установите ПИН-код для входа в приложение"),
+            content: new Form(
+                key: pinFormKey,
+                child: new Container(
+                  height: 100,
+                  color: Colors.white,
+                  child: new TextFormField(
+                      // inputFormatters: [widget._amountValidator],
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.digitsOnly
+                      ], // Only numbers can be entered
+                      keyboardType:
+                          TextInputType.numberWithOptions(decimal: true),
+                      maxLines: 1,
+                      maxLength: 5,
+                      cursorColor: Theme.of(context).cursorColor,
+                      style: _sizeTextBlack,
+                      onSaved: (val) => _pin = val,
+                      validator: (val) => val.length < 5
+                          ? "ПИН-код должен состоять из 5 цифр"
+                          : null),
+                )),
+            actions: <Widget>[
+              FlatButton(
+                  onPressed: () {
+                    pinConfirm();
+                  },
+                  child: Text("OK"))
+            ],
+          );
+        });
   }
 }

@@ -1,11 +1,6 @@
 export 'inspection.dart';
+export 'railway.dart';
+export 'sector.dart';
+export 'userInfo.dart';
 
-import 'package:flutter/cupertino.dart';
-
-class LoginData {
-  String login;
-  String userName;
-  String password;
-
-  LoginData({this.login, this.password, this.userName});
-}
+export 'dog.dart'; //todo delete

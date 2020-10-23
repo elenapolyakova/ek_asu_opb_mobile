@@ -1,8 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:ek_asu_opb_mobile/loginPage.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
+import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
+import 'package:ek_asu_opb_mobile/models/models.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -13,47 +12,33 @@ class _HomeScreen extends State<HomeScreen> {
   var _userInfo;
   var _predId;
   String _supportPhoneNumber = "123456";
-  final storage = FlutterSecureStorage();
 
-  @override 
+  @override
   void initState() {
     super.initState();
-    checkLoginStatus();
-  }
-
-  checkLoginStatus() async {
-    String value = await storage.read(key: 'auth_token');
-    if (value == null) {
-      Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (BuildContext context) => LoginPage()),
-          (Route<dynamic> route) => false);
-    } else {
-      storage.read(key: "user_info").then((userInfo) => {
-            setState(() {
-              _userInfo = jsonDecode(userInfo);
-              _predId = _userInfo["pred_id"];
-            })
-          });
-    }
+    auth.checkLoginStatus(context).then((isLogin) => {
+          if (isLogin)
+            {
+              auth.getUserInfo().then((userInfo) => setState(() {
+                    _userInfo = userInfo;
+                  }))
+            }
+        });
   }
 
   void LogOut() {
-    storage.delete(key: 'user_info');
-    storage.delete(key: 'auth_token');
-    Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (BuildContext context) => LoginPage()),
-        (Route<dynamic> route) => false);
+    auth.LogOut(context);
   }
+
 
   void planScreen() {
-      Navigator.pushNamed(
-        context,
-        '/planCbt',
-      );
+    Navigator.pushNamed(
+      context,
+      '/planCbt',
+    );
   }
-  void emptyRoute(){
 
-  }
+  void emptyRoute() {}
 
   @override
   Widget build(BuildContext context) {

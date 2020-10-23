@@ -1,11 +1,11 @@
 import "dart:convert";
 
-Railway inspectionFromJson(String str) {
+Railway railwayFromJson(String str) {
   final jsonData = json.decode(str);
   return Railway.fromJson(jsonData);
 }
 
-String inspectionToJson(Railway data) {
+String railwayToJson(Railway data) {
   final dyn = data.toJson();
   return json.encode(dyn);
 }
