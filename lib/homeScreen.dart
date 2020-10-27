@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
+import 'package:ek_asu_opb_mobile/src/exchangeData.dart' as exchange;
+import 'package:ek_asu_opb_mobile/src/db.dart';
+import 'utils/network.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -9,27 +12,51 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreen extends State<HomeScreen> {
-  var _userInfo;
   var _predId;
   String _supportPhoneNumber = "123456";
+  List<dynamic> logRows = []; // = ['test', 'test2'];
 
   @override
   void initState() {
     super.initState();
-    auth.checkLoginStatus(context).then((isLogin) => {
-          if (isLogin)
-            {
-              auth.getUserInfo().then((userInfo) => setState(() {
-                    _userInfo = userInfo;
-                  }))
-            }
-        });
+    loadLog();
+    auth.checkLoginStatus(context).then((isLogin) {
+      if (isLogin) {
+        checkConnection().then((isConnect) {
+          if (isConnect) {
+            auth.checkSession().then((isSessionExist) {
+              if (isSessionExist) {
+                exchange.getDictionaries(all: true).then((result) {
+                  loadLog();
+                }); //getDictionary
+              } //isSessionExist = true
+            }); //checkSession
+          } //isConnect == true
+        }); //checkConnection
+      } //isLogin == true
+    }); //checkLoginStatus
   }
 
   void LogOut() {
     auth.LogOut(context);
   }
 
+  void loadLog() {
+    logRows.clear();
+    DBProvider.db.selectAll("log").then((data) {
+      data.forEach((logItem) {
+        logRows.add("${logItem['date']}: ${logItem['message']}");
+      }); //forEach
+      setState(() => {});
+    }); //getLog
+  }
+
+  void clearLog() {
+    DBProvider.db.deleteAll('log');
+    setState(() {
+      logRows.clear();
+    });
+  }
 
   void planScreen() {
     Navigator.pushNamed(
@@ -57,18 +84,28 @@ class _HomeScreen extends State<HomeScreen> {
                   tooltip: 'Выход',
                   onPressed: LogOut),
             ]),
-        floatingActionButton: FloatingActionButton.extended(
+        /*floatingActionButton: FloatingActionButton.extended(
           onPressed: () => UrlLauncher.launch("tel://$_supportPhoneNumber"),
           label: Text('Служба поддержки'),
           icon: Icon(Icons.phone),
           backgroundColor: Colors.green,
+        ),*/
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => {clearLog()},
+          label: Text('Очистить лог'),
+          icon: Icon(Icons.delete_outline),
+          backgroundColor: Colors.green,
         ),
-        body: new Padding(
+        body: ListView(
+            children: List<Widget>.generate(
+                logRows.length,
+                (index) => Text(logRows[index]
+                    .toString()))) /* new Padding(
             padding: new EdgeInsets.only(bottom: 50.0),
             child: new Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                new Expanded(
+               new Expanded(
                   child: new Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
@@ -87,7 +124,9 @@ class _HomeScreen extends State<HomeScreen> {
                   ),
                 ),
               ],
-            )));
+            ))
+            */
+        );
   }
 }
 

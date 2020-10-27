@@ -1,4 +1,6 @@
 import "dart:convert";
+import 'package:ek_asu_opb_mobile/utils/convert.dart';
+
 
 Railway railwayFromJson(String str) {
   final jsonData = json.decode(str);
@@ -11,30 +13,28 @@ String railwayToJson(Railway data) {
 }
 
 class Railway {
-  final int railway_id;
+  final int id;
   final String name;
-  final String vname;
+  final String short_name;
 
-  Railway({this.railway_id, this.name, this.vname});
+  Railway({this.id, this.name, this.short_name});
 
   factory Railway.fromJson(Map<String, dynamic> json) => new Railway(
-        railway_id: json["railway_id"],
-        name: json["name"],
-        vname: json["vname"],
+        id: json["id"],
+        name: getStr(json["name"]),
+        short_name: getStr(json["short_name"]),
       );
 
   Map<String, dynamic> toJson() {
     return {
-      'railway_id': railway_id,
+      'id': id,
       'name': name,
-      'vname': vname,
+      'short_name': short_name,
     };
   }
 
-  // Implement toString to make it easier to see information about
-  // each dog when using the print statement.
   @override
   String toString() {
-    return 'Railway{railway_id: $railway_id, name: $name, vname: $vname }';
+    return 'Railway{id: $id, name: $name, short_name: $short_name }';
   }
 }

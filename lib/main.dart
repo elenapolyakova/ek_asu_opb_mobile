@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'utils/authenticate.dart' as auth;
 import 'dart:async';
 import 'utils/config.dart' as config;
+import 'package:ek_asu_opb_mobile/src/exchangeData.dart' as exchange;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +36,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
   bool _isPinDialogShow = false;
   bool _isTimeExpire = false;
   final _sizeTextBlack = const TextStyle(fontSize: 20.0, color: Colors.black);
+  final _sizeTextWhite = const TextStyle(fontSize: 20.0, color: Colors.white);
   final pinFormKey = new GlobalKey<FormState>();
 
   @override
@@ -97,8 +99,8 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
 
         int sessionExpire =
             int.tryParse(config.getItem("sessionExpire").toString());
-        Duration seconds =
-            new Duration(seconds: (sessionExpire != null ? sessionExpire : 10*60));
+        Duration seconds = new Duration(
+            seconds: (sessionExpire != null ? sessionExpire : 10 * 60));
         _pinTimer = Timer(seconds, sessionExpired);
         break;
       case AppLifecycleState.detached:
@@ -132,7 +134,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
           _isPinDialogShow = false;
           _showErrorPin = false;
         });
-        //loadData
+       //await exchange.getDictionaries(all: true);
         Navigator.pop(context, true);
       }
     }
@@ -147,53 +149,84 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
     });
     showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (_) {
           return AlertDialog(
             title: Text("Введите ПИН-код"),
+            backgroundColor: Theme.of(context).backgroundColor,
+            contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             content: new Form(
                 key: pinFormKey,
                 child: new Container(
-                    height: 100,
-                    child: new Column(children: <Widget>[
-                      new Container(
-                        height: 60,
-                        color: Colors.white,
-                        child: new TextFormField(
-                            // inputFormatters: [widget._amountValidator],
-                            inputFormatters: <TextInputFormatter>[
-                              FilteringTextInputFormatter.digitsOnly
-                            ], // Only numbers can be entered
-                            keyboardType:
-                                TextInputType.numberWithOptions(decimal: true),
-                            maxLines: 1,
-                            maxLength: 5,
-                            cursorColor: Theme.of(context).cursorColor,
-                            style: _sizeTextBlack,
-                            onSaved: (val) => _pin = val,
-                            onTap: () => setState(() {
-                                  _showErrorPin = false;
-                                }),
-                            validator: (val) => val.length < 5
+                    height: 150,
+                    child: new Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          new Container(
+                            decoration: new BoxDecoration(
+                              border: Border.all(
+                                  color: Colors
+                                      .white, //Theme.of(context).accentColor,
+                                  width: 1.5),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(10)),
+                              color: Colors.white,
+                            ),
+                            height: 56,
+                            child: new TextFormField(
+                              decoration: new InputDecoration(
+                                prefixIcon: Icon(Icons.vpn_key,
+                                    color: Theme.of(context).accentColor),
+                                border: OutlineInputBorder(
+                                    borderSide: BorderSide.none),
+                              ),
+                              // inputFormatters: [widget._amountValidator],
+                              inputFormatters: <TextInputFormatter>[
+                                FilteringTextInputFormatter.digitsOnly
+                              ], // Only numbers can be entered
+                              keyboardType: TextInputType.numberWithOptions(
+                                  decimal: true),
+                              maxLines: 1,
+                              maxLength: 5,
+                              obscureText: true,
+                              cursorColor: Theme.of(context).cursorColor,
+                              style: _sizeTextBlack,
+                              onSaved: (val) => _pin = val,
+                              onTap: () => setState(() {
+                                _showErrorPin = false;
+                              }),
+                              /*validator: (val) => val.length < 5
                                 ? "ПИН-код должен состоять из 5 цифр"
-                                : null),
-                      ),
-                      new Expanded(
-                          child: new Container(
-                              padding: new EdgeInsets.all(10.0),
+                                : null*/
+                            ),
+                          ),
+                          new Expanded(
+                              child: new Container(
+                                  padding: new EdgeInsets.all(5.0),
+                                  child: new Text(
+                                    _showErrorPin ? "Неверный ПИН-код" : '',
+                                    style: TextStyle(
+                                        color: Colors.redAccent, fontSize: 15),
+                                    textAlign: TextAlign.left,
+                                  ))),
+                          new Container(
+                            width: 200,
+                            height: 50.0,
+                            margin: new EdgeInsets.only(top: 15.0),
+                            decoration: new BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(10)),
+                              color: Theme.of(context).accentColor,
+                            ),
+                            child: new MaterialButton(
+                              onPressed: pinConfirm,
                               child: new Text(
-                                _showErrorPin ? "Неверный ПИН-код" : '',
-                                style: TextStyle(
-                                    color: Colors.redAccent, fontSize: 17),
-                                textAlign: TextAlign.left,
-                              ))),
-                    ]))),
-            actions: <Widget>[
-              FlatButton(
-                  onPressed: () {
-                    pinConfirm();
-                  },
-                  child: Text("OK"))
-            ],
+                                "OK",
+                                style: _sizeTextWhite,
+                              ),
+                            ),
+                          )
+                        ]))),
           );
         });
   }

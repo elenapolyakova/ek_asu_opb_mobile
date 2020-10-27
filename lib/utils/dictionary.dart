@@ -1,3 +1,4 @@
+
 const _typeInspectionList = [
   {"id": 1, "name": "Комплексный аудит"},
   {"id": 2, "name": "Целевая"},
@@ -17,13 +18,19 @@ const _resultList = [
   {"id": 3, "name": "Корректирующие меры"},
 ];
 
+List<Map<String, Object>> getTypeInspectionListt() => _typeInspectionList;
+Map<String, Object> getTypeInspectionById(int _id) =>
+    _typeInspectionList.firstWhere((result) => result["id"] == _id);
 
+List<Map<String, Object>> getPeriodInspectionList() => _periodInspectionList;
+Map<String, Object> getPeriodInspectionById(int _id) =>
+    _periodInspectionList.firstWhere((result) => result["id"] == _id);
 
-List<Map<String,Object>> getTypeInspectionListt () => _typeInspectionList;
-Map<String,Object> getTypeInspectionById (int _id) => _typeInspectionList.firstWhere((result) => result["id"] == _id);
+List<Map<String, Object>> getResultList() => _resultList;
+Map<String, Object> getResultById(int _id) =>
+    _resultList.firstWhere((result) => result["id"] == _id);
 
-List<Map<String,Object>> getPeriodInspectionList () => _periodInspectionList;
-Map<String,Object> getPeriodInspectionById (int _id) => _periodInspectionList.firstWhere((result) => result["id"] == _id);
+// Future<bool> getDictionary() async {
+//   var lastUpdate = await _storage.read(key: 'lastDateUpdate');
 
-List<Map<String,Object>> getResultList () => _resultList;
-Map<String,Object> getResultById (int _id) => _resultList.firstWhere((result) => result["id"] == _id);
+// }

@@ -34,8 +34,8 @@ dependencies:
   connectivity: ^0.4.2
   url_launcher: ^4.0.0
   http: ^0.12.2
-  xml_rpc: ^0.3.0
   crypto: ^2.1.5
+  odoo_rpc: ^0.2.6
 
 dev_dependencies:
   flutter_test:

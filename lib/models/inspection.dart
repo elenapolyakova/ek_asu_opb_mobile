@@ -18,6 +18,7 @@ class Inspection {
   final String auditor_name;
 
   Inspection({this.inspection_id = -1, this.type_id = 0, this.period_id = 0, this.to_be_inspected_name = '', this.auditor_name = ''});
+    
 
   factory Inspection.fromJson(Map<String, dynamic> json) => new Inspection(
         inspection_id: json["iinspection_idd"],

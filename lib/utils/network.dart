@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:connectivity/connectivity.dart';
+import 'config.dart' as config;
+import 'package:ek_asu_opb_mobile/src/db.dart';
+import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
-Future<bool> checkConnection() async {
+Future<bool> checkExist() async {
   var conectivityResult = await Connectivity().checkConnectivity();
   if (conectivityResult == ConnectivityResult.mobile ||
       conectivityResult == ConnectivityResult.wifi) {
@@ -11,12 +14,36 @@ Future<bool> checkConnection() async {
   return false;
 }
 
-Future<bool> checkConnection2() async {
+Future<bool> ping() async {
   try {
-    final result = await InternetAddress.lookup('google.com');
-    if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) 
-    return true;
+    String address = config.getItem('addressForPing');
+    final result = await InternetAddress.lookup(address);
+    if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) return true;
   } on SocketException catch (_) {
+    return false;
+  }
+}
+
+Future<bool> checkConnection() async {
+  DBProvider.db
+      .insert('log', {'date': nowStr(), 'message': 'checking Connection'});
+
+  try {
+    var result = await checkExist() && await ping();
+
+    DBProvider.db.insert(
+        'log', {'date': nowStr(), 'message': "${result ? 'sucess' : 'error'}"});
+    DBProvider.db.insert('log', {
+      'date': nowStr(),
+      'message': '----------------------------------------'
+    });
+    return result;
+  } catch (ex) {
+    DBProvider.db.insert('log', {'date': nowStr(), 'message': 'error'});
+    DBProvider.db.insert('log', {
+      'date': nowStr(),
+      'message': '----------------------------------------'
+    });
     return false;
   }
 }

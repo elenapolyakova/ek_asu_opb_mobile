@@ -11,7 +11,6 @@ class PlanCbtScreen extends StatefulWidget {
 }
 
 class _PlanCbtScreen extends State<PlanCbtScreen> {
-  UserInfo _userInfo;
   var test;
   var _headers = [
     {
@@ -54,9 +53,6 @@ class _PlanCbtScreen extends State<PlanCbtScreen> {
     auth.checkLoginStatus(context).then((isLogin) => {
           if (isLogin)
             {
-              auth.getUserInfo().then((userInfo) => setState(() {
-                    _userInfo = userInfo;
-                  }))
             }
         });
   }

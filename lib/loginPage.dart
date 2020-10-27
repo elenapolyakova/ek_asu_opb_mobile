@@ -1,9 +1,6 @@
-import 'package:ek_asu_opb_mobile/main.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:ek_asu_opb_mobile/homeScreen.dart';
-import 'package:ek_asu_opb_mobile/testScreen.dart';
 import 'utils/authenticate.dart' as auth;
 
 class LoginPage extends StatefulWidget {
@@ -15,7 +12,10 @@ class _LoginPage extends State<LoginPage> {
   String _email;
   String _password;
   String _pin;
-  bool _showErrorUser = false;
+  //bool _showErrorUser = false;
+  String _errorMessage = "";
+  bool _showErrorPin = false;
+
   final _sizeTextBlack = const TextStyle(fontSize: 20.0, color: Colors.black);
   final _sizeTextWhite = const TextStyle(fontSize: 20.0, color: Colors.white);
   final formKey = new GlobalKey<FormState>();
@@ -23,7 +23,6 @@ class _LoginPage extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-
     return new MaterialApp(
       home: new Scaffold(
         body: new Container(
@@ -60,8 +59,6 @@ class _LoginPage extends State<LoginPage> {
                               color: Theme.of(context).accentColor),
                           border:
                               OutlineInputBorder(borderSide: BorderSide.none),
-
-                          //helperText: ''
                         ),
                         keyboardType: TextInputType.emailAddress,
                         maxLines: 1,
@@ -69,7 +66,7 @@ class _LoginPage extends State<LoginPage> {
                         style: _sizeTextBlack,
                         onSaved: (val) => _email = val,
                         onTap: () => setState(() {
-                          _showErrorUser = false;
+                          _errorMessage = "";
                         }),
                         /* validator: (val) => val.length < 1
                           ? "Имя пользователя не может быть пустым"
@@ -101,7 +98,7 @@ class _LoginPage extends State<LoginPage> {
                         style: _sizeTextBlack,
                         onSaved: (val) => _password = val,
                         onTap: () => setState(() {
-                          _showErrorUser = false;
+                          _errorMessage = "";
                         }),
                         /* validator: (val) => val.length < 1
                             ? "Пароль не может быть пустым"
@@ -112,9 +109,7 @@ class _LoginPage extends State<LoginPage> {
                     new Container(
                         padding: new EdgeInsets.all(10.0),
                         child: new Text(
-                          _showErrorUser
-                              ? "Неверное имя пользователя или пароль"
-                              : '',
+                          _errorMessage,
                           style:
                               TextStyle(color: Colors.redAccent, fontSize: 17),
                           textAlign: TextAlign.left,
@@ -161,63 +156,125 @@ class _LoginPage extends State<LoginPage> {
 
   signIn() async {
     bool isAuthorize = await auth.authorize(_email, _password);
-
-    if (!isAuthorize) {
-      setState(() {
-        _showErrorUser = true;
-      });
-      return;
+    bool isSet = false;
+    if (isAuthorize) {
+      isSet = await auth.setUserData();
+      //isSet = await auth.setUserData(_email, _password);
     }
-    showSetPinDialog();
+
+    setState(() {
+      if (!isAuthorize)
+        _errorMessage = "Неверное имя пользователя или пароль";
+      else if (!isSet)
+        _errorMessage = "Ошибка при получении данных о пользователе";
+      else
+        _errorMessage = "";
+    });
+    if (isSet && isAuthorize) {
+      showSetPinDialog();
+    }
   }
 
-  pinConfirm() async {
+  pinConfirm(setState) async {
     final form = pinFormKey.currentState;
-    if (form.validate()) {
-      form.save();
-      await auth.setPinCode(_pin);
 
-      //loadData
-      bool result = await auth.setUserData(_email, _password);
+    form.save();
 
-      Navigator.pushNamed(context, "/home");
-    }
+    setState(() {
+      _showErrorPin = _pin.length != 5;
+    });
+    if (_showErrorPin) return;
+
+    await auth.setPinCode(_pin);
+    
+
+    Navigator.pushNamed(context, "/home");
   }
 
   showSetPinDialog() {
     showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (_) {
           return AlertDialog(
             title: Text("Установите ПИН-код для входа в приложение"),
-            content: new Form(
-                key: pinFormKey,
-                child: new Container(
-                  height: 100,
-                  color: Colors.white,
-                  child: new TextFormField(
-                      // inputFormatters: [widget._amountValidator],
-                      inputFormatters: <TextInputFormatter>[
-                        FilteringTextInputFormatter.digitsOnly
-                      ], // Only numbers can be entered
-                      keyboardType:
-                          TextInputType.numberWithOptions(decimal: true),
-                      maxLines: 1,
-                      maxLength: 5,
-                      cursorColor: Theme.of(context).cursorColor,
-                      style: _sizeTextBlack,
-                      onSaved: (val) => _pin = val,
-                      validator: (val) => val.length < 5
-                          ? "ПИН-код должен состоять из 5 цифр"
-                          : null),
-                )),
-            actions: <Widget>[
-              FlatButton(
-                  onPressed: () {
-                    pinConfirm();
-                  },
-                  child: Text("OK"))
-            ],
+            backgroundColor: Theme.of(context).backgroundColor,
+            contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            content: StatefulBuilder(builder: (context, StateSetter setState) {
+              return new Form(
+                  key: pinFormKey,
+                  child: new Container(
+                      height: 150,
+                      child: new Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            new Container(
+                                decoration: new BoxDecoration(
+                                  border: Border.all(
+                                      color: Colors
+                                          .white, //Theme.of(context).accentColor,
+                                      width: 1.5),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(10)),
+                                  color: Colors.white,
+                                ),
+                                height: 56,
+                                padding: EdgeInsets.symmetric(horizontal: 10.0),
+                                margin: EdgeInsets.all(10),
+                                child: new TextFormField(
+                                  decoration: new InputDecoration(
+                                    prefixIcon: Icon(Icons.vpn_key,
+                                        color: Theme.of(context).accentColor),
+                                    border: OutlineInputBorder(
+                                        borderSide: BorderSide.none),
+                                  ),
+                                  // inputFormatters: [widget._amountValidator],
+                                  inputFormatters: <TextInputFormatter>[
+                                    FilteringTextInputFormatter.digitsOnly
+                                  ], // Only numbers can be entered
+                                  keyboardType: TextInputType.numberWithOptions(
+                                      decimal: true),
+                                  maxLines: 1,
+                                  maxLength: 5,
+                                  cursorColor: Theme.of(context).cursorColor,
+                                  style: _sizeTextBlack,
+                                  obscureText: true,
+                                  onSaved: (val) => _pin = val,
+                                  onTap: () => setState(() {
+                                    _showErrorPin = false;
+                                  }),
+                                )),
+                            new Expanded(
+                                child: new Container(
+                                    padding: new EdgeInsets.all(5.0),
+                                    child: new Text(
+                                      _showErrorPin
+                                          ? "ПИН-код должен содержать 5 цифр"
+                                          : '',
+                                      style: TextStyle(
+                                          color: Colors.redAccent,
+                                          fontSize: 15),
+                                      textAlign: TextAlign.left,
+                                    ))),
+                            new Container(
+                              width: 200,
+                              height: 50.0,
+                              margin: new EdgeInsets.only(top: 15.0),
+                              decoration: new BoxDecoration(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(10)),
+                                color: Theme.of(context).accentColor,
+                              ),
+                              child: new MaterialButton(
+                                onPressed: () => pinConfirm(setState),
+                                child: new Text(
+                                  "OK",
+                                  style: _sizeTextWhite,
+                                ),
+                              ),
+                            )
+                          ])));
+            }),
           );
         });
   }

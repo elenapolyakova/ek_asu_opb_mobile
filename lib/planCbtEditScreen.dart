@@ -12,8 +12,6 @@ class PlanCbtEditScreen extends StatefulWidget {
 }
 
 class _PlanCbtEditScreen extends State<PlanCbtEditScreen> {
-  var _userInfo;
-
 
  @override
   void initState() {
@@ -21,9 +19,7 @@ class _PlanCbtEditScreen extends State<PlanCbtEditScreen> {
     auth.checkLoginStatus(context).then((isLogin) => {
           if (isLogin)
             {
-              auth.getUserInfo().then((userInfo) => setState(() {
-                    _userInfo = userInfo;
-                  }))
+             
             }
         });
   }
