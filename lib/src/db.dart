@@ -99,14 +99,30 @@ class DBProvider {
     return (maps.length > 0) ? maps[0] : null;
   }
 
-  Future<List<int>> selectIDs(String tableName) async {
+  Future<List<Map<String, dynamic>>> select(String tableName,
+      {bool distinct,
+      List<String> columns,
+      String where,
+      List<dynamic> whereArgs,
+      String groupBy,
+      String having,
+      String orderBy,
+      int limit,
+      int offset}) async {
     // Get a reference to the database.
     final Database db = await database;
 
-    final List<Map<String, dynamic>> maps =
-        await db.query(tableName, distinct: true,  columns: ["id"]);
-    List<int> result = List.generate(maps.length, (index) => maps[index]["id"]);
-    return result;
+    final List<Map<String, dynamic>> maps = await db.query(tableName,
+        distinct: distinct,
+        columns: columns,
+        where: where,
+        whereArgs: whereArgs,
+        groupBy: groupBy,
+        having: having,
+        orderBy: orderBy,
+        limit: limit,
+        offset: offset);
+    return maps;
   }
 
   Future<void> update(String tableName, Map<String, dynamic> values) async {

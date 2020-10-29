@@ -3,8 +3,9 @@ import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/src/exchangeData.dart' as exchange;
-import 'package:ek_asu_opb_mobile/src/db.dart';
+//import 'package:ek_asu_opb_mobile/src/db.dart';
 import 'utils/network.dart';
+import "package:ek_asu_opb_mobile/controllers/controllers.dart" as controllers;
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -30,21 +31,12 @@ class _HomeScreen extends State<HomeScreen> {
           if (isConnect) {
             auth.checkSession(context).then((isSessionExist) {
               if (isSessionExist) {
-                DBProvider.db.selectAll('railway').then((rows) {
-                  DBProvider.db.insert('log', {
-                    'date': '@@@@@@@ ',
-                    'message': 'railway count ${rows.length}'
-                  });
-                  DBProvider.db.selectAll('department').then((rows) {
-                    DBProvider.db.insert('log', {
-                      'date': '@@@@@@@ ',
-                      'message': 'department count ${rows.length}'
-                    });
-                    DBProvider.db.selectAll('user').then((rows) {
-                      DBProvider.db.insert('log', {
-                        'date': '@@@@@@@ ',
-                        'message': 'user count ${rows.length}'
-                      });
+                controllers.Railway.selectAll().then((rows) {
+                  controllers.Log.insert('railway count ${rows.length}');
+                  controllers.Department.selectAll().then((rows) {
+                    controllers.Log.insert('department count ${rows.length}');
+                    controllers.UserInfo.selectAll('user').then((rows) {
+                      controllers.Log.insert('user count ${rows.length}');
                       exchange.getDictionaries(all: true).then((result) {
                         loadLog();
                       }); //getDictionary
@@ -65,7 +57,7 @@ class _HomeScreen extends State<HomeScreen> {
 
   void loadLog() {
     logRows.clear();
-    DBProvider.db.selectAll("log").then((data) {
+   controllers.Log.selectAll().then((data) {
       data.forEach((logItem) {
         logRows.add("${logItem['date']}: ${logItem['message']}");
       }); //forEach
@@ -74,7 +66,7 @@ class _HomeScreen extends State<HomeScreen> {
   }
 
   void clearLog() {
-    DBProvider.db.deleteAll('log');
+   controllers.Log.deleteAll();
     setState(() {
       logRows.clear();
     });
@@ -93,7 +85,8 @@ class _HomeScreen extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return new Scaffold(
         appBar: new AppBar(
-            title: new Text('${_userInfo!=null ? _userInfo.display_name : ""}',
+            title: new Text(
+                '${_userInfo != null ? _userInfo.display_name : ""}',
                 style:
                     new TextStyle(color: Theme.of(context).primaryColorLight)),
             leading: null,
@@ -124,15 +117,16 @@ class _HomeScreen extends State<HomeScreen> {
           backgroundColor: Theme.of(context).primaryColor,
         ),
         body: Container(
-          padding: EdgeInsets.all(10),
-          child:
-        ListView(
-            children: List<Widget>.generate(
-                logRows.length,
-                (index) => Container(
-                    color: index%2 == 0 ? Colors.white: Theme.of(context).shadowColor,
-                    child: Text(logRows[index]
-                        .toString())))) /* new Padding(
+            padding: EdgeInsets.all(10),
+            child: ListView(
+                children: List<Widget>.generate(
+                    logRows.length,
+                    (index) => Container(
+                        color: index % 2 == 0
+                            ? Colors.white
+                            : Theme.of(context).shadowColor,
+                        child: Text(logRows[index]
+                            .toString())))) /* new Padding(
             padding: new EdgeInsets.only(bottom: 50.0),
             child: new Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -158,7 +152,7 @@ class _HomeScreen extends State<HomeScreen> {
               ],
             ))
             */
-        ));
+            ));
   }
 }
 

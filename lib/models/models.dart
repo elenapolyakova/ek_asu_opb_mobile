@@ -1,6 +1,8 @@
-export 'inspection.dart';
-export 'railway.dart';
-export 'department.dart';
-export 'userInfo.dart';
+export 'package:ek_asu_opb_mobile/models/railway.dart';
+export 'package:ek_asu_opb_mobile/models/department.dart';
+export 'package:ek_asu_opb_mobile/models/userInfo.dart';
 
-class Models {}
+abstract class Models {
+  fomJson() {}
+  toJson() {}
+}

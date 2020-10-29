@@ -1,7 +1,8 @@
 import "dart:convert";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import "package:ek_asu_opb_mobile/models/models.dart";
 
-UserInfo userInfoFromJson(String str) {
+/*UserInfo userInfoFromJson(String str) {
   final jsonData = json.decode(str);
   return UserInfo.fromJson(jsonData);
 }
@@ -9,9 +10,9 @@ UserInfo userInfoFromJson(String str) {
 String userInfoToJson(UserInfo data) {
   final dyn = data.toJson();
   return json.encode(dyn);
-}
+}*/
 
-class UserInfo {
+class UserInfo extends Models {
   int id;
   String login;
   final String f_user_role_txt;
@@ -33,6 +34,10 @@ class UserInfo {
       this.phone,
       this.active});
 
+
+  UserInfo fromJson(Map<String, dynamic> json) {
+    return UserInfo.fromJson(json);
+  }
   factory UserInfo.fromJson(Map<String, dynamic> json) {
     return new UserInfo(
         id: json["id"],

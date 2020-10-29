@@ -1,8 +1,8 @@
 import "dart:convert";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import "package:ek_asu_opb_mobile/models/models.dart";
 
-
-Railway railwayFromJson(String str) {
+/*Railway railwayFromJson(String str) {
   final jsonData = json.decode(str);
   return Railway.fromJson(jsonData);
 }
@@ -10,9 +10,9 @@ Railway railwayFromJson(String str) {
 String railwayToJson(Railway data) {
   final dyn = data.toJson();
   return json.encode(dyn);
-}
+}*/
 
-class Railway {
+class Railway extends Models {
   final int id;
   final String name;
   final String short_name;
@@ -24,6 +24,10 @@ class Railway {
         name: getStr(json["name"]),
         short_name: getStr(json["short_name"]),
       );
+
+  Railway fromJson(Map<String, dynamic> json) {
+    return Railway.fromJson(json);
+  }
 
   Map<String, dynamic> toJson() {
     return {

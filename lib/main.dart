@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/loginPage.dart';
 import 'package:ek_asu_opb_mobile/homeScreen.dart';
-import 'package:ek_asu_opb_mobile/planCbtScreen.dart';
-import 'package:ek_asu_opb_mobile/planCbtEditScreen.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'utils/authenticate.dart' as auth;
@@ -10,6 +8,7 @@ import 'dart:async';
 import 'utils/config.dart' as config;
 import 'package:ek_asu_opb_mobile/src/exchangeData.dart' as exchange;
 import 'utils/network.dart';
+
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,10 +62,10 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
         routes: <String, WidgetBuilder>{
           '/login': (context) => RouteAwareWidget('/login', child: LoginPage()),
           '/home': (context) => RouteAwareWidget('/home', child: HomeScreen()),
-          '/planCbt': (context) =>
+         /* '/planCbt': (context) =>
               RouteAwareWidget('planCbt', child: PlanCbtScreen()),
           '/planCbtEdit': (context) =>
-              RouteAwareWidget('planCbtEdit', child: PlanCbtEditScreen()),
+              RouteAwareWidget('planCbtEdit', child: PlanCbtEditScreen()),*/
         });
   }
 

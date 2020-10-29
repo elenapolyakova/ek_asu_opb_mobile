@@ -1,10 +1,9 @@
-import 'package:ek_asu_opb_mobile/models/models.dart';
+
 import 'package:ek_asu_opb_mobile/src/odooClient.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
-import 'package:ek_asu_opb_mobile/src/db.dart';
-import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
+import "package:ek_asu_opb_mobile/controllers/controllers.dart" as controllers;
 
 final attemptCount = config.getItem('attemptCount') ?? 5;
 final limitRecord = config.getItem('limitRecord') ?? 80;
@@ -26,16 +25,12 @@ Future<List<Map<String, dynamic>>> getDictionaries(
     dicts = _dict;
   else if (dicts == null || dicts.length == 0) dicts = _dict;
 
-  DBProvider.db.insert('log', {
-    'date': nowStr(),
-    'message': '========================================='
-  });
-  DBProvider.db.insert('log',
-      {'date': nowStr(), 'message': "Get dictionaries ${dicts.join(', ')}"});
+  controllers.Log.insert('=========================================');
+  controllers.Log.insert("Get dictionaries ${dicts.join(', ')}");
 
   for (int i = 0; i < dicts.length; i++) {
     try {
-      DBProvider.db.insert('log', {'date': nowStr(), 'message': dicts[i]});
+     controllers.Log.insert(dicts[i]);
       dynamic lastUpdate = isLastUpdate ? await getLastUpdate(dicts[i]) : null;
       switch (dicts[i]) {
         case 'railway':
@@ -62,7 +57,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
           List<dynamic> domain = new List<dynamic>();
 
           if (lastUpdate != null) domain.add(lastUpdate);
-          listDepIds = await DBProvider.db.selectIDs('department');
+          listDepIds = await controllers.Department.selectIDs();
           if (listDepIds.length > 0)
             domain.add(['department_id', 'in', listDepIds]);
           data = await getDataWithAttemp('res.users', 'search_read', null, {
@@ -87,31 +82,24 @@ Future<List<Map<String, dynamic>>> getDictionaries(
         for (int j = 0; j < dataList.length; j++) {
           switch (dicts[i]) {
             case 'railway':
-              Railway railway =
-                  Railway.fromJson(dataList[j] as Map<String, dynamic>);
-              await DBProvider.db.insert(dicts[i], railway.toJson());
+              await controllers.Railway.insert(
+                  dataList[j] as Map<String, dynamic>);
               break;
             case 'department':
-              Department dep =
-                  Department.fromJson(dataList[j] as Map<String, dynamic>);
-              await DBProvider.db.insert(dicts[i], dep.toJson());
+              await controllers.Department.insert(
+                  dataList[j] as Map<String, dynamic>);
               break;
             case 'user':
-              UserInfo user =
-                  UserInfo.fromJson(dataList[j] as Map<String, dynamic>);
-              await DBProvider.db.insert(dicts[i], user.toJson());
+              await controllers.UserInfo.insert('user',
+                  dataList[j] as Map<String, dynamic>);
               break;
           } //switch
         } //for j
 
         var recordCount = (data as List<dynamic>).length.toString();
         print('Recived $recordCount records');
-        DBProvider.db.insert('log',
-            {'date': nowStr(), 'message': 'Recived $recordCount records'});
-        DBProvider.db.insert('log', {
-          'date': nowStr(),
-          'message': "----------------------------------------"
-        });
+        controllers.Log.insert('Recived $recordCount records');
+        controllers.Log.insert( "----------------------------------------");
 
         result.add({
           dicts[i]: [1, recordCount]
@@ -122,16 +110,13 @@ Future<List<Map<String, dynamic>>> getDictionaries(
     } //try
     catch (e) {
       print(e);
-      DBProvider.db.insert('log', {'date': nowStr(), 'message': 'error: $e'});
+      controllers.Log.insert('error: $e');
       result.add({
         dicts[i]: [-1, e.toString()]
       });
     }
   } //for i
-  DBProvider.db.insert('log', {
-    'date': nowStr(),
-    'message': '========================================='
-  });
+  controllers.Log.insert('=========================================');
   return result;
 }
 
@@ -147,10 +132,7 @@ Future<dynamic> getDataWithAttemp(String model, String method, dynamic args,
 
   while (curAttempt++ < attemptCount) {
     print('Attempt ${curAttempt.toString()}..........');
-    DBProvider.db.insert('log', {
-      'date': nowStr(),
-      'message': 'Attempt ${curAttempt.toString()}..........'
-    });
+    controllers.Log.insert('Attempt ${curAttempt.toString()}..........');
     var data = await getData(model, method, args, kwargs);
     if (data == null) continue;
     return data;
