@@ -11,6 +11,7 @@ import 'package:ek_asu_opb_mobile/src/db.dart';
 
 final _storage = FlutterSecureStorage();
 UserInfo _currentUser;
+bool _isSameUser = false;
 
 void LogOut(BuildContext context) async {
   OdooSession session = await getSession();
@@ -24,18 +25,17 @@ void LogOut(BuildContext context) async {
       await OdooProxy.odooClient.destroySession();
       OdooProxy.odooClient.close();
       DBProvider.db.insert('log', {'date': nowStr(), 'message': 'success'});
-      await DBProvider.db.deleteAll('userInfo');
+      //await DBProvider.db.deleteAll('userInfo'); удалим при повторной авторизации, если вошел новый пользователь
     }
   } on OdooException catch (e) {
     DBProvider.db.insert('log', {'date': nowStr(), 'message': 'error'});
     print(e);
   }
 
-  //await _storage.delete(key: 'userInfo');
-
   await _storage.delete(key: 'session');
-  await _storage.delete(key: 'pin');
-  await _storage.delete(key: 'lastDateUpdate');
+  // удалим при повторной авторизации, если вошел новый пользователь
+  // await _storage.delete(key: 'pin');
+  // await _storage.delete(key: 'lastDateUpdate');
 
   Navigator.pushNamedAndRemoveUntil(
       context, '/login', (Route<dynamic> route) => false);
@@ -57,7 +57,7 @@ Future<bool> checkLoginStatus(BuildContext context) async {
 }
 
 //Проверять только если есть сеть
-Future<bool> checkSession() async {
+Future<bool> checkSession(BuildContext context) async {
   String session = await _storage.read(key: 'session');
   try {
     if (session != null) {
@@ -74,6 +74,9 @@ Future<bool> checkSession() async {
   } on OdooSessionExpiredException catch (e) {
     await _storage.delete(key: 'session');
 
+    Navigator.pushNamed(
+        context, '/login');
+
     DBProvider.db
         .insert('log', {'date': nowStr(), 'message': 'Session expired'});
     DBProvider.db.insert('log', {
@@ -88,19 +91,31 @@ Future<bool> checkSession() async {
   }
 }
 
+bool isSameUser() {
+  return _isSameUser;
+}
+
 Future<bool> setUserData() async {
   OdooSession session = await getSession();
   if (session == null) return false;
+  UserInfo oldUserInfo = await getUserInfo();
 
   try {
-    //UserInfo userInfo =  await proxyOdoo.getUserData(int.tryParse(uid.toString()), password);
-
     _currentUser = await OdooProxy.odooClient.getUserData(session.userId);
     if (_currentUser == null) return false;
+    //todo сравнивать, если изменилось предприятие у пользователя, то загружать новые данные?
+    if (oldUserInfo != null) {
+      if (oldUserInfo.department_id != _currentUser.department_id) {
+        await DBProvider.db.reCreateDictionary();
+        await DBProvider.db.reCreateTable();
+        await _storage.delete(key: 'lastDateUpdate');
+      } else
+        _isSameUser = true;
+    }
+
+    await DBProvider.db.deleteAll('userInfo');
     DBProvider.db.insert('userInfo', _currentUser.toJson());
 
-    // userInfo.password = password;
-    //await _storage.write(key: "userInfo", value: userInfoToJson(_currentUser));
     return true;
   } catch (e) {
     print(e);
@@ -111,18 +126,34 @@ Future<bool> setUserData() async {
 Future<UserInfo> getUserInfo() async {
   OdooSession session = await getSession();
   if (session == null) return null;
-  return UserInfo.fromJson(
-      await DBProvider.db.select('userInfo', session.userId));
+  var userInfoFromDb = await DBProvider.db.selectAll('userInfo');
+  if (userInfoFromDb == null || userInfoFromDb.length == 0) return null;
+  return UserInfo.fromJson(userInfoFromDb[0]);
 }
 
 Future<bool> authorize(String login, String password) async {
-  // int uid = await proxyOdoo.authorize(login, password);
+  UserInfo oldUserInfo = await getUserInfo();
+  _isSameUser = false;
+
   OdooSession session = await OdooProxy.odooClient.authorize(login, password);
   int uid;
   if (session != null) {
     String sessionString = json.encode(session.toJson());
-    await _storage.write(key: "session", value: sessionString);
     uid = session.userId;
+
+    if (oldUserInfo != null) {
+      if (oldUserInfo.id != uid) {
+        await _storage.delete(key: 'pin');
+        await _storage.delete(key: 'lastDateUpdate');
+        await _storage.delete(key: 'session');
+        // await DBProvider.db.deleteAll('userInfo');
+        await DBProvider.db.reCreateDictionary();
+        await DBProvider.db.reCreateTable();
+
+        //todo так же удалять все данные из локально БД/пересоздавать таблицы
+      }
+    }
+    await _storage.write(key: "session", value: sessionString);
   } else
     await _storage.delete(key: 'session');
 
@@ -154,6 +185,10 @@ Future<bool> setPinCode(String pin) async {
   await _storage.write(key: "pin", value: hashPin.toString());
 
   return true;
+}
+
+Future<String> getPin() async {
+  return await _storage.read(key: "pin");
 }
 
 Future<bool> isPinValid(String pin) async {

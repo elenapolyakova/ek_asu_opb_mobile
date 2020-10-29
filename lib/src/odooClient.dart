@@ -127,7 +127,7 @@ class OdooProxy {
           ['id', '=', uid.toString()]
         ],
         'fields': [
-          'user_id',
+          'id',
           'login',
           'f_user_role_txt',
           'display_name',

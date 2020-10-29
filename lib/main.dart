@@ -9,6 +9,7 @@ import 'utils/authenticate.dart' as auth;
 import 'dart:async';
 import 'utils/config.dart' as config;
 import 'package:ek_asu_opb_mobile/src/exchangeData.dart' as exchange;
+import 'utils/network.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,12 +45,17 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
     return MaterialApp(
         navigatorKey: MyApp.navKey,
         theme: ThemeData(
-          primaryColor: Color(0xFF808285), //серый
-          accentColor: Color(0xFFEE1C28), //красный
-          canvasColor: Color(0xFFd1d2d4),
-          backgroundColor: Color(0xFFd1d2d4), //светло-серый
-          focusColor: Color(0xFF808285),
-          cursorColor: Color(0xFF808285),
+          
+          primaryColor: Color(0xFFADB439), //салатовый
+          accentColor: Color(0xFF465C0B), //оливковый
+          primaryColorLight: Color(0xFFEFF0D7),//бежевый
+          primaryColorDark: Color(0xFF465C0B),//оливковый
+          buttonColor: Color(0xFF252A0E), //почти черный
+          backgroundColor: Colors.white, //бежевый
+          focusColor: Color(0xFF465C0B),
+          cursorColor: Color(0xFF465C0B),
+          bottomAppBarColor: Colors.white,
+          shadowColor: Color(0xFFE6E6E6), //черый для зебры таблицы
           textTheme: TextTheme(bodyText2: TextStyle(color: Colors.black)),
         ),
         navigatorObservers: [routeObserver],
@@ -134,7 +140,17 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
           _isPinDialogShow = false;
           _showErrorPin = false;
         });
-       //await exchange.getDictionaries(all: true);
+        checkConnection().then((isConnect) {
+          if (isConnect) {
+            auth.checkSession(context).then((isSessionExist) {
+              if (isSessionExist) {
+                exchange.getDictionaries(all: true, isLastUpdate: true).then((result) {
+                  //?
+                }); //getDictionary
+              } //isSessionExist = true
+            }); //checkSession
+          } //isConnect == true
+        }); //checkConnection
         Navigator.pop(context, true);
       }
     }
@@ -150,10 +166,11 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
     showDialog(
         context: context,
         barrierDismissible: false,
+        barrierColor: Color(0x88E6E6E6),
         builder: (_) {
           return AlertDialog(
             title: Text("Введите ПИН-код"),
-            backgroundColor: Theme.of(context).backgroundColor,
+            backgroundColor: Theme.of(context).primaryColor,
             contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             content: new Form(
                 key: pinFormKey,
@@ -165,8 +182,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
                           new Container(
                             decoration: new BoxDecoration(
                               border: Border.all(
-                                  color: Colors
-                                      .white, //Theme.of(context).accentColor,
+                                  color: Theme.of(context).primaryColorLight,
                                   width: 1.5),
                               borderRadius:
                                   BorderRadius.all(Radius.circular(10)),
@@ -176,7 +192,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
                             child: new TextFormField(
                               decoration: new InputDecoration(
                                 prefixIcon: Icon(Icons.vpn_key,
-                                    color: Theme.of(context).accentColor),
+                                    color: Theme.of(context).primaryColorLight),
                                 border: OutlineInputBorder(
                                     borderSide: BorderSide.none),
                               ),
@@ -216,7 +232,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
                             decoration: new BoxDecoration(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(10)),
-                              color: Theme.of(context).accentColor,
+                              color: Theme.of(context).buttonColor,
                             ),
                             child: new MaterialButton(
                               onPressed: pinConfirm,

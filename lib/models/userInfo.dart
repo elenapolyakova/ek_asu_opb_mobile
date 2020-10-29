@@ -11,8 +11,6 @@ String userInfoToJson(UserInfo data) {
   return json.encode(dyn);
 }
 
-
-
 class UserInfo {
   int id;
   String login;
@@ -22,6 +20,7 @@ class UserInfo {
   final int railway_id;
   final String email;
   final String phone;
+  final bool active;
 
   UserInfo(
       {this.id,
@@ -31,7 +30,8 @@ class UserInfo {
       this.department_id,
       this.railway_id,
       this.email,
-      this.phone});
+      this.phone,
+      this.active});
 
   factory UserInfo.fromJson(Map<String, dynamic> json) {
     return new UserInfo(
@@ -42,7 +42,8 @@ class UserInfo {
         department_id: getIdFromList(json["department_id"]),
         railway_id: getIdFromList(json["rel_railway_id"]),
         email: getStr(json["email"]),
-        phone: getStr(json["phone"]));
+        phone: getStr(json["phone"]),
+        active: (json["active"] == true));
   }
 
   Map<String, dynamic> toJson() {
@@ -55,6 +56,7 @@ class UserInfo {
       'railway_id': railway_id,
       'email': email,
       'phone': phone,
+      'active': active
     };
   }
 

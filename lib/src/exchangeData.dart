@@ -4,23 +4,24 @@ import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:ek_asu_opb_mobile/src/db.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'dart:convert';
 
 final attemptCount = config.getItem('attemptCount') ?? 5;
 final limitRecord = config.getItem('limitRecord') ?? 80;
 final _storage = FlutterSecureStorage();
-final List<String> _dict = ['railway', 'department'];
+final List<String> _dict = ['railway', 'department', 'user'];
 
 //загрузка справочников
 //Возвращает List[
 //  {'dictName': [1, countRecord]} //success
-//  {'dictName': [-1]} //error
+//  {'dictName': [-1, err.message]} //error
 //]
 Future<List<Map<String, dynamic>>> getDictionaries(
-    {List<String> dicts, bool all: true}) async {
+    {List<String> dicts, bool all: true, bool isLastUpdate: true}) async {
   List<Map<String, dynamic>> result = new List<Map<String, dynamic>>();
   dynamic data;
-  //bool isLastData = false;
-  dynamic lastUpdate = await getLastUpdate();
+  List<dynamic> listDepIds;
+
   if (all)
     dicts = _dict;
   else if (dicts == null || dicts.length == 0) dicts = _dict;
@@ -32,50 +33,77 @@ Future<List<Map<String, dynamic>>> getDictionaries(
   DBProvider.db.insert('log',
       {'date': nowStr(), 'message': "Get dictionaries ${dicts.join(', ')}"});
 
-  await DBProvider.db
-      .reCreateDictionary(); //todo delete when lastUpdate is working
-
   for (int i = 0; i < dicts.length; i++) {
     try {
       DBProvider.db.insert('log', {'date': nowStr(), 'message': dicts[i]});
+      dynamic lastUpdate = isLastUpdate ? await getLastUpdate(dicts[i]) : null;
       switch (dicts[i]) {
         case 'railway':
           List<dynamic> domain = new List<dynamic>();
-          //todo не работает условие, __last_update > datetime ???
           if (lastUpdate != null) domain.add(lastUpdate);
           data =
               await getDataWithAttemp('eco.ref.railway', 'search_read', null, {
             'domain': domain,
             'fields': ['id', 'name', 'short_name']
           });
-          if (data != null) {
-            (data as List<dynamic>).forEach((dataItem) {
-              DBProvider.db.insert(dicts[i], dataItem as Map<String, dynamic>);
-            });
-          }
 
           break;
         case 'department':
           List<dynamic> domain = new List<dynamic>();
-          //todo не работает условие, __last_update > datetime ???
           if (lastUpdate != null) domain.add(lastUpdate);
           data =
               await getDataWithAttemp('eco.department', 'search_read', null, {
             'domain': domain,
-            'fields': ['id', 'name', 'short_name', 'rel_railway_id']
+            'fields': ['id', 'name', 'short_name', 'rel_railway_id', 'active']
           });
-          if (data != null) {
-            //List<dynamic> listOfData = data as List<dynamic>;
-           // for ()
-            (data as List<dynamic>).forEach((dataItem) async{
-              Department dep =
-                  Department.fromJson(dataItem as Map<String, dynamic>);
-              await DBProvider.db.insert(dicts[i], dep.toJson());
-            });
-          }
+
           break;
-      }
+        case 'user':
+          List<dynamic> domain = new List<dynamic>();
+
+          if (lastUpdate != null) domain.add(lastUpdate);
+          listDepIds = await DBProvider.db.selectIDs('department');
+          if (listDepIds.length > 0)
+            domain.add(['department_id', 'in', listDepIds]);
+          data = await getDataWithAttemp('res.users', 'search_read', null, {
+            'domain': domain,
+            'fields': [
+              'id',
+              'login',
+              'f_user_role_txt',
+              'display_name',
+              'department_id',
+              'rel_railway_id',
+              'email',
+              'phone',
+              'active'
+            ]
+          });
+
+          break;
+      } //switch
       if (data != null) {
+        List<dynamic> dataList = data as List<dynamic>;
+        for (int j = 0; j < dataList.length; j++) {
+          switch (dicts[i]) {
+            case 'railway':
+              Railway railway =
+                  Railway.fromJson(dataList[j] as Map<String, dynamic>);
+              await DBProvider.db.insert(dicts[i], railway.toJson());
+              break;
+            case 'department':
+              Department dep =
+                  Department.fromJson(dataList[j] as Map<String, dynamic>);
+              await DBProvider.db.insert(dicts[i], dep.toJson());
+              break;
+            case 'user':
+              UserInfo user =
+                  UserInfo.fromJson(dataList[j] as Map<String, dynamic>);
+              await DBProvider.db.insert(dicts[i], user.toJson());
+              break;
+          } //switch
+        } //for j
+
         var recordCount = (data as List<dynamic>).length.toString();
         print('Recived $recordCount records');
         DBProvider.db.insert('log',
@@ -84,18 +112,22 @@ Future<List<Map<String, dynamic>>> getDictionaries(
           'date': nowStr(),
           'message': "----------------------------------------"
         });
+
         result.add({
           dicts[i]: [1, recordCount]
         });
-      }
-    } catch (e) {
+
+        await setLastUpdate(dicts[i]);
+      } //if (data!=null)
+    } //try
+    catch (e) {
       print(e);
       DBProvider.db.insert('log', {'date': nowStr(), 'message': 'error: $e'});
       result.add({
         dicts[i]: [-1, e.toString()]
       });
     }
-  }
+  } //for i
   DBProvider.db.insert('log', {
     'date': nowStr(),
     'message': '========================================='
@@ -103,17 +135,12 @@ Future<List<Map<String, dynamic>>> getDictionaries(
   return result;
 }
 
-//возвращает данные по строго по параметрам
 Future<dynamic> getData(String model, String method, dynamic args,
     Map<String, dynamic> kwargs) async {
-  // bool checkSession = await auth.checkSession();
-  // if (checkSession) return null;
-
-  final client = await OdooProxy.odooClient;
-  return client.callKw(model, method, args, kwargs);
+  return OdooProxy.odooClient.callKw(model, method, args, kwargs);
 }
 
-//получение данных с attemptCount попытками (bool lastData - новые данные, по умолчанию да)
+//получение данных с attemptCount попытками
 Future<dynamic> getDataWithAttemp(String model, String method, dynamic args,
     Map<String, dynamic> kwargs) async {
   int curAttempt = 0;
@@ -132,6 +159,7 @@ Future<dynamic> getDataWithAttemp(String model, String method, dynamic args,
 }
 
 //получаем данные частями по limitRecord с attemptCount попытками
+//todo дописать, если нужно
 Future<dynamic> getDataChunk(String model, String method, dynamic args,
     Map<String, dynamic> kwargs) async {
   List<dynamic> result;
@@ -143,14 +171,27 @@ Future<dynamic> getDataChunk(String model, String method, dynamic args,
 
   // }
 
-  //  limitRecord
   return result;
 }
 
-Future<List<dynamic>> getLastUpdate() async {
-  String sLastUpdate =
-      DateTime.now().toString(); //await _storage.read(key: 'lastDateUpdate');
+Future<List<dynamic>> getLastUpdate(modelName) async {
+  String sLastUpdate = await _storage.read(key: 'lastDateUpdate');
   if (sLastUpdate == null) return null;
-  //return DateTime.tryParse(sLastUpdate);
-  return ['__last_update', '>', sLastUpdate];
+  dynamic lastUpdate = json.decode(sLastUpdate);
+  if (lastUpdate[modelName] != null)
+    return ['write_date', '>', lastUpdate[modelName]];
+  return null;
+}
+
+Future<void> setLastUpdate(modelName) async {
+  String sLastUpdate = await _storage.read(key: 'lastDateUpdate');
+  Map<String, dynamic> lastUpdate;
+  if (sLastUpdate == null)
+    lastUpdate = {modelName: DateTime.now().toString()};
+  else {
+    lastUpdate = json.decode(sLastUpdate);
+    lastUpdate[modelName] = DateTime.now().toString();
+  }
+
+  await _storage.write(key: 'lastDateUpdate', value: json.encode(lastUpdate));
 }

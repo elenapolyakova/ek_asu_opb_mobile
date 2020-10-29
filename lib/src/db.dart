@@ -28,19 +28,18 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE railway(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER)");
         await db.execute(
-            "CREATE TABLE department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER)");
+            "CREATE TABLE department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, active TEXT)");
         await db.execute(
-            "CREATE TABLE user(id INTEGER PRIMARY KEY, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT)");
+            "CREATE TABLE user(id INTEGER PRIMARY KEY, login TEXT,  display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT)");
         await db.execute("CREATE TABLE log(date TEXT, message TEXT)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS userInfo(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT)");
+            "CREATE TABLE IF NOT EXISTS userInfo(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT)");
       },
       onOpen: (db) async {
-         await db.execute(
-            "CREATE TABLE IF NOT EXISTS log (date TEXT, message TEXT)");
-
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS userInfo(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT)");
+            "CREATE TABLE IF NOT EXISTS log (date TEXT, message TEXT)");
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS userInfo(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT)");
       },
 
       // Set the version. This executes the onCreate function and provides a
@@ -58,13 +57,14 @@ class DBProvider {
     await db.execute(
         "CREATE TABLE railway(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER)");
     await db.execute(
-        "CREATE TABLE department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER)");
+        "CREATE TABLE department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, active TEXT)");
     await db.execute(
-        "CREATE TABLE user(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT)");
+        "CREATE TABLE user(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT)");
   }
 
   Future<void> reCreateTable() async {
     final Database db = await database;
+    //todo пересоздавать таблицы с данными
   }
 
   Future<void> insert(String tableName, Map<String, dynamic> values,
@@ -85,17 +85,9 @@ class DBProvider {
     final List<Map<String, dynamic>> maps = await db.query(tableName);
 
     return maps;
-    // Convert the List<Map<String, dynamic> into a List<Dog>.
-    /* return List.generate(maps.length, (i) {
-      return Dog(
-        id: maps[i]['id'],
-        name: maps[i]['name'],
-        age: maps[i]['age'],
-      );
-    });*/
   }
 
-  Future<Map<String, dynamic>> select(String tableName, int id) async {
+  Future<Map<String, dynamic>> selectById(String tableName, int id) async {
     // Get a reference to the database.
     final Database db = await database;
 
@@ -104,7 +96,17 @@ class DBProvider {
       where: "id = ?",
       whereArgs: [id],
     );
-    return maps.length > 0 ? maps[0] : null;
+    return (maps.length > 0) ? maps[0] : null;
+  }
+
+  Future<List<int>> selectIDs(String tableName) async {
+    // Get a reference to the database.
+    final Database db = await database;
+
+    final List<Map<String, dynamic>> maps =
+        await db.query(tableName, distinct: true,  columns: ["id"]);
+    List<int> result = List.generate(maps.length, (index) => maps[index]["id"]);
+    return result;
   }
 
   Future<void> update(String tableName, Map<String, dynamic> values) async {

@@ -12,8 +12,6 @@ Map<String, Object> _config = {
   "ncopRole": "ncop",
   "attemptCount": 5,
   "limitRecord": 80,
-  
-  "clientId": "fd9dd42e-f50e-4d15-be78-f3c76ad4bb95",
   "sessionExpire": 10*60, //через какое время запрашиваем ПИН-код, секунд
 };
 

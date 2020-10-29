@@ -26,7 +26,11 @@ class _LoginPage extends State<LoginPage> {
     return new MaterialApp(
       home: new Scaffold(
         body: new Container(
-          color: Theme.of(context).backgroundColor,
+          decoration: BoxDecoration(
+            image:DecorationImage(
+              image:AssetImage("assets/images/background.jpg"),
+              fit:BoxFit.fitWidth)
+          ),
           child: new Center(
             child: new Form(
                 key: formKey,
@@ -37,7 +41,7 @@ class _LoginPage extends State<LoginPage> {
                         child: new Text(
                       "Авторизация",
                       style: TextStyle(
-                          color: Theme.of(context).accentColor,
+                          color: Theme.of(context).primaryColorLight,
                           fontSize: 35.0,
                           fontWeight: FontWeight.w700),
                       textAlign: TextAlign.center,
@@ -56,7 +60,7 @@ class _LoginPage extends State<LoginPage> {
                       child: new TextFormField(
                         decoration: new InputDecoration(
                           prefixIcon: Icon(Icons.mail_outline,
-                              color: Theme.of(context).accentColor),
+                              color: Theme.of(context).primaryColorLight),
                           border:
                               OutlineInputBorder(borderSide: BorderSide.none),
                         ),
@@ -88,7 +92,7 @@ class _LoginPage extends State<LoginPage> {
                       child: new TextFormField(
                         decoration: new InputDecoration(
                           prefixIcon: Icon(Icons.vpn_key,
-                              color: Theme.of(context).accentColor),
+                              color: Theme.of(context).primaryColorLight),
                           border:
                               OutlineInputBorder(borderSide: BorderSide.none),
                         ),
@@ -120,7 +124,7 @@ class _LoginPage extends State<LoginPage> {
                       margin: new EdgeInsets.only(top: 15.0),
                       decoration: new BoxDecoration(
                         borderRadius: BorderRadius.all(Radius.circular(10)),
-                        color: Theme.of(context).accentColor,
+                        color: Theme.of(context).buttonColor,
                       ),
                       child: new MaterialButton(
                         onPressed: submit,
@@ -159,7 +163,6 @@ class _LoginPage extends State<LoginPage> {
     bool isSet = false;
     if (isAuthorize) {
       isSet = await auth.setUserData();
-      //isSet = await auth.setUserData(_email, _password);
     }
 
     setState(() {
@@ -171,7 +174,7 @@ class _LoginPage extends State<LoginPage> {
         _errorMessage = "";
     });
     if (isSet && isAuthorize) {
-      showSetPinDialog();
+      showSetPinDialog(); // возможно проверять pin в storage? если есть не запрашивать заново? но если пользователь его забыл...
     }
   }
 
@@ -186,19 +189,25 @@ class _LoginPage extends State<LoginPage> {
     if (_showErrorPin) return;
 
     await auth.setPinCode(_pin);
-    
+    Navigator.pop(context, true); //для скрытия диалога с установкой ПИН-кода
 
-    Navigator.pushNamed(context, "/home");
+    if (auth.isSameUser() && Navigator.canPop(context)) {
+      //на случай, если закончилась odoo сессия и зашли под тем же пользователем, - перенаправляем на последнюю страницу
+      //возможно нужно будет сохранять state куда-то, чтобы восстановить последние введенные данные пользователя
+      Navigator.pop(context);
+    } else
+      Navigator.pushNamed(context, "/home");
   }
 
   showSetPinDialog() {
     showDialog(
         context: context,
         barrierDismissible: false,
+         barrierColor: Color(0x88E6E6E6),
         builder: (_) {
           return AlertDialog(
             title: Text("Установите ПИН-код для входа в приложение"),
-            backgroundColor: Theme.of(context).backgroundColor,
+            backgroundColor: Theme.of(context).primaryColor,
             contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             content: StatefulBuilder(builder: (context, StateSetter setState) {
               return new Form(
@@ -211,8 +220,7 @@ class _LoginPage extends State<LoginPage> {
                             new Container(
                                 decoration: new BoxDecoration(
                                   border: Border.all(
-                                      color: Colors
-                                          .white, //Theme.of(context).accentColor,
+                                      color: Theme.of(context).primaryColor, 
                                       width: 1.5),
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(10)),
@@ -224,7 +232,7 @@ class _LoginPage extends State<LoginPage> {
                                 child: new TextFormField(
                                   decoration: new InputDecoration(
                                     prefixIcon: Icon(Icons.vpn_key,
-                                        color: Theme.of(context).accentColor),
+                                        color: Theme.of(context).primaryColorLight),
                                     border: OutlineInputBorder(
                                         borderSide: BorderSide.none),
                                   ),
@@ -263,7 +271,7 @@ class _LoginPage extends State<LoginPage> {
                               decoration: new BoxDecoration(
                                 borderRadius:
                                     BorderRadius.all(Radius.circular(10)),
-                                color: Theme.of(context).accentColor,
+                                color: Theme.of(context).buttonColor,
                               ),
                               child: new MaterialButton(
                                 onPressed: () => pinConfirm(setState),

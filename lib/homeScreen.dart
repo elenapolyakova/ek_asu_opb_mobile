@@ -12,7 +12,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreen extends State<HomeScreen> {
-  var _predId;
+  UserInfo _userInfo;
   String _supportPhoneNumber = "123456";
   List<dynamic> logRows = []; // = ['test', 'test2'];
 
@@ -20,15 +20,37 @@ class _HomeScreen extends State<HomeScreen> {
   void initState() {
     super.initState();
     loadLog();
+
     auth.checkLoginStatus(context).then((isLogin) {
       if (isLogin) {
+        setState(() {
+          auth.getUserInfo().then((userInfo) => {_userInfo = userInfo});
+        });
         checkConnection().then((isConnect) {
           if (isConnect) {
-            auth.checkSession().then((isSessionExist) {
+            auth.checkSession(context).then((isSessionExist) {
               if (isSessionExist) {
-                exchange.getDictionaries(all: true).then((result) {
-                  loadLog();
-                }); //getDictionary
+                DBProvider.db.selectAll('railway').then((rows) {
+                  DBProvider.db.insert('log', {
+                    'date': '@@@@@@@ ',
+                    'message': 'railway count ${rows.length}'
+                  });
+                  DBProvider.db.selectAll('department').then((rows) {
+                    DBProvider.db.insert('log', {
+                      'date': '@@@@@@@ ',
+                      'message': 'department count ${rows.length}'
+                    });
+                    DBProvider.db.selectAll('user').then((rows) {
+                      DBProvider.db.insert('log', {
+                        'date': '@@@@@@@ ',
+                        'message': 'user count ${rows.length}'
+                      });
+                      exchange.getDictionaries(all: true).then((result) {
+                        loadLog();
+                      }); //getDictionary
+                    });
+                  });
+                });
               } //isSessionExist = true
             }); //checkSession
           } //isConnect == true
@@ -71,16 +93,21 @@ class _HomeScreen extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return new Scaffold(
         appBar: new AppBar(
-            title: new Text("ЕК АСУ ОПБ"),
+            title: new Text('${_userInfo!=null ? _userInfo.display_name : ""}',
+                style:
+                    new TextStyle(color: Theme.of(context).primaryColorLight)),
             leading: null,
             automaticallyImplyLeading: false,
+            backgroundColor: Theme.of(context).primaryColorDark,
             actions: <Widget>[
               new IconButton(
                   icon: const Icon(Icons.help_outline),
                   tooltip: 'Рабочая документация',
+                  color: Theme.of(context).buttonColor,
                   onPressed: () => {}),
               new IconButton(
                   icon: const Icon(Icons.logout),
+                  color: Theme.of(context).buttonColor,
                   tooltip: 'Выход',
                   onPressed: LogOut),
             ]),
@@ -94,13 +121,18 @@ class _HomeScreen extends State<HomeScreen> {
           onPressed: () => {clearLog()},
           label: Text('Очистить лог'),
           icon: Icon(Icons.delete_outline),
-          backgroundColor: Colors.green,
+          backgroundColor: Theme.of(context).primaryColor,
         ),
-        body: ListView(
+        body: Container(
+          padding: EdgeInsets.all(10),
+          child:
+        ListView(
             children: List<Widget>.generate(
                 logRows.length,
-                (index) => Text(logRows[index]
-                    .toString()))) /* new Padding(
+                (index) => Container(
+                    color: index%2 == 0 ? Colors.white: Theme.of(context).shadowColor,
+                    child: Text(logRows[index]
+                        .toString())))) /* new Padding(
             padding: new EdgeInsets.only(bottom: 50.0),
             child: new Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -126,7 +158,7 @@ class _HomeScreen extends State<HomeScreen> {
               ],
             ))
             */
-        );
+        ));
   }
 }
 
