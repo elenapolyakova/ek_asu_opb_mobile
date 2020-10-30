@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'utils/authenticate.dart' as auth;
+import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 
 class LoginPage extends StatefulWidget {
   @override
@@ -163,15 +164,15 @@ class _LoginPage extends State<LoginPage> {
     bool isAuthorize = await auth.authorize(_email, _password);
     bool isSet = false;
     bool isValidRole = false;
+    List<String> roleList = [];
+    roleList.add(config.getItem('cbtRole'));
+    roleList.add(config.getItem('ncopRole'));
     if (isAuthorize) {
-<<<<<<< HEAD
-      // Department.loadFromOdoo();
-=======
       // Department.loadFromOdoo(1);
->>>>>>> 8c9d2eb7e54150ce13d309240b9e95a000580379
       isSet = await auth.setUserData();
       if (isSet) {
-        //isValidRole = (await auth.getUserInfo()).f_user_role_txt;
+        String userRole = (await auth.getUserInfo()).f_user_role_txt;
+        isValidRole = (roleList.indexOf(userRole) > -1);
       }
     }
 
@@ -180,10 +181,14 @@ class _LoginPage extends State<LoginPage> {
         _errorMessage = "Неверное имя пользователя или пароль";
       else if (!isSet)
         _errorMessage = "Ошибка при получении данных о пользователе";
+      else if (!isValidRole)
+        _errorMessage =
+            "Пользователь с данной ролью не может работать в приложении";
       else
         _errorMessage = "";
     });
-    if (_errorMessage == ""){//(isSet && isAuthorize) {
+    if (_errorMessage == "") {
+      //(isSet && isAuthorize) {
       showSetPinDialog(); // возможно проверять pin в storage? если есть не запрашивать заново? но если пользователь его забыл...
     }
   }
