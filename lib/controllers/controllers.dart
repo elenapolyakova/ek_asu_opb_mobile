@@ -10,5 +10,5 @@ abstract class Controllers {
   static select() {}
   static update() {}
   static delete() {}
-  static loadFromOdoo({limit = 0}) async {}
+  static loadFromOdoo([limit]) async {}
 }
