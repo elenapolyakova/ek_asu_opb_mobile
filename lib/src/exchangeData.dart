@@ -6,6 +6,8 @@ import "package:ek_asu_opb_mobile/controllers/controllers.dart" as controllers;
 
 final attemptCount = config.getItem('attemptCount') ?? 5;
 final limitRecord = config.getItem('limitRecord') ?? 80;
+final cbtRole = config.getItem('cbtRole') ?? 'cbt';
+final ncopRole = config.getItem('ncopRole') ?? 'ncop';
 final _storage = FlutterSecureStorage();
 final List<String> _dict = ['railway', 'department', 'user'];
 
@@ -59,6 +61,8 @@ Future<List<Map<String, dynamic>>> getDictionaries(
           listDepIds = await controllers.Department.selectIDs();
           if (listDepIds.length > 0)
             domain.add(['department_id', 'in', listDepIds]);
+         // domain.add(['department_id.role', 'in', ['cbt', 'ncop']]); 
+          domain.add(['f_user_role_txt', 'in', [cbtRole, ncopRole]]);
           data = await getDataWithAttemp('res.users', 'search_read', null, {
             'domain': domain,
             'fields': [
@@ -70,7 +74,8 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               'rel_railway_id',
               'email',
               'phone',
-              'active'
+              'active',
+              'function'
             ]
           });
 

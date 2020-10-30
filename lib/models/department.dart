@@ -13,12 +13,12 @@ String departmantToJson(Department data) {
 }*/
 
 class Department extends Models {
-  final int id;
-  final String name;
-  final String short_name;
-  final int railway_id;
-  final int parent_id;
-  final String active;
+   int id;
+   String name;
+   String short_name;
+   int railway_id;
+   int parent_id;
+   String active;
 
   Department(
       {this.id, this.name, this.short_name, this.railway_id, this.parent_id, this.active});

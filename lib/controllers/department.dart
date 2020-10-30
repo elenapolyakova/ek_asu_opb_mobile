@@ -20,6 +20,7 @@ class Department extends Controllers {
 
   static Future<List<Map<String, dynamic>>> selectAll() async {
     return await DBProvider.db.selectAll(_tableName);
+    
   }
 
   static loadFromOdoo({limit = 0}) async {

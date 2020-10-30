@@ -15,12 +15,12 @@ String userInfoToJson(UserInfo data) {
 class UserInfo extends Models {
   int id;
   String login;
-  final String f_user_role_txt;
-  final String display_name;
-  final int department_id;
-  final int railway_id;
-  final String email;
-  final String phone;
+  String f_user_role_txt;
+  String display_name;
+  int department_id;
+  int railway_id;
+  String email;
+  String phone;
 
   UserInfo(
       {this.id,

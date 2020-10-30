@@ -5,14 +5,14 @@ import "package:ek_asu_opb_mobile/models/models.dart";
 class User extends Models {
   int id;
   String login;
-  final String f_user_role_txt;
-  final String display_name;
-  final int department_id;
-  final int railway_id;
-  final String email;
-  final String phone;
-  final String active;
-  final String function;
+  String f_user_role_txt;
+  String display_name;
+  int department_id;
+  int railway_id;
+  String email;
+  String phone;
+  String active;
+  String function;
 
   User(
       {this.id,

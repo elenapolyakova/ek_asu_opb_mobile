@@ -162,7 +162,7 @@ class _LoginPage extends State<LoginPage> {
     bool isAuthorize = await auth.authorize(_email, _password);
     bool isSet = false;
     if (isAuthorize) {
-      Department.loadFromOdoo();
+     // Department.loadFromOdoo();
       isSet = await auth.setUserData();
     }
 

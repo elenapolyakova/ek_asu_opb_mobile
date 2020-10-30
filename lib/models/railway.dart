@@ -13,9 +13,9 @@ String railwayToJson(Railway data) {
 }*/
 
 class Railway extends Models {
-  final int id;
-  final String name;
-  final String short_name;
+   int id;
+   String name;
+   String short_name;
 
   Railway({this.id, this.name, this.short_name});
 
