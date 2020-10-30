@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/loginPage.dart';
-import 'package:ek_asu_opb_mobile/homeScreen_log.dart';
+import 'package:ek_asu_opb_mobile/homeScreen.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'utils/authenticate.dart' as auth;
@@ -35,7 +35,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
   bool _showErrorPin = false;
   bool _isPinDialogShow = false;
   bool _isTimeExpire = false;
-  final _sizeTextBlack = const TextStyle(fontSize: 20.0, color: Colors.black);
+  final _sizeTextBlack = const TextStyle(fontSize: 20.0, color: Color(0xFF252A0E));
   final _sizeTextWhite = const TextStyle(fontSize: 20.0, color: Colors.white);
   final pinFormKey = new GlobalKey<FormState>();
 
@@ -50,9 +50,9 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
           primaryColorLight: Color(0xFFEFF0D7),//бежевый
           primaryColorDark: Color(0xFF465C0B),//оливковый
           buttonColor: Color(0xFF252A0E), //почти черный
-          backgroundColor: Colors.white, //бежевый
+          backgroundColor: Colors.white, 
           focusColor: Color(0xFF465C0B),
-          cursorColor: Color(0xFF465C0B),
+          cursorColor: Color(0xFF252A0E),
           bottomAppBarColor: Colors.white,
           shadowColor: Color(0xFFE6E6E6), //черый для зебры таблицы
           textTheme: TextTheme(bodyText2: TextStyle(color: Colors.black)),

@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
@@ -6,6 +8,8 @@ import 'package:ek_asu_opb_mobile/src/exchangeData.dart' as exchange;
 //import 'package:ek_asu_opb_mobile/src/db.dart';
 import 'utils/network.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart" as controllers;
+import 'package:ek_asu_opb_mobile/components/components.dart';
+import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -14,8 +18,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreen extends State<HomeScreen> {
   UserInfo _userInfo;
+  List<Map<String, dynamic>> navigationMenu;
   String _supportPhoneNumber = "123456";
   List<dynamic> logRows = []; // = ['test', 'test2'];
+  final _sizeTextBlack =
+      const TextStyle(fontSize: 20.0, color: Color(0xFF252A0E));
 
   @override
   void initState() {
@@ -24,12 +31,13 @@ class _HomeScreen extends State<HomeScreen> {
 
     auth.checkLoginStatus(context).then((isLogin) {
       if (isLogin) {
-        setState(() {});
-        checkConnection().then((isConnect) {
-          if (isConnect) {
-            auth.getUserInfo().then((userInfo) {
-              _userInfo = userInfo;
-              setState(() {});
+        auth.getUserInfo().then((userInfo) {
+          _userInfo = userInfo;
+          navigationMenu = getNavigationMenu(userInfo.f_user_role_txt);
+
+          setState(() {});
+          checkConnection().then((isConnect) {
+            if (isConnect) {
               auth.checkSession(context).then((isSessionExist) {
                 if (isSessionExist) {
                   exchange.getDictionaries(all: true).then((result) {
@@ -38,11 +46,23 @@ class _HomeScreen extends State<HomeScreen> {
 
                 } //isSessionExist = true
               }); //checkSession
-            });
-          } //isConnect == true
-        }); //checkConnection
+
+            } //isConnect == true
+          }); //checkConnection
+        });
       } //isLogin == true
     }); //checkLoginStatus
+  }
+
+  List<Map<String, dynamic>> getNavigationMenu(String role_txt) {
+    List<Map<String, dynamic>> result = [];
+    if (role_txt == config.getItem('cbtRole')) {
+      result.add({
+        'label': 'Favorites',
+        'icon': Icon(Icons.favorite),
+      });
+    }
+    return result;
   }
 
   void LogOut() {
@@ -72,7 +92,7 @@ class _HomeScreen extends State<HomeScreen> {
           backgroundColor: Theme.of(context).primaryColorDark,
           actions: <Widget>[
             Padding(
-                padding: EdgeInsets.only(right: 10),
+                padding: EdgeInsets.only(right: 26),
                 child: TextIcon(
                     icon: Icons.logout,
                     text: 'Выход',
@@ -99,8 +119,8 @@ class _HomeScreen extends State<HomeScreen> {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Theme.of(context).bottomAppBarColor,
-        selectedItemColor: Theme.of(context).primaryColorDark ,
-        unselectedItemColor: Theme.of(context).primaryColor ,
+        selectedItemColor: Theme.of(context).primaryColorDark,
+        unselectedItemColor: Theme.of(context).primaryColor,
         selectedFontSize: 14,
         unselectedFontSize: 14,
         onTap: (value) {
@@ -160,36 +180,5 @@ class _TileButton extends State<TileButton> {
         ),
       ),
     ));
-  }
-}
-
-class TextIcon extends StatefulWidget {
-  IconData icon;
-  String text;
-  Function onTap;
-  Color color;
-
-  TextIcon({this.icon, this.text = "", this.onTap, this.color});
-  @override
-  State<TextIcon> createState() => _TextIcon();
-}
-
-class _TextIcon extends State<TextIcon> {
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-        onTap: widget.onTap, // LogOut,
-        child: Row(children: <Widget>[
-          IconButton(
-              icon: Icon(widget.icon), //Icons.logout),
-              color: widget.color,
-              onPressed: () => widget.onTap),
-          new Text(
-            widget.text,
-            style: TextStyle(
-              color: widget.color,
-            ),
-          )
-        ]));
   }
 }

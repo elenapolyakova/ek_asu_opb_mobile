@@ -17,7 +17,8 @@ class _LoginPage extends State<LoginPage> {
   String _errorMessage = "";
   bool _showErrorPin = false;
 
-  final _sizeTextBlack = const TextStyle(fontSize: 20.0, color: Colors.black);
+  final _sizeTextBlack =
+      const TextStyle(fontSize: 20.0, color: Color(0xFF252A0E));
   final _sizeTextWhite = const TextStyle(fontSize: 20.0, color: Colors.white);
   final formKey = new GlobalKey<FormState>();
   final pinFormKey = new GlobalKey<FormState>();
@@ -29,8 +30,8 @@ class _LoginPage extends State<LoginPage> {
         body: new Container(
           decoration: BoxDecoration(
               image: DecorationImage(
-                  image: AssetImage("assets/images/background.jpg"),
-                  fit: BoxFit.fill)),
+                  image: AssetImage("assets/images/LoginScreenBack.png"),
+                  fit: BoxFit.fitWidth)),
           child: new Center(
             child: new Form(
                 key: formKey,
@@ -161,9 +162,13 @@ class _LoginPage extends State<LoginPage> {
   signIn() async {
     bool isAuthorize = await auth.authorize(_email, _password);
     bool isSet = false;
+    bool isValidRole = false;
     if (isAuthorize) {
-     // Department.loadFromOdoo();
+      // Department.loadFromOdoo();
       isSet = await auth.setUserData();
+      if (isSet) {
+        //isValidRole = (await auth.getUserInfo()).f_user_role_txt;
+      }
     }
 
     setState(() {
@@ -174,7 +179,7 @@ class _LoginPage extends State<LoginPage> {
       else
         _errorMessage = "";
     });
-    if (isSet && isAuthorize) {
+    if (_errorMessage == ""){//(isSet && isAuthorize) {
       showSetPinDialog(); // возможно проверять pin в storage? если есть не запрашивать заново? но если пользователь его забыл...
     }
   }
