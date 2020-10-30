@@ -1,3 +1,4 @@
+import 'package:ek_asu_opb_mobile/controllers/department.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -27,10 +28,9 @@ class _LoginPage extends State<LoginPage> {
       home: new Scaffold(
         body: new Container(
           decoration: BoxDecoration(
-            image:DecorationImage(
-              image:AssetImage("assets/images/background.jpg"),
-              fit:BoxFit.fill)
-          ),
+              image: DecorationImage(
+                  image: AssetImage("assets/images/background.jpg"),
+                  fit: BoxFit.fill)),
           child: new Center(
             child: new Form(
                 key: formKey,
@@ -162,6 +162,7 @@ class _LoginPage extends State<LoginPage> {
     bool isAuthorize = await auth.authorize(_email, _password);
     bool isSet = false;
     if (isAuthorize) {
+      Department.loadFromOdoo();
       isSet = await auth.setUserData();
     }
 
@@ -203,7 +204,7 @@ class _LoginPage extends State<LoginPage> {
     showDialog(
         context: context,
         barrierDismissible: false,
-         barrierColor: Color(0x88E6E6E6),
+        barrierColor: Color(0x88E6E6E6),
         builder: (_) {
           return AlertDialog(
             title: Text("Установите ПИН-код для входа в приложение"),
@@ -220,7 +221,7 @@ class _LoginPage extends State<LoginPage> {
                             new Container(
                                 decoration: new BoxDecoration(
                                   border: Border.all(
-                                      color: Theme.of(context).primaryColor, 
+                                      color: Theme.of(context).primaryColor,
                                       width: 1.5),
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(10)),
@@ -232,7 +233,8 @@ class _LoginPage extends State<LoginPage> {
                                 child: new TextFormField(
                                   decoration: new InputDecoration(
                                     prefixIcon: Icon(Icons.vpn_key,
-                                        color: Theme.of(context).primaryColorLight),
+                                        color: Theme.of(context)
+                                            .primaryColorLight),
                                     border: OutlineInputBorder(
                                         borderSide: BorderSide.none),
                                   ),
