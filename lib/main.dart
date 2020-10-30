@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/loginPage.dart';
-import 'package:ek_asu_opb_mobile/homeScreen.dart';
+import 'package:ek_asu_opb_mobile/homeScreen_log.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'utils/authenticate.dart' as auth;

@@ -29,7 +29,7 @@ class _LoginPage extends State<LoginPage> {
           decoration: BoxDecoration(
             image:DecorationImage(
               image:AssetImage("assets/images/background.jpg"),
-              fit:BoxFit.fitWidth)
+              fit:BoxFit.fill)
           ),
           child: new Center(
             child: new Form(

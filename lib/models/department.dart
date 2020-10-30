@@ -17,22 +17,19 @@ class Department extends Models {
   final String name;
   final String short_name;
   final int railway_id;
-  final bool active;
+  final int parent_id;
+  final String active;
 
   Department(
-      {this.id, this.name, this.short_name, this.railway_id, this.active});
+      {this.id, this.name, this.short_name, this.railway_id, this.parent_id, this.active});
 
   factory Department.fromJson(Map<String, dynamic> json) => new Department(
       id: json["id"],
       name: getStr(json["name"]),
       short_name: getStr(json["short_name"]),
       railway_id: getIdFromList(json["rel_railway_id"]),
-      active: (json["active"] == true));
-
-    Department fromJson(Map<String, dynamic> json) {
-    return Department.fromJson(json);
-  }
-
+      parent_id: getIdFromList(json["parent_id"]),
+      active: (json["active"] == true).toString());
 
   Map<String, dynamic> toJson() {
     return {
@@ -40,6 +37,7 @@ class Department extends Models {
       'name': name,
       'short_name': short_name,
       'railway_id': railway_id,
+      'parent_id': parent_id,
       'active': active
     };
   }

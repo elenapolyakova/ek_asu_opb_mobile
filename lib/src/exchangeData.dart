@@ -1,4 +1,3 @@
-
 import 'package:ek_asu_opb_mobile/src/odooClient.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -30,7 +29,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
 
   for (int i = 0; i < dicts.length; i++) {
     try {
-     controllers.Log.insert(dicts[i]);
+      controllers.Log.insert(dicts[i]);
       dynamic lastUpdate = isLastUpdate ? await getLastUpdate(dicts[i]) : null;
       switch (dicts[i]) {
         case 'railway':
@@ -90,7 +89,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
                   dataList[j] as Map<String, dynamic>);
               break;
             case 'user':
-              await controllers.UserInfo.insert('user',
+              await controllers.User.insert(
                   dataList[j] as Map<String, dynamic>);
               break;
           } //switch
@@ -99,7 +98,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
         var recordCount = (data as List<dynamic>).length.toString();
         print('Recived $recordCount records');
         controllers.Log.insert('Recived $recordCount records');
-        controllers.Log.insert( "----------------------------------------");
+        controllers.Log.insert("----------------------------------------");
 
         result.add({
           dicts[i]: [1, recordCount]

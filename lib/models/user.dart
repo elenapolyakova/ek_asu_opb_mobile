@@ -1,18 +1,8 @@
-import "dart:convert";
+
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
 
-/*UserInfo userInfoFromJson(String str) {
-  final jsonData = json.decode(str);
-  return UserInfo.fromJson(jsonData);
-}
-
-String userInfoToJson(UserInfo data) {
-  final dyn = data.toJson();
-  return json.encode(dyn);
-}*/
-
-class UserInfo extends Models {
+class User extends Models {
   int id;
   String login;
   final String f_user_role_txt;
@@ -21,8 +11,10 @@ class UserInfo extends Models {
   final int railway_id;
   final String email;
   final String phone;
+  final String active;
+  final String function;
 
-  UserInfo(
+  User(
       {this.id,
       this.login,
       this.f_user_role_txt,
@@ -30,14 +22,16 @@ class UserInfo extends Models {
       this.department_id,
       this.railway_id,
       this.email,
-      this.phone});
+      this.phone,
+      this.active,
+      this.function});
 
-
-  UserInfo fromJson(Map<String, dynamic> json) {
-    return UserInfo.fromJson(json);
+  User fromJson(Map<String, dynamic> json) {
+    return User.fromJson(json);
   }
-  factory UserInfo.fromJson(Map<String, dynamic> json) {
-    return new UserInfo(
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return new User(
         id: json["id"],
         login: json["login"],
         f_user_role_txt: getStr(json["f_user_role_txt"]),
@@ -45,7 +39,9 @@ class UserInfo extends Models {
         department_id: getIdFromList(json["department_id"]),
         railway_id: getIdFromList(json["rel_railway_id"]),
         email: getStr(json["email"]),
-        phone: getStr(json["phone"]));
+        phone: getStr(json["phone"]),
+        active: (json["active"] == true).toString(),
+        function:  getStr(json["function"]));
   }
 
   Map<String, dynamic> toJson() {
@@ -57,7 +53,9 @@ class UserInfo extends Models {
       'department_id': department_id,
       'railway_id': railway_id,
       'email': email,
-      'phone': phone
+      'phone': phone,
+      'active': active,
+      'function': function
     };
   }
 
@@ -65,7 +63,7 @@ class UserInfo extends Models {
   // each dog when using the print statement.
   @override
   String toString() {
-    return 'userInfo{uid: $id, login: $login, ' +
+    return 'user{uid: $id, login: $login, ' +
         ' role_id: $f_user_role_txt, display_name: $display_name, }';
   }
 }

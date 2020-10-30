@@ -20,31 +20,25 @@ class _HomeScreen extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    loadLog();
+    // loadLog();
 
     auth.checkLoginStatus(context).then((isLogin) {
       if (isLogin) {
-        setState(() {
-          auth.getUserInfo().then((userInfo) => {_userInfo = userInfo});
-        });
+        setState(() {});
         checkConnection().then((isConnect) {
           if (isConnect) {
-            auth.checkSession(context).then((isSessionExist) {
-              if (isSessionExist) {
-                controllers.Railway.selectAll().then((rows) {
-                  controllers.Log.insert('railway count ${rows.length}');
-                  controllers.Department.selectAll().then((rows) {
-                    controllers.Log.insert('department count ${rows.length}');
-                    controllers.UserInfo.selectAll('user').then((rows) {
-                      controllers.Log.insert('user count ${rows.length}');
-                      exchange.getDictionaries(all: true).then((result) {
-                        loadLog();
-                      }); //getDictionary
-                    });
-                  });
-                });
-              } //isSessionExist = true
-            }); //checkSession
+            auth.getUserInfo().then((userInfo) {
+              _userInfo = userInfo;
+              setState(() {});
+              auth.checkSession(context).then((isSessionExist) {
+                if (isSessionExist) {
+                  exchange.getDictionaries(all: true).then((result) {
+                    // loadLog();
+                  }); //getDictionary
+
+                } //isSessionExist = true
+              }); //checkSession
+            });
           } //isConnect == true
         }); //checkConnection
       } //isLogin == true
@@ -53,23 +47,6 @@ class _HomeScreen extends State<HomeScreen> {
 
   void LogOut() {
     auth.LogOut(context);
-  }
-
-  void loadLog() {
-    logRows.clear();
-   controllers.Log.selectAll().then((data) {
-      data.forEach((logItem) {
-        logRows.add("${logItem['date']}: ${logItem['message']}");
-      }); //forEach
-      setState(() => {});
-    }); //getLog
-  }
-
-  void clearLog() {
-   controllers.Log.deleteAll();
-    setState(() {
-      logRows.clear();
-    });
   }
 
   void planScreen() {
@@ -84,75 +61,71 @@ class _HomeScreen extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
-        appBar: new AppBar(
-            title: new Text(
-                '${_userInfo != null ? _userInfo.display_name : ""}',
-                style:
-                    new TextStyle(color: Theme.of(context).primaryColorLight)),
-            leading: null,
-            automaticallyImplyLeading: false,
-            backgroundColor: Theme.of(context).primaryColorDark,
-            actions: <Widget>[
-              new IconButton(
-                  icon: const Icon(Icons.help_outline),
-                  tooltip: 'Рабочая документация',
-                  color: Theme.of(context).buttonColor,
-                  onPressed: () => {}),
-              new IconButton(
-                  icon: const Icon(Icons.logout),
-                  color: Theme.of(context).buttonColor,
-                  tooltip: 'Выход',
-                  onPressed: LogOut),
-            ]),
-        /*floatingActionButton: FloatingActionButton.extended(
+      appBar: new AppBar(
+          leading: null,
+          title: TextIcon(
+              icon: Icons.account_circle_rounded,
+              text: '${_userInfo != null ? _userInfo.display_name : ""}',
+              onTap: null,
+              color: Theme.of(context).primaryColorLight),
+          automaticallyImplyLeading: false,
+          backgroundColor: Theme.of(context).primaryColorDark,
+          actions: <Widget>[
+            Padding(
+                padding: EdgeInsets.only(right: 10),
+                child: TextIcon(
+                    icon: Icons.logout,
+                    text: 'Выход',
+                    onTap: LogOut,
+                    color: Theme.of(context).buttonColor)),
+          ]),
+      /*floatingActionButton: FloatingActionButton.extended(
           onPressed: () => UrlLauncher.launch("tel://$_supportPhoneNumber"),
           label: Text('Служба поддержки'),
           icon: Icon(Icons.phone),
           backgroundColor: Colors.green,
         ),*/
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => {clearLog()},
-          label: Text('Очистить лог'),
-          icon: Icon(Icons.delete_outline),
-          backgroundColor: Theme.of(context).primaryColor,
-        ),
-        body: Container(
-            padding: EdgeInsets.all(10),
-            child: ListView(
-                children: List<Widget>.generate(
-                    logRows.length,
-                    (index) => Container(
-                        color: index % 2 == 0
-                            ? Colors.white
-                            : Theme.of(context).shadowColor,
-                        child: Text(logRows[index]
-                            .toString())))) /* new Padding(
-            padding: new EdgeInsets.only(bottom: 50.0),
-            child: new Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-               new Expanded(
-                  child: new Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      new TileButton("Планирование", planScreen),
-                      new TileButton("Учёт первичных сведений", emptyRoute),
-                    ],
-                  ),
-                ),
-                new Expanded(
-                  child: new Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      new TileButton("Формирование отчетности", emptyRoute),
-                      new TileButton("Просмотр карты", emptyRoute),
-                    ],
-                  ),
-                ),
-              ],
-            ))
-            */
-            ));
+
+      body: Container(
+          padding: EdgeInsets.all(10),
+          child: ListView(
+              children: List<Widget>.generate(
+                  logRows.length,
+                  (index) => Container(
+                      color: index % 2 == 0
+                          ? Colors.white
+                          : Theme.of(context).shadowColor,
+                      child: Text(logRows[index].toString()))))),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Theme.of(context).bottomAppBarColor,
+        selectedItemColor: Theme.of(context).primaryColorDark ,
+        unselectedItemColor: Theme.of(context).primaryColor ,
+        selectedFontSize: 14,
+        unselectedFontSize: 14,
+        onTap: (value) {
+          // Respond to item press.
+        },
+        items: [
+          BottomNavigationBarItem(
+            label: 'Favorites',
+            icon: Icon(Icons.favorite),
+          ),
+          BottomNavigationBarItem(
+            label: 'Music',
+            icon: Icon(Icons.music_note),
+          ),
+          BottomNavigationBarItem(
+            label: 'Places',
+            icon: Icon(Icons.location_on),
+          ),
+          BottomNavigationBarItem(
+            label: 'News',
+            icon: Icon(Icons.library_books),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -187,5 +160,36 @@ class _TileButton extends State<TileButton> {
         ),
       ),
     ));
+  }
+}
+
+class TextIcon extends StatefulWidget {
+  IconData icon;
+  String text;
+  Function onTap;
+  Color color;
+
+  TextIcon({this.icon, this.text = "", this.onTap, this.color});
+  @override
+  State<TextIcon> createState() => _TextIcon();
+}
+
+class _TextIcon extends State<TextIcon> {
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+        onTap: widget.onTap, // LogOut,
+        child: Row(children: <Widget>[
+          IconButton(
+              icon: Icon(widget.icon), //Icons.logout),
+              color: widget.color,
+              onPressed: () => widget.onTap),
+          new Text(
+            widget.text,
+            style: TextStyle(
+              color: widget.color,
+            ),
+          )
+        ]));
   }
 }

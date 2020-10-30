@@ -102,8 +102,8 @@ Future<bool> setUserData() async {
         _isSameUser = true;
     }
 
-    await controllers.UserInfo.deleteAll('userInfo');
-   await controllers.UserInfo.insert('userInfo', _currentUser.toJson());
+    await controllers.UserInfo.deleteAll();
+   await controllers.UserInfo.insert( _currentUser.toJson());
 
     return true;
   } catch (e) {
