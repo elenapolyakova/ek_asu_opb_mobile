@@ -17,25 +17,29 @@ class User extends Controllers {
     return await DBProvider.db.selectAll(_tableName);
   }
 
-  static loadFromOdoo({limit = 0}) async {
-    List<dynamic> json = await getDataWithAttemp(
-        'eco.department',
-        'search_read',
-        [
-          [],
-          [
-            'login',
-            'f_user_role_txt',
-            'display_name',
-            'department_id',
-            'railway_id',
-            'email',
-            'phone',
-            'active',
-            'function',
-          ]
-        ],
-        limit ? {'limit': limit} : {});
+  static Future<String> getName(id) async {
+    Map<String, String> res = await DBProvider.db.selectById(_tableName, id);
+    if (res != null) return res['login'];
+    return null;
+  }
+
+  static loadFromOdoo([limit]) async {
+    List<dynamic> json = await getDataWithAttemp('res.users', 'search_read', [
+      [],
+      [
+        'login',
+        'f_user_role_txt',
+        'display_name',
+        'department_id',
+        'railway_id',
+        'email',
+        'phone',
+        'active',
+        'function',
+      ]
+    ], {
+      'limit': limit
+    });
     DBProvider.db.deleteAll(_tableName);
     json.forEach((e) => insert(e));
   }

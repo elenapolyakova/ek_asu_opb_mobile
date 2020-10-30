@@ -31,7 +31,7 @@ class DBProvider {
             "CREATE TABLE department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER,  active TEXT)");
         await db.execute(
             "CREATE TABLE user(id INTEGER PRIMARY KEY, login TEXT,  display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT)");
-      
+
         await db.execute("CREATE TABLE log(date TEXT, message TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS userInfo(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT)");
@@ -61,6 +61,8 @@ class DBProvider {
         "CREATE TABLE department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER, active TEXT)");
     await db.execute(
         "CREATE TABLE user(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT)");
+    await db.execute(
+        "CREATE TABLE plan(id INTEGER PRIMARY KEY, odoo_id INTEGER, type TEXT, name TEXT, railway_id INTEGER, year INTEGER, date_set TEXT, user_set_id INTEGER, state TEXT)");
   }
 
   Future<void> reCreateTable() async {

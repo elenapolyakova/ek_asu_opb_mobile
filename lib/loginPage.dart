@@ -164,7 +164,11 @@ class _LoginPage extends State<LoginPage> {
     bool isSet = false;
     bool isValidRole = false;
     if (isAuthorize) {
+<<<<<<< HEAD
       // Department.loadFromOdoo();
+=======
+      // Department.loadFromOdoo(1);
+>>>>>>> 8c9d2eb7e54150ce13d309240b9e95a000580379
       isSet = await auth.setUserData();
       if (isSet) {
         //isValidRole = (await auth.getUserInfo()).f_user_role_txt;

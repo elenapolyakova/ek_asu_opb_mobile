@@ -6,9 +6,7 @@ String getStr(dynamic source) {
 
 //not for bool field!
 dynamic getObj(dynamic source) {
-  if (source is bool) 
-  if (!source) 
-  return null;
+  if (source is bool) if (!source) return null;
   return source;
 }
 
@@ -44,4 +42,16 @@ String slice(String subject, [int start = 0, int end]) {
   }
 
   return subject.substring(_realStart, _realEnd);
+}
+
+Map<String, dynamic> unpackListId(listId) {
+  Map<String, dynamic> res = {
+    'id': null,
+    'name': null,
+  };
+  if (!(listId is bool) && listId != null && listId.length > 0) {
+    res['id'] = listId[0];
+    res['name'] = listId[1];
+  }
+  return res;
 }

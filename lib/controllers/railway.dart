@@ -14,18 +14,22 @@ class Railway extends Controllers {
     return await DBProvider.db.selectAll(_tableName);
   }
 
-  static loadFromOdoo({limit = 0}) async {
-    List<dynamic> json = await getDataWithAttemp(
-        'eco.department',
-        'search_read',
-        [
-          [],
-          [
-            'name',
-            'short_name',
-          ]
-        ],
-        limit ? {'limit': limit} : {});
+  static Future<String> getName(id) async {
+    Map<String, String> res = await DBProvider.db.selectById(_tableName, id);
+    if (res != null) return res['name'];
+    return null;
+  }
+
+  static loadFromOdoo([limit]) async {
+    List<dynamic> json = await getDataWithAttemp('eco.railway', 'search_read', [
+      [],
+      [
+        'name',
+        'short_name',
+      ]
+    ], {
+      'limit': limit
+    });
     DBProvider.db.deleteAll(_tableName);
     json.forEach((e) => insert(e));
   }
