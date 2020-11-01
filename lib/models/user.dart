@@ -64,6 +64,6 @@ class User extends Models {
   @override
   String toString() {
     return 'user{uid: $id, login: $login, ' +
-        ' role_id: $f_user_role_txt, display_name: $display_name, }';
+        ' f_user_role_txt: $f_user_role_txt, display_name: $display_name, }';
   }
 }

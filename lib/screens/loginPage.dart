@@ -2,7 +2,7 @@ import 'package:ek_asu_opb_mobile/controllers/department.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'utils/authenticate.dart' as auth;
+import '../utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 
 class LoginPage extends StatefulWidget {
@@ -222,6 +222,8 @@ class _LoginPage extends State<LoginPage> {
         builder: (_) {
           return AlertDialog(
             title: Text("Установите ПИН-код для входа в приложение"),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12.0))),
             backgroundColor: Theme.of(context).primaryColor,
             contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             content: StatefulBuilder(builder: (context, StateSetter setState) {

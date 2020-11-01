@@ -34,7 +34,9 @@ class DBProvider {
 
         await db.execute("CREATE TABLE log(date TEXT, message TEXT)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS userInfo(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT)");
+            "CREATE TABLE userInfo(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT)");
+        await db.execute(
+            "CREATE TABLE plan(id INTEGER PRIMARY KEY, odoo_id INTEGER, type TEXT, name TEXT, railway_id INTEGER, year INTEGER, date_set TEXT, user_set_id INTEGER, state TEXT)");
       },
       onOpen: (db) async {
         await db.execute(
@@ -45,7 +47,7 @@ class DBProvider {
 
       // Set the version. This executes the onCreate function and provides a
       // path to perform database upgrades and downgrades.
-      version: 1,
+      version: 2,
     );
   }
 
@@ -54,6 +56,7 @@ class DBProvider {
     await db.execute("DROP TABLE IF EXISTS railway");
     await db.execute("DROP TABLE IF EXISTS department");
     await db.execute("DROP TABLE IF EXISTS user");
+
     // await db.execute("DROP TABLE IF EXISTS log");
     await db.execute(
         "CREATE TABLE railway(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER)");
@@ -61,12 +64,14 @@ class DBProvider {
         "CREATE TABLE department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER, active TEXT)");
     await db.execute(
         "CREATE TABLE user(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT)");
-    await db.execute(
-        "CREATE TABLE plan(id INTEGER PRIMARY KEY, odoo_id INTEGER, type TEXT, name TEXT, railway_id INTEGER, year INTEGER, date_set TEXT, user_set_id INTEGER, state TEXT)");
-  }
+    }
 
   Future<void> reCreateTable() async {
     final Database db = await database;
+        await db.execute("DROP TABLE IF EXISTS plan");
+      await db.execute(
+        "CREATE TABLE plan(id INTEGER PRIMARY KEY, odoo_id INTEGER, type TEXT, name TEXT, railway_id INTEGER, year INTEGER, date_set TEXT, user_set_id INTEGER, state TEXT)");
+
     //todo пересоздавать таблицы с данными
   }
 

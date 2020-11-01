@@ -4,7 +4,7 @@ import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/src/exchangeData.dart' as exchange;
 //import 'package:ek_asu_opb_mobile/src/db.dart';
-import 'utils/network.dart';
+import '../utils/network.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart" as controllers;
 
 class HomeScreen extends StatefulWidget {

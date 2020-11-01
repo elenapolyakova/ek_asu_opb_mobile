@@ -92,7 +92,7 @@ Future<bool> setUserData() async {
   try {
     _currentUser = await OdooProxy.odooClient.getUserData(session.userId);
     if (_currentUser == null) return false;
-    //todo сравнивать, если изменилось предприятие у пользователя, то загружать новые данные?
+    //todo сравнивать, если изменилось предприятие у пользователя, то загружать новые данные? а если они еще не все ушли в одоо?
     if (oldUserInfo != null) {
       if (oldUserInfo.department_id != _currentUser.department_id) {
         await DBProvider.db.reCreateDictionary();

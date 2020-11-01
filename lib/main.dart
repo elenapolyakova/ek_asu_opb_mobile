@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:ek_asu_opb_mobile/loginPage.dart';
-import 'package:ek_asu_opb_mobile/homeScreen.dart';
+import 'package:ek_asu_opb_mobile/screens/loginPage.dart';
+import 'package:ek_asu_opb_mobile/screens/homeScreen.dart';
+import 'package:ek_asu_opb_mobile/screens/ISPScreen.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'utils/authenticate.dart' as auth;
@@ -9,10 +11,10 @@ import 'utils/config.dart' as config;
 import 'package:ek_asu_opb_mobile/src/exchangeData.dart' as exchange;
 import 'utils/network.dart';
 
-
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft])
+  SystemChrome.setPreferredOrientations(
+          [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight])
       .then((_) {
     runApp(MyApp());
   });
@@ -35,7 +37,8 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
   bool _showErrorPin = false;
   bool _isPinDialogShow = false;
   bool _isTimeExpire = false;
-  final _sizeTextBlack = const TextStyle(fontSize: 20.0, color: Color(0xFF252A0E));
+  final _sizeTextBlack =
+      const TextStyle(fontSize: 20.0, color: Color(0xFF252A0E));
   final _sizeTextWhite = const TextStyle(fontSize: 20.0, color: Colors.white);
   final pinFormKey = new GlobalKey<FormState>();
 
@@ -44,17 +47,17 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
     return MaterialApp(
         navigatorKey: MyApp.navKey,
         theme: ThemeData(
-          
           primaryColor: Color(0xFFADB439), //салатовый
+          cardColor: Color(0x00ADB439), //салатовый,
           accentColor: Color(0xFF465C0B), //оливковый
-          primaryColorLight: Color(0xFFEFF0D7),//бежевый
-          primaryColorDark: Color(0xFF465C0B),//оливковый
+          primaryColorLight: Color(0xFFEFF0D7), //бежевый
+          primaryColorDark: Color(0xFF465C0B), //оливковый
           buttonColor: Color(0xFF252A0E), //почти черный
-          backgroundColor: Colors.white, 
+          backgroundColor: Colors.white,
           focusColor: Color(0xFF465C0B),
           cursorColor: Color(0xFF252A0E),
           bottomAppBarColor: Colors.white,
-          shadowColor: Color(0xFFE6E6E6), //черый для зебры таблицы
+          shadowColor: Color(0xFFE6E6E6), //cерый для зебры таблицы
           textTheme: TextTheme(bodyText2: TextStyle(color: Colors.black)),
         ),
         navigatorObservers: [routeObserver],
@@ -62,7 +65,8 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
         routes: <String, WidgetBuilder>{
           '/login': (context) => RouteAwareWidget('/login', child: LoginPage()),
           '/home': (context) => RouteAwareWidget('/home', child: HomeScreen()),
-         /* '/planCbt': (context) =>
+          '/ISP': (context) => RouteAwareWidget('/ISP', child: ISPScreen()),
+          /* '/planCbt': (context) =>
               RouteAwareWidget('planCbt', child: PlanCbtScreen()),
           '/planCbtEdit': (context) =>
               RouteAwareWidget('planCbtEdit', child: PlanCbtEditScreen()),*/
@@ -72,7 +76,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-
+    WidgetsFlutterBinding.ensureInitialized();
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -143,7 +147,9 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
           if (isConnect) {
             auth.checkSession(context).then((isSessionExist) {
               if (isSessionExist) {
-                exchange.getDictionaries(all: true, isLastUpdate: true).then((result) {
+                exchange
+                    .getDictionaries(all: true, isLastUpdate: true)
+                    .then((result) {
                   //?
                 }); //getDictionary
               } //isSessionExist = true
@@ -168,6 +174,8 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
         barrierColor: Color(0x88E6E6E6),
         builder: (_) {
           return AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12.0))),
             title: Text("Введите ПИН-код"),
             backgroundColor: Theme.of(context).primaryColor,
             contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),

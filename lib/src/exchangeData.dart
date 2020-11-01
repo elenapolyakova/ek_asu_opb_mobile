@@ -59,10 +59,15 @@ Future<List<Map<String, dynamic>>> getDictionaries(
 
           if (lastUpdate != null) domain.add(lastUpdate);
           listDepIds = await controllers.Department.selectIDs();
-          if (listDepIds.length > 0)
-            domain.add(['department_id', 'in', listDepIds]);
-         // domain.add(['department_id.role', 'in', ['cbt', 'ncop']]); 
-          domain.add(['f_user_role_txt', 'in', [cbtRole, ncopRole]]);
+          if (listDepIds == null) continue;
+            if (listDepIds.length > 0)
+              domain.add(['department_id', 'in', listDepIds]);
+          // domain.add(['department_id.role', 'in', ['cbt', 'ncop']]);
+          domain.add([
+            'f_user_role_txt',
+            'in',
+            [cbtRole, ncopRole]
+          ]);
           data = await getDataWithAttemp('res.users', 'search_read', null, {
             'domain': domain,
             'fields': [

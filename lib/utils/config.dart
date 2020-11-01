@@ -8,11 +8,11 @@ Map<String, Object> _config = {
   "db":	"ek_asu_opb2",
   "password": "1", */
 
-  "cbtRole": "cbt",
-  "ncopRole": "ncop",
-  "attemptCount": 5,
+  "cbtRole": "ЦБТ",
+  "ncopRole": "НЦОП",
+  "attemptCount":1,// 5,
   "limitRecord": 80,
-  "sessionExpire": 10*60, //через какое время запрашиваем ПИН-код, секунд
+  "sessionExpire": 1//0*60, //через какое время запрашиваем ПИН-код, секунд
 };
 
 dynamic getItem(String item) {
