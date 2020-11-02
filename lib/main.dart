@@ -1,18 +1,44 @@
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import 'package:workmanager/workmanager.dart' as WM;
 import 'package:ek_asu_opb_mobile/screens/loginPage.dart';
 import 'package:ek_asu_opb_mobile/screens/homeScreen.dart';
 import 'package:ek_asu_opb_mobile/screens/ISPScreen.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
-import 'utils/authenticate.dart' as auth;
-import 'dart:async';
-import 'utils/config.dart' as config;
 import 'package:ek_asu_opb_mobile/src/exchangeData.dart' as exchange;
+import 'utils/authenticate.dart' as auth;
+import 'utils/config.dart' as config;
 import 'utils/network.dart';
+
+void callbackDispatcher() {
+  WM.Workmanager.executeTask((task, inputData) {
+    print(
+        "Native called background task: task = $task; inputData = $inputData."); //simpleTask will be emitted here.
+    return Future.value(true);
+  });
+}
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Background tasks
+  WM.Workmanager.initialize(
+      callbackDispatcher, // The top level function, aka callbackDispatcher
+      isInDebugMode:
+          true // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
+      );
+  WM.Workmanager.registerPeriodicTask("1", "syn",
+      // When no frequency is provided the default 15 minutes is set.
+      // Minimum frequency is 15 min. Android will automatically change your frequency to 15 min if you have configured a lower frequency.
+      frequency: Duration(minutes: 1),
+      constraints: WM.Constraints(networkType: WM.NetworkType.connected),);
+  WM.Workmanager.registerPeriodicTask("2", "synW/oNetwork",
+      // When no frequency is provided the default 15 minutes is set.
+      // Minimum frequency is 15 min. Android will automatically change your frequency to 15 min if you have configured a lower frequency.
+      frequency: Duration(minutes: 1),
+      initialDelay: Duration(seconds: 1));
   SystemChrome.setPreferredOrientations(
           [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight])
       .then((_) {
