@@ -1,5 +1,6 @@
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import "package:ek_asu_opb_mobile/models/models.dart";
+import "package:ek_asu_opb_mobile/controllers/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 
 class PlanController extends Controllers {
@@ -22,8 +23,8 @@ class PlanController extends Controllers {
   }
 
   static loadFromOdoo([limit]) async {
-    List<dynamic> json =
-        await getDataWithAttemp('mob.main.plan', 'search_read', [
+    List<dynamic> json = await getDataWithAttemp(
+        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
       [],
       [
         'type',
@@ -49,29 +50,31 @@ class PlanController extends Controllers {
 
   static Future<Plan> add(Map<String, dynamic> json) async {
     Plan plan = Plan.fromJson(json);
-    int newItemId = await getDataWithAttemp(_tableName, 'create', [
-      {
-        'type': plan.type,
-        'name': plan.name,
-        'railway_id': plan.railwayId,
-        'year': plan.year,
-        'date_set': plan.dateSet,
-        'user_set_id': plan.userSetId,
-        'state': plan.state,
-      }
-    ], {});
-    plan.odooId = newItemId;
-    await DBProvider.db.insert(_tableName, plan.toJson());
+    // int newItemId = await getDataWithAttemp(_tableName, 'create', [
+    //   {
+    //     'type': plan.type,
+    //     'name': plan.name,
+    //     'railway_id': plan.railwayId,
+    //     'year': plan.year,
+    //     'date_set': plan.dateSet,
+    //     'user_set_id': plan.userSetId,
+    //     'state': plan.state,
+    //   }
+    // ], {});
+    // plan.odooId = newItemId;
+    final resId = await DBProvider.db.insert(_tableName, plan.toJson());
+    await SynController.create(_tableName, resId);
     return plan;
   }
 
   static Future<Plan> edit(Plan plan) async {
-    if (plan.odooId != null)
-      getDataWithAttemp(_tableName, 'write', [
-        [plan.odooId],
-        plan.toJson(true)
-      ], {});
-    await DBProvider.db.update(_tableName, plan.toJson());
+    final resId = await DBProvider.db.update(_tableName, plan.toJson());
+    await SynController.edit(_tableName, resId, plan.odooId);
+    // if (plan.odooId != null)
+    //   getDataWithAttemp(_tableName, 'write', [
+    //     [plan.odooId],
+    //     plan.toJson(true)
+    //   ], {});
     return plan;
   }
 

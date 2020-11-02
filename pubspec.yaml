@@ -38,6 +38,7 @@ dependencies:
   crypto: ^2.1.5
   odoo_rpc: ^0.2.6
   flutter_spinkit: ^4.1.2
+  workmanager: ^0.2.0
 
 dev_dependencies:
   flutter_test:

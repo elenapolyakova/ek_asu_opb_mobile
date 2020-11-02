@@ -43,6 +43,8 @@ class DBProvider {
             "CREATE TABLE IF NOT EXISTS log (date TEXT, message TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS userInfo(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT)");
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS syn (id INTEGER PRIMARY KEY, record_id INTEGER, local_table_name TEXT, method TEXT)");
       },
 
       // Set the version. This executes the onCreate function and provides a
@@ -64,22 +66,22 @@ class DBProvider {
         "CREATE TABLE department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER, active TEXT)");
     await db.execute(
         "CREATE TABLE user(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT)");
-    }
+  }
 
   Future<void> reCreateTable() async {
     final Database db = await database;
-        await db.execute("DROP TABLE IF EXISTS plan");
-      await db.execute(
+    await db.execute("DROP TABLE IF EXISTS plan");
+    await db.execute(
         "CREATE TABLE plan(id INTEGER PRIMARY KEY, odoo_id INTEGER, type TEXT, name TEXT, railway_id INTEGER, year INTEGER, date_set TEXT, user_set_id INTEGER, state TEXT)");
 
     //todo пересоздавать таблицы с данными
   }
 
-  Future<void> insert(String tableName, Map<String, dynamic> values,
+  Future<int> insert(String tableName, Map<String, dynamic> values,
       {ConflictAlgorithm conflictAlgorithm = ConflictAlgorithm.replace}) async {
     final Database db = await database;
 
-    await db.insert(
+    return db.insert(
       tableName,
       values,
       conflictAlgorithm: conflictAlgorithm,
@@ -133,11 +135,11 @@ class DBProvider {
     return maps;
   }
 
-  Future<void> update(String tableName, Map<String, dynamic> values) async {
+  Future<int> update(String tableName, Map<String, dynamic> values) async {
     // Get a reference to the database.
     final Database db = await database;
 
-    await db.update(
+    return db.update(
       tableName,
       values,
       where: "id = ?",
@@ -145,10 +147,10 @@ class DBProvider {
     );
   }
 
-  Future<void> delete(String tableName, int id) async {
+  Future<int> delete(String tableName, int id) async {
     final Database db = await database;
 
-    await db.delete(
+    return db.delete(
       tableName,
       where: "id = ?",
       whereArgs: [id],
