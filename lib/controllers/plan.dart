@@ -48,10 +48,12 @@ class PlanController extends Controllers {
   /// Select the first record matching passed year, type and railwayId.
   /// Returns selected record or null.
   static Future<Plan> select(int year, String type, int railwayId) async {
+    Map<String, dynamic> where = Controllers.getNullSafeWhere(
+        {'year': year, 'type': type, 'railway_id': railwayId});
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
-      where: "year = ? and type = ? and railway_id = ?",
-      whereArgs: [year, type, railwayId],
+      where: where['where'],
+      whereArgs: where['whereArgs'],
     );
     Plan plan;
     if (queryRes.length == 1)
@@ -90,10 +92,14 @@ class PlanController extends Controllers {
       'message': null,
       'id': null,
     };
-    List uniqueChecked = await DBProvider.db.select(_tableName,
-        columns: ['id'],
-        where: "year = ? and type = ? and railway_id = ?",
-        whereArgs: [plan.year, plan.type, plan.railwayId]);
+    Map<String, dynamic> where = Controllers.getNullSafeWhere(
+        {'year': plan.year, 'type': plan.type, 'railway_id': plan.railwayId});
+    List uniqueChecked = await DBProvider.db.select(
+      _tableName,
+      columns: ['id'],
+      where: where['where'],
+      whereArgs: where['whereArgs'],
+    );
     if (uniqueChecked.length > 0) {
       res['code'] = -1;
       res['message'] =
@@ -133,10 +139,14 @@ class PlanController extends Controllers {
       'message': null,
       'id': null,
     };
-    List uniqueChecked = await DBProvider.db.select(_tableName,
-        columns: ['id'],
-        where: "year = ? and type = ? and railway_id = ?",
-        whereArgs: [plan.year, plan.type, plan.railwayId]);
+    Map<String, dynamic> where = Controllers.getNullSafeWhere(
+        {'year': plan.year, 'type': plan.type, 'railway_id': plan.railwayId});
+    List uniqueChecked = await DBProvider.db.select(
+      _tableName,
+      columns: ['id'],
+      where: where['where'],
+      whereArgs: where['whereArgs'],
+    );
     if (uniqueChecked.length > 0) {
       res['code'] = -1;
       res['message'] =

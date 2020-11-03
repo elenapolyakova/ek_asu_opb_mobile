@@ -12,4 +12,19 @@ abstract class Controllers {
   static update() {}
   static delete() {}
   static loadFromOdoo([limit]) async {}
+  static Map<String, dynamic> getNullSafeWhere(Map<String, dynamic> args) {
+    List where = [];
+    List whereArgs = [];
+    args.entries.forEach((el) {
+      String whereEl = el.key;
+      if (el.value == null)
+        whereEl += ' IS NULL';
+      else {
+        whereEl += ' = ?';
+        whereArgs.add(el.value);
+      }
+      where.add(whereEl);
+    });
+    return {'where': where.join(' and '), 'whereArgs': whereArgs};
+  }
 }
