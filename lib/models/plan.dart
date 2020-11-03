@@ -1,8 +1,5 @@
-import "dart:convert";
 import 'package:ek_asu_opb_mobile/controllers/railway.dart'
     as railwayController;
-import 'package:ek_asu_opb_mobile/controllers/user.dart' as userController;
-import 'package:ek_asu_opb_mobile/src/db.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
 
@@ -15,8 +12,10 @@ class Plan extends Models {
   String _railwayName; //Дорога
   int year; //Год
   String dateSet; //Дата утверждения
-  int userSetId; //Подписант
-  String _userSetName; //Подписант
+  String signerName; //Подписант имя
+  String signerPost; //Подписант должность
+  String numSet; //Номер плана
+  bool active; //Действует
   String state; //Состояние
 
   static Map<String, String> typeSelection = {
@@ -29,18 +28,11 @@ class Plan extends Models {
     'approved': 'Утверждено',
   };
 
-  String get railwayName {
+  Future<String> get railwayName async {
     if (_railwayName == null)
-      railwayController.Railway.getName(railwayId)
+      await railwayController.Railway.getName(railwayId)
           .then((name) => {_railwayName = name});
-    return _railwayName;
-  }
-
-  String get userSetName {
-    if (_userSetName == null)
-      userController.User.getName(railwayId)
-          .then((name) => {_userSetName = name});
-    return _userSetName;
+    return Future.value(_railwayName);
   }
 
   String get typeDisplay {
@@ -63,7 +55,10 @@ class Plan extends Models {
       this.dateSet,
       this.name,
       this.railwayId,
-      this.userSetId,
+      this.signerName,
+      this.signerPost,
+      this.numSet,
+      this.active,
       this.state});
 
   factory Plan.fromJson(Map<String, dynamic> json) {
@@ -75,7 +70,10 @@ class Plan extends Models {
       railwayId: unpackListId(json["railway_id"])['id'],
       year: json["year"],
       dateSet: getObj(json["date_set"]),
-      userSetId: unpackListId(json["user_set_id"])['id'],
+      signerName: getObj(json["signer_name"]),
+      signerPost: getObj(json["signer_post"]),
+      numSet: getObj(json["num_set"]),
+      active: json["active"] == 'true',
       state: getObj(json["state"]),
     );
     return res;
@@ -90,7 +88,10 @@ class Plan extends Models {
       'railway_id': railwayId,
       'year': year,
       'date_set': dateSet,
-      'user_set_id': userSetId,
+      'signer_name': signerName,
+      'signer_post': signerPost,
+      'num_set': numSet,
+      'active': active,
       'state': state,
     };
     if (omitId) {

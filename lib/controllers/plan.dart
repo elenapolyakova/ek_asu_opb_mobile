@@ -2,13 +2,10 @@ import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import "package:ek_asu_opb_mobile/models/models.dart";
 import "package:ek_asu_opb_mobile/controllers/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
+import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class PlanController extends Controllers {
   static String _tableName = "plan";
-  static Future<dynamic> insert(Map<String, dynamic> json) async {
-    Plan plan = Plan.fromJson(json); //нужно, чтобы преобразовать одоо rel в id
-    return await DBProvider.db.insert(_tableName, plan.toJson());
-  }
 
   static Future<List<int>> selectIDs() async {
     List<Map<String, dynamic>> maps =
@@ -45,45 +42,146 @@ class PlanController extends Controllers {
               'id': null,
               'odoo_id': e.id,
             })
-        .forEach((e) => insert(e));
+        .forEach((e) => DBProvider.db.insert(_tableName, e));
   }
 
-  static Future<Plan> add(Map<String, dynamic> json) async {
-    Plan plan = Plan.fromJson(json);
-    // int newItemId = await getDataWithAttemp(_tableName, 'create', [
-    //   {
-    //     'type': plan.type,
-    //     'name': plan.name,
-    //     'railway_id': plan.railwayId,
-    //     'year': plan.year,
-    //     'date_set': plan.dateSet,
-    //     'user_set_id': plan.userSetId,
-    //     'state': plan.state,
-    //   }
-    // ], {});
-    // plan.odooId = newItemId;
-    final resId = await DBProvider.db.insert(_tableName, plan.toJson());
-    await SynController.create(_tableName, resId);
+  /// Select the first record matching passed year, type and railwayId.
+  /// Returns selected record or null.
+  static Future<Plan> select(int year, String type, int railwayId) async {
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
+      _tableName,
+      where: "year = ? and type = ? and railway_id = ?",
+      whereArgs: [year, type, railwayId],
+    );
+    Plan plan;
+    if (queryRes.length == 1)
+      plan = Plan.fromJson(queryRes[0]);
+    else if (queryRes.length > 1) {
+      DBProvider.db.insert('log', {
+        'date': nowStr(),
+        'message':
+            "There is more than one record of $_tableName with year=$year, type=$type and railway_id=$railwayId"
+      });
+      plan = Plan.fromJson(queryRes[0]);
+    } else
+      DBProvider.db.insert('log', {
+        'date': nowStr(),
+        'message':
+            "There is no records of $_tableName with year=$year, type=$type and railway_id=$railwayId"
+      });
     return plan;
   }
 
-  static Future<Plan> edit(Plan plan) async {
-    final resId = await DBProvider.db.update(_tableName, plan.toJson());
-    await SynController.edit(_tableName, resId, plan.odooId);
-    // if (plan.odooId != null)
-    //   getDataWithAttemp(_tableName, 'write', [
-    //     [plan.odooId],
-    //     plan.toJson(true)
-    //   ], {});
-    return plan;
+  /// Try to insert into the table.
+  /// ======
+  /// Returns ```{
+  ///   'code':[1|-1|-2|-3],
+  ///   'message':[
+  ///     null|
+  ///     There is already a $_tableName record with year=${plan.year}, type=${plan.type}, railway=${plan.railwayId}|
+  ///     Error updating syn|
+  ///     Error inserting into $_tableName|
+  ///   ]
+  ///   'id':record_id
+  /// }```
+  static Future<Map<String, dynamic>> insert(Plan plan) async {
+    Map<String, dynamic> res = {
+      'code': null,
+      'message': null,
+      'id': null,
+    };
+    List uniqueChecked = await DBProvider.db.select(_tableName,
+        columns: ['id'],
+        where: "year = ? and type = ? and railway_id = ?",
+        whereArgs: [plan.year, plan.type, plan.railwayId]);
+    if (uniqueChecked.length > 0) {
+      res['code'] = -1;
+      res['message'] =
+          'There is already a $_tableName record with year=${plan.year}, type=${plan.type}, railway=${plan.railwayId}';
+      DBProvider.db.insert('log', {'date': nowStr(), 'message': res});
+      return res;
+    }
+    await DBProvider.db.insert(_tableName, plan.toJson()).then((resId) {
+      res['code'] = 1;
+      res['id'] = resId;
+      return SynController.create(_tableName, resId).catchError(() {
+        res['code'] = -2;
+        res['message'] = 'Error updating syn';
+      });
+    }).catchError(() {
+      res['code'] = -3;
+      res['message'] = 'Error inserting into $_tableName';
+    });
+    DBProvider.db.insert('log', {'date': nowStr(), 'message': res});
+    return res;
   }
 
-  static Future<Plan> delete(Plan plan) async {
-    if (plan.odooId != null)
-      getDataWithAttemp(_tableName, 'unlink', [
-        [plan.odooId],
-      ], {});
-    await DBProvider.db.delete(_tableName, plan.id);
-    return plan;
+  /// Try to update a record of the table.
+  /// Returns ```{
+  ///   'code':[1|-1|-2|-3],
+  ///   'message':[
+  ///     null|
+  ///     There is already a $_tableName record with year=${plan.year}, type=${plan.type}, railway=${plan.railwayId}|
+  ///     Error updating syn|
+  ///     Error updating $_tableName|
+  ///   ]
+  ///   'id':null
+  /// }```
+  static Future<Map<String, dynamic>> update(Plan plan) async {
+    Map<String, dynamic> res = {
+      'code': null,
+      'message': null,
+      'id': null,
+    };
+    List uniqueChecked = await DBProvider.db.select(_tableName,
+        columns: ['id'],
+        where: "year = ? and type = ? and railway_id = ?",
+        whereArgs: [plan.year, plan.type, plan.railwayId]);
+    if (uniqueChecked.length > 0) {
+      res['code'] = -1;
+      res['message'] =
+          'There is already a $_tableName record with year=${plan.year}, type=${plan.type}, railway=${plan.railwayId}';
+      DBProvider.db.insert('log', {'date': nowStr(), 'message': res});
+      return res;
+    }
+    await DBProvider.db.update(_tableName, plan.toJson()).then((resId) {
+      res['code'] = 1;
+      res['id'] = resId;
+      return SynController.edit(_tableName, resId, plan.odooId).catchError(() {
+        res['code'] = -2;
+        res['message'] = 'Error updating syn';
+      });
+    }).catchError(() {
+      res['code'] = -3;
+      res['message'] = 'Error updating $_tableName';
+    });
+    DBProvider.db.insert('log', {'date': nowStr(), 'message': res});
+    return res;
+  }
+
+  /// Try to delete a record from the table.
+  /// Returns ```{
+  ///   'code':[1|-2|-3],
+  ///   'message':[null|Error deleting from syn|Error deleting from $_tableName],
+  ///   'id':null
+  /// }```
+  static Future<Map<String, dynamic>> delete(Plan plan) async {
+    Map<String, dynamic> res = {
+      'code': null,
+      'message': null,
+      'id': null,
+    };
+    await DBProvider.db.delete(_tableName, plan.id).then((value) {
+      res['code'] = 1;
+      return SynController.delete(_tableName, plan.id, plan.odooId)
+          .catchError(() {
+        res['code'] = -2;
+        res['message'] = 'Error updating syn';
+      });
+    }).catchError(() {
+      res['code'] = -3;
+      res['message'] = 'Error deleting from $_tableName';
+    });
+    return res;
   }
 }
