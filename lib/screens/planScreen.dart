@@ -1,3 +1,4 @@
+import 'package:ek_asu_opb_mobile/src/exchangeData.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
@@ -5,6 +6,8 @@ import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart' as controllers;
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:flutter/rendering.dart';
+import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import 'dart:async';
 
 final _sizeTextBlack =
     const TextStyle(fontSize: 20.0, color: Color(0xFF252A0E));
@@ -45,10 +48,23 @@ class _PlanScreen extends State<PlanScreen> {
   String tableName;
   int _year;
   String _type;
+  int _railway_id;
   var _tapPosition;
   int _count = 0;
   final GlobalKey _menuKey = new GlobalKey();
   Plan _plan;
+  //создаём копию и при редактировании работаем с ней
+  //если пользователь отменит или ошибка при сохранении - вернем на начальное значение _plan
+  Plan planCopy;
+  List<Map<String, dynamic>> yearList;
+  List<Map<String, dynamic>> railwayList;
+  List<Map<String, dynamic>> stateList;
+  Color color;
+  TextStyle textStyle;
+  String errorTableName;
+  String emptyTableName;
+  String saveError;
+
   _PlanScreen(type) {
     _type = type;
   }
@@ -77,7 +93,7 @@ class _PlanScreen extends State<PlanScreen> {
     {'text': 'Результаты проведенной проверки', 'flex': 2.0}
   ];
 
-  List<PlanItem> planItems = <PlanItem>[
+  List<PlanItem> _planItems = <PlanItem>[
     PlanItem(
         planItemId: 1,
         filial:
@@ -108,32 +124,126 @@ class _PlanScreen extends State<PlanScreen> {
         result: 'Протокол,  приказ, корректирующие меры'),
   ];
 
+  List<PlanItem> planItems = [];
+
   @override
   void initState() {
     super.initState();
     auth.getUserInfo().then((userInfo) {
       _userInfo = userInfo;
       _year = DateTime.now().year;
-      tableName =
-          "ПЛАН\nпроведения комплексных аудитов и целевых проверок организации работы по экологической безопасности на ${_year.toString()} год";
-      showLoading = false;
-      loadData();
-      setState(() {});
+      _railway_id = _userInfo.railway_id;
+      saveError = "";
+      emptyTableName =
+          "ПЛАН\nпроведения комплексных аудитов и целевых проверок организации работы по экологической безопасности"; // на ${_year.toString()} год";
+      errorTableName = "Выберите дорогу для загрузки плана...";
+      //showLoading = false;
+      loadData(); //.then((value) => setState(() => {}));
     });
   }
 
-  void loadData() async {
-    List<Map<String, dynamic>> plans = await controllers.PlanController
-        .selectAll(); //todo переделать на getByParam (_year, _type, _userInfo.railway_id)
-    if (plans != null && plans.length > 0)
-      _plan = Plan.fromJson(plans[0]);
-    else
+  List<Map<String, dynamic>> getYearList(int year) {
+    List<Map<String, dynamic>> yearList = [];
+    for (int i = year - 1; i <= year + 1; i++)
+      yearList.add({"id": i, "value": i});
+    return yearList;
+  }
+
+  Future<List<Map<String, dynamic>>> getRailwayList() async {
+    List<Map<String, dynamic>> result = [];
+    List<Map<String, dynamic>> railwayList =
+        await controllers.Railway.selectAll();
+
+    railwayList.forEach((railway) {
+      result.add(
+          {"id": railway["id"], "value": railway["name"].toString().trim()});
+    });
+
+    return result;
+  }
+
+  bool canEdit() {
+    if (_type == "ncop" && (_railway_id == null)) return false;
+    return true;
+  }
+
+  Future<void> loadData() async {
+    try {
+      showLoadingDialog(context);
+      setState(() => {showLoading = true});
+      yearList = getYearList(_year);
+      railwayList = await getRailwayList();
+      stateList = makeListFromJson(Plan.stateSelection);
+      await reloadPlan();
+      //  reloadPlanItems(); //todo убрать отсюда
+    } catch (e) {} finally {
+      hideDialog(context);
+      showLoading = false;
+      setState(() => {});
+    }
+  }
+
+  Future<void> reloadPlan() async {
+    try {
       _plan =
-          new Plan(type: _type, year: _year, railwayId: _userInfo.railway_id);
+          await controllers.PlanController.select(_year, _type, _railway_id);
+    } catch (e) {}
+
+    if (_plan == null)
+      _plan = new Plan(
+          id: null,
+          type: _type,
+          year: _year,
+          railwayId: _railway_id,
+          active: true,
+          name: canEdit() ? emptyTableName : errorTableName);
+
+    await reloadPlanItems();
+    setState(() => {});
+  }
+
+  Future<void> reloadPlanItems() async {
+    if (canEdit()) //todo потом проверять id <> -1
+      planItems = _planItems;
+    else
+      planItems = [];
   }
 
   @override
   Widget build(BuildContext context) {
+    color = Theme.of(context).buttonColor;
+    textStyle = TextStyle(fontSize: 16.0, color: color);
+
+    final menu = PopupMenuButton(
+      itemBuilder: (_) => getMenu(context),
+      padding: EdgeInsets.all(0.0),
+      onSelected: (value) {
+        switch (value) {
+          case 'edit':
+            editPlanClicked();
+            break;
+          case 'add':
+            addPlanItemClicked();
+            break;
+        }
+      },
+      icon: Icon(
+        Icons.more_vert,
+        color: Theme.of(context).primaryColorDark,
+        size: 30,
+      ),
+      color: Theme.of(context).primaryColor,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12.0))),
+    );
+    String tableName = "";
+    if (_plan != null && _plan.name != null) {
+      if (_plan.name != errorTableName)
+        tableName = '${_plan.name} ${_year.toString()} год';
+      else
+        tableName = '${_plan.name}';
+    }
+
     return new Container(
         decoration: BoxDecoration(
             image: DecorationImage(
@@ -142,12 +252,13 @@ class _PlanScreen extends State<PlanScreen> {
         child: showLoading
             ? Text("")
             : Padding(
-                padding: EdgeInsets.symmetric(horizontal: 70, vertical: 20),
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: Column(children: [
-                  Container(
-                    child: Text(tableName ?? "", textAlign: TextAlign.center),
-                    width: double.infinity,
-                  ),
+                  ListTile(
+                      trailing: menu,
+                      contentPadding: EdgeInsets.all(0),
+                      title: Text(tableName, textAlign: TextAlign.center),
+                      onTap: () {}),
                   Expanded(
                       child: ListView(
                           padding: const EdgeInsets.all(16),
@@ -156,13 +267,6 @@ class _PlanScreen extends State<PlanScreen> {
                           generateTableData(context, planItemHeader, planItems)
                         ])
                       ])),
-                  Container(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: getPanel(context),
-                    ),
-                    width: double.infinity,
-                  )
                 ])));
   }
 
@@ -232,41 +336,121 @@ class _PlanScreen extends State<PlanScreen> {
         child: cell);
   }
 
-  List<Widget> getPanel(BuildContext context) {
-    List<Widget> result = [];
-    result.add(TextIcon(
-      icon: Icons.edit,
-      text: "Редактировать план",
-      onTap: () async {
-        // Plan copyPlan = new Plan.fromJson(plan.toJson());
-        bool result = await showPlanDialog(_plan);
-        if (result != null && result) //иначе перезагружать _plan?
-          setState(() {
-            //   plan = _plan;
-          });
-      },
-      color: Theme.of(context).primaryColorDark,
-    ));
-    result.add(TextIcon(
-      icon: Icons.add,
-      text: "Добавить новую запись",
-      onTap: () async {
-        PlanItem planItem = new PlanItem(planItemId: -1);
-        bool result = await showPlanItemDialog(planItem);
-        if (result != null && result)
-          setState(() {
-            planItems.add(planItem);
-            //todo refresh all list?
-          });
-      },
-      color: Theme.of(context).primaryColorDark,
-    ));
-    result.add(Container(
-        margin: EdgeInsets.symmetric(horizontal: 13), child: Text('год')));
-    if (_type == 'cbt')
-      result.add(Container(
-          margin: EdgeInsets.symmetric(horizontal: 13), child: Text('дорога')));
+  List<PopupMenuItem<String>> getMenu(BuildContext context) {
+    List<PopupMenuItem<String>> result = [];
+    result.add(
+      PopupMenuItem<String>(
+          child: TextIcon(
+            icon: Icons.edit,
+            text: "Редактировать план",
+            margin: 5.0,
+            /* onTap: () */
+            color: Theme.of(context).primaryColorDark,
+          ),
+          value: 'edit'),
+    );
+
+    result.add(
+      PopupMenuItem<String>(
+          child: TextIcon(
+            icon: Icons.add,
+            text: "Добавить пункт",
+            margin: 5.0,
+            /* onTap: () ,*/
+            color: Theme.of(context).primaryColorDark,
+          ),
+          value: 'add'),
+    );
+    result.add(
+      PopupMenuItem<String>(
+          child: Container(
+            margin: EdgeInsets.symmetric(horizontal: 17.0),
+            child: MyDropdown(
+              text: '',
+              width: double.infinity,
+              dropdownValue: _year.toString(),
+              items: yearList,
+              onChange: (value) {
+                setState(() {
+                  _year = int.parse(value);
+                });
+                reloadPlan();
+              },
+              parentContext: context,
+            ),
+          ),
+          value: 'year'),
+    );
+
+    if (_userInfo.f_user_role_txt == cbtRole && _type == "ncop") {
+      result.add(
+        PopupMenuItem<String>(
+            child: Container(
+              margin: EdgeInsets.symmetric(horizontal: 17.0),
+              child: MyDropdown(
+                text: '',
+                width: double.infinity,
+                height: 100,
+                dropdownValue:
+                    _railway_id != null ? _railway_id.toString() : null, //"0",
+                items: railwayList,
+                onChange: (value) {
+                  setState(() {
+                    _railway_id = int.parse(value);
+
+                    reloadPlan();
+                  });
+                  reloadPlan();
+                },
+                parentContext: context,
+              ),
+            ),
+            value: 'railway'),
+      );
+    }
     return result;
+  }
+
+  Future<void> editPlanClicked() async {
+    if (!canEdit()) {
+      Scaffold.of(context).showSnackBar(errorSnackBar(text: errorTableName));
+      return;
+    }
+    saveError = "";
+    planCopy = new Plan(
+        odooId: _plan.odooId,
+        id: _plan.id,
+        type: _plan.type,
+        year: _plan.year,
+        dateSet: _plan.dateSet,
+        name: _plan.name,
+        railwayId: _plan.railwayId,
+        signerName: _plan.signerName,
+        signerPost: _plan.signerPost,
+        numSet: _plan.numSet,
+        active: _plan.active,
+        state: _plan.state);
+    setState(() {});
+    bool result = await showPlanDialog(planCopy);
+    if (result != null && result) //иначе перезагружать _plan?
+      setState(() {
+        _plan = planCopy;
+        ;
+      });
+  }
+
+  Future<void> addPlanItemClicked() async {
+    if (!canEdit()) {
+      Scaffold.of(context).showSnackBar(errorSnackBar(text: errorTableName));
+      return;
+    }
+    PlanItem planItem = new PlanItem(planItemId: -1);
+    bool result = await showPlanItemDialog(planItem);
+    if (result != null && result)
+      setState(() {
+        planItems.add(planItem);
+        //todo refresh all list?
+      });
   }
 
   void _showCustomMenu(int planItemId, int index) {
@@ -331,64 +515,150 @@ class _PlanScreen extends State<PlanScreen> {
         barrierDismissible: true,
         barrierColor: Color(0x88E6E6E6),
         builder: (BuildContext context) {
-          return AlertDialog(
-               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12.0))),
-              backgroundColor: Theme.of(context).primaryColor,
-              content: Container(
-                  width: 500.0,
-                  child: Scaffold(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      body: Form(
-                          key: formPlanKey,
-                          child: Container(
-                              child: Column(children: [
-                            Expanded(
-                                child: Center(
-                                    child: SingleChildScrollView(
-                                        child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceEvenly,
-                                            children: [
-                                  EditTextField(
-                                    text: 'Наименование',
-                                    value: plan.name,
-                                    onSaved: (value) => {plan.name = value},
-                                    context: context,
-                                  ),
-                                  EditTextField(
-                                    text: 'Год',
-                                    value: plan.year,
-                                    onSaved: (value) =>
-                                        {plan.year = int.tryParse(value)},
-                                    context: context,
-                                  ),
-                                  EditTextField(
-                                    text: 'Дата утверждения',
-                                    value: plan.dateSet,
-                                    onSaved: (value) => {plan.dateSet = value},
-                                    context: context,
-                                  ),
-                                  EditTextField(
-                                    text: 'Номер',
-                                    //value: plan.,???
-                                    onSaved: (value) => {},
-                                    context: context,
-                                  ),
-                                  EditTextField(
-                                    text: 'Подписант',
-                                    value: "", //plan.userSetName,
-                                    onSaved: (value) =>
-                                        {}, //plan.userSetName = value},
-                                    context: context,
-                                  ),
-                                ])))),
-                            Container(
-                                child: MyButton(
+          return StatefulBuilder(builder: (context, StateSetter setState) {
+            return AlertDialog(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12.0))),
+                backgroundColor: Theme.of(context).primaryColor,
+                content: Container(
+                    width: 700.0,
+                    margin: EdgeInsets.symmetric(horizontal: 13, vertical: 13),
+                    padding: EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Scaffold(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        body: Form(
+                            key: formPlanKey,
+                            child: Container(
+                                child: Column(children: [
+                              Expanded(
+                                  child: Center(
+                                      child: SingleChildScrollView(
+                                          child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.spaceEvenly,
+                                              children: [
+                                    EditTextField(
+                                      text: 'Наименование',
+                                      value: plan.name,
+                                      onSaved: (value) => {plan.name = value},
+                                      context: context,
+                                      height: 100,
+                                      maxLines: 3,
+                                    ),
+                                    Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceAround,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.baseline,
+                                        children: [
+                                          Container(
+                                              width: 200,
+                                              child: MyDropdown(
+                                                text: 'Статус',
+                                                dropdownValue: plan.state,
+                                                items: stateList,
+                                                onChange: (value) {
+                                                  plan.state = value;
+                                                },
+                                                parentContext: context,
+                                              )),
+                                         if ( _userInfo.f_user_role_txt ==cbtRole &&plan.type == 'ncop') 
+                                         Container(
+                                              child: MyDropdown(
+                                                text: 'Дорога',
+                                                dropdownValue: plan.railwayId !=
+                                                        null
+                                                    ? plan.railwayId.toString()
+                                                    : null, // railwayList[0]['id'].toString(),
+                                                items: railwayList,
+                                                onChange: (value) {
+                                                  plan.railwayId = int.parse(
+                                                      value.toString());
+                                                },
+                                                parentContext: context,
+                                              )),
+                                          Container(
+                                              width: 100,
+                                              child: MyDropdown(
+                                                text: 'Год',
+                                                dropdownValue:
+                                                    plan.year.toString(),
+                                                items: yearList,
+                                                onChange: (value) {
+                                                  plan.year = int.parse(value);
+                                                },
+                                                parentContext: context,
+                                              )),
+                                        ]),
+                                    Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.baseline,
+                                        children: [
+                                          Container(
+                                              width: 400,
+                                              child: EditTextField(
+                                                text: 'Номер',
+                                                value: plan.numSet,
+                                                onSaved: (value) =>
+                                                    {plan.numSet = value},
+                                                context: context,
+                                              )),
+                                          Container(
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 13),
+                                              child: DatePicker(
+                                                  parentContext: context,
+                                                  text: "Дата утверждения",
+                                                  selectedDate:
+                                                      DateTime.tryParse(plan
+                                                              .dateSet
+                                                              .toString()) ??
+                                                          DateTime.now(),
+                                                  onChanged: ((DateTime date) {
+                                                    //   setState(() {
+                                                    plan.dateSet =
+                                                        date.toString();
+                                                    //  });
+                                                  })))
+                                        ]),
+                                    EditTextField(
+                                      text: 'Подписант, ФИО',
+                                      value: plan.signerName,
+                                      onSaved: (value) =>
+                                          {plan.signerName = value},
+                                      context: context,
+                                    ),
+                                    EditTextField(
+                                      text: 'Подписант, должность',
+                                      value: plan.signerPost,
+                                      onSaved: (value) =>
+                                          {plan.signerPost = value},
+                                      context: context,
+                                    )
+                                  ])))),
+                              Container(
+                                  child: Column(children: [
+                              
+                                MyButton(
                                     text: 'принять',
                                     parentContext: context,
-                                    onPress: submitPlan))
-                          ]))))));
+                                    onPress: () {
+                                      submitPlan(setState);
+                                    }),
+                                    Container(
+                                    width: double.infinity,
+                                    height: 20,
+                                    color:  (saveError != "") ? Color(0xAAE57373) : Color(0x00E57373),
+                                    child:   Text('$saveError',
+                                        textAlign: TextAlign.center,
+                                        
+                                        style: TextStyle(
+                                            color: Color(0xFF252A0E))))
+                              ]))
+                            ]))))));
+          });
         });
   }
 
@@ -470,17 +740,47 @@ class _PlanScreen extends State<PlanScreen> {
         });
   }
 
-  void submitPlan() {
+  void submitPlan(setState) async {
     final form = formPlanKey.currentState;
     hideKeyboard();
     if (form.validate()) {
       form.save();
-      bool result = true;
-      Navigator.pop<bool>(context, result);
-      if (result)
-        Scaffold.of(context).showSnackBar(successSnackBar);
-      else
-        Scaffold.of(context).showSnackBar(errorSnackBar);
+      bool hasErorr = false;
+      Map<String, dynamic> result;
+      try {
+        if (planCopy.id == null) {
+          result = await controllers.PlanController.insert(planCopy);
+        } else {
+          result = await controllers.PlanController.update(planCopy);
+        }
+        hasErorr = result["code"] < 0;
+
+        if (hasErorr) {
+          if (result["code"] == -1)
+            setState(() {
+              saveError = 'Уже существует план на ${planCopy.year} год';
+              Timer(new Duration(seconds: 3), () {
+                setState(() {
+                  saveError = "";
+                });
+              });
+            });
+          //  Scaffold.of(context).showSnackBar(errorSnackBar(
+          //      text: 'Уже существует план на ${planCopy.year} год'));
+          else {
+            Navigator.pop<bool>(context, false);
+            Scaffold.of(context).showSnackBar(errorSnackBar());
+          }
+        } else {
+          if (planCopy.id == null) planCopy.id = result["id"];
+
+          Navigator.pop<bool>(context, true);
+          Scaffold.of(context).showSnackBar(successSnackBar);
+        }
+      } catch (e) {
+        Navigator.pop<bool>(context, false);
+        Scaffold.of(context).showSnackBar(errorSnackBar());
+      }
     }
   }
 
@@ -494,7 +794,7 @@ class _PlanScreen extends State<PlanScreen> {
       if (result)
         Scaffold.of(context).showSnackBar(successSnackBar);
       else
-        Scaffold.of(context).showSnackBar(errorSnackBar);
+        Scaffold.of(context).showSnackBar(errorSnackBar());
     }
   }
 

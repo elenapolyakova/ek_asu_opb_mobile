@@ -55,3 +55,10 @@ Map<String, dynamic> unpackListId(listId) {
   }
   return res;
 }
+
+List<Map<String, dynamic>> makeListFromJson(Map<String, dynamic> json) {
+  return List<Map<String, dynamic>>.generate(json.keys.length, (i) {
+    String key = (json.keys.toList())[i];
+    return {'id': key, 'value': json[key]};
+  });
+}

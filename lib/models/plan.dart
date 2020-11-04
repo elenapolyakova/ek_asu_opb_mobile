@@ -80,7 +80,7 @@ class Plan extends Models {
   }
 
   Map<String, dynamic> toJson([omitId = false]) {
-    Map res = {
+    Map<String, dynamic> res = {
       'id': id,
       'odoo_id': odooId,
       'type': type,

@@ -15,8 +15,8 @@ class Railway extends Controllers {
   }
 
   static Future<String> getName(id) async {
-    Map<String, String> res = await DBProvider.db.selectById(_tableName, id);
-    if (res != null) return res['name'];
+    Map<String, dynamic> res = await DBProvider.db.selectById(_tableName, id);
+    if (res != null) return res['name'].toString();
     return null;
   }
 

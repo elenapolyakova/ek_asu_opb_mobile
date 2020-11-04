@@ -32,18 +32,19 @@ class UserInfo extends Models {
       this.email,
       this.phone});
 
-
   UserInfo fromJson(Map<String, dynamic> json) {
     return UserInfo.fromJson(json);
   }
+
   factory UserInfo.fromJson(Map<String, dynamic> json) {
+    dynamic railway = json["rel_railway_id"] ?? json["railway_id"];
     return new UserInfo(
         id: json["id"],
         login: json["login"],
         f_user_role_txt: getStr(json["f_user_role_txt"]),
         display_name: getStr(json["display_name"]),
         department_id: getIdFromList(json["department_id"]),
-        railway_id: getIdFromList(json["rel_railway_id"]),
+        railway_id: getIdFromList(railway),
         email: getStr(json["email"]),
         phone: getStr(json["phone"]));
   }
