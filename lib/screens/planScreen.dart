@@ -554,7 +554,7 @@ class _PlanScreen extends State<PlanScreen> {
                                           Container(
                                               width: 200,
                                               child: MyDropdown(
-                                                text: 'Статус',
+                                                text: 'Состояние',
                                                 dropdownValue: plan.state,
                                                 items: stateList,
                                                 onChange: (value) {
