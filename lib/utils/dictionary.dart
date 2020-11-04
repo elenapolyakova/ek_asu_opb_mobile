@@ -1,24 +1,24 @@
 
 const _typeInspectionList = [
-  {"id": 1, "name": "Комплексный аудит"},
-  {"id": 2, "name": "Целевая"},
-  {"id": 3, "name": "Внеплановая"},
+  {"id": 1, "value": "Комплексный аудит"},
+  {"id": 2, "value": "Целевая"},
+  {"id": 3, "value": "Внеплановая"},
 ];
 
 const _periodInspectionList = [
-  {"id": 1, "name": "I квартал"},
-  {"id": 2, "name": "II квартал"},
-  {"id": 3, "name": "III квартал"},
-  {"id": 4, "name": "IV квартал"},
+  {"id": 1, "value": "I квартал"},
+  {"id": 2, "value": "II квартал"},
+  {"id": 3, "value": "III квартал"},
+  {"id": 4, "value": "IV квартал"},
 ];
 
 const _resultList = [
-  {"id": 1, "name": "Приказ"},
-  {"id": 2, "name": "Протокол"},
-  {"id": 3, "name": "Корректирующие меры"},
+  {"id": 1, "value": "Приказ"},
+  {"id": 2, "value": "Протокол"},
+  {"id": 3, "value": "Корректирующие меры"},
 ];
 
-List<Map<String, Object>> getTypeInspectionListt() => _typeInspectionList;
+List<Map<String, Object>> getTypeInspectionList() => _typeInspectionList;
 Map<String, Object> getTypeInspectionById(int _id) =>
     _typeInspectionList.firstWhere((result) => result["id"] == _id);
 

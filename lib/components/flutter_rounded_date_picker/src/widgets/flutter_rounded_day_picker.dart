@@ -410,7 +410,7 @@ class FlutterRoundedDayPicker extends StatelessWidget {
         children: <Widget>[
           Container(
             decoration: BoxDecoration(
-                color: style?.backgroundHeaderMonth, borderRadius: orientation == Orientation.landscape ? BorderRadius.only(topRight: Radius.circular(borderRadius)) : null),
+                color: style?.backgroundHeaderMonth, borderRadius: orientation == Orientation.landscape ? BorderRadius.only(topRight: Radius.circular(borderRadius), topLeft: Radius.circular(borderRadius)) : null),
             padding: style?.paddingMonthHeader,
 //            height: _kDayPickerRowHeight,
             child: Center(

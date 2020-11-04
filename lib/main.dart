@@ -7,6 +7,7 @@ import 'package:workmanager/workmanager.dart' as WM;
 import 'package:ek_asu_opb_mobile/screens/loginPage.dart';
 import 'package:ek_asu_opb_mobile/screens/homeScreen.dart';
 import 'package:ek_asu_opb_mobile/screens/ISPScreen.dart';
+import 'package:ek_asu_opb_mobile/screens/inspectionScreen.dart';
 import 'package:ek_asu_opb_mobile/src/exchangeData.dart' as exchange;
 import 'utils/authenticate.dart' as auth;
 import 'utils/config.dart' as config;
@@ -100,8 +101,9 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
         home: RouteAwareWidget('/home', child: HomeScreen()),
         routes: <String, WidgetBuilder>{
           '/login': (context) => RouteAwareWidget('/login', child: LoginPage()),
-          '/home': (context) => RouteAwareWidget('/home', child: HomeScreen()),
+          '/home': (context) => RouteAwareWidget('/inspectionhome', child: HomeScreen()),
           '/ISP': (context) => RouteAwareWidget('/ISP', child: ISPScreen()),
+          '/inspection': (context) => RouteAwareWidget('/inspection', child: InspectionScreen(context: context)),
           /* '/planCbt': (context) =>
               RouteAwareWidget('planCbt', child: PlanCbtScreen()),
           '/planCbtEdit': (context) =>

@@ -1649,7 +1649,7 @@ class _TimePickerDialogState extends State<_TimePickerDialog> {
 
           final radius = Radius.circular(widget.borderRadius);
           final borderRadiusData =
-              orientation == Orientation.landscape ? BorderRadius.only(topRight: radius, bottomRight: radius) : BorderRadius.only(bottomLeft: radius, bottomRight: radius);
+              orientation == Orientation.landscape ? BorderRadius.only(topLeft: radius, topRight: radius, bottomRight: radius) : BorderRadius.only(bottomLeft: radius, bottomRight: radius);
 
           final Widget pickerAndActions = Container(
             decoration: BoxDecoration(

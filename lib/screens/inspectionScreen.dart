@@ -1,29 +1,26 @@
-
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
-import 'package:ek_asu_opb_mobile/src/exchangeData.dart' as exchange;
-import 'package:ek_asu_opb_mobile/utils/network.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/screens/screens.dart' as screens;
-import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
-import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:ek_asu_opb_mobile/screens/planScreen.dart'; //todo delete when model PlanItem exists
 
-class HomeScreen extends StatefulWidget {
+class InspectionScreen extends StatefulWidget {
   BuildContext context;
 
-  HomeScreen({this.context});
   @override
-  State<HomeScreen> createState() => _HomeScreen();
+  InspectionScreen({this.context});
+  @override
+  State<InspectionScreen> createState() => _InspectionScreen();
 }
 
-class _HomeScreen extends State<HomeScreen> {
+class _InspectionScreen extends State<InspectionScreen> {
   UserInfo _userInfo;
   List<Map<String, dynamic>> _navigationMenu;
   int _selectedIndex = 0;
   bool showLoading = true;
   final sizeTextBlack = TextStyle(fontSize: 17.0, color: Color(0xFF252A0E));
-  final spinkit = SpinKitFadingCircle(color: Color(0xFFADB439));
+  PlanItem planItem;
 
   Map<String, dynamic> screenList = {};
 
@@ -35,44 +32,24 @@ class _HomeScreen extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsFlutterBinding.ensureInitialized();
+    auth.getUserInfo().then((userInfo) {
+      _userInfo = userInfo;
+      _navigationMenu = getNavigationMenu(userInfo.f_user_role_txt);
 
-    // _navigationMenu = getNavigationMenu("");
-    auth.checkLoginStatus(context).then((isLogin) {
-      if (isLogin) {
-        showLoadingDialog(context);
-        auth.getUserInfo().then((userInfo) {
-          _userInfo = userInfo;
-          _navigationMenu = getNavigationMenu(userInfo.f_user_role_txt);
-
-          setState(() {});
-          checkConnection().then((isConnect) {
-            if (isConnect) {
-              auth.checkSession(context).then((isSessionExist) {
-                if (isSessionExist) {
-                  exchange.getDictionaries(all: true).then((result) {
-                    setState(() {
-                      showLoading = false;
-                      hideDialog(context);
-                    });
-                  }); //getDictionary
-                } //isSessionExist = true
-              }); //checkSession
-
-            } //isConnect == true
-          }); //checkConnection
-        });
-      } //isLogin == true
-    }); //checkLoginStatus
+      showLoading = false;
+      setState(() {});
+    });
   }
 
   List<Map<String, dynamic>> getNavigationMenu(String role_txt) {
     List<Map<String, dynamic>> result = [];
-    if (role_txt == config.getItem('cbtRole')) {
-      result.add(
-          {'key': 'cbt', 'label': 'План ЦБТ', 'icon': Icon(Icons.description)});
-    }
-    result.add(
-        {'key': 'ncop', 'label': 'План НЦОП', 'icon': Icon(Icons.description)});
+
+    result.add({
+      'key': 'inspection',
+      'label': 'План проверки',
+      'icon': Icon(Icons.description)
+    });
+
     result
         .add({'key': 'map', 'label': 'Карта', 'icon': Icon(Icons.location_on)});
     result.add({
@@ -104,13 +81,9 @@ class _HomeScreen extends State<HomeScreen> {
     String screenKey = _navigationMenu[_selectedIndex]["key"];
     if (screenList[screenKey] != null) return screenList[screenKey];
     switch (screenKey) {
-      case "cbt":
+      case 'inspection':
         screenList[screenKey] =
-            screens.PlanScreen(type: screenKey, key: GlobalKey());
-        break;
-      case "ncop":
-        screenList[screenKey] =
-            screens.PlanScreen(type: screenKey, key: GlobalKey());
+            screens.InspectionPlanScreen(context, planItem);
         break;
       case "map":
         screenList[screenKey] = screens.MapScreen();
@@ -129,6 +102,9 @@ class _HomeScreen extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    setState(() {
+      planItem = ModalRoute.of(context).settings.arguments;
+    });
     //, controller: _controller);
     return showLoading
         ? new ConstrainedBox(
@@ -139,13 +115,13 @@ class _HomeScreen extends State<HomeScreen> {
           )
         : new Scaffold(
             appBar: new AppBar(
-                leading: null,
+                //leading: null,
                 title: TextIcon(
                     icon: Icons.account_circle_rounded,
                     text: '${_userInfo != null ? _userInfo.display_name : ""}',
                     onTap: null,
                     color: Theme.of(context).primaryColorLight),
-                automaticallyImplyLeading: false,
+                //  automaticallyImplyLeading: false,
                 backgroundColor: Theme.of(context).primaryColorDark,
                 actions: <Widget>[
                   TextIcon(

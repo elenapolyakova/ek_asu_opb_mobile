@@ -259,7 +259,7 @@ class _FlutterRoundedMonthPickerState extends State<FlutterRoundedMonthPicker> w
       decoration: BoxDecoration(
           color: widget.style?.backgroundPicker,
           borderRadius: orientation == Orientation.landscape
-              ? BorderRadius.only(topRight: Radius.circular(widget.borderRadius))
+              ? BorderRadius.only(topRight: Radius.circular(widget.borderRadius),topLeft: Radius.circular(widget.borderRadius))
               : null),
       // The month picker just adds month navigation to the day picker, so make
       // it the same height as the DayPicker

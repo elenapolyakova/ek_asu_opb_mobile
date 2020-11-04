@@ -538,14 +538,14 @@ class _DatePicker extends State<DatePicker> {
             marginTopArrowPrevious: 20,
             textStyleMonthYearHeader: TextStyle(
                 color: Theme.of(widget.parentContext).primaryColorLight,
-                fontSize: 30), //месяц и год в шапке
+                fontSize: 25), //месяц и год в шапке
 
             textStyleDayHeader: TextStyle(
-                color: Theme.of(widget.parentContext).primaryColorDark,
+                color: Theme.of(widget.parentContext).primaryColor,
                 fontSize: 20), //дни недели
             textStyleDayOnCalendar: TextStyle(
                 color: Theme.of(widget.parentContext).primaryColorDark,
-                fontSize: 30), //дни месяца
+                fontSize: 20), //дни месяца
             textStyleYearButton: TextStyle(
                 color: Theme.of(widget.parentContext).buttonColor,
                 fontSize: 30), //год слева
@@ -566,7 +566,6 @@ class _DatePicker extends State<DatePicker> {
             textStyleYearSelected: TextStyle(
                 fontSize: 25,
                 color: Theme.of(widget.parentContext).primaryColor))
-        //ba
 
         );
     if (picked != null && picked != widget.selectedDate) {
