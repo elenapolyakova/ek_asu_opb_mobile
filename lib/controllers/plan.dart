@@ -107,7 +107,7 @@ class PlanController extends Controllers {
       DBProvider.db.insert('log', {'date': nowStr(), 'message': res});
       return res;
     }
-    await DBProvider.db.insert(_tableName, plan.toJson()).then((resId) {
+    await DBProvider.db.insert(_tableName, plan.toJson(true)).then((resId) {
       res['code'] = 1;
       res['id'] = resId;
       return SynController.create(_tableName, resId).catchError(() {
