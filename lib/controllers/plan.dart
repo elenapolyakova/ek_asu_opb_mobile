@@ -144,8 +144,8 @@ class PlanController extends Controllers {
     List uniqueChecked = await DBProvider.db.select(
       _tableName,
       columns: ['id'],
-      where: where['where'],
-      whereArgs: where['whereArgs'],
+      where: where['where'] + 'and id != ?',
+      whereArgs: where['whereArgs'] + [plan.id],
     );
     if (uniqueChecked.length > 0) {
       res['code'] = -1;
