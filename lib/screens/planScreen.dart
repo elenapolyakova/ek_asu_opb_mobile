@@ -10,12 +10,9 @@ import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'dart:async';
 import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 
-final _sizeTextBlack =
-    const TextStyle(fontSize: 20.0, color: Color(0xFF252A0E));
-final _sizeTextWhite = const TextStyle(fontSize: 20.0, color: Colors.white);
-
-//todo delete
+//todo delete when model exists
 class PlanItem {
+  int planId;
   int planItemId;
   String filial;
   String department;
@@ -24,7 +21,8 @@ class PlanItem {
   String responsible;
   String result;
   PlanItem(
-      {this.planItemId,
+      {this.planId,
+      this.planItemId,
       this.filial,
       this.department,
       this.typeId,
@@ -99,6 +97,7 @@ class _PlanScreen extends State<PlanScreen> {
 
   List<PlanItem> _planItems = <PlanItem>[
     PlanItem(
+        planId: 1,
         planItemId: 1,
         filial:
             'Центральная дирекция по ремонту тягового подвижного состава (ЦТР)',
@@ -108,6 +107,7 @@ class _PlanScreen extends State<PlanScreen> {
         responsible: 'ЦБТ - ЦТР, НЦОП - ТР',
         result: 'Корректирующие меры'),
     PlanItem(
+        planId: 1,
         planItemId: 2,
         filial: 'Дирекция железнодорожных вокзалов  (ДЖВ)',
         department: 'Все РДЖВ, ДЖВ',
@@ -116,6 +116,7 @@ class _PlanScreen extends State<PlanScreen> {
         responsible: 'ЦБТ - ДЖВ,НЦОП - РДЖВ',
         result: 'Корректирующие меры'),
     PlanItem(
+        planId: 1,
         planItemId: 3,
         filial:
             'Территория Южно-Уральской железной дороги подразделения всех хозяйств ОАО «РЖД» и ДЗО (по согласованию)',
@@ -204,12 +205,12 @@ class _PlanScreen extends State<PlanScreen> {
           active: true,
           name: canEdit() ? emptyTableName : errorTableName);
 
-    await reloadPlanItems();
+    await reloadPlanItems(_plan.id);
     setState(() => {});
   }
 
-  Future<void> reloadPlanItems() async {
-    if (canEdit()) //todo потом проверять id <> -1
+  Future<void> reloadPlanItems(int planId) async {
+    if (canEdit()) //todo потом проверять planId != null
       planItems = _planItems;
     else
       planItems = [];
@@ -273,6 +274,11 @@ class _PlanScreen extends State<PlanScreen> {
                           generateTableData(context, planItemHeader, planItems)
                         ])
                       ])),
+                  Container(
+                      child: MyButton(
+                          text: 'test',
+                          parentContext: context,
+                          onPress: testClicked))
                 ])));
   }
 
@@ -514,11 +520,16 @@ class _PlanScreen extends State<PlanScreen> {
   }
 
   Future<void> forwartPlanInspection(int planItemId) async {
-     PlanItem planItem =
-          planItems.firstWhere((planItem) => planItem.planItemId == planItemId);
-  Navigator.pushNamed(context, '/inspection',
-        arguments: planItem);
-
+    PlanItem planItem =
+        planItems.firstWhere((planItem) => planItem.planItemId == planItemId);
+    Map<String, dynamic> args = {
+      'planItemId': planItemId,
+      'filial': planItem.filial,
+      'typeName': getTypeInspectionById(planItem.typeId)["value"],
+      'railwayId': _railway_id,
+      'typePlan': _type
+    };
+    Navigator.pushNamed(context, '/inspection', arguments: args);
   }
 
   void _storePosition(TapDownDetails details) {
@@ -569,7 +580,7 @@ class _PlanScreen extends State<PlanScreen> {
                                         children: [
                                           Container(
                                               width: 200,
-                                              margin: EdgeInsets.only(left: 15) ,
+                                              margin: EdgeInsets.only(left: 15),
                                               child: MyDropdown(
                                                 text: 'Состояние',
                                                 dropdownValue: plan.state,
@@ -579,11 +590,8 @@ class _PlanScreen extends State<PlanScreen> {
                                                 },
                                                 parentContext: context,
                                               )),
-                                        
-                                            
                                           Container(
                                               width: 100,
-                                              
                                               child: MyDropdown(
                                                 text: 'Год',
                                                 dropdownValue:
@@ -594,25 +602,29 @@ class _PlanScreen extends State<PlanScreen> {
                                                 },
                                                 parentContext: context,
                                               )),
-                                              Container(
+                                          Container(
                                               width: 200,
-                                              height: (_userInfo.f_user_role_txt ==
-                                                  cbtRole &&
-                                              plan.type == 'ncop') ? null : 0,
-                                              margin: EdgeInsets.only(right: 15) ,
-                                                child: MyDropdown(
-                                              text: 'Дорога',
-                                              dropdownValue: plan.railwayId !=
-                                                      null
-                                                  ? plan.railwayId.toString()
-                                                  : null, // railwayList[0]['id'].toString(),
-                                              items: railwayList,
-                                              onChange: (value) {
-                                                plan.railwayId =
-                                                    int.parse(value.toString());
-                                              },
-                                              parentContext: context,
-                                            )),
+                                              height:
+                                                  (_userInfo.f_user_role_txt ==
+                                                              cbtRole &&
+                                                          plan.type == 'ncop')
+                                                      ? null
+                                                      : 0,
+                                              margin:
+                                                  EdgeInsets.only(right: 15),
+                                              child: MyDropdown(
+                                                text: 'Дорога',
+                                                dropdownValue: plan.railwayId !=
+                                                        null
+                                                    ? plan.railwayId.toString()
+                                                    : null, // railwayList[0]['id'].toString(),
+                                                items: railwayList,
+                                                onChange: (value) {
+                                                  plan.railwayId = int.parse(
+                                                      value.toString());
+                                                },
+                                                parentContext: context,
+                                              )),
                                         ]),
                                     Row(
                                         mainAxisAlignment:
@@ -900,5 +912,9 @@ class _PlanScreen extends State<PlanScreen> {
 
   void hideKeyboard() {
     SystemChannels.textInput.invokeMethod('TextInput.hide');
+  }
+
+  void testClicked() {
+    print('test');
   }
 }

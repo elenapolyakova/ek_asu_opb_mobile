@@ -3,7 +3,6 @@ import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/screens/screens.dart' as screens;
-import 'package:ek_asu_opb_mobile/screens/planScreen.dart'; //todo delete when model PlanItem exists
 
 class InspectionScreen extends StatefulWidget {
   BuildContext context;
@@ -20,7 +19,7 @@ class _InspectionScreen extends State<InspectionScreen> {
   int _selectedIndex = 0;
   bool showLoading = true;
   final sizeTextBlack = TextStyle(fontSize: 17.0, color: Color(0xFF252A0E));
-  PlanItem planItem;
+  Map<String, dynamic> planItem;
 
   Map<String, dynamic> screenList = {};
 
@@ -82,8 +81,7 @@ class _InspectionScreen extends State<InspectionScreen> {
     if (screenList[screenKey] != null) return screenList[screenKey];
     switch (screenKey) {
       case 'inspection':
-        screenList[screenKey] =
-            screens.InspectionPlanScreen(context, planItem);
+        screenList[screenKey] = screens.InspectionPlanScreen(context, planItem);
         break;
       case "map":
         screenList[screenKey] = screens.MapScreen();
