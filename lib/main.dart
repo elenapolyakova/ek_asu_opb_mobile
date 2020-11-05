@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ek_asu_opb_mobile/controllers/syn.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -15,9 +16,10 @@ import 'utils/network.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void callbackDispatcher() {
-  WM.Workmanager.executeTask((task, inputData) {
-    print(
-        "Native called background task: task = $task; inputData = $inputData."); //simpleTask will be emitted here.
+  WM.Workmanager.executeTask((task, inputData) async {
+    if (task == 'syn') {
+      SynController.syncTask();
+    }
     return Future.value(true);
   });
 }
@@ -35,14 +37,9 @@ void main() {
     "1", "syn",
     // When no frequency is provided the default 15 minutes is set.
     // Minimum frequency is 15 min. Android will automatically change your frequency to 15 min if you have configured a lower frequency.
-    frequency: Duration(minutes: 1),
+    frequency: Duration(minutes: 15),
     constraints: WM.Constraints(networkType: WM.NetworkType.connected),
   );
-  WM.Workmanager.registerPeriodicTask("2", "synW/oNetwork",
-      // When no frequency is provided the default 15 minutes is set.
-      // Minimum frequency is 15 min. Android will automatically change your frequency to 15 min if you have configured a lower frequency.
-      frequency: Duration(minutes: 1),
-      initialDelay: Duration(seconds: 1));
   SystemChrome.setPreferredOrientations(
           [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight])
       .then((_) {
@@ -75,13 +72,11 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      localizationsDelegates: [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
-      supportedLocales: [
-        const Locale('ru', 'RU')
-      ],
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        supportedLocales: [const Locale('ru', 'RU')],
         navigatorKey: MyApp.navKey,
         theme: ThemeData(
           primaryColor: Color(0xFFADB439), //салатовый
@@ -101,9 +96,11 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
         home: RouteAwareWidget('/home', child: HomeScreen()),
         routes: <String, WidgetBuilder>{
           '/login': (context) => RouteAwareWidget('/login', child: LoginPage()),
-          '/home': (context) => RouteAwareWidget('/inspectionhome', child: HomeScreen()),
+          '/home': (context) =>
+              RouteAwareWidget('/inspectionhome', child: HomeScreen()),
           '/ISP': (context) => RouteAwareWidget('/ISP', child: ISPScreen()),
-          '/inspection': (context) => RouteAwareWidget('/inspection', child: InspectionScreen(context: context)),
+          '/inspection': (context) => RouteAwareWidget('/inspection',
+              child: InspectionScreen(context: context)),
           /* '/planCbt': (context) =>
               RouteAwareWidget('planCbt', child: PlanCbtScreen()),
           '/planCbtEdit': (context) =>
