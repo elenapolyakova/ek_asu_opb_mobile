@@ -91,7 +91,7 @@ class Plan extends Models {
       'signer_name': signerName,
       'signer_post': signerPost,
       'num_set': numSet,
-      'active': active,
+      'active': (active == null || !active) ? 'false' : 'true',
       'state': state,
     };
     if (omitId) {
