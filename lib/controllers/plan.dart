@@ -104,7 +104,8 @@ class PlanController extends Controllers {
       res['code'] = -1;
       res['message'] =
           'There is already a $_tableName record with year=${plan.year}, type=${plan.type}, railway=${plan.railwayId}';
-      DBProvider.db.insert('log', {'date': nowStr(), 'message': res});
+      DBProvider.db
+          .insert('log', {'date': nowStr(), 'message': res.toString()});
       return res;
     }
     await DBProvider.db.insert(_tableName, plan.toJson(true)).then((resId) {
@@ -118,7 +119,7 @@ class PlanController extends Controllers {
       res['code'] = -3;
       res['message'] = 'Error inserting into $_tableName';
     });
-    DBProvider.db.insert('log', {'date': nowStr(), 'message': res});
+    DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
     return res;
   }
 
@@ -151,7 +152,8 @@ class PlanController extends Controllers {
       res['code'] = -1;
       res['message'] =
           'There is already a $_tableName record with year=${plan.year}, type=${plan.type}, railway=${plan.railwayId}';
-      DBProvider.db.insert('log', {'date': nowStr(), 'message': res});
+      DBProvider.db
+          .insert('log', {'date': nowStr(), 'message': res.toString()});
       return res;
     }
     await DBProvider.db.update(_tableName, plan.toJson()).then((resId) {
@@ -166,7 +168,7 @@ class PlanController extends Controllers {
       res['code'] = -3;
       res['message'] = 'Error updating $_tableName';
     });
-    DBProvider.db.insert('log', {'date': nowStr(), 'message': res});
+    DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
     return res;
   }
 
