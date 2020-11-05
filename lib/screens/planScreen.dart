@@ -66,6 +66,7 @@ class _PlanScreen extends State<PlanScreen> {
   String errorTableName;
   String emptyTableName;
   String saveError;
+  String _tableName;
 
   _PlanScreen(type) {
     _type = type;
@@ -143,6 +144,8 @@ class _PlanScreen extends State<PlanScreen> {
           "ПЛАН\nпроведения комплексных аудитов и целевых проверок организации работы по экологической безопасности"; // на ${_year.toString()} год";
       errorTableName = "Выберите дорогу для загрузки плана...";
       //showLoading = false;
+      _tableName = "";
+
       loadData(); //.then((value) => setState(() => {}));
     });
   }
@@ -194,7 +197,9 @@ class _PlanScreen extends State<PlanScreen> {
     try {
       _plan =
           await controllers.PlanController.select(_year, _type, _railway_id);
-    } catch (e) {}
+    } catch (e) {
+      _plan = null;
+    }
 
     if (_plan == null)
       _plan = new Plan(
@@ -206,7 +211,16 @@ class _PlanScreen extends State<PlanScreen> {
           name: canEdit() ? emptyTableName : errorTableName);
 
     await reloadPlanItems(_plan.id);
-    setState(() => {});
+
+    String tableName = "";
+    if (_plan != null && _plan.name != null) {
+      if (_plan.name != errorTableName)
+        tableName = '${_plan.name} ${_year.toString()} год';
+      else
+        tableName = '${_plan.name}';
+    }
+
+    setState(() => {_tableName = tableName});
   }
 
   Future<void> reloadPlanItems(int planId) async {
@@ -243,13 +257,6 @@ class _PlanScreen extends State<PlanScreen> {
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(12.0))),
     );
-    String tableName = "";
-    if (_plan != null && _plan.name != null) {
-      if (_plan.name != errorTableName)
-        tableName = '${_plan.name} ${_year.toString()} год';
-      else
-        tableName = '${_plan.name}';
-    }
 
     return new Container(
         decoration: BoxDecoration(
@@ -264,7 +271,7 @@ class _PlanScreen extends State<PlanScreen> {
                   ListTile(
                       trailing: menu,
                       contentPadding: EdgeInsets.all(0),
-                      title: Text(tableName, textAlign: TextAlign.center),
+                      title: Text(_tableName, textAlign: TextAlign.center),
                       onTap: () {}),
                   Expanded(
                       child: ListView(
@@ -274,11 +281,11 @@ class _PlanScreen extends State<PlanScreen> {
                           generateTableData(context, planItemHeader, planItems)
                         ])
                       ])),
-                  Container(
-                      child: MyButton(
-                          text: 'test',
-                          parentContext: context,
-                          onPress: testClicked))
+                   Container(
+                       child: MyButton(
+                           text: 'test',
+                           parentContext: context,
+                           onPress: testClicked))
                 ])));
   }
 
@@ -387,8 +394,8 @@ class _PlanScreen extends State<PlanScreen> {
               onChange: (value) {
                 setState(() {
                   _year = int.parse(value);
+                  reloadPlan();
                 });
-                reloadPlan();
               },
               parentContext: context,
             ),
@@ -411,10 +418,8 @@ class _PlanScreen extends State<PlanScreen> {
                 onChange: (value) {
                   setState(() {
                     _railway_id = int.parse(value);
-
                     reloadPlan();
                   });
-                  reloadPlan();
                 },
                 parentContext: context,
               ),

@@ -66,17 +66,30 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   Map<String, dynamic> planItem;
   Inspection _inspection;
   String emptyTableName;
+  String _tableName;
   List<InspectionItem> _inspectionItems = <InspectionItem>[
     /*добавить тестовые пункты проверки */
   ];
   List<InspectionItem> inspectionItems = [];
+
+
+  
+  List<Map<String, dynamic>> inspectionItemHeader = [
+    {
+      'text': 'Дата проверки',
+      'flex': 1.0
+    },
+    {'text': 'Наименование структурного подразделения', 'flex': 4.0},
+    {'text': 'Время проверки (мест. вр)', 'flex': 1.0},
+    {'text': 'Члены комиссии', 'flex': 1.0}
+  ];
   @override
   _InspectionPlanScreen(this.planItem);
 
   @override
   void initState() {
     super.initState();
-
+    _tableName = "";
     auth.checkLoginStatus(context).then((isLogin) {
       if (isLogin) {
         auth.getUserInfo().then((userInfo) {
@@ -113,7 +126,13 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
           id: null, planItemId: planItemId, name: emptyTableName);
 
     await reloadInspectionItems(_inspection.id);
-    setState(() => {});
+    String tableName = "";
+    if (_inspection != null && _inspection.name != null) {
+      
+        tableName = '${_inspection.name}';
+    }
+
+    setState(() => {_tableName = tableName});
   }
 
   Future<void> reloadInspectionItems(int inspectionId) async {
@@ -125,7 +144,138 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return new Text(
-        'Здесь будет редактирование плана проверок по ${planItem["typeName"]} ${planItem["filial"]}');
+    final menu = PopupMenuButton(
+      itemBuilder: (_) => getMenu(context),
+      padding: EdgeInsets.all(0.0),
+      onSelected: (value) {
+        switch (value) {
+          case 'edit':
+            editInspectionClicked();
+            break;
+          case 'add':
+            addInspectionClicked();
+            break;
+        }
+      },
+      icon: Icon(
+        Icons.more_vert,
+        color: Theme.of(context).primaryColorDark,
+        size: 30,
+      ),
+      color: Theme.of(context).primaryColor,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12.0))),
+    );
+
+    return new Container(
+        decoration: BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage("assets/images/frameScreen.png"),
+                fit: BoxFit.fitWidth)),
+        child: showLoading
+            ? Text("")
+            : Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Column(children: [
+                  ListTile(
+                      trailing: menu,
+                      contentPadding: EdgeInsets.all(0),
+                      title: Text(_tableName, textAlign: TextAlign.center),
+                      onTap: () {}),
+                  Expanded(
+                      child: ListView(
+                          padding: const EdgeInsets.all(16),
+                          children: [
+                        Column(children: [
+                           generateTableData(context, inspectionItemHeader, inspectionItems)
+                        ])
+                      ])),
+                  // Container(
+                  //     child: MyButton(
+                  //         text: 'test',
+                  //         parentContext: context,
+                  //         onPress: testClicked))
+                ])));
   }
+
+  List<PopupMenuItem<String>> getMenu(BuildContext context) {
+    List<PopupMenuItem<String>> result = [];
+    result.add(
+      PopupMenuItem<String>(
+          child: TextIcon(
+            icon: Icons.edit,
+            text: "Редактировать проверку",
+            margin: 5.0,
+            /* onTap: () */
+            color: Theme.of(context).primaryColorDark,
+          ),
+          value: 'edit'),
+    );
+
+    result.add(
+      PopupMenuItem<String>(
+          child: TextIcon(
+            icon: Icons.add,
+            text: "Добавить запись",
+            margin: 5.0,
+            /* onTap: () ,*/
+            color: Theme.of(context).primaryColorDark,
+          ),
+          value: 'add'),
+    );
+    return result;
+  }
+
+  Widget generateTableData(BuildContext context,
+      List<Map<String, dynamic>> headers, List<InspectionItem> rows) {
+    int i = 0;
+    Map<int, TableColumnWidth> columnWidths = Map.fromIterable(headers,
+        key: (item) => i++,
+        value: (item) =>
+            FlexColumnWidth(double.parse(item['flex'].toString())));
+
+    TableRow headerTableRow = TableRow(
+        decoration: BoxDecoration(color: Theme.of(context).primaryColor),
+        children: List.generate(
+            headers.length,
+            (index) => Column(
+                  children: [
+                    Padding(
+                        padding: EdgeInsets.all(10.0),
+                        child: Text(
+                          headers[index]["text"],
+                          textAlign: TextAlign.center,
+                        )),
+                  ],
+                )));
+    List<TableRow> tableRows = [headerTableRow];
+   /* int rowIndex = 0;
+    rows.forEach((row) {
+      rowIndex++;
+      TableRow tableRow = TableRow(
+          decoration: BoxDecoration(
+              color: (rowIndex % 2 == 0
+                  ? Theme.of(context).shadowColor
+                  : Colors.white)),
+          children: [
+            getRowCell(row.filial, row.planItemId, 0),
+            getRowCell(row.department, row.planItemId, 1),
+            getRowCell(
+                getTypeInspectionById(row.typeId)["value"], row.planItemId, 2),
+            getRowCell(getPeriodInspectionById(row.periodId)["value"],
+                row.planItemId, 3),
+            getRowCell(row.responsible, row.planItemId, 4),
+            getRowCell(row.result, row.planItemId, 5),
+          ]);
+      tableRows.add(tableRow);
+    });*/
+
+    return Table(
+        border: TableBorder.all(),
+        columnWidths: columnWidths,
+        children: tableRows);
+  }
+
+  Future<void> editInspectionClicked() async {}
+  Future<void> addInspectionClicked() async {}
 }
