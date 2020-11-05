@@ -42,7 +42,7 @@ class PlanController extends Controllers {
               'id': null,
               'odoo_id': e.id,
             })
-        .forEach((e) => DBProvider.db.insert(_tableName, e));
+        .forEach((e) => insert(Plan.fromJson(e)));
   }
 
   /// Select the first record matching passed year, type and railwayId.
@@ -110,11 +110,11 @@ class PlanController extends Controllers {
     await DBProvider.db.insert(_tableName, plan.toJson(true)).then((resId) {
       res['code'] = 1;
       res['id'] = resId;
-      return SynController.create(_tableName, resId).catchError(() {
+      return SynController.create(_tableName, resId).catchError((err) {
         res['code'] = -2;
         res['message'] = 'Error updating syn';
       });
-    }).catchError(() {
+    }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error inserting into $_tableName';
     });
@@ -157,11 +157,12 @@ class PlanController extends Controllers {
     await DBProvider.db.update(_tableName, plan.toJson()).then((resId) {
       res['code'] = 1;
       res['id'] = resId;
-      return SynController.edit(_tableName, resId, plan.odooId).catchError(() {
+      return SynController.edit(_tableName, resId, plan.odooId)
+          .catchError((err) {
         res['code'] = -2;
         res['message'] = 'Error updating syn';
       });
-    }).catchError(() {
+    }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error updating $_tableName';
     });
@@ -184,11 +185,11 @@ class PlanController extends Controllers {
     await DBProvider.db.delete(_tableName, plan.id).then((value) {
       res['code'] = 1;
       return SynController.delete(_tableName, plan.id, plan.odooId)
-          .catchError(() {
+          .catchError((err) {
         res['code'] = -2;
         res['message'] = 'Error updating syn';
       });
-    }).catchError(() {
+    }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error deleting from $_tableName';
     });

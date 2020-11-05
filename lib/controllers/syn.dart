@@ -110,7 +110,7 @@ class SynController extends Controllers {
       // If successful, delete syn and return true
       await DBProvider.db.delete(_tableName, syn.id);
       return true;
-    }).catchError(() {
+    }).catchError((err) {
       // If unsuccessful, return false
       return false;
     });
