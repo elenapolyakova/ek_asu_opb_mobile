@@ -29,7 +29,7 @@ class Plan extends Models {
   };
 
   Future<String> get railwayName async {
-    if (_railwayName == null)
+    if (_railwayName == null && railwayId != null)
       await railwayController.Railway.getName(railwayId)
           .then((name) => {_railwayName = name});
     return Future.value(_railwayName);
