@@ -45,12 +45,16 @@ class SynController extends Controllers {
   static Future<int> edit(localTableName, resId, odooId) async {
     List toSyn = await DBProvider.db.select(
       _tableName,
-      columns: ['id'],
-      where: "record_id = ? and local_table_name = ? and method = 'create'",
+      columns: ['method'],
+      where:
+          "record_id = ? and local_table_name = ? and (method = 'create' or method = 'write')",
       whereArgs: [resId, localTableName],
     );
-    if (toSyn.length != 0 && odooId == null)
-      //sync record exists and local record does not exist => wasn't uploaded
+    if (toSyn.length != 0 &&
+        (toSyn[0]['method'] == 'create' && odooId == null ||
+            toSyn[0]['method'] == 'write' && odooId != null))
+      //sync record 'create' exists and local record does not have odooId => check for 'write'
+      //sync record 'write' exists and local record has odooId => wasn't uploaded
       return null;
     return DBProvider.db.insert(_tableName, {
       'record_id': resId,
@@ -62,20 +66,21 @@ class SynController extends Controllers {
   /// If a record to delete wasn't uploaded, removes existing records to sync.
   /// Else adds a record to delete into syn table.
   static Future<int> delete(localTableName, resId, odooId) async {
-    List toSyn = await DBProvider.db.select(
-      _tableName,
-      columns: ['id'],
-      where: "record_id = ? and local_table_name = ? and method = 'create'",
-      whereArgs: [resId, localTableName],
-    );
-    if (toSyn.length == 0 && odooId != null)
-      //sync record does not exist and local record exists => was uploaded
-      return DBProvider.db.delete(_tableName, toSyn[0]['id']);
-    return DBProvider.db.insert(_tableName, {
-      'record_id': resId,
-      'local_table_name': localTableName,
-      'method': 'unlink',
-    });
+    return edit(localTableName, resId, odooId);
+    // List toSyn = await DBProvider.db.select(
+    //   _tableName,
+    //   columns: ['id'],
+    //   where: "record_id = ? and local_table_name = ? and method = 'create'",
+    //   whereArgs: [resId, localTableName],
+    // );
+    // if (toSyn.length == 0 && odooId != null)
+    //   //sync record does not exist and local record exists => was uploaded
+    //   return DBProvider.db.delete(_tableName, toSyn[0]['id']);
+    // return DBProvider.db.insert(_tableName, {
+    //   'record_id': resId,
+    //   'local_table_name': localTableName,
+    //   'method': 'unlink',
+    // });
   }
 
   /// Perform a synchronization of a syn record with backend.
@@ -85,15 +90,16 @@ class SynController extends Controllers {
     // Get syn's local db record
     List<Map<String, dynamic>> records = await DBProvider.db
         .select(syn.localTableName, where: 'id = ?', whereArgs: [syn.recordId]);
+    // if (records.length == 0 && syn.method == 'unlink') {}
     Map<String, dynamic> record = records[0];
 
     List<dynamic> args = [];
-    if (record['odooId'] != null) {
-      int odooId = record.remove('odooId');
+    if (record['odoo_id'] != null) {
+      int odooId = record['odoo_id'];
       if (syn.method == 'write')
         args = [odooId, record];
-      else if (syn.method == 'unlink')
-        args = [odooId];
+      // else if (syn.method == 'unlink')
+      //   args = [odooId];
       else
         return Future.value(false);
     } else {
@@ -107,11 +113,18 @@ class SynController extends Controllers {
     return await getDataWithAttemp(
             localRemoteTableNameMap[syn.localTableName], syn.method, args, {})
         .then((value) async {
+      if (syn.method == 'create') {
+        print(value);
+        record['odoo_id'] = int.parse(value.toString());
+        await DBProvider.db.update(syn.localTableName, record);
+      }
       // If successful, delete syn and return true
+      print(syn.id);
       await DBProvider.db.delete(_tableName, syn.id);
       return true;
     }).catchError((err) {
       // If unsuccessful, return false
+      DBProvider.db.delete(_tableName, syn.id);
       return false;
     });
     // }
@@ -122,7 +135,7 @@ class SynController extends Controllers {
       // Load a syn record
       List<Map<String, dynamic>> toSyn =
           await DBProvider.db.select(_tableName, limit: 1, orderBy: 'id');
-      if (toSyn.length != 0) {
+      if (toSyn.length == 0) {
         //Синхронизация завершена
         //TODO: вывести уведомление
         print('Finished synchronization');

@@ -1,3 +1,4 @@
+import 'package:ek_asu_opb_mobile/controllers/syn.dart';
 import 'package:ek_asu_opb_mobile/src/exchangeData.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -916,5 +917,25 @@ class _PlanScreen extends State<PlanScreen> {
 
   void testClicked() {
     print('test');
+    // Plan plan = new Plan(
+    //     id: 2,
+    //     odooId: 2,
+    //     active: true,
+    //     year: 2020,
+    //     type: 'cbt',
+    //     state: 'draft',
+    //     name: 'hey its me1',
+    //     railwayId: 1);
+    // controllers.DBProvider.db.deleteAll('syn');
+    // controllers.PlanController.delete(plan).then((a) {
+    //   print(a);
+    //   SynController.syncTask();
+    //   // controllers.PlanController.selectAll().then((a) {
+    //   //   print(a);
+    //   // });
+    // });
+    // controllers.PlanController.select(2020, 'cbt', 1).then((a) {
+    //   print(a.active);
+    // });
   }
 }
