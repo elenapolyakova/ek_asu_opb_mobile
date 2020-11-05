@@ -184,7 +184,8 @@ class PlanController extends Controllers {
       'message': null,
       'id': null,
     };
-    await DBProvider.db.delete(_tableName, plan.id).then((value) {
+    plan.active = false;
+    await DBProvider.db.update(_tableName, plan.toJson()).then((value) {
       res['code'] = 1;
       return SynController.delete(_tableName, plan.id, plan.odooId)
           .catchError((err) {
