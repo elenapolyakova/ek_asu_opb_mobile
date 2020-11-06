@@ -8,7 +8,8 @@ class Plan extends Models {
   int odooId;
   String type; //Принадлежность
   String name; //Наименование
-  Railway railway; //Дорога
+  Railway _railway; //Дорога
+  int railwayId; //Дорога
   int year; //Год
   DateTime dateSet; //Дата утверждения
   String signerName; //Подписант имя
@@ -44,6 +45,12 @@ class Plan extends Models {
     return [];
   }
 
+  Future<Railway> get railway async {
+    if (_railway == null)
+      _railway = await controllers.Railway.selectById(railwayId);
+    return _railway;
+  }
+
   Plan({
     this.odooId,
     this.id,
@@ -51,7 +58,7 @@ class Plan extends Models {
     this.year,
     this.dateSet,
     this.name,
-    this.railway,
+    this.railwayId,
     this.signerName,
     this.signerPost,
     this.numSet,
@@ -65,7 +72,9 @@ class Plan extends Models {
       id: json["id"],
       type: getObj(json["type"]),
       name: getObj(json["name"]),
-      railway: null,
+      railwayId: (json["railway_id"] is List)
+          ? unpackListId(json["railway_id"])['id']
+          : json["railway_id"],
       year: json["year"],
       dateSet:
           json["date_set"] == null ? null : DateTime.parse(json["date_set"]),
@@ -75,10 +84,6 @@ class Plan extends Models {
       active: json["active"] == 'true',
       state: getObj(json["state"]),
     );
-    controllers.Railway.selectById((json["railway_id"] is List)
-            ? unpackListId(json["railway_id"])['id']
-            : json["railway_id"])
-        .then((value) => res.railway = value);
     return res;
   }
 
@@ -88,7 +93,7 @@ class Plan extends Models {
       'odoo_id': odooId,
       'type': type,
       'name': name,
-      'railway_id': railway.id,
+      'railway_id': _railway.id,
       'year': year,
       'date_set': dateSet.toIso8601String().split(':')[0],
       'signer_name': signerName,
