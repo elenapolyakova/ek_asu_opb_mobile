@@ -1,3 +1,4 @@
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart' as controllers;
 
 const _typeInspectionList = [
   {"id": 1, "value": "Комплексный аудит"},
@@ -18,6 +19,16 @@ const _resultList = [
   {"id": 3, "value": "Корректирующие меры"},
 ];
 
+const _eventList = [
+  {"id": 1, "value": "Проверка"},
+  {"id": 2, "value": "Встреча"},
+  {"id": 3, "value": "Завтрак"},
+  {"id": 4, "value": "Обед"},
+  {"id": 5, "value": "Отъезд"},
+  {"id": 100, "value": "Прочее"},
+];
+
+
 List<Map<String, Object>> getTypeInspectionList() => _typeInspectionList;
 Map<String, Object> getTypeInspectionById(int _id) =>
     _typeInspectionList.firstWhere((result) => result["id"] == _id);
@@ -30,7 +41,19 @@ List<Map<String, Object>> getResultList() => _resultList;
 Map<String, Object> getResultById(int _id) =>
     _resultList.firstWhere((result) => result["id"] == _id);
 
-// Future<bool> getDictionary() async {
-//   var lastUpdate = await _storage.read(key: 'lastDateUpdate');
+Future<List<Map<String, dynamic>>> getRailwayList() async {
+  List<Map<String, dynamic>> result = [];
+  List<Map<String, dynamic>> railwayList =
+      await controllers.Railway.selectAll();
 
-// }
+  railwayList.forEach((railway) {
+    result
+        .add({"id": railway["id"], "value": railway["name"].toString().trim()});
+  });
+
+  return result;
+}
+
+List<Map<String, Object>> getEventInspectionList() => _eventList;
+Map<String, Object> getEventInspectionById(int _id) =>
+    _eventList.firstWhere((result) => result["id"] == _id);

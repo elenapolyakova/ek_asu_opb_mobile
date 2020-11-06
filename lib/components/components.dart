@@ -1,10 +1,10 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-//import 'package:flutter_rounded_date_picker/rounded_picker.dart';
 import 'package:ek_asu_opb_mobile/components/flutter_rounded_date_picker/rounded_picker.dart';
+import 'package:ek_asu_opb_mobile/components/time_picker_spinner.dart';
 import 'package:intl/intl.dart';
+import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class TextIcon extends StatefulWidget {
   IconData icon;
@@ -116,7 +116,7 @@ class _EditTextField extends State<EditTextField> {
                 widget.text,
                 textAlign: TextAlign.left,
                 style: TextStyle(
-                  color: widget.color,
+                  color: color,
                 ),
               )),
           Container(
@@ -164,7 +164,7 @@ SnackBar successSnackBar = SnackBar(
 );
 
 SnackBar errorSnackBar({String text}) => SnackBar(
-  elevation: 100,
+      elevation: 100,
       backgroundColor: Color(0xAAE57373),
       padding: EdgeInsets.all(5.0),
       shape: RoundedRectangleBorder(
@@ -479,7 +479,8 @@ class DatePicker extends StatefulWidget {
   final ValueChanged<DateTime> onChanged;
   final DateTime selectedDate;
   final text;
-  double height;
+  bool enable;
+  double width;
 
   final BuildContext parentContext;
   DatePicker(
@@ -487,7 +488,9 @@ class DatePicker extends StatefulWidget {
       this.selectedDate,
       this.onChanged,
       this.text,
-      this.parentContext})
+      this.parentContext,
+      this.width = 200,
+      this.enable = true})
       : super(key: key);
 
   @override
@@ -565,9 +568,7 @@ class _DatePicker extends State<DatePicker> {
                 color: Theme.of(widget.parentContext).primaryColorDark),
             textStyleYearSelected: TextStyle(
                 fontSize: 25,
-                color: Theme.of(widget.parentContext).primaryColor))
-
-        );
+                color: Theme.of(widget.parentContext).primaryColor)));
     if (picked != null && picked != widget.selectedDate) {
       setState(() {
         _selectedDate = picked;
@@ -580,6 +581,7 @@ class _DatePicker extends State<DatePicker> {
   Widget build(BuildContext context) {
     final color = Theme.of(context).buttonColor;
     final textStyle = TextStyle(fontSize: 16.0, color: color);
+    final disabledColor =  Color(0xAA6E6E6E);
     String _text = widget.text ?? "";
     return
         /*Row(crossAxisAlignment: CrossAxisAlignment.end, children: <Widget>[
@@ -588,7 +590,7 @@ class _DatePicker extends State<DatePicker> {
         InkWell(
             onTap: () => _selectDate(context),
             child: Container(
-                width: 200,
+                width: widget.width,
                 child: Column(children: [
                   Container(
                       width: double.infinity,
@@ -605,10 +607,10 @@ class _DatePicker extends State<DatePicker> {
                       width: double.infinity,
                       decoration: BoxDecoration(
                           border: Border.all(
-                              color: Theme.of(context).primaryColorLight,
-                              width: 1.5),
+                              color: widget.enable ? Theme.of(context).primaryColorLight: disabledColor,
+                              width: 1.5), 
                           borderRadius: BorderRadius.all(Radius.circular(12)),
-                          color: Theme.of(context).primaryColorLight),
+                          color: widget.enable ? Theme.of(context).primaryColorLight : disabledColor),
                       child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           mainAxisSize: MainAxisSize.min,
@@ -632,4 +634,148 @@ class _DatePicker extends State<DatePicker> {
                           ]))
                 ])));
   }
+}
+
+class TimePicker extends StatefulWidget {
+  DateTime time;
+  int minutesInterval;
+  bool enable;
+  double spacing;
+  double itemHeight;
+  double width;
+  BuildContext context;
+  Function(DateTime) onTimeChange;
+
+  TimePicker({
+    this.time,
+    this.minutesInterval = 1,
+    this.spacing = 50,
+    this.itemHeight = 80,
+    this.context,
+    this.width = 200,
+    this.onTimeChange,
+    this.enable = true,
+  });
+  @override
+  State<TimePicker> createState() => _TimePicker(time);
+}
+
+class _TimePicker extends State<TimePicker> {
+  DateTime _time;
+  @override
+  _TimePicker(time) {
+    _time = time;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    DateTime now = DateTime.now();
+    _time = _time ?? DateTime(now.year, now.month, now.day, 8, 0, 0);
+
+    String _value = '${addZero(_time.hour)}:${addZero(_time.minute)}';
+
+    final color = Theme.of(widget.context).primaryColorDark;
+    final textStyle = TextStyle(fontSize: 16.0, color: color);
+    final TextStyle disableText =
+        TextStyle(fontSize: 16.0, color: Color(0xAA6E6E6E));
+    return Container(
+        child: Column(children: <Widget>[
+      Container(
+        height: 35,
+        width: widget.width,
+        padding: EdgeInsets.only(left: 10),
+        decoration: BoxDecoration(
+            border: Border.all(
+                color: widget.enable
+                    ? Theme.of(widget.context).primaryColorLight
+                    : Color(0xAA6E6E6E),
+                width: 1.5),
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+            color: widget.enable
+                ? Theme.of(widget.context).primaryColorLight
+                : Color(0xAA6E6E6E)),
+        child: TextFormField(
+          readOnly: true,
+          style: TextStyle(color:Theme.of(widget.context).buttonColor),
+          controller:
+              TextEditingController.fromValue(TextEditingValue(text: _value)),
+          decoration: new InputDecoration(
+              border: OutlineInputBorder(borderSide: BorderSide.none),
+              contentPadding: EdgeInsets.all(5.0)
+              ),
+          // initialValue:
+          //     _value, //widget.value != null ? widget.value.toString() : '',
+          onTap: () {
+            if (!widget.enable) return;
+
+            showTimePicker(_time, widget.context, widget.minutesInterval,
+                    widget.spacing, widget.itemHeight)
+                .then((time) {
+              if (time == null) return;
+              setState(() {
+                _time = time;
+                widget.onTimeChange(time);
+                _value = '${addZero(_time.hour)}:${addZero(_time.minute)}';
+              });
+            });
+          },
+
+          // maxLength: 256,
+        ),
+      )
+    ]));
+  }
+}
+
+Future<DateTime> showTimePicker(DateTime time, BuildContext parentContext,
+    int minutesInterval, double spacing, double itemHeight) {
+  DateTime sourceTime = time;
+  return showDialog<DateTime>(
+      context: parentContext,
+      barrierDismissible: true,
+      barrierColor: Color(0x88E6E6E6),
+      builder: (context) {
+        return AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12.0))),
+            backgroundColor: Theme.of(context).primaryColor,
+            content: ConstrainedBox(
+                constraints: BoxConstraints.tight(new Size(300, 300)),
+                child: Column(children: [
+                  TimePickerSpinner(
+                    time: time,
+                    is24HourMode: true,
+                    minutesInterval: minutesInterval,
+                    normalTextStyle: TextStyle(
+                        fontSize: 20,
+                        color: Theme.of(parentContext).primaryColorDark),
+                    highlightedTextStyle: TextStyle(
+                        fontSize: 24,
+                        color: Theme.of(parentContext).primaryColorLight),
+                    spacing: spacing,
+                    itemHeight: itemHeight,
+                    isForce2Digits: true,
+                    onTimeChange: (newTime) {
+                      time = newTime;
+                    },
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      MyButton(
+                          text: 'принять',
+                          parentContext: parentContext,
+                          onPress: () {
+                            Navigator.pop<DateTime>(context, time);
+                          }),
+                      /* MyButton(
+                  text: 'отменить',
+                  parentContext: parentContext,
+                  onPress: () {
+                    Navigator.pop<DateTime>(context, sourceTime);
+                  })*/
+                    ],
+                  )
+                ])));
+      });
 }

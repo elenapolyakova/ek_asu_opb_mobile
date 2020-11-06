@@ -48,19 +48,25 @@ class _InspectionScreen extends State<InspectionScreen> {
       'label': 'План проверки',
       'icon': Icon(Icons.description)
     });
-
+  result.add({
+      'key': 'commission',
+      'label': 'Комиссия',
+      'icon': Icon(Icons.supervisor_account_outlined)
+    });
     result
         .add({'key': 'map', 'label': 'Карта', 'icon': Icon(Icons.location_on)});
+  
     result.add({
       'key': 'report',
       'label': 'Отчеты',
       'icon': Icon(Icons.insert_drive_file)
     });
-    result.add({
+  /*  result.add({
       'key': 'checkList',
       'label': 'Чек-листы',
       'icon': Icon(Icons.fact_check)
-    });
+    });*/
+     
 
     return result;
   }
@@ -91,6 +97,9 @@ class _InspectionScreen extends State<InspectionScreen> {
         break;
       case "checkList":
         screenList[screenKey] = screens.CheckListScreen();
+        break;
+        case "commission":
+          screenList[screenKey] = screens.CommissionScreen();
         break;
       default:
         return Text("");

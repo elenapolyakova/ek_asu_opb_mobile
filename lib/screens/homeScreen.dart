@@ -73,7 +73,7 @@ class _HomeScreen extends State<HomeScreen> {
     }
     result.add(
         {'key': 'ncop', 'label': 'План НЦОП', 'icon': Icon(Icons.description)});
-    result
+  /*  result
         .add({'key': 'map', 'label': 'Карта', 'icon': Icon(Icons.location_on)});
     result.add({
       'key': 'report',
@@ -84,7 +84,7 @@ class _HomeScreen extends State<HomeScreen> {
       'key': 'checkList',
       'label': 'Чек-листы',
       'icon': Icon(Icons.fact_check)
-    });
+    });*/
 
     return result;
   }
