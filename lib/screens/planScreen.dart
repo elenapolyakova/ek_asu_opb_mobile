@@ -14,7 +14,7 @@ import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 //todo delete when model exists
 class PlanItem {
   int planId;
-  int planItemId;
+  int id;
   String filial;
   String department;
   int typeId;
@@ -23,7 +23,7 @@ class PlanItem {
   String result;
   PlanItem(
       {this.planId,
-      this.planItemId,
+      this.id,
       this.filial,
       this.department,
       this.typeId,
@@ -67,6 +67,7 @@ class _PlanScreen extends State<PlanScreen> {
   String errorTableName;
   String emptyTableName;
   String saveError;
+  String _tableName;
 
   _PlanScreen(type) {
     _type = type;
@@ -99,7 +100,7 @@ class _PlanScreen extends State<PlanScreen> {
   List<PlanItem> _planItems = <PlanItem>[
     PlanItem(
         planId: 1,
-        planItemId: 1,
+        id: 1,
         filial:
             'Центральная дирекция по ремонту тягового подвижного состава (ЦТР)',
         department: 'Все ТР, ЦТР',
@@ -109,7 +110,7 @@ class _PlanScreen extends State<PlanScreen> {
         result: 'Корректирующие меры'),
     PlanItem(
         planId: 1,
-        planItemId: 2,
+        id: 2,
         filial: 'Дирекция железнодорожных вокзалов  (ДЖВ)',
         department: 'Все РДЖВ, ДЖВ',
         typeId: 2,
@@ -118,7 +119,7 @@ class _PlanScreen extends State<PlanScreen> {
         result: 'Корректирующие меры'),
     PlanItem(
         planId: 1,
-        planItemId: 3,
+        id: 3,
         filial:
             'Территория Южно-Уральской железной дороги подразделения всех хозяйств ОАО «РЖД» и ДЗО (по согласованию)',
         department:
@@ -131,6 +132,7 @@ class _PlanScreen extends State<PlanScreen> {
   ];
 
   List<PlanItem> planItems = [];
+  PlanItem planItemCopy;
 
   @override
   void initState() {
@@ -144,6 +146,8 @@ class _PlanScreen extends State<PlanScreen> {
           "ПЛАН\nпроведения комплексных аудитов и целевых проверок организации работы по экологической безопасности"; // на ${_year.toString()} год";
       errorTableName = "Выберите дорогу для загрузки плана...";
       //showLoading = false;
+      _tableName = "";
+
       loadData(); //.then((value) => setState(() => {}));
     });
   }
@@ -153,19 +157,6 @@ class _PlanScreen extends State<PlanScreen> {
     for (int i = year - 1; i <= year + 1; i++)
       yearList.add({"id": i, "value": i});
     return yearList;
-  }
-
-  Future<List<Map<String, dynamic>>> getRailwayList() async {
-    List<Map<String, dynamic>> result = [];
-    List<Map<String, dynamic>> railwayList =
-        await controllers.Railway.selectAll();
-
-    railwayList.forEach((railway) {
-      result.add(
-          {"id": railway["id"], "value": railway["name"].toString().trim()});
-    });
-
-    return result;
   }
 
   bool canEdit() {
@@ -195,7 +186,9 @@ class _PlanScreen extends State<PlanScreen> {
     try {
       _plan =
           await controllers.PlanController.select(_year, _type, _railway_id);
-    } catch (e) {}
+    } catch (e) {
+      _plan = null;
+    }
 
     if (_plan == null)
       _plan = new Plan(
@@ -207,7 +200,10 @@ class _PlanScreen extends State<PlanScreen> {
           name: canEdit() ? emptyTableName : errorTableName);
 
     await reloadPlanItems(_plan.id);
-    setState(() => {});
+
+    
+
+    setState(() => {/*_tableName = tableName*/});
   }
 
   Future<void> reloadPlanItems(int planId) async {
@@ -244,6 +240,7 @@ class _PlanScreen extends State<PlanScreen> {
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(12.0))),
     );
+
     String tableName = "";
     if (_plan != null && _plan.name != null) {
       if (_plan.name != errorTableName)
@@ -315,14 +312,14 @@ class _PlanScreen extends State<PlanScreen> {
                   ? Theme.of(context).shadowColor
                   : Colors.white)),
           children: [
-            getRowCell(row.filial, row.planItemId, 0),
-            getRowCell(row.department, row.planItemId, 1),
+            getRowCell(row.filial, row.id, 0),
+            getRowCell(row.department, row.id, 1),
             getRowCell(
-                getTypeInspectionById(row.typeId)["value"], row.planItemId, 2),
+                getTypeInspectionById(row.typeId)["value"], row.id, 2),
             getRowCell(getPeriodInspectionById(row.periodId)["value"],
-                row.planItemId, 3),
-            getRowCell(row.responsible, row.planItemId, 4),
-            getRowCell(row.result, row.planItemId, 5),
+                row.id, 3),
+            getRowCell(row.responsible, row.id, 4),
+            getRowCell(row.result, row.id, 5),
           ]);
       tableRows.add(tableRow);
     });
@@ -388,8 +385,8 @@ class _PlanScreen extends State<PlanScreen> {
               onChange: (value) {
                 setState(() {
                   _year = int.parse(value);
+                  reloadPlan();
                 });
-                reloadPlan();
               },
               parentContext: context,
             ),
@@ -412,10 +409,8 @@ class _PlanScreen extends State<PlanScreen> {
                 onChange: (value) {
                   setState(() {
                     _railway_id = int.parse(value);
-
                     reloadPlan();
                   });
-                  reloadPlan();
                 },
                 parentContext: context,
               ),
@@ -461,7 +456,7 @@ class _PlanScreen extends State<PlanScreen> {
       Scaffold.of(context).showSnackBar(errorSnackBar(text: errorTableName));
       return;
     }
-    PlanItem planItem = new PlanItem(planItemId: -1);
+    PlanItem planItem = new PlanItem(id: null);
     bool result = await showPlanItemDialog(planItem);
     if (result != null && result)
       setState(() {
@@ -491,7 +486,7 @@ class _PlanScreen extends State<PlanScreen> {
           deletePlanItem(planItemId);
           break;
         case 'forward':
-          forwartPlanInspection(planItemId);
+          forwardPlanInspection(planItemId);
           break;
       }
     });
@@ -499,20 +494,30 @@ class _PlanScreen extends State<PlanScreen> {
 
   Future<void> editPlanItem(int planItemId) async {
     PlanItem planItem =
-        planItems.firstWhere((planItem) => planItem.planItemId == planItemId);
-    bool result = await showPlanItemDialog(planItem);
+        planItems.firstWhere((planItem) => planItem.id == planItemId);
+    PlanItem planItemCopy = new PlanItem(
+        planId: planItem.planId,
+        id: planItem.id,
+        filial: planItem.filial,
+        department: planItem.department,
+        typeId: planItem.typeId,
+        periodId: planItem.periodId,
+        responsible: planItem.responsible,
+        result: planItem.responsible);
+    bool result = await showPlanItemDialog(planItemCopy);
     if (result != null && result)
       setState(() {
-        //todo refresh all list?
+        int index = planItems.indexOf(planItem);
+        planItems[index] = planItemCopy;
       });
   }
 
   Future<void> deletePlanItem(int planItemId) async {
     bool result = await showConfirmDialog(
-        'Вы уверены, что хотите удлить пункт плана?', context);
+        'Вы уверены, что хотите удалить пункт плана?', context);
     if (result != null && result) {
       PlanItem deletedPlanItem =
-          planItems.firstWhere((planItem) => planItem.planItemId == planItemId);
+          planItems.firstWhere((planItem) => planItem.id == planItemId);
       if (deletedPlanItem == null) return;
       planItems.remove(deletedPlanItem);
       //todo delete from db
@@ -520,15 +525,16 @@ class _PlanScreen extends State<PlanScreen> {
     }
   }
 
-  Future<void> forwartPlanInspection(int planItemId) async {
+  Future<void> forwardPlanInspection(int planItemId) async {
     PlanItem planItem =
-        planItems.firstWhere((planItem) => planItem.planItemId == planItemId);
+        planItems.firstWhere((planItem) => planItem.id == planItemId);
     Map<String, dynamic> args = {
       'planItemId': planItemId,
       'filial': planItem.filial,
       'typeName': getTypeInspectionById(planItem.typeId)["value"],
       'railwayId': _railway_id,
-      'typePlan': _type
+      'typePlan': _type,
+      'year': _year
     };
     Navigator.pushNamed(context, '/inspection', arguments: args);
   }
@@ -571,7 +577,7 @@ class _PlanScreen extends State<PlanScreen> {
                                       onSaved: (value) => {plan.name = value},
                                       context: context,
                                       height: 100,
-                                      maxLines: 3,
+                                      maxLines: 5,
                                     ),
                                     Row(
                                         mainAxisAlignment:
@@ -903,6 +909,8 @@ class _PlanScreen extends State<PlanScreen> {
     if (form.validate()) {
       form.save();
       bool result = true;
+
+     // if (planItemCopy.id == null) planItemCopy.id = result["id"];
       Navigator.pop<bool>(context, result);
       if (result)
         Scaffold.of(context).showSnackBar(successSnackBar);
