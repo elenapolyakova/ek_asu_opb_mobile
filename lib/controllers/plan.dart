@@ -97,7 +97,7 @@ class PlanController extends Controllers {
       'id': null,
     };
     Map<String, dynamic> where = Controllers.getNullSafeWhere(
-        {'year': plan.year, 'type': plan.type, 'railway_id': plan.railway.id});
+        {'year': plan.year, 'type': plan.type, 'railway_id': plan.railwayId});
     List uniqueChecked = await DBProvider.db.select(
       _tableName,
       columns: ['id'],
@@ -107,7 +107,7 @@ class PlanController extends Controllers {
     if (uniqueChecked.length > 0) {
       res['code'] = -1;
       res['message'] =
-          'There is already a $_tableName record with year=${plan.year}, type=${plan.type}, railway=${plan.railway.id}';
+          'There is already a $_tableName record with year=${plan.year}, type=${plan.type}, railway=${plan.railwayId}';
       DBProvider.db
           .insert('log', {'date': nowStr(), 'message': res.toString()});
       return res;
@@ -147,7 +147,7 @@ class PlanController extends Controllers {
       'id': null,
     };
     Map<String, dynamic> where = Controllers.getNullSafeWhere(
-        {'year': plan.year, 'type': plan.type, 'railway_id': plan.railway.id});
+        {'year': plan.year, 'type': plan.type, 'railway_id': plan.railwayId});
     List uniqueChecked = await DBProvider.db.select(
       _tableName,
       columns: ['id'],
@@ -157,7 +157,7 @@ class PlanController extends Controllers {
     if (uniqueChecked.length > 0) {
       res['code'] = -1;
       res['message'] =
-          'There is already a $_tableName record with year=${plan.year}, type=${plan.type}, railway=${plan.railway.id}';
+          'There is already a $_tableName record with year=${plan.year}, type=${plan.type}, railway=${plan.railwayId}';
       DBProvider.db
           .insert('log', {'date': nowStr(), 'message': res.toString()});
       return res;
