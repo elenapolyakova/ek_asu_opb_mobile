@@ -29,7 +29,10 @@ class PlanController extends Controllers {
         'railway_id',
         'year',
         'date_set',
-        'user_set_id',
+        'signer_name',
+        'signer_post',
+        'num_set',
+        'active',
         'state',
       ]
     ], {
@@ -42,7 +45,7 @@ class PlanController extends Controllers {
               'id': null,
               'odoo_id': e.id,
             })
-        .forEach((e) => insert(Plan.fromJson(e)));
+        .forEach((e) => insert(Plan.fromJson(e), true));
   }
 
   /// Select the first record matching passed year, type and railwayId.
@@ -86,7 +89,8 @@ class PlanController extends Controllers {
   ///   ]
   ///   'id':record_id
   /// }```
-  static Future<Map<String, dynamic>> insert(Plan plan) async {
+  static Future<Map<String, dynamic>> insert(Plan plan,
+      [bool saveOdooId = false]) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
@@ -108,7 +112,9 @@ class PlanController extends Controllers {
           .insert('log', {'date': nowStr(), 'message': res.toString()});
       return res;
     }
-    await DBProvider.db.insert(_tableName, plan.toJson(true)).then((resId) {
+    Map<String, dynamic> json = plan.toJson(!saveOdooId);
+    if (saveOdooId) json.remove('id');
+    await DBProvider.db.insert(_tableName, json).then((resId) {
       res['code'] = 1;
       res['id'] = resId;
       return SynController.create(_tableName, resId).catchError((err) {
