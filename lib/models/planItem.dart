@@ -6,7 +6,8 @@ import "package:ek_asu_opb_mobile/models/models.dart";
 class PlanItem extends Models {
   int id;
   int odooId;
-  Plan parent; //План проверки
+  int parentId; //План проверки
+  Plan _parent; //План проверки
   String name; //Наименование
   String departmentTxt; //Подразделения
   int checkType; //Вид проверки
@@ -40,6 +41,11 @@ class PlanItem extends Models {
     return period;
   }
 
+  Future<Plan> get parent async {
+    if (_parent == null) _parent = await PlanController.selectById(parentId);
+    return _parent;
+  }
+
   List<CheckPlanItem> get items {
     //mob.check.plan
     return [];
@@ -48,7 +54,7 @@ class PlanItem extends Models {
   PlanItem({
     this.id,
     this.odooId,
-    this.parent,
+    this.parentId,
     this.name,
     this.departmentTxt,
     this.checkType,
@@ -62,7 +68,9 @@ class PlanItem extends Models {
     PlanItem res = new PlanItem(
       id: json["odoo_id"],
       odooId: json["id"],
-      parent: PlanController.selectById(json["parent_id"]),
+      parentId: (json["parent_id"] is List)
+          ? unpackListId(json["parent_id"])['id']
+          : json["parent_id"],
       name: getObj(json["name"]),
       departmentTxt: getObj(json["department_txt"]),
       checkType: json["check_type"],
@@ -78,7 +86,7 @@ class PlanItem extends Models {
     Map<String, dynamic> res = {
       'id': id,
       'odoo_id': odooId,
-      'parent_id': parent.id,
+      'parent_id': parentId,
       'name': name,
       'department_txt': departmentTxt,
       'check_type': checkType,

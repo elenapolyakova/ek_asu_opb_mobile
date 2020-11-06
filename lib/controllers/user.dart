@@ -17,10 +17,10 @@ class User extends Controllers {
     return await DBProvider.db.selectAll(_tableName);
   }
 
-  static Future<String> getName(id) async {
-    Map<String, String> res = await DBProvider.db.selectById(_tableName, id);
-    if (res != null) return res['login'];
-    return null;
+  static Future<model.User> selectById(int id) async {
+    if (id == null) return null;
+    var json = await DBProvider.db.selectById(_tableName, id);
+    return model.User.fromJson(json);
   }
 
   static loadFromOdoo([limit]) async {

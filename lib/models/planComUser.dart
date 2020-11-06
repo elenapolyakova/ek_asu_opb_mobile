@@ -1,3 +1,5 @@
+import 'package:ek_asu_opb_mobile/controllers/checkPlan.dart';
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart' as controllers;
 import 'package:ek_asu_opb_mobile/models/checkPlan.dart';
 import 'package:ek_asu_opb_mobile/models/checkPlanItem.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
@@ -6,8 +8,10 @@ import "package:ek_asu_opb_mobile/models/models.dart";
 class PlanComUser extends Models {
   int id;
   int odooId;
-  CheckPlan parent; //План проверки
-  User user; //Пользователь
+  int parentId; //План проверки
+  CheckPlan _parent; //План проверки
+  int userId; //Пользователь
+  User _user; //Пользователь
   int comRole; //Роль
   int groupNum; //Номер группы
 
@@ -25,18 +29,33 @@ class PlanComUser extends Models {
   PlanComUser({
     this.id,
     this.odooId,
-    this.parent,
-    this.user,
+    this.parentId,
+    this.userId,
     this.comRole,
     this.groupNum,
   });
+
+  Future<CheckPlan> get parent async {
+    if (_parent == null)
+      _parent = await CheckPlanController.selectById(parentId);
+    return _parent;
+  }
+
+  Future<User> get user async {
+    if (_user == null) _user = await controllers.User.selectById(userId);
+    return _user;
+  }
 
   factory PlanComUser.fromJson(Map<String, dynamic> json) {
     PlanComUser res = new PlanComUser(
       id: json["odoo_id"],
       odooId: json["id"],
-      parent: CheckPlanController.selectById(json["parent_id"]),
-      user: UserController.selectById(json["user_id"]),
+      parentId: (json["parent_id"] is List)
+          ? unpackListId(json["parent_id"])['id']
+          : json["parent_id"],
+      userId: (json["user_id"] is List)
+          ? unpackListId(json["user_id"])['id']
+          : json["user_id"],
       comRole: json["com_role"],
       groupNum: json["group_num"],
     );
@@ -47,8 +66,8 @@ class PlanComUser extends Models {
     Map<String, dynamic> res = {
       'id': id,
       'odoo_id': odooId,
-      'parent_id': parent.id,
-      'user_id': user.id,
+      'parent_id': parentId,
+      'user_id': userId,
       'com_role': comRole,
       'group_num': groupNum,
     };
@@ -61,6 +80,6 @@ class PlanComUser extends Models {
 
   @override
   String toString() {
-    return 'PlanComUser{odooId: $odooId, id: $id, login: ${user.login}}';
+    return 'PlanComUser{odooId: $odooId, id: $id, user_id: $userId}';
   }
 }

@@ -1,5 +1,5 @@
-import 'package:ek_asu_opb_mobile/controllers/department.dart'
-    as departmentController;
+import 'package:ek_asu_opb_mobile/controllers/checkPlan.dart';
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart' as controllers;
 import 'package:ek_asu_opb_mobile/models/checkPlan.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
@@ -7,9 +7,11 @@ import "package:ek_asu_opb_mobile/models/models.dart";
 class CheckPlanItem extends Models {
   int id;
   int odooId;
-  CheckPlan parent; //План проверки
+  int parentId; //План проверки
+  CheckPlan _parent; //План проверки
   String name; //Наименование
-  Department department; //Предприятие
+  int departmentId; //Предприятие
+  Department _department; //Предприятие
   DateTime date; //Дата
   DateTime dtFrom; //Начало мероприятия
   DateTime dtTo; //Окончание мероприятия
@@ -23,23 +25,38 @@ class CheckPlanItem extends Models {
   CheckPlanItem({
     this.id,
     this.odooId,
-    this.parent,
+    this.parentId,
     this.name,
-    this.department,
+    this.departmentId,
     this.date,
     this.dtFrom,
     this.dtTo,
     this.active,
   });
 
+  Future<Department> get department async {
+    if (_department == null)
+      _department = await controllers.Department.selectById(departmentId);
+    return _department;
+  }
+
+  Future<CheckPlan> get parent async {
+    if (_parent == null)
+      _parent = await CheckPlanController.selectById(parentId);
+    return _parent;
+  }
+
   factory CheckPlanItem.fromJson(Map<String, dynamic> json) {
     CheckPlanItem res = new CheckPlanItem(
       id: json["odoo_id"],
       odooId: json["id"],
-      parent: CheckPlanController.selectById(json["parent_id"]),
+      parentId: (json["parent_id"] is List)
+          ? unpackListId(json["parent_id"])['id']
+          : json["parent_id"],
       name: getObj(json["name"]),
-      department:
-          departmentController.Department.selectById(json["department_id"]),
+      departmentId: (json["department_id"] is List)
+          ? unpackListId(json["department_id"])['id']
+          : json["department_id"],
       date: json["date"] == null ? null : DateTime.parse(json["date"]),
       dtFrom: json["dt_from"] == null ? null : DateTime.parse(json["dt_from"]),
       dtTo: json["dt_to"] == null ? null : DateTime.parse(json["dt_to"]),
@@ -52,9 +69,9 @@ class CheckPlanItem extends Models {
     Map<String, dynamic> res = {
       'id': id,
       'odoo_id': odooId,
-      'parent_id': parent.id,
+      'parent_id': parentId,
       'name': name,
-      'department_id': department.id,
+      'department_id': departmentId,
       'date': date.toIso8601String().split(':')[0],
       'dt_from': dtFrom.toIso8601String().split(':')[0],
       'dt_to': dtTo.toIso8601String().split(':')[0],

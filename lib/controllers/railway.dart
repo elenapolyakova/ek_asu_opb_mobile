@@ -20,12 +20,6 @@ class Railway extends Controllers {
     return model.Railway.fromJson(json);
   }
 
-  static Future<String> getName(id) async {
-    Map<String, dynamic> res = await DBProvider.db.selectById(_tableName, id);
-    if (res != null) return res['name'].toString();
-    return null;
-  }
-
   static loadFromOdoo([limit]) async {
     List<dynamic> json = await getDataWithAttemp('eco.railway', 'search_read', [
       [],

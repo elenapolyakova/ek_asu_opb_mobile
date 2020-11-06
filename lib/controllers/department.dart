@@ -28,12 +28,6 @@ class Department extends Controllers {
     return await DBProvider.db.selectAll(_tableName);
   }
 
-  static Future<String> getName(id) async {
-    Map<String, dynamic> res = await DBProvider.db.selectById(_tableName, id);
-    if (res != null) return res['short_name'].toString();
-    return null;
-  }
-
   static loadFromOdoo([limit]) async {
     List<dynamic> json =
         await getDataWithAttemp('eco.department', 'search_read', [

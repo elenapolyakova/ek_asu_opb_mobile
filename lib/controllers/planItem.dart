@@ -1,11 +1,12 @@
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import "package:ek_asu_opb_mobile/models/models.dart";
 import "package:ek_asu_opb_mobile/controllers/syn.dart";
+import 'package:ek_asu_opb_mobile/models/planItem.dart';
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
-class PlanController extends Controllers {
-  static String _tableName = "plan";
+class PlanItemController extends Controllers {
+  static String _tableName = "plan_item";
 
   static Future<List<int>> selectIDs() async {
     List<Map<String, dynamic>> maps =
@@ -19,10 +20,10 @@ class PlanController extends Controllers {
     return await DBProvider.db.selectAll(_tableName);
   }
 
-  static Future<Plan> selectById(int id) async {
+  static Future<PlanItem> selectById(int id) async {
     if (id == null) return null;
     var json = await DBProvider.db.selectById(_tableName, id);
-    return Plan.fromJson(json);
+    return PlanItem.fromJson(json);
   }
 
   static loadFromOdoo([limit]) async {

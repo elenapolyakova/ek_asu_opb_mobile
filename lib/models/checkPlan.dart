@@ -1,3 +1,4 @@
+import 'package:ek_asu_opb_mobile/controllers/planItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/railway.dart'
     as railwayController;
 import 'package:ek_asu_opb_mobile/models/checkPlanItem.dart';
@@ -8,9 +9,11 @@ import "package:ek_asu_opb_mobile/models/models.dart";
 class CheckPlan extends Models {
   int id;
   int odooId;
-  PlanItem parent; //План проверки
+  int parentId; //План проверки
+  PlanItem _parent; //План проверки
   String name; //Наименование
-  Railway railway; //Дорога
+  Railway _railway; //Дорога
+  int railwayId; //Дорога
   DateTime dateFrom; //Начало проверки
   DateTime dateTo; //Окончание проверки
   DateTime dateSet; //Дата утверждения
@@ -43,12 +46,24 @@ class CheckPlan extends Models {
     return [];
   }
 
+  Future<Railway> get railway async {
+    if (_railway == null)
+      _railway = await railwayController.Railway.selectById(railwayId);
+    return _railway;
+  }
+
+  Future<PlanItem> get parent async {
+    if (_parent == null)
+      _parent = await PlanItemController.selectById(parentId);
+    return _parent;
+  }
+
   CheckPlan({
     this.id,
     this.odooId,
-    this.parent,
+    this.parentId,
     this.name,
-    this.railway,
+    this.railwayId,
     this.dateFrom,
     this.dateTo,
     this.dateSet,
@@ -65,11 +80,13 @@ class CheckPlan extends Models {
     CheckPlan res = new CheckPlan(
       odooId: json["odoo_id"],
       id: json["id"],
-      parent: PlanItemController.selectById(json["parent_id"]),
+      parentId: (json["parent_id"] is List)
+          ? unpackListId(json["parent_id"])['id']
+          : json["parent_id"],
       name: getObj(json["name"]),
-      railway: railwayController.Railway.selectById((json["railway_id"] is List)
+      railwayId: (json["railway_id"] is List)
           ? unpackListId(json["railway_id"])['id']
-          : json["railway_id"]),
+          : json["railway_id"],
       dateFrom:
           json["date_from"] == null ? null : DateTime.parse(json["date_from"]),
       dateTo: json["date_to"] == null ? null : DateTime.parse(json["date_to"]),
@@ -90,9 +107,9 @@ class CheckPlan extends Models {
     Map<String, dynamic> res = {
       'odoo_id': odooId,
       'id': id,
-      'parent_id': parent.id,
+      'parent_id': parentId,
       'name': name,
-      'railway_id': railway.id,
+      'railway_id': railwayId,
       'date_from': dateFrom.toIso8601String().split(':')[0],
       'date_to': dateTo.toIso8601String().split(':')[0],
       'date_set': dateSet.toIso8601String().split(':')[0],
