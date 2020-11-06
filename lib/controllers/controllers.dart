@@ -9,6 +9,7 @@ export 'package:ek_asu_opb_mobile/src/db.dart';
 abstract class Controllers {
   static Future<dynamic> insert(Map<String, dynamic> json) async {}
   static select() {}
+  static selectById() {}
   static update() {}
   static delete() {}
   static loadFromOdoo([limit]) async {}

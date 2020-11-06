@@ -18,8 +18,20 @@ class Department extends Controllers {
     return List.generate(maps.length, (index) => maps[index]["id"]);
   }
 
+  static Future<model.Department> selectById(int id) async {
+    if (id == null) return null;
+    var json = await DBProvider.db.selectById(_tableName, id);
+    return model.Department.fromJson(json);
+  }
+
   static Future<List<Map<String, dynamic>>> selectAll() async {
     return await DBProvider.db.selectAll(_tableName);
+  }
+
+  static Future<String> getName(id) async {
+    Map<String, dynamic> res = await DBProvider.db.selectById(_tableName, id);
+    if (res != null) return res['short_name'].toString();
+    return null;
   }
 
   static loadFromOdoo([limit]) async {

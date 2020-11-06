@@ -14,6 +14,12 @@ class Railway extends Controllers {
     return await DBProvider.db.selectAll(_tableName);
   }
 
+  static Future<model.Railway> selectById(int id) async {
+    if (id == null) return null;
+    var json = await DBProvider.db.selectById(_tableName, id);
+    return model.Railway.fromJson(json);
+  }
+
   static Future<String> getName(id) async {
     Map<String, dynamic> res = await DBProvider.db.selectById(_tableName, id);
     if (res != null) return res['name'].toString();
