@@ -18,33 +18,31 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 void callbackDispatcher() {
   WM.Workmanager.executeTask((task, inputData) async {
     if (task == 'syn') {
-      SynController.syncTask();
+      return SynController.syncTask();
     }
-    return Future.value(true);
+    return false;
   });
 }
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Background tasks
-  WM.Workmanager.initialize(
+  await WM.Workmanager.initialize(
       callbackDispatcher, // The top level function, aka callbackDispatcher
       isInDebugMode:
           true // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
       );
-  WM.Workmanager.registerPeriodicTask(
+  await WM.Workmanager.registerPeriodicTask(
     "1", "syn",
     // When no frequency is provided the default 15 minutes is set.
     // Minimum frequency is 15 min. Android will automatically change your frequency to 15 min if you have configured a lower frequency.
     frequency: Duration(minutes: 15),
     constraints: WM.Constraints(networkType: WM.NetworkType.connected),
   );
-  SystemChrome.setPreferredOrientations(
-          [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight])
-      .then((_) {
-    runApp(MyApp());
-  });
+  await SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
+  runApp(MyApp());
 }
 
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
