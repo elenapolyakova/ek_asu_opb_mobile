@@ -130,7 +130,7 @@ class SynController extends Controllers {
     // }
   }
 
-  static syncTask() async {
+  static Future<bool> syncTask() async {
     while (true) {
       // Load a syn record
       List<Map<String, dynamic>> toSyn =
@@ -141,7 +141,7 @@ class SynController extends Controllers {
         print('Finished synchronization');
         DBProvider.db.insert(
             'log', {'date': nowStr(), 'message': "Finished synchronization"});
-        break;
+        return true;
       }
 
       // For each syn record:
