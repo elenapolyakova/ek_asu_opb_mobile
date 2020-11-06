@@ -93,7 +93,7 @@ class Plan extends Models {
       'odoo_id': odooId,
       'type': type,
       'name': name,
-      'railway_id': _railway.id,
+      'railway_id': railwayId,
       'year': year,
       'date_set': dateSet.toIso8601String().split(':')[0],
       'signer_name': signerName,
