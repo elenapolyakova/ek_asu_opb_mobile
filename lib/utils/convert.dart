@@ -24,6 +24,12 @@ int getIdFromList(dynamic source) {
 String dateStr(DateTime dt) =>
     '${addZero(dt.day)}.${addZero(dt.month)}.${dt.year} ${addZero(dt.hour)}:${addZero(dt.minute)}:${addZero(dt.second)}';
 
+String dateDMY(DateTime dt) =>
+    '${addZero(dt.day)}.${addZero(dt.month)}.${dt.year}';
+
+String dateHm(DateTime dt) =>
+    '${addZero(dt.hour)}:${addZero(dt.minute)}';
+
 String nowStr() => dateStr(DateTime.now());
 
 String addZero(val) => slice(('0' + val.toString()), -2);
@@ -56,9 +62,13 @@ Map<String, dynamic> unpackListId(listId) {
   return res;
 }
 
-List<Map<String, dynamic>> makeListFromJson(Map<String, dynamic> json) {
+List<Map<String, dynamic>> makeListFromJson(Map<dynamic, dynamic> json) {
   return List<Map<String, dynamic>>.generate(json.keys.length, (i) {
-    String key = (json.keys.toList())[i];
-    return {'id': key, 'value': json[key]};
+    dynamic key = (json.keys.toList())[i];
+    return {'id': key.toString(), 'value': json[key]};
   });
+}
+
+bool isDateEqual(DateTime dt1, DateTime dt2) {
+  return dt1.year == dt2.year && dt1.month == dt2.month && dt1.day == dt2.day;
 }

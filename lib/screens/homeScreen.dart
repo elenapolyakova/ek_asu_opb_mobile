@@ -169,7 +169,10 @@ class _HomeScreen extends State<HomeScreen> {
         ),*/
 
             body: getBodyContent(),
-            bottomNavigationBar: BottomNavigationBar(
+            
+            bottomNavigationBar:
+            ( _navigationMenu.length > 1) ?
+            BottomNavigationBar(
                 type: BottomNavigationBarType.fixed,
                 backgroundColor: Theme.of(context).bottomAppBarColor,
                 selectedItemColor: Theme.of(context).primaryColorDark,
@@ -190,7 +193,7 @@ class _HomeScreen extends State<HomeScreen> {
                         (i) => BottomNavigationBarItem(
                               label: _navigationMenu[i]["label"],
                               icon: _navigationMenu[i]["icon"],
-                            ))),
+                            ))) : null,
           );
   }
 }

@@ -1,10 +1,13 @@
 import 'dart:ui';
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart' as controllers;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ek_asu_opb_mobile/components/flutter_rounded_date_picker/rounded_picker.dart';
 import 'package:ek_asu_opb_mobile/components/time_picker_spinner.dart';
 import 'package:intl/intl.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
+import 'package:ek_asu_opb_mobile/models/department.dart' as dep;
 
 class TextIcon extends StatefulWidget {
   IconData icon;
@@ -112,13 +115,8 @@ class _EditTextField extends State<EditTextField> {
           Container(
               alignment: Alignment.bottomLeft,
               padding: EdgeInsets.only(bottom: 5.0),
-              child: Text(
-                widget.text,
-                textAlign: TextAlign.left,
-                style: TextStyle(
-                  color: color,
-                ),
-              )),
+              child: Text(widget.text,
+                  textAlign: TextAlign.left, style: textStyle)),
           Container(
             height: widget.height,
             decoration: BoxDecoration(
@@ -128,8 +126,8 @@ class _EditTextField extends State<EditTextField> {
             ),
             child: TextFormField(
               readOnly: widget.showEditDialog,
-              controller: TextEditingController.fromValue(
-                  TextEditingValue(text: _value)),
+              controller: TextEditingController.fromValue(TextEditingValue(
+                  text: widget.value != null ? widget.value.toString() : "")),
               decoration: new InputDecoration(
                   border: OutlineInputBorder(borderSide: BorderSide.none),
                   contentPadding: EdgeInsets.all(5.0)),
@@ -137,9 +135,9 @@ class _EditTextField extends State<EditTextField> {
               //     _value, //widget.value != null ? widget.value.toString() : '',
               onTap: () {
                 if (!widget.showEditDialog) return;
-                showEdit(_value, widget.text, widget.context)
+                showEdit(widget.value, widget.text, widget.context)
                     .then((newValue) => setState(() {
-                          _value = newValue ?? "";
+                          widget.value = newValue ?? "";
                         }));
               },
               cursorColor: widget.color,
@@ -430,13 +428,7 @@ class _MyDropdown extends State<MyDropdown> {
               alignment: Alignment.bottomLeft,
               height: text == "" ? 0 : 35.0,
               padding: EdgeInsets.only(bottom: text == "" ? 0 : 5.0),
-              child: Text(
-                text,
-                textAlign: TextAlign.left,
-                style: TextStyle(
-                  color: color,
-                ),
-              )),
+              child: Text(text, textAlign: TextAlign.left, style: textStyle)),
           Container(
               height: 35.0,
               width: widget.width,
@@ -581,7 +573,7 @@ class _DatePicker extends State<DatePicker> {
   Widget build(BuildContext context) {
     final color = Theme.of(context).buttonColor;
     final textStyle = TextStyle(fontSize: 16.0, color: color);
-    final disabledColor =  Color(0xAA6E6E6E);
+    final disabledColor = Color(0xAA6E6E6E);
     String _text = widget.text ?? "";
     return
         /*Row(crossAxisAlignment: CrossAxisAlignment.end, children: <Widget>[
@@ -597,20 +589,21 @@ class _DatePicker extends State<DatePicker> {
                       height: _text == "" ? 0 : 35.0,
                       alignment: Alignment.bottomLeft,
                       padding: EdgeInsets.only(bottom: 5.0),
-                      child: Text(
-                        _text,
-                        textAlign: TextAlign.left,
-                        style: TextStyle(color: color),
-                      )),
+                      child: Text(_text,
+                          textAlign: TextAlign.left, style: textStyle)),
                   Container(
                       height: 35,
                       width: double.infinity,
                       decoration: BoxDecoration(
                           border: Border.all(
-                              color: widget.enable ? Theme.of(context).primaryColorLight: disabledColor,
-                              width: 1.5), 
+                              color: widget.enable
+                                  ? Theme.of(context).primaryColorLight
+                                  : disabledColor,
+                              width: 1.5),
                           borderRadius: BorderRadius.all(Radius.circular(12)),
-                          color: widget.enable ? Theme.of(context).primaryColorLight : disabledColor),
+                          color: widget.enable
+                              ? Theme.of(context).primaryColorLight
+                              : disabledColor),
                       child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           mainAxisSize: MainAxisSize.min,
@@ -670,7 +663,7 @@ class _TimePicker extends State<TimePicker> {
   @override
   Widget build(BuildContext context) {
     DateTime now = DateTime.now();
-    _time = _time ?? DateTime(now.year, now.month, now.day, 8, 0, 0);
+    _time = _time ?? now; //DateTime(now.year, now.month, now.day, 8, 0, 0);
 
     String _value = '${addZero(_time.hour)}:${addZero(_time.minute)}';
 
@@ -696,13 +689,12 @@ class _TimePicker extends State<TimePicker> {
                 : Color(0xAA6E6E6E)),
         child: TextFormField(
           readOnly: true,
-          style: TextStyle(color:Theme.of(widget.context).buttonColor),
+          style: TextStyle(color: Theme.of(widget.context).buttonColor),
           controller:
               TextEditingController.fromValue(TextEditingValue(text: _value)),
           decoration: new InputDecoration(
               border: OutlineInputBorder(borderSide: BorderSide.none),
-              contentPadding: EdgeInsets.all(5.0)
-              ),
+              contentPadding: EdgeInsets.all(5.0)),
           // initialValue:
           //     _value, //widget.value != null ? widget.value.toString() : '',
           onTap: () {
@@ -778,4 +770,356 @@ Future<DateTime> showTimePicker(DateTime time, BuildContext parentContext,
                   )
                 ])));
       });
+}
+
+class DepartmentSelect extends StatefulWidget {
+  String text;
+  dep.Department department;
+  int railwayId;
+  Function(dep.Department) onSaved;
+  BuildContext context;
+  double width;
+  double height;
+  int maxLine;
+
+  DepartmentSelect(
+      {this.text = "",
+      this.department,
+      this.railwayId = null,
+      this.context,
+      this.onSaved,
+      this.width = 300,
+      this.height = 60,
+      this.maxLine = 2});
+  @override
+  State<DepartmentSelect> createState() =>
+      _DepartmentSelect(department, railwayId);
+}
+
+class _DepartmentSelect extends State<DepartmentSelect> {
+  dep.Department _department;
+  int _railwayId;
+  dep.Department selecteDepartment; 
+  int selectedRailwayId; 
+  int selectedId;
+
+  String _value;
+  _DepartmentSelect(dep.Department department, int railway_id) {
+    _department = department;
+    _railwayId = railway_id;
+  }
+
+  void onRailwaySelected(railwayId) {
+    setState(() {
+      selectedRailwayId = railwayId;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // String _value = widget.value.toString();
+    final color = Theme.of(widget.context).buttonColor;
+    final textStyle = TextStyle(fontSize: 16.0, color: color);
+
+    return Container(
+        margin: EdgeInsets.symmetric(horizontal: 13, vertical: 13),
+        child: Column(children: <Widget>[
+          Container(
+              alignment: Alignment.bottomLeft,
+              padding: EdgeInsets.only(bottom: 5.0),
+              child: Text(widget.text,
+                  textAlign: TextAlign.left, style: textStyle)),
+          Container(
+            height: widget.height,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.white, width: 1.5),
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+              color: Colors.white,
+            ),
+            child: TextFormField(
+                readOnly: true,
+                maxLines: widget.maxLine,
+                controller: TextEditingController.fromValue(TextEditingValue(
+                    text: _department != null ? _department.name : '')),
+                decoration: new InputDecoration(
+                    border: OutlineInputBorder(borderSide: BorderSide.none),
+                    contentPadding: EdgeInsets.all(5.0)),
+                // initialValue:
+                //     _value, //widget.value != null ? widget.value.toString() : '',
+                onTap: () {
+                  showDepartmentSelect(_department, _railwayId, widget.text,
+                          widget.context, setState,
+                          onRailwaySelected: onRailwaySelected)
+                      .then((department) {
+                    if (department == null) return;
+                    setState(() {
+                      _department = department ?? null;
+                      return widget.onSaved(_department);
+                    });
+                  });
+                },
+                cursorColor: Theme.of(widget.context).primaryColorDark,
+                style: textStyle
+                // maxLength: 256,
+                ),
+          )
+        ]));
+  }
+
+  Future<List<dynamic>> onSearch(String template, int railwayId) async {
+    List<dep.Department> list =
+        await controllers.Department.select(template, railwayId);
+    if (list == null) return null;
+    List<dynamic> result = List.generate(list.length, (index) {
+      return {
+        'id': list[index].id,
+        'value': '${list[index].name}(${list[index].short_name})'
+      };
+    });
+    return result;
+  }
+
+  Future<dep.Department> showDepartmentSelect(dep.Department sourceDepartment,
+      int sourceRailwayId, String text, BuildContext parentContext, setState,
+      {Function(int) onRailwaySelected}) async {
+    List<Map<String, dynamic>> railwayList = await getRailwayList();
+    railwayList.insert(0, ({"id": 0, "value": "Центральный аппарат"}));
+
+    setState(() {
+      if (sourceRailwayId != null) selectedRailwayId = sourceRailwayId;
+    });
+
+    return showDialog<dep.Department>(
+        context: parentContext,
+        barrierDismissible: true,
+        barrierColor: Color(0x88E6E6E6),
+        builder: (context) {
+          return StatefulBuilder(builder: (context, StateSetter setState) {
+            return AlertDialog(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12.0))),
+                backgroundColor: Theme.of(context).primaryColor,
+                content: SingleChildScrollView(
+                    child: ConstrainedBox(
+                        constraints:
+                            BoxConstraints(maxHeight: 700, minWidth: 700),
+                        child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (_railwayId == null)
+                                Container(
+                                    width: 500,
+                                    child: MyDropdown(
+                                      text: 'Дорога',
+                                      dropdownValue: selectedRailwayId != null
+                                          ? selectedRailwayId.toString()
+                                          : null,
+                                      items: railwayList,
+                                      onChange: (value) {
+                                        setState(() {
+                                          selectedRailwayId =
+                                              int.tryParse(value);
+                                        });
+                                        return onRailwaySelected(
+                                            selectedRailwayId);
+                                      },
+                                      parentContext: context,
+                                    )),
+                              if (selectedRailwayId != null)
+                                SearchBox(
+                                  (newValue) =>
+                                      setState(() => selectedId = newValue),
+                                  (template) {
+                                    return onSearch(
+                                        template, selectedRailwayId);
+                                  },
+                                  context,
+                                  text: 'Структурное подразделение',
+                                  width: 750,
+                                ),
+                              if (selectedRailwayId == null)
+                                Expanded(
+                                    child: Center(
+                                        child: Text(
+                                            'Для поиска структурных подразделений выберите дорогу'))),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  MyButton(
+                                      text: 'принять',
+                                      parentContext: parentContext,
+                                      onPress: () async {
+                                        selecteDepartment = await controllers
+                                            .Department.selectById(selectedId);
+                                        Navigator.pop<dep.Department>(
+                                            context, selecteDepartment);
+                                      }),
+                                  MyButton(
+                                      text: 'отменить',
+                                      parentContext: parentContext,
+                                      onPress: () {
+                                        Navigator.pop<dep.Department>(
+                                            context, sourceDepartment);
+                                      }),
+                                ],
+                              )
+                            ])
+                        //Navigator.pop<bool>(context, result);
+                        )));
+          });
+        });
+  }
+}
+
+class SearchBox extends StatefulWidget {
+  IconData icon;
+  String text;
+  Function(String) onSearch;
+  double width;
+  double height;
+  BuildContext parentContext;
+  Function(dynamic) valueChanged;
+
+  SearchBox(
+    this.valueChanged,
+    this.onSearch,
+    this.parentContext, {
+    this.icon = Icons.search,
+    this.text = "",
+    this.width = 600,
+    this.height = 400,
+  });
+  @override
+  State<SearchBox> createState() => _SearchBox();
+}
+
+class _SearchBox extends State<SearchBox> {
+  List<dynamic> result = [];
+  String template;
+  String emptyText = "";
+  int _selectedId;
+  final keyDepartmentForm = new GlobalKey<FormState>();
+
+  Future<List<dynamic>> _onSearch() async {
+    final form = keyDepartmentForm.currentState;
+    form.save();
+
+    List<dynamic> _result = await widget.onSearch(template);
+    setState(() {
+      emptyText = 'По Вашему запросу ничего не найдено';
+      _selectedId = null;
+      result = _result;
+    });
+  }
+
+  void onRowSelected(int index) {
+    setState(() {
+      _selectedId = result[index]["id"];
+    });
+    widget.valueChanged(_selectedId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        constraints: BoxConstraints.tightForFinite(
+          width: widget.width,
+          height: widget.height,
+        ),
+        padding: EdgeInsets.all(10),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+                child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                    child: Form(
+                        key: keyDepartmentForm,
+                        child: EditTextField(
+                            text: widget.text,
+                            value: template,
+                            showEditDialog: true,
+                            context: widget.parentContext,
+                            onSaved: (newValue) {
+                              setState(() {
+                                template = newValue;
+                              });
+                            }))),
+                Container(
+                  child: IconButton(
+                      padding: EdgeInsets.all(0),
+                      icon: Icon(widget.icon),
+                      iconSize: 40,
+                      color: Theme.of(widget.parentContext).primaryColorDark,
+                      onPressed: () => _onSearch()),
+                )
+              ],
+            )),
+            Expanded(
+                child: Container(
+                    margin: EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.white, width: 1.5),
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                      color: Theme.of(context).primaryColorLight,
+                    ),
+                    child: (result != null && result.length > 0)
+                        ? ListView(
+                            children: List.generate(result.length, (index) {
+                            return GestureDetector(
+                                onTap: () => onRowSelected(index),
+                                child: Row(children: [
+                                  Expanded(
+                                    child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 5),
+                                        color: result[index]["id"] ==
+                                                _selectedId
+                                            ? Theme.of(context).primaryColorDark
+                                            : null,
+                                        child: Text(
+                                          result[index]["value"] ?? "",
+                                          style: TextStyle(
+                                              color: result[index]
+                                                          ["id"] ==
+                                                      _selectedId
+                                                  ? Theme.of(context)
+                                                      .primaryColorLight
+                                                  : Theme.of(context)
+                                                      .buttonColor),
+                                        )),
+                                  )
+                                ]));
+                          }))
+                        : Row(children: [
+                            Expanded(
+                                child: Text(
+                              '$emptyText',
+                              textAlign: TextAlign.center,
+                            ))
+                          ])))
+          ],
+        ));
+
+    /*GestureDetector(
+        onTap: widget.onTap,
+        child: Container(
+            margin: EdgeInsets.symmetric(horizontal: widget.margin),
+            child: Row(children: <Widget>[
+              IconButton(
+                  padding: EdgeInsets.all(0),
+                  icon: Icon(widget.icon), //Icons.logout),
+                  color: widget.color,
+                  onPressed: () => widget.onTap),
+              new Text(
+                widget.text,
+                style: TextStyle(
+                  color: widget.color,
+                ),
+              )
+            ])));*/
+  }
 }

@@ -55,7 +55,9 @@ class User extends Models {
       'email': email,
       'phone': phone,
       'active': active,
-      'function': function
+      'function': function,
+      'search_field':
+          display_name.trim().toLowerCase()
     };
   }
 

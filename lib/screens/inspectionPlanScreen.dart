@@ -1,60 +1,31 @@
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart' as controllers;
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
-import 'package:ek_asu_opb_mobile/components/time_picker_spinner.dart';
 
-class Inspection {
-  int id;
-  int planItemId;
-  String name; //наименование
-  String signerName; //Подписант имя
-  String signerPost; //Подписант должность
-  String appName; //утвержден имя
-  String appPost; //утвержден должность
-  String numSet; //Номер плана
-  String dateSet; //дата утверждения
-  bool active; //Действует
-  String state; //Состояние
-  String dateBegin; //Дата начала проверки
-  String dateEnd; //Дата окончания проверки
-  Inspection(
-      {this.id,
-      this.planItemId,
-      this.name,
-      this.signerName,
-      this.signerPost,
-      this.appName,
-      this.appPost,
-      this.numSet,
-      this.dateSet,
-      this.active,
-      this.state,
-      this.dateBegin,
-      this.dateEnd});
-}
-
-//todo delete when model exists
 class InspectionItem {
   int id;
-  int inspectionItemId;
+  int inspectionId;
   int departmentId; //если проверка СП
   int eventId; //для обеда, отъезда, ужина и тд
   String eventName; //событие текстом на случай встреча с руководством и тд
-  String date; //Дата проверки
-  String timeBegin; //Время начала проверки
-  String timeEnd; //Время окончания проверки
+  DateTime date; //Дата проверки
+  DateTime timeBegin; //Время начала проверки
+  DateTime timeEnd; //Время окончания проверки
+  int groupId; //члены комиссии
   InspectionItem(
       {this.id,
-      this.inspectionItemId,
+      this.inspectionId,
       this.departmentId,
       this.eventId,
       this.eventName,
       this.date,
       this.timeBegin,
-      this.timeEnd});
+      this.timeEnd,
+      this.groupId});
 }
 
 //todo delete
@@ -73,32 +44,67 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   UserInfo _userInfo;
   bool showLoading = true;
   Map<String, dynamic> planItem;
-  Inspection _inspection;
+  CheckPlan _inspection;
   //создаём копию и при редактировании работаем с ней
   //если пользователь отменит или ошибка при сохранении - вернем на начальное значение _inspection
-  Inspection inspectionCopy;
+  CheckPlan inspectionCopy;
   String emptyTableName;
   String _tableName;
   List<Map<String, dynamic>> railwayList;
   List<Map<String, dynamic>> stateList;
   List<Map<String, dynamic>> eventList;
+  List<Map<String, dynamic>> groupList;
   var _tapPosition;
   bool hasTimeBegin;
   bool hasTimeEnd;
+  int eventId;
+  String eventName;
+  Department department;
 
-  List<InspectionItem> _inspectionItems = [];
-  /*<InspectionItem>[
-    InspectionItem(inspectionId: 1,inspectionItemId: 1, departmentId: null, eventId: null, eventName: '' ),
-    InspectionItem(),
-    InspectionItem(),
-  ];*/
-  List<InspectionItem> inspectionItems = [];
+  List<InspectionItem> _inspectionItems = <InspectionItem>[
+    InspectionItem(
+        id: 1,
+        inspectionId: 1,
+        departmentId: null,
+        eventId: 2,
+        eventName: 'Встреча членов комиссии. Размещение в гостинице',
+        date: DateTime(2020, 5, 19),
+        timeBegin: null,
+        timeEnd: null,
+        groupId: null),
+    InspectionItem(
+        id: 2,
+        inspectionId: 1,
+        departmentId: null,
+        eventId: 2,
+        eventName: 'Встреча c руководством Оренбургского региона',
+        date: DateTime(2020, 5, 20),
+        timeBegin: DateTime(2020, 5, 20, 8, 0),
+        timeEnd: DateTime(2020, 5, 20, 8, 30),
+        groupId: 1),
+    InspectionItem(
+        id: 3,
+        inspectionId: 1,
+        departmentId: 32229,
+        eventId: 1,
+        eventName: null,
+        date: DateTime(2020, 5, 20),
+        timeBegin: DateTime(2020, 5, 20, 8, 30),
+        timeEnd: DateTime(2020, 5, 20, 12, 30),
+        groupId: 2),
+  ];
+  List<Map<String, dynamic>> inspectionItems = [];
   final formInspectionKey = new GlobalKey<FormState>();
   final formInspectionItemKey = new GlobalKey<FormState>();
 
   List<Map<String, dynamic>> choices = [
-    {'title': "Редактировать проверку", 'icon': Icons.edit, 'key': 'edit'},
-    {'title': 'Удалить проверку', 'icon': Icons.delete, 'key': 'delete'},
+    {'title': "Редактировать запись", 'icon': Icons.edit, 'key': 'edit'},
+    {'title': 'Удалить запись', 'icon': Icons.delete, 'key': 'delete'}
+  ];
+
+  List<Map<String, dynamic>> choicesWithInspection = [
+    {'title': "Редактировать запись", 'icon': Icons.edit, 'key': 'edit'},
+    {'title': 'Удалить запись', 'icon': Icons.delete, 'key': 'delete'},
     {'title': 'Начать проверку', 'icon': Icons.flag, 'key': 'forward'}
   ];
 
@@ -108,6 +114,19 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     {'text': 'Время проверки (мест. вр)', 'flex': 2.0},
     {'text': 'Члены комиссии', 'flex': 2.0}
   ];
+
+  //todo delete
+  List<Map<String, dynamic>> _groupList = [
+    {
+      'id': 1,
+      'value': 'Все члены комисии',
+    },
+    {
+      'id': 2,
+      'value': 'Группа 1',
+    }
+  ];
+
   @override
   _InspectionPlanScreen(this.planItem);
 
@@ -150,19 +169,43 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     } catch (e) {}*/
 
     if (_inspection == null)
-      _inspection = new Inspection(
-          id: null, planItemId: planItemId, name: emptyTableName);
+      _inspection = new CheckPlan(
+          id: 1, //null, todo вернуть на null!!!!!
+          parentId: planItemId,
+          name: emptyTableName);
 
     await reloadInspectionItems(_inspection.id);
+    await reloadGroups(_inspection.id);
 
     setState(() => {});
   }
 
   Future<void> reloadInspectionItems(int inspectionId) async {
+    inspectionItems = [];
+    if (inspectionId != null) {
+      //todo потом проверять planId <> null
+      //_inspectionItems; //получать из базы
+      for (int i = 0; i < _inspectionItems.length; i++) {
+        InspectionItem item = _inspectionItems[i];
+        String name = await depOrEventName(
+            item.eventId, item.departmentId, item.eventName);
+        inspectionItems.add({'item': item, 'name': name});
+      }
+    }
+  }
+
+  Future<void> reloadGroups(int inspectionId) async {
     if (inspectionId != null) //todo потом проверять planId <> null
-      inspectionItems = _inspectionItems;
+      groupList = _groupList; //получать из базы
     else
-      inspectionItems = [];
+      groupList = [];
+  }
+
+  Future<String> depOrEventName(
+      int eventId, int departmentId, String eventName) async {
+    if (departmentId != null)
+      return (await controllers.Department.selectById(departmentId)).name;
+    return eventName ?? "";
   }
 
   @override
@@ -219,11 +262,6 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                               context, inspectionItemHeader, inspectionItems)
                         ])
                       ])),
-                  // Container(
-                  //     child: MyButton(
-                  //         text: 'test',
-                  //         parentContext: context,
-                  //         onPress: testClicked))
                 ])));
   }
 
@@ -233,7 +271,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       PopupMenuItem<String>(
           child: TextIcon(
             icon: Icons.edit,
-            text: "Редактировать проверку",
+            text: "Редактировать план",
             margin: 5.0,
             /* onTap: () */
             color: Theme.of(context).primaryColorDark,
@@ -245,7 +283,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       PopupMenuItem<String>(
           child: TextIcon(
             icon: Icons.add,
-            text: "Добавить запись",
+            text: "Добавить пункт",
             margin: 5.0,
             /* onTap: () ,*/
             color: Theme.of(context).primaryColorDark,
@@ -256,7 +294,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   }
 
   Widget generateTableData(BuildContext context,
-      List<Map<String, dynamic>> headers, List<InspectionItem> rows) {
+      List<Map<String, dynamic>> headers, List<Map<String, dynamic>> rows) {
     int i = 0;
     Map<int, TableColumnWidth> columnWidths = Map.fromIterable(headers,
         key: (item) => i++,
@@ -279,25 +317,29 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                 )));
     List<TableRow> tableRows = [headerTableRow];
     int rowIndex = 0;
-    /*rows.forEach((row) {
+    rows.forEach((row) {
       rowIndex++;
+      InspectionItem item = row["item"] as InspectionItem;
       TableRow tableRow = TableRow(
           decoration: BoxDecoration(
               color: (rowIndex % 2 == 0
                   ? Theme.of(context).shadowColor
                   : Colors.white)),
           children: [
-            getRowCell(row.filial, row.planItemId, 0),
-            getRowCell(row.department, row.planItemId, 1),
             getRowCell(
-                getTypeInspectionById(row.typeId)["value"], row.planItemId, 2),
-            getRowCell(getPeriodInspectionById(row.periodId)["value"],
-                row.planItemId, 3),
-            getRowCell(row.responsible, row.planItemId, 4),
-            getRowCell(row.result, row.planItemId, 5),
+                dateDMY(item.date), item.id, 0, item.eventId, item.departmentId,
+                textAlign: TextAlign.center),
+            getRowCell(
+                row['name'], item.id, 1, item.eventId, item.departmentId),
+            getRowCell(getTimePeriod(item.timeBegin, item.timeEnd), item.id, 2,
+                item.eventId, item.departmentId,
+                textAlign: TextAlign.center),
+            getRowCell(getGroupById(item.groupId), item.id, 4, item.eventId,
+                item.departmentId,
+                textAlign: TextAlign.center),
           ]);
       tableRows.add(tableRow);
-    });*/
+    });
 
     return Table(
         border: TableBorder.all(),
@@ -305,7 +347,48 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
         children: tableRows);
   }
 
-  void _showCustomMenu(int inspectionItemId, int index) {
+  Widget getRowCell(String text, int inspectionItemId, int index, int eventId,
+      int departmentId,
+      {TextAlign textAlign = TextAlign.left}) {
+    Widget cell = Container(
+      padding: EdgeInsets.all(10.0),
+      child: Text(
+        text,
+        textAlign: textAlign,
+      ),
+    );
+
+    return GestureDetector(
+        onTapDown: _storePosition,
+        onLongPress: () {
+          _showCustomMenu(inspectionItemId, index, eventId, departmentId);
+        },
+        child: cell);
+  }
+
+  String getTimePeriod(DateTime dtBegin, DateTime dtEnd) {
+    print(dtBegin);
+    print(dtEnd);
+    if (dtBegin != null) {
+      if (dtEnd != null) {
+        if (isDateEqual(dtBegin, dtEnd))
+          return '${dateHm(dtBegin)} - ${dateHm(dtEnd)}';
+        return '${dateDMY(dtBegin)} ${dateHm(dtBegin)} - ${dateDMY(dtEnd)} ${dateHm(dtEnd)}';
+      }
+      return dateHm(dtBegin);
+    }
+    return '';
+  }
+
+  String getGroupById(int groupId) {
+    if (groupId == null || groupList.length == 0) return '';
+    Map<String, dynamic> group =
+        groupList.firstWhere((group) => group["id"] == groupId);
+    return group != null ? group['value'] : '';
+  }
+
+  void _showCustomMenu(
+      int inspectionItemId, int index, int eventId, int departmentId) {
     final RenderBox overlay = Overlay.of(context).context.findRenderObject();
     showMenu(
         context: context,
@@ -314,7 +397,9 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
         items: <PopupMenuEntry<Map<String, dynamic>>>[
           CustomPopMenu(
             context: context,
-            choices: choices,
+            choices: (eventId == 1 && departmentId != null)
+                ? choicesWithInspection
+                : choices,
           )
         ]).then<void>((Map<String, dynamic> choice) {
       if (choice == null) return;
@@ -336,7 +421,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     _tapPosition = details.globalPosition;
   }
 
-  Future<bool> showInspectionDialog(Inspection inspection) {
+  Future<bool> showInspectionDialog(CheckPlan inspection) {
     return showDialog<bool>(
         context: context,
         barrierDismissible: true,
@@ -398,15 +483,12 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                   parentContext: context,
                                                   text: "Дата начала",
                                                   width: 150,
-                                                  selectedDate: DateTime
-                                                          .tryParse(inspection
-                                                              .dateBegin
-                                                              .toString()) ??
-                                                      DateTime.now(),
+                                                  selectedDate:
+                                                      inspection.dateFrom ??
+                                                          DateTime.now(),
                                                   onChanged: ((DateTime date) {
                                                     //   setState(() {
-                                                    inspection.dateBegin =
-                                                        date.toString();
+                                                    inspection.dateFrom = date;
                                                     //  });
                                                   }))),
                                           Container(
@@ -416,15 +498,12 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                   parentContext: context,
                                                   text: "Дата окончания",
                                                   width: 150,
-                                                  selectedDate: DateTime
-                                                          .tryParse(inspection
-                                                              .dateEnd
-                                                              .toString()) ??
-                                                      DateTime.now(),
+                                                  selectedDate:
+                                                      inspection.dateTo ??
+                                                          DateTime.now(),
                                                   onChanged: ((DateTime date) {
                                                     //   setState(() {
-                                                    inspection.dateEnd =
-                                                        date.toString();
+                                                    inspection.dateTo = date;
                                                     //  });
                                                   })))
                                         ]),
@@ -450,15 +529,12 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                   parentContext: context,
                                                   text: "Дата утверждения",
                                                   width: 150,
-                                                  selectedDate: DateTime
-                                                          .tryParse(inspection
-                                                              .dateSet
-                                                              .toString()) ??
-                                                      DateTime.now(),
+                                                  selectedDate:
+                                                      inspection.dateSet ??
+                                                          DateTime.now(),
                                                   onChanged: ((DateTime date) {
                                                     //   setState(() {
-                                                    inspection.dateSet =
-                                                        date.toString();
+                                                    inspection.dateSet = date;
                                                     //  });
                                                   })))
                                         ]),
@@ -514,13 +590,22 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   }
 
   Future<bool> showInspectionItemDialog(
-      InspectionItem inspectionItem, setState) {
+      InspectionItem inspectionItem, setState) async {
+    Department tempDepartment = inspectionItem.departmentId != null
+        ? await controllers.Department.selectById(inspectionItem.departmentId)
+        : null;
     setState(() {
       hasTimeBegin = inspectionItem.timeBegin != null;
       hasTimeEnd = inspectionItem.timeEnd != null;
+      eventId = inspectionItem.eventId ?? null;
+      eventName = inspectionItem.eventName ?? "";
+      department = tempDepartment;
     });
+
+    int checkTypeId = 1;
+    double widthDepartment = 500;
     final TextStyle enableText =
-        TextStyle(fontSize: 16.0, color: Theme.of(context).primaryColorDark);
+        TextStyle(fontSize: 16.0, color: Theme.of(context).buttonColor);
     final TextStyle disableText =
         TextStyle(fontSize: 16.0, color: Color(0xAA6E6E6E));
     return showDialog<bool>(
@@ -534,7 +619,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                     borderRadius: BorderRadius.all(Radius.circular(12.0))),
                 backgroundColor: Theme.of(context).primaryColor,
                 content: Container(
-                    width: 500.0,
+                    width: widthDepartment * 2 + 50,
                     child: Scaffold(
                         backgroundColor: Theme.of(context).primaryColor,
                         body: Form(
@@ -544,318 +629,395 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                               Expanded(
                                   child: Center(
                                       child: SingleChildScrollView(
-                                          child: Column(
+                                          child: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                    Expanded(
+                                        child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceEvenly,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Container(
+                                                  width: 450,
+                                                  padding: EdgeInsets.only(
+                                                      bottom: 10),
+                                                  child: MyDropdown(
+                                                    text: 'Тип события',
+                                                    dropdownValue:
+                                                        inspectionItem
+                                                                    .eventId !=
+                                                                null
+                                                            ? inspectionItem
+                                                                .eventId
+                                                                .toString()
+                                                            : null,
+                                                    items: eventList,
+                                                    onChange: (value) {
+                                                      inspectionItem.eventId =
+                                                          int.tryParse(value);
+                                                      setState(() {
+                                                        eventId =
+                                                            int.tryParse(value);
+                                                        if (eventId >
+                                                            checkTypeId) if (eventId < 100)
+                                                          eventName =
+                                                              getEventInspectionById(
+                                                                      eventId)[
+                                                                  "value"];
+                                                        else
+                                                          eventName = "";
+                                                        inspectionItem
+                                                                .eventName =
+                                                            eventName;
+                                                      });
+                                                    },
+                                                    parentContext: context,
+                                                  )),
+                                            ],
+                                          ),
+                                          Row(
                                               mainAxisAlignment:
                                                   MainAxisAlignment.spaceEvenly,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
-                                    Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Container(
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 13),
-                                              child: Container(
-                                                  width: 200,
-                                                  child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Container(
-                                                            padding:
-                                                                EdgeInsets.only(
-                                                                    bottom: 6),
-                                                            child: Text(
-                                                              'Дата проверки',
-                                                              textAlign:
-                                                                  TextAlign
-                                                                      .left,
-                                                              style: enableText,
-                                                            )),
-                                                        DatePicker(
-                                                            parentContext:
-                                                                context,
-                                                            text: "",
-                                                            width: 200,
-                                                            selectedDate: DateTime
-                                                                    .tryParse(
-                                                                        inspectionItem
-                                                                            .date
-                                                                            .toString()) ??
-                                                                DateTime.now(),
-                                                            onChanged:
-                                                                ((DateTime
-                                                                    date) {
-                                                              // setState(() {
-                                                              inspectionItem
-                                                                      .date =
-                                                                  date.toString();
-                                                              // });
-                                                            })),
-                                                      ]))),
-                                          Container(
-                                              child: Container(
-                                                  width: 200,
-                                                  child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Container(
-                                                            padding:
-                                                                EdgeInsets.only(
-                                                                    bottom: 2),
-                                                            child:
-                                                                Row(children: [
-                                                              SizedBox(
-                                                                  height: 24,
-                                                                  width: 24,
-                                                                  child:
-                                                                      Checkbox(
-                                                                    value:
-                                                                        hasTimeBegin ??
-                                                                            false,
-                                                                    onChanged:
-                                                                        (value) {
-                                                                      setState(
-                                                                          () {
-                                                                        hasTimeBegin =
-                                                                            value;
-                                                                      });
-                                                                    },
-                                                                    checkColor:
-                                                                        Theme.of(context)
-                                                                            .primaryColor,
+                                                Container(
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                            horizontal: 13),
+                                                    child: Container(
+                                                        width: 200,
+                                                        child: Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              Container(
+                                                                  padding: EdgeInsets
+                                                                      .only(
+                                                                          bottom:
+                                                                              6),
+                                                                  child: Text(
+                                                                    'Дата проверки',
+                                                                    textAlign:
+                                                                        TextAlign
+                                                                            .left,
+                                                                    style:
+                                                                        enableText,
                                                                   )),
-                                                              GestureDetector(
-                                                                  child: Text(
-                                                                    'Время',
-                                                                    style: hasTimeBegin
-                                                                        ? enableText
-                                                                        : disableText,
-                                                                    textAlign:
-                                                                        TextAlign
-                                                                            .left,
-                                                                  ),
-                                                                  onTap: () {
-                                                                    setState(
-                                                                        () {
-                                                                      hasTimeBegin =
-                                                                          !hasTimeBegin;
-                                                                    });
-                                                                  })
-                                                            ])),
-                                                        TimePicker(
-                                                          time: inspectionItem
-                                                                      .timeBegin !=
-                                                                  null
-                                                              ? DateTime.parse(
+                                                              DatePicker(
+                                                                  parentContext:
+                                                                      context,
+                                                                  text: "",
+                                                                  width: 200,
+                                                                  selectedDate: inspectionItem
+                                                                          .date ??
+                                                                      DateTime
+                                                                          .now(),
+                                                                  onChanged:
+                                                                      ((DateTime
+                                                                          date) {
+                                                                    // setState(() {
+                                                                    inspectionItem
+                                                                            .date =
+                                                                        date;
+                                                                    // });
+                                                                  })),
+                                                            ]))),
+                                                Container(
+                                                    child: Container(
+                                                        width: 200,
+                                                        child: Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              Container(
+                                                                  padding: EdgeInsets
+                                                                      .only(
+                                                                          bottom:
+                                                                              2),
+                                                                  child: Row(
+                                                                      children: [
+                                                                        SizedBox(
+                                                                            height:
+                                                                                24,
+                                                                            width:
+                                                                                24,
+                                                                            child:
+                                                                                Checkbox(
+                                                                              value: hasTimeBegin ?? false,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  hasTimeBegin = value;
+                                                                                  if (value && inspectionItem.timeBegin == null) inspectionItem.timeBegin = DateTime.now();
+                                                                                  if (!value) inspectionItem.timeBegin = null;
+                                                                                });
+                                                                              },
+                                                                              checkColor: Theme.of(context).primaryColor,
+                                                                            )),
+                                                                        GestureDetector(
+                                                                            child:
+                                                                                Text(
+                                                                              'Время',
+                                                                              style: hasTimeBegin ? enableText : disableText,
+                                                                              textAlign: TextAlign.left,
+                                                                            ),
+                                                                            onTap:
+                                                                                () {
+                                                                              setState(() {
+                                                                                hasTimeBegin = !hasTimeBegin;
+                                                                              });
+                                                                            })
+                                                                      ])),
+                                                              TimePicker(
+                                                                time: inspectionItem
+                                                                        .timeBegin ??
+                                                                    DateTime
+                                                                        .now(),
+                                                                enable:
+                                                                    hasTimeBegin,
+                                                                minutesInterval:
+                                                                    1,
+                                                                spacing: 50,
+                                                                itemHeight: 80,
+                                                                context:
+                                                                    context,
+                                                                onTimeChange:
+                                                                    (time) {
                                                                   inspectionItem
-                                                                      .timeBegin)
-                                                              : null,
-                                                          enable: hasTimeBegin,
-                                                          minutesInterval: 1,
-                                                          spacing: 50,
-                                                          itemHeight: 80,
-                                                          context: context,
-                                                          onTimeChange: (time) {
-                                                            inspectionItem
-                                                                    .timeBegin =
-                                                                time.toString();
-                                                          },
-                                                        )
-                                                      ]))),
-                                        ]),
-                                    Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Container(
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 13),
-                                              child: Container(
-                                                  width: 200,
-                                                  child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Container(
-                                                            padding:
-                                                                EdgeInsets.only(
-                                                                    bottom: 2,
-                                                                    top: 13),
-                                                            child:
-                                                                Row(children: [
-                                                              SizedBox(
-                                                                  height: 24,
-                                                                  width: 24,
-                                                                  child:
-                                                                      Checkbox(
-                                                                    value:
-                                                                        hasTimeEnd ??
-                                                                            false,
-                                                                    onChanged:
-                                                                        (value) {
-                                                                      setState(
-                                                                          () {
-                                                                        hasTimeEnd =
-                                                                            value;
-                                                                      });
-                                                                    },
-                                                                    checkColor:
-                                                                        Theme.of(context)
-                                                                            .primaryColor,
-                                                                  )),
-                                                              GestureDetector(
-                                                                  child: Text(
-                                                                    'Дата окончания',
-                                                                    style: hasTimeEnd
-                                                                        ? enableText
-                                                                        : disableText,
-                                                                    textAlign:
-                                                                        TextAlign
-                                                                            .left,
-                                                                  ),
-                                                                  onTap: () {
-                                                                    setState(
-                                                                        () {
-                                                                      hasTimeEnd =
-                                                                          !hasTimeEnd;
-                                                                    });
-                                                                  })
-                                                            ])),
-                                                        DatePicker(
-                                                            parentContext:
-                                                                context,
-                                                            text: "",
-                                                            width: 200,
-                                                            enable: hasTimeEnd,
-                                                            selectedDate: DateTime
-                                                                    .tryParse(
-                                                                        inspectionItem
-                                                                            .date
-                                                                            .toString()) ??
-                                                                DateTime.now(),
-                                                            onChanged:
-                                                                ((DateTime
-                                                                    date) {
-                                                              // setState(() {
-                                                              inspectionItem
-                                                                      .date =
-                                                                  date.toString();
-                                                              // });
-                                                            })),
-                                                      ]))),
-                                          Container(
-                                              child: Container(
-                                                  width: 200,
-                                                  padding:
-                                                      EdgeInsets.only(top: 15),
-                                                  child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Container(
-                                                            padding:
-                                                                EdgeInsets.only(
-                                                                    bottom:
-                                                                        6), //2 c checkbox
-                                                            child:
-                                                                Row(children: [
-                                                              if (false)
-                                                                SizedBox(
-                                                                    height: 24,
-                                                                    width: 24,
-                                                                    child:
-                                                                        Checkbox(
-                                                                      value: hasTimeEnd ??
-                                                                          false,
-                                                                      onChanged:
-                                                                          (value) {
-                                                                        setState(
-                                                                            () {
-                                                                          hasTimeEnd =
-                                                                              value;
-                                                                        });
-                                                                      },
-                                                                      checkColor:
-                                                                          Theme.of(context)
-                                                                              .primaryColor,
-                                                                    )),
-                                                              GestureDetector(
-                                                                  child: Text(
-                                                                    'Время',
-                                                                    style: hasTimeEnd
-                                                                        ? enableText
-                                                                        : disableText,
-                                                                    textAlign:
-                                                                        TextAlign
-                                                                            .left,
-                                                                  ),
-                                                                  onTap: () {
-                                                                    setState(
-                                                                        () {
-                                                                      hasTimeEnd =
-                                                                          !hasTimeEnd;
-                                                                    });
-                                                                  })
-                                                            ])),
-                                                        TimePicker(
-                                                          time: inspectionItem
-                                                                      .timeBegin !=
-                                                                  null
-                                                              ? DateTime.parse(
+                                                                          .timeBegin =
+                                                                      time;
+                                                                },
+                                                              )
+                                                            ]))),
+                                              ]),
+                                          Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.spaceEvenly,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Container(
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                            horizontal: 13),
+                                                    child: Container(
+                                                        width: 200,
+                                                        child: Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              Container(
+                                                                  padding: EdgeInsets
+                                                                      .only(
+                                                                          bottom:
+                                                                              2,
+                                                                          top:
+                                                                              13),
+                                                                  child: Row(
+                                                                      children: [
+                                                                        SizedBox(
+                                                                            height:
+                                                                                24,
+                                                                            width:
+                                                                                24,
+                                                                            child:
+                                                                                Checkbox(
+                                                                              value: hasTimeEnd ?? false,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  hasTimeEnd = value;
+                                                                                  if (value && inspectionItem.timeEnd == null) inspectionItem.timeEnd = DateTime.now();
+                                                                                  if (!value) inspectionItem.timeEnd = null;
+                                                                                });
+                                                                              },
+                                                                              checkColor: Theme.of(context).primaryColor,
+                                                                            )),
+                                                                        GestureDetector(
+                                                                            child:
+                                                                                Text(
+                                                                              'Дата окончания',
+                                                                              style: hasTimeEnd ? enableText : disableText,
+                                                                              textAlign: TextAlign.left,
+                                                                            ),
+                                                                            onTap:
+                                                                                () {
+                                                                              setState(() {
+                                                                                hasTimeEnd = !hasTimeEnd;
+                                                                              });
+                                                                            })
+                                                                      ])),
+                                                              DatePicker(
+                                                                  parentContext:
+                                                                      context,
+                                                                  text: "",
+                                                                  width: 200,
+                                                                  enable:
+                                                                      hasTimeEnd,
+                                                                  selectedDate: inspectionItem
+                                                                          .timeEnd ??
+                                                                      DateTime
+                                                                          .now(),
+                                                                  onChanged:
+                                                                      ((DateTime
+                                                                          date) {
+                                                                    // setState(() {
+                                                                    inspectionItem
+                                                                            .timeEnd =
+                                                                        date;
+                                                                    // });
+                                                                  })),
+                                                            ]))),
+                                                Container(
+                                                    child: Container(
+                                                        width: 200,
+                                                        padding:
+                                                            EdgeInsets.only(
+                                                                top: 15),
+                                                        child: Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              Container(
+                                                                  padding: EdgeInsets
+                                                                      .only(
+                                                                          bottom:
+                                                                              6), //2 c checkbox
+                                                                  child: Row(
+                                                                      children: [
+                                                                        if (false)
+                                                                          SizedBox(
+                                                                              height: 24,
+                                                                              width: 24,
+                                                                              child: Checkbox(
+                                                                                value: hasTimeEnd ?? false,
+                                                                                onChanged: (value) {
+                                                                                  setState(() {
+                                                                                    hasTimeEnd = value;
+                                                                                  });
+                                                                                },
+                                                                                checkColor: Theme.of(context).primaryColor,
+                                                                              )),
+                                                                        GestureDetector(
+                                                                            child:
+                                                                                Text(
+                                                                              'Время',
+                                                                              style: hasTimeEnd ? enableText : disableText,
+                                                                              textAlign: TextAlign.left,
+                                                                            ),
+                                                                            onTap:
+                                                                                () {
+                                                                              setState(() {
+                                                                                hasTimeEnd = !hasTimeEnd;
+                                                                              });
+                                                                            })
+                                                                      ])),
+                                                              TimePicker(
+                                                                time:
+                                                                    inspectionItem
+                                                                        .timeEnd,
+                                                                enable:
+                                                                    hasTimeEnd,
+                                                                minutesInterval:
+                                                                    1,
+                                                                spacing: 50,
+                                                                itemHeight: 80,
+                                                                context:
+                                                                    context,
+                                                                onTimeChange:
+                                                                    (time) {
                                                                   inspectionItem
-                                                                      .timeBegin)
-                                                              : null,
-                                                          enable: hasTimeEnd,
-                                                          minutesInterval: 1,
-                                                          spacing: 50,
-                                                          itemHeight: 80,
-                                                          context: context,
-                                                          onTimeChange: (time) {
-                                                            inspectionItem
-                                                                    .timeBegin =
-                                                                time.toString();
-                                                          },
-                                                        )
-                                                      ]))),
-                                        ]),
-                                        Row(
-                                            mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                          children: [
+                                                                          .timeEnd =
+                                                                      time;
+                                                                },
+                                                              )
+                                                            ]))),
+                                              ]),
                                           Container(
-                                                        width:200,
-                                                          child: MyDropdown(
-                                                            text:
-                                                                'Тип события',
-                                                            dropdownValue: inspectionItem.eventId !=
-                                                                    null
-                                                                ? inspectionItem
-                                                                    .eventId
-                                                                    .toString()
-                                                                : null,
-                                                            items:
-                                                                eventList,
-                                                            onChange: (value) {
-                                                              inspectionItem.eventId =
-                                                                  int.tryParse(
-                                                                      value);
-                                                            },
-                                                            parentContext:
-                                                                context,
-                                                          ))
-                                        ],)
+                                              width: 450,
+                                              child: MyDropdown(
+                                                text: 'Члены комиссии',
+                                                dropdownValue:
+                                                    inspectionItem.groupId !=
+                                                            null
+                                                        ? inspectionItem.groupId
+                                                            .toString()
+                                                        : null,
+                                                items: groupList,
+                                                onChange: (value) {
+                                                  setState(() {
+                                                    inspectionItem.groupId =
+                                                        int.tryParse(value);
+                                                  });
+                                                },
+                                                parentContext: context,
+                                              )),
+                                        ])),
+                                    Expanded(
+                                        child: Column(
+                                      children: [
+                                        if (eventId != null &&
+                                            eventId == checkTypeId)
+                                          ConstrainedBox(
+                                              constraints: BoxConstraints(
+                                                  maxWidth: widthDepartment,
+                                                  minHeight: 60),
+                                              child: DepartmentSelect(
+                                                  text:
+                                                      "Структурное подразделение",
+                                                  width: widthDepartment,
+                                                  height: 250,
+                                                  maxLine: 12,
+                                                  department: department,
+                                                  railwayId:
+                                                      planItem["railwayId"],
+                                                  context: context,
+                                                  onSaved: (newDepartment) {
+                                                    if (newDepartment == null)
+                                                      return;
+                                                    setState(() {
+                                                      inspectionItem
+                                                              .departmentId =
+                                                          newDepartment.id;
+                                                      department =
+                                                          newDepartment;
+                                                    });
+                                                  })),
+                                        if (eventId != null &&
+                                            eventId != checkTypeId)
+                                          ConstrainedBox(
+                                              constraints: BoxConstraints(
+                                                  maxWidth: widthDepartment,
+                                                  minHeight: 60),
+                                              child: EditTextField(
+                                                text: 'Описание',
+                                                value: eventName,
+                                                onSaved: (value) {
+                                                  eventName = value;
+                                                  inspectionItem.eventName =
+                                                      value;
+                                                },
+                                                context: context,
+                                                height: 250,
+                                                maxLines: 12,
+                                              )),
+                                        if (eventId == null)
+                                          Container(
+                                              width: widthDepartment,
+                                              height: 250,
+                                              child: Text("")),
+                                      ],
+                                    ))
                                   ])))),
                               Container(
                                   child: MyButton(
@@ -868,26 +1030,26 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   }
 
   Future<void> editInspectionClicked() async {
-    inspectionCopy = new Inspection(
+    inspectionCopy = new CheckPlan(
         id: _inspection.id,
-        planItemId: _inspection.planItemId,
+        parentId: _inspection.parentId,
         name: _inspection.name,
         signerName: _inspection.signerName,
         signerPost: _inspection.signerPost,
         appName: _inspection.appName,
         appPost: _inspection.appPost,
         numSet: _inspection.numSet,
-        dateSet: _inspection.dateSet,
+        dateSet: _inspection.dateSet ?? DateTime.now(),
         active: _inspection.active,
         state: _inspection.state,
-        dateBegin: _inspection.dateBegin,
-        dateEnd: _inspection.dateEnd);
+        dateFrom: _inspection.dateFrom ?? DateTime.now(),
+        dateTo: _inspection.dateTo ?? DateTime.now());
     setState(() {});
     bool result = await showInspectionDialog(inspectionCopy);
     if (result != null && result) //иначе перезагружать _plan?
       setState(() {
         _inspection = inspectionCopy;
-        reloadInspection(_inspection.planItemId);
+        reloadInspection(_inspection.parentId);
       });
   }
 
@@ -948,6 +1110,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       bool result = true;
 
       // if (inspectionItemCopy.id == null) inspectionItemCopy.id = result["id"];
+
       Navigator.pop<bool>(context, result);
       if (result)
         Scaffold.of(context).showSnackBar(successSnackBar);
@@ -957,30 +1120,42 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   }
 
   Future<void> editInspectionItem(int inspectionItemId) async {
-    InspectionItem inspectionItem = inspectionItems
-        .firstWhere((inspectionItem) => inspectionItem.id == inspectionItemId);
+    InspectionItem inspectionItem = (inspectionItems.firstWhere((item) =>
+            (item["item"] as InspectionItem).id == inspectionItemId))["item"]
+        as InspectionItem;
     InspectionItem inspectionItemCopy = new InspectionItem(
         id: inspectionItem.id,
-        inspectionItemId: inspectionItem.inspectionItemId,
+        inspectionId: inspectionItem.inspectionId,
         departmentId: inspectionItem.departmentId,
         eventId: inspectionItem.eventId,
         eventName: inspectionItem.eventName,
         date: inspectionItem.date,
-        timeBegin: inspectionItem.timeBegin);
+        timeBegin: inspectionItem.timeBegin,
+        timeEnd: inspectionItem.timeEnd,
+        groupId: inspectionItem.groupId);
     bool result = await showInspectionItemDialog(inspectionItemCopy, setState);
-    if (result != null && result)
+    if (result != null && result) {
+      Map<String, dynamic> newValue = {
+        'item': inspectionItemCopy,
+        'name': await depOrEventName(inspectionItemCopy.eventId,
+            inspectionItemCopy.departmentId, inspectionItemCopy.eventName)
+      };
+
       setState(() {
-        int index = inspectionItems.indexOf(inspectionItem);
-        inspectionItems[index] = inspectionItemCopy;
+        int index = inspectionItems.indexWhere((inspectionItem) =>
+            (inspectionItem["item"] as InspectionItem).id == inspectionItemId);
+        inspectionItems[index] = newValue;
       });
+    }
   }
 
   Future<void> deleteInspectionItem(int inspectionItemId) async {
     bool result = await showConfirmDialog(
         'Вы уверены, что хотите удалить проверку?', context);
     if (result != null && result) {
-      InspectionItem deletedInspectionItem = inspectionItems.firstWhere(
-          (inspectionItem) => inspectionItem.id == inspectionItemId);
+      Map<String, dynamic> deletedInspectionItem = inspectionItems.firstWhere(
+          (item) => (item["item"] as InspectionItem).id == inspectionItemId);
+
       if (deletedInspectionItem == null) return;
       inspectionItems.remove(deletedInspectionItem);
       //todo delete from db
@@ -989,18 +1164,31 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   }
 
   Future<void> addInspectionItemClicked() async {
-    InspectionItem inspectionItem = new InspectionItem(id: null);
+    if (_inspection.id == null) {
+      Scaffold.of(context).showSnackBar(
+          errorSnackBar(text: 'Сначала добавьте реквизиты плана проверок'));
+      return;
+    }
+    InspectionItem inspectionItem = new InspectionItem(
+        id: null, inspectionId: _inspection.id, date: DateTime.now());
     bool result = await showInspectionItemDialog(inspectionItem, setState);
-    if (result != null && result)
+    if (result != null && result) {
+      Map<String, dynamic> newValue = {
+        'item': inspectionItem,
+        'name': await depOrEventName(inspectionItem.eventId,
+            inspectionItem.departmentId, inspectionItem.eventName)
+      };
       setState(() {
-        inspectionItems.add(inspectionItem);
+        inspectionItems.add(newValue);
         //todo refresh all list?
       });
+    }
   }
 
   Future<void> forwardInsDepartment(int inspectionItemId) async {
-    InspectionItem inspectionItem = inspectionItems
-        .firstWhere((inspectionItem) => inspectionItem.id == inspectionItemId);
+    InspectionItem inspectionItem = (inspectionItems.firstWhere((item) =>
+            (item["item"] as InspectionItem).id == inspectionItemId))["item"]
+        as InspectionItem;
     /* Map<String, dynamic> args = {
       'planItemId': planItemId,
       'filial': planItem.filial,

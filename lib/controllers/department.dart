@@ -28,6 +28,21 @@ class Department extends Controllers {
     return await DBProvider.db.selectAll(_tableName);
   }
 
+  static Future<List<model.Department>> select(String template, int railwayId) async {
+    String railwayWhere =
+        railwayId != null ? 'railway_id = ?' :'railway_id IS NULL';
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
+      _tableName,
+      where: 'search_field like ? and $railwayWhere',
+      whereArgs: ['%${template}%', railwayId],
+    );
+    if (queryRes.isEmpty) return null;
+    List<model.Department> result = List.generate(
+        queryRes.length, (index) => model.Department.fromJson(queryRes[index]));
+
+    return result;
+  }
+
   static loadFromOdoo([limit]) async {
     List<dynamic> json =
         await getDataWithAttemp('eco.department', 'search_read', [

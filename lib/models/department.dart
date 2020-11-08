@@ -13,23 +13,28 @@ String departmantToJson(Department data) {
 }*/
 
 class Department extends Models {
-   int id;
-   String name;
-   String short_name;
-   int railway_id;
-   int parent_id;
-   String active;
+  int id;
+  String name;
+  String short_name;
+  int railway_id;
+  int parent_id;
+  bool active;
 
   Department(
-      {this.id, this.name, this.short_name, this.railway_id, this.parent_id, this.active});
+      {this.id,
+      this.name,
+      this.short_name,
+      this.railway_id,
+      this.parent_id,
+      this.active});
 
   factory Department.fromJson(Map<String, dynamic> json) => new Department(
       id: json["id"],
       name: getStr(json["name"]),
       short_name: getStr(json["short_name"]),
-      railway_id: getIdFromList(json["rel_railway_id"]),
+      railway_id: json["rel_railway_id"] != null ? getIdFromList(json["rel_railway_id"]) : json["railway_id"],
       parent_id: getIdFromList(json["parent_id"]),
-      active: (json["active"] == true).toString());
+      active: (json["active"].toString() == 'true'));
 
   Map<String, dynamic> toJson() {
     return {
@@ -38,7 +43,9 @@ class Department extends Models {
       'short_name': short_name,
       'railway_id': railway_id,
       'parent_id': parent_id,
-      'active': active
+      'active':  (active == null || !active) ? 'false' : 'true',
+      'search_field':
+          name.trim().toLowerCase() +' '+ short_name.trim().toLowerCase()
     };
   }
 

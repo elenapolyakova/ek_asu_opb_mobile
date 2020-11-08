@@ -10,28 +10,8 @@ import 'package:flutter/rendering.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'dart:async';
 import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
+import 'package:ek_asu_opb_mobile/src/db.dart';
 
-//todo delete when model exists
-class PlanItem {
-  int planId;
-  int id;
-  String filial;
-  String department;
-  int typeId;
-  int periodId;
-  String responsible;
-  String result;
-  PlanItem(
-      {this.planId,
-      this.id,
-      this.filial,
-      this.department,
-      this.typeId,
-      this.periodId,
-      this.responsible,
-      this.result});
-}
-//todo delete
 
 class PlanScreen extends StatefulWidget {
   String type;
@@ -99,36 +79,39 @@ class _PlanScreen extends State<PlanScreen> {
 
   List<PlanItem> _planItems = <PlanItem>[
     PlanItem(
-        planId: 1,
+        parentId: 1,
         id: 1,
-        filial:
+        name:
             'Центральная дирекция по ремонту тягового подвижного состава (ЦТР)',
-        department: 'Все ТР, ЦТР',
-        typeId: 1,
-        periodId: 1,
+        departmentTxt: 'Все ТР, ЦТР',
+        checkType: 1,
+        period: 1,
         responsible: 'ЦБТ - ЦТР, НЦОП - ТР',
-        result: 'Корректирующие меры'),
+        checkResult: 'Корректирующие меры',
+        active: true),
     PlanItem(
-        planId: 1,
+        parentId: 1,
         id: 2,
-        filial: 'Дирекция железнодорожных вокзалов  (ДЖВ)',
-        department: 'Все РДЖВ, ДЖВ',
-        typeId: 2,
-        periodId: 2,
+        name: 'Дирекция железнодорожных вокзалов  (ДЖВ)',
+        departmentTxt: 'Все РДЖВ, ДЖВ',
+        checkType: 2,
+        period: 2,
         responsible: 'ЦБТ - ДЖВ,НЦОП - РДЖВ',
-        result: 'Корректирующие меры'),
+        checkResult: 'Корректирующие меры',
+        active: true),
     PlanItem(
-        planId: 1,
+        parentId: 1,
         id: 3,
-        filial:
+        name:
             'Территория Южно-Уральской железной дороги подразделения всех хозяйств ОАО «РЖД» и ДЗО (по согласованию)',
-        department:
+        departmentTxt:
             'Челябинск, Курган, Петропавловск, Троицк, Карталы, Магнитогорск, Орск, Оренбург, Бердяуш',
-        typeId: 2,
-        periodId: 2,
+        checkType: 2,
+        period: 2,
         responsible:
             'Комиссионно, под председательством руководителей или специалистов ЦБТ, НПЦ по ООС',
-        result: 'Протокол,  приказ, корректирующие меры'),
+        checkResult: 'Протокол,  приказ, корректирующие меры',
+        active: true),
   ];
 
   List<PlanItem> planItems = [];
@@ -171,8 +154,8 @@ class _PlanScreen extends State<PlanScreen> {
       yearList = getYearList(_year);
       railwayList = await getRailwayList();
       stateList = makeListFromJson(Plan.stateSelection);
-      typeInspectionList = getTypeInspectionList();
-      periodInspectionList = getPeriodInspectionList();
+      typeInspectionList = makeListFromJson(PlanItem.checkTypeSelection);
+      periodInspectionList = makeListFromJson(PlanItem.periodSelection);
       await reloadPlan();
       //  reloadPlanItems(); //todo убрать отсюда
     } catch (e) {} finally {
@@ -200,8 +183,6 @@ class _PlanScreen extends State<PlanScreen> {
           name: canEdit() ? emptyTableName : errorTableName);
 
     await reloadPlanItems(_plan.id);
-
-    
 
     setState(() => {/*_tableName = tableName*/});
   }
@@ -312,14 +293,12 @@ class _PlanScreen extends State<PlanScreen> {
                   ? Theme.of(context).shadowColor
                   : Colors.white)),
           children: [
-            getRowCell(row.filial, row.id, 0),
-            getRowCell(row.department, row.id, 1),
-            getRowCell(
-                getTypeInspectionById(row.typeId)["value"], row.id, 2),
-            getRowCell(getPeriodInspectionById(row.periodId)["value"],
-                row.id, 3),
+            getRowCell(row.name, row.id, 0),
+            getRowCell(row.departmentTxt, row.id, 1),
+            getRowCell(row.checkTypeDisplay, row.id, 2),
+            getRowCell(row.periodDisplay, row.id, 3),
             getRowCell(row.responsible, row.id, 4),
-            getRowCell(row.result, row.id, 5),
+            getRowCell(row.checkResult, row.id, 5),
           ]);
       tableRows.add(tableRow);
     });
@@ -432,7 +411,7 @@ class _PlanScreen extends State<PlanScreen> {
         id: _plan.id,
         type: _plan.type,
         year: _plan.year,
-        dateSet: _plan.dateSet,
+        dateSet: _plan.dateSet?? DateTime.now(),
         name: _plan.name,
         railwayId: _plan.railwayId,
         signerName: _plan.signerName,
@@ -456,7 +435,7 @@ class _PlanScreen extends State<PlanScreen> {
       Scaffold.of(context).showSnackBar(errorSnackBar(text: errorTableName));
       return;
     }
-    PlanItem planItem = new PlanItem(id: null);
+    PlanItem planItem = new PlanItem(id: null, parentId: _plan.id);
     bool result = await showPlanItemDialog(planItem);
     if (result != null && result)
       setState(() {
@@ -496,14 +475,16 @@ class _PlanScreen extends State<PlanScreen> {
     PlanItem planItem =
         planItems.firstWhere((planItem) => planItem.id == planItemId);
     PlanItem planItemCopy = new PlanItem(
-        planId: planItem.planId,
+        parentId: planItem.parentId,
         id: planItem.id,
-        filial: planItem.filial,
-        department: planItem.department,
-        typeId: planItem.typeId,
-        periodId: planItem.periodId,
+        name: planItem.name,
+        departmentTxt: planItem.departmentTxt,
+        checkType: planItem.checkType,
+        period: planItem.period,
         responsible: planItem.responsible,
-        result: planItem.responsible);
+        checkResult: planItem.checkResult,
+        active: planItem.active
+        );
     bool result = await showPlanItemDialog(planItemCopy);
     if (result != null && result)
       setState(() {
@@ -530,8 +511,8 @@ class _PlanScreen extends State<PlanScreen> {
         planItems.firstWhere((planItem) => planItem.id == planItemId);
     Map<String, dynamic> args = {
       'planItemId': planItemId,
-      'filial': planItem.filial,
-      'typeName': getTypeInspectionById(planItem.typeId)["value"],
+      'filial': planItem.name,
+      'typeName': planItem.checkTypeDisplay,
       'railwayId': _railway_id,
       'typePlan': _type,
       'year': _year
@@ -654,15 +635,12 @@ class _PlanScreen extends State<PlanScreen> {
                                               child: DatePicker(
                                                   parentContext: context,
                                                   text: "Дата утверждения",
-                                                  selectedDate:
-                                                      DateTime.tryParse(plan
-                                                              .dateSet
-                                                              .toString()) ??
-                                                          DateTime.now(),
+                                                  selectedDate: plan.dateSet ??
+                                                     DateTime.now(),
                                                   onChanged: ((DateTime date) {
                                                     //   setState(() {
                                                     plan.dateSet =
-                                                        date.toString();
+                                                        date; //.toString();
                                                     //  });
                                                   })))
                                         ]),
@@ -736,9 +714,9 @@ class _PlanScreen extends State<PlanScreen> {
                                       child: EditTextField(
                                         text:
                                             'Наименование проверяемого филиала',
-                                        value: planItem.filial,
+                                        value: planItem.name,
                                         onSaved: (value) =>
-                                            {planItem.filial = value},
+                                            {planItem.name = value},
                                         context: context,
                                         height: 350,
                                         maxLines: 17,
@@ -754,9 +732,9 @@ class _PlanScreen extends State<PlanScreen> {
                                             EditTextField(
                                               text:
                                                   'Подразделение, подлежащее проверке',
-                                              value: planItem.department,
+                                              value: planItem.departmentTxt,
                                               onSaved: (value) =>
-                                                  {planItem.department = value},
+                                                  {planItem.departmentTxt = value},
                                               context: context,
                                               height: 100,
                                               maxLines: 3,
@@ -785,16 +763,16 @@ class _PlanScreen extends State<PlanScreen> {
                                                             text:
                                                                 'Вид проверки',
                                                             dropdownValue:
-                                                                planItem.typeId !=
+                                                                planItem.checkType !=
                                                                         null
                                                                     ? planItem
-                                                                        .typeId
+                                                                        .checkType
                                                                         .toString()
                                                                     : null,
                                                             items:
                                                                 typeInspectionList,
                                                             onChange: (value) {
-                                                              planItem.typeId =
+                                                              planItem.checkType =
                                                                   int.tryParse(
                                                                       value);
                                                             },
@@ -814,16 +792,16 @@ class _PlanScreen extends State<PlanScreen> {
                                                             text:
                                                                 'Срок проведения проверки',
                                                             dropdownValue: planItem
-                                                                        .periodId !=
+                                                                        .period !=
                                                                     null
                                                                 ? planItem
-                                                                    .periodId
+                                                                    .period
                                                                     .toString()
                                                                 : null,
                                                             items:
                                                                 periodInspectionList,
                                                             onChange: (value) {
-                                                              planItem.periodId =
+                                                              planItem.period =
                                                                   int.tryParse(
                                                                       value);
                                                             },
@@ -843,9 +821,9 @@ class _PlanScreen extends State<PlanScreen> {
                                             EditTextField(
                                               text:
                                                   'Результаты проведенной проверки',
-                                              value: planItem.result,
+                                              value: planItem.checkResult,
                                               onSaved: (value) =>
-                                                  {planItem.result = value},
+                                                  {planItem.checkResult = value},
                                               context: context,
                                             ),
                                           ]))
@@ -860,6 +838,7 @@ class _PlanScreen extends State<PlanScreen> {
   }
 
   void submitPlan(setState) async {
+    var formPlanKey2 = formPlanKey;
     final form = formPlanKey.currentState;
     hideKeyboard();
     if (form.validate()) {
@@ -910,7 +889,7 @@ class _PlanScreen extends State<PlanScreen> {
       form.save();
       bool result = true;
 
-     // if (planItemCopy.id == null) planItemCopy.id = result["id"];
+      // if (planItemCopy.id == null) planItemCopy.id = result["id"];
       Navigator.pop<bool>(context, result);
       if (result)
         Scaffold.of(context).showSnackBar(successSnackBar);
@@ -923,27 +902,11 @@ class _PlanScreen extends State<PlanScreen> {
     SystemChannels.textInput.invokeMethod('TextInput.hide');
   }
 
-  void testClicked() {
+  Future<void> testClicked() async {
     print('test');
-    // Plan plan = new Plan(
-    //     id: 2,
-    //     odooId: 2,
-    //     active: true,
-    //     year: 2020,
-    //     type: 'cbt',
-    //     state: 'draft',
-    //     name: 'hey its me1',
-    //     railwayId: 1);
-    // controllers.DBProvider.db.deleteAll('syn');
-    // controllers.PlanController.delete(plan).then((a) {
-    //   print(a);
-    //   SynController.syncTask();
-    //   // controllers.PlanController.selectAll().then((a) {
-    //   //   print(a);
-    //   // });
-    // });
-    // controllers.PlanController.select(2020, 'cbt', 1).then((a) {
-    //   print(a.active);
-    // });
+
+    List result = await DBProvider.db.select('department',
+     columns: ['id', 'name', 'short_name'], where: 'railway_id IS NULL');
+    print(result.length);
   }
 }
