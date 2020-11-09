@@ -38,7 +38,6 @@ class PlanController extends Controllers {
         'signer_name',
         'signer_post',
         'num_set',
-        'active',
         'state',
       ]
     ], {
@@ -49,7 +48,8 @@ class PlanController extends Controllers {
         .map((e) => {
               ...e,
               'id': null,
-              'odoo_id': e.id,
+              'odoo_id': e['id'],
+              'active': 'true',
             })
         .forEach((e) => insert(Plan.fromJson(e), true));
   }
