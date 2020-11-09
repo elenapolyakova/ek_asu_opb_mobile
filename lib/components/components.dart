@@ -807,6 +807,7 @@ class _DepartmentSelect extends State<DepartmentSelect> {
   _DepartmentSelect(dep.Department department, int railway_id) {
     _department = department;
     _railwayId = railway_id;
+     selectedRailwayId = _railwayId ?? (_department != null ? _department.railway_id : null);
   }
 
   void onRailwaySelected(railwayId) {

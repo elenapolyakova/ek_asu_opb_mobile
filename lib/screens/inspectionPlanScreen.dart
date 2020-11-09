@@ -172,7 +172,8 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       _inspection = new CheckPlan(
           id: 1, //null, todo вернуть на null!!!!!
           parentId: planItemId,
-          name: emptyTableName);
+          name: emptyTableName,
+          railwayId: planItem["railwayId"]);
 
     await reloadInspectionItems(_inspection.id);
     await reloadGroups(_inspection.id);
