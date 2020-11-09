@@ -62,7 +62,7 @@ class PlanItemController extends Controllers {
   static Future<List<PlanItem>> select(int parentId) async {
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
-      where: "parent_id = ?",
+      where: "parent_id = ? and active = 'true'",
       whereArgs: [parentId],
     );
     if (queryRes == null || queryRes.length == 0) return null;

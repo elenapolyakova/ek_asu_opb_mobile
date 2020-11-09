@@ -61,7 +61,7 @@ class PlanController extends Controllers {
         {'year': year, 'type': type, 'railway_id': railwayId});
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
-      where: where['where'],
+      where: where['where'] + " and active = 'true'",
       whereArgs: where['whereArgs'],
     );
     Plan plan;
@@ -107,7 +107,7 @@ class PlanController extends Controllers {
     List uniqueChecked = await DBProvider.db.select(
       _tableName,
       columns: ['id'],
-      where: where['where'],
+      where: where['where'] + " and active = 'true'",
       whereArgs: where['whereArgs'],
     );
     if (uniqueChecked.length > 0) {
@@ -157,7 +157,7 @@ class PlanController extends Controllers {
     List uniqueChecked = await DBProvider.db.select(
       _tableName,
       columns: ['id'],
-      where: where['where'] + ' and id != ?',
+      where: where['where'] + " and id != ? and active = 'true'",
       whereArgs: where['whereArgs'] + [plan.id],
     );
     if (uniqueChecked.length > 0) {
