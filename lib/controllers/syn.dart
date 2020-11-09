@@ -1,6 +1,4 @@
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
-import 'package:ek_asu_opb_mobile/models/models.dart';
-import 'package:ek_asu_opb_mobile/models/models.dart' as models;
 import "package:ek_asu_opb_mobile/models/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
@@ -10,9 +8,14 @@ class SynController extends Controllers {
   static Map<String, String> localRemoteTableNameMap = {
     'plan': 'mob.main.plan',
   };
-  static Map<String, dynamic> tableNameClassMap = {
-    'plan': Plan,
-    'department': models.Department,
+  static Map<String, Map<String, String>> tableNameMany2oneFieldsMap = {
+    'plan': {},
+    'plan_item': {
+      'parent_id': 'plan',
+    },
+    'plan_item_check': {
+      'parent_id': 'plan_item_check',
+    },
   };
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     Syn syn = Syn.fromJson(json); //нужно, чтобы преобразовать одоо rel в id
@@ -95,6 +98,37 @@ class SynController extends Controllers {
 
     List<dynamic> args = [];
     record['active'] = record['active'] == 'true' ? true : false;
+
+    // turn local many2one ids into Odoo ids
+    final Map<String, String> many2oneFields =
+        tableNameMany2oneFieldsMap[syn.localTableName];
+    // If a record contains any many2one fields
+    if (many2oneFields != null && many2oneFields.length > 0) {
+      // For each many2one field in a record
+      Future.forEach(many2oneFields.entries, (el) async {
+        final int many2oneFieldId = record[el.key];
+        // If the record has a many2one
+        if (many2oneFieldId != null) {
+          final String localTable = el.value;
+          return DBProvider.db.select(
+            localTable,
+            where: "id = ?",
+            whereArgs: [many2oneFieldId],
+          ).then((List<Map<String, dynamic>> many2oneRecord) {
+            if (many2oneRecord == null || many2oneRecord.length == 0) {
+              DBProvider.db.insert('log', {
+                'date': nowStr(),
+                'message':
+                    "Tried to synchronize record $syn. Specified record has ${el.key}=$many2oneFieldId. But no record of table $localTable with id=$many2oneFieldId was found"
+              });
+              return;
+            }
+            record[el.key] = many2oneRecord[0]['odoo_id'];
+          });
+        }
+      });
+    }
+
     if (record['odoo_id'] != null) {
       int odooId = record['odoo_id'];
       if (syn.method == 'write')
@@ -124,8 +158,13 @@ class SynController extends Controllers {
       await DBProvider.db.delete(_tableName, syn.id);
       return true;
     }).catchError((err) {
-      // If unsuccessful, return false
-      DBProvider.db.delete(_tableName, syn.id);
+      // If unsuccessful, put error into syn and return false
+      syn.error = err.toString();
+      DBProvider.db.insert('log', {
+        'date': nowStr(),
+        'message': "Error: ${err.toString()}; Record: $syn"
+      });
+      DBProvider.db.update(_tableName, syn.toJson());
       return false;
     });
     // }
@@ -134,8 +173,8 @@ class SynController extends Controllers {
   static Future<bool> syncTask() async {
     while (true) {
       // Load a syn record
-      List<Map<String, dynamic>> toSyn =
-          await DBProvider.db.select(_tableName, limit: 1, orderBy: 'id');
+      List<Map<String, dynamic>> toSyn = await DBProvider.db
+          .select(_tableName, limit: 1, orderBy: 'id', where: "error IS NULL");
       if (toSyn.length == 0) {
         //Синхронизация завершена
         //TODO: вывести уведомление
