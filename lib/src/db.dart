@@ -38,6 +38,10 @@ class DBProvider {
             "CREATE TABLE IF NOT EXISTS userInfo(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS plan(id INTEGER PRIMARY KEY, odoo_id INTEGER, type TEXT, name TEXT, railway_id INTEGER, year INTEGER, date_set TEXT, signer_name TEXT, signer_post TEXT, num_set TEXT, active TEXT, state TEXT)");
+      
+        await db.execute(
+            "CREATE TABLE plan_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, department_txt TEXT, check_type INTEGER, period INTEGER, responsible TEXT, check_result TEXT, active TEXT)");
+
       },
       onUpgrade: (db, oldVersion, version) async {
         if (version == 4)
@@ -49,7 +53,7 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS userInfo(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS syn (id INTEGER PRIMARY KEY, record_id INTEGER, local_table_name TEXT, method TEXT)");
+            "CREATE TABLE IF NOT EXISTS syn (id INTEGER PRIMARY KEY, record_id INTEGER, local_table_name TEXT, method TEXT, error TEXT)");
       },
 
       // Set the version. This executes the onCreate function and provides a
@@ -73,14 +77,14 @@ class DBProvider {
         "CREATE TABLE user(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT, search_field TEXT, user_role TEXT)");
   }
 
-  Future<void> reCreateTable() async {
+  /*Future<void> reCreateTable() async {
     final Database db = await database;
     await db.execute("DROP TABLE IF EXISTS plan");
     await db.execute(
         "CREATE TABLE plan(id INTEGER PRIMARY KEY, odoo_id INTEGER, type TEXT, name TEXT, railway_id INTEGER, year INTEGER, date_set TEXT, user_set_id INTEGER, state TEXT)");
 
     //todo пересоздавать таблицы с данными
-  }
+  }*/
 
 
   Future<int> insert(String tableName, Map<String, dynamic> values,

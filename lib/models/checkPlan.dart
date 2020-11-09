@@ -17,13 +17,13 @@ class CheckPlan extends Models {
   DateTime dateFrom; //Начало проверки
   DateTime dateTo; //Окончание проверки
   DateTime dateSet; //Дата утверждения
-  String state; //Состояние
+  String state = 'draft'; //Состояние
   String signerName; //Подписант. Имя
   String signerPost; //Подписант. Должность
   String appName; //Кто утвердил. Имя
   String appPost; //Кто утвердил. Должность
   String numSet; //Номер
-  bool active; //Действует
+  bool active = true; //Действует
 
   static Map<String, String> stateSelection = {
     'draft': 'Черновик',

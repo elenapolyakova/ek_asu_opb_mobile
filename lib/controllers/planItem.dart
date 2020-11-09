@@ -31,57 +31,44 @@ class PlanItemController extends Controllers {
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
       [],
       [
-        'type',
+        'parent_id',
         'name',
-        'railway_id',
-        'year',
-        'date_set',
-        'signer_name',
-        'signer_post',
-        'num_set',
-        'active',
-        'state',
+        'department_txt',
+        'check_type',
+        'period',
+        'responsible',
+        'check_result',
       ]
     ], {
       'limit': limit
     });
     DBProvider.db.deleteAll(_tableName);
-    json
-        .map((e) => {
-              ...e,
-              'id': null,
-              'odoo_id': e.id,
-            })
-        .forEach((e) => insert(Plan.fromJson(e), true));
+    json.map((e) {
+      return PlanController.selectById(e['parent_id']).then((Plan plan) {
+        var res = {
+          ...e,
+          'id': null,
+          'odoo_id': e['id'],
+          'parent_id': plan.id,
+          'active': 'true',
+        };
+        return res;
+      });
+    }).forEach((e) async => insert(PlanItem.fromJson(await e), true));
   }
 
-  /// Select the first record matching passed year, type and railwayId.
-  /// Returns selected record or null.
-  static Future<Plan> select(int year, String type, int railwayId) async {
-    Map<String, dynamic> where = Controllers.getNullSafeWhere(
-        {'year': year, 'type': type, 'railway_id': railwayId});
+  /// Select all records with matching parentId
+  /// Returns found records or null.
+  static Future<List<PlanItem>> select(int parentId) async {
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
-      where: where['where'],
-      whereArgs: where['whereArgs'],
+      where: "parent_id = ? and active = 'true'",
+      whereArgs: [parentId],
     );
-    Plan plan;
-    if (queryRes.length == 1)
-      plan = Plan.fromJson(queryRes[0]);
-    else if (queryRes.length > 1) {
-      DBProvider.db.insert('log', {
-        'date': nowStr(),
-        'message':
-            "There is more than one record of $_tableName with year=$year, type=$type and railway_id=$railwayId"
-      });
-      plan = Plan.fromJson(queryRes[0]);
-    } else
-      DBProvider.db.insert('log', {
-        'date': nowStr(),
-        'message':
-            "There is no records of $_tableName with year=$year, type=$type and railway_id=$railwayId"
-      });
-    return plan;
+    if (queryRes == null || queryRes.length == 0) return null;
+    List<PlanItem> planItems;
+    queryRes.map((e) => PlanItem.fromJson(e));
+    return planItems;
   }
 
   /// Try to insert into the table.
@@ -96,30 +83,14 @@ class PlanItemController extends Controllers {
   ///   ]
   ///   'id':record_id
   /// }```
-  static Future<Map<String, dynamic>> insert(Plan plan,
+  static Future<Map<String, dynamic>> insert(PlanItem planItem,
       [bool saveOdooId = false]) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
       'id': null,
     };
-    Map<String, dynamic> where = Controllers.getNullSafeWhere(
-        {'year': plan.year, 'type': plan.type, 'railway_id': plan.railwayId});
-    List uniqueChecked = await DBProvider.db.select(
-      _tableName,
-      columns: ['id'],
-      where: where['where'],
-      whereArgs: where['whereArgs'],
-    );
-    if (uniqueChecked.length > 0) {
-      res['code'] = -1;
-      res['message'] =
-          'There is already a $_tableName record with year=${plan.year}, type=${plan.type}, railway=${plan.railwayId}';
-      DBProvider.db
-          .insert('log', {'date': nowStr(), 'message': res.toString()});
-      return res;
-    }
-    Map<String, dynamic> json = plan.toJson(!saveOdooId);
+    Map<String, dynamic> json = planItem.toJson(!saveOdooId);
     if (saveOdooId) json.remove('id');
     await DBProvider.db.insert(_tableName, json).then((resId) {
       res['code'] = 1;
@@ -147,32 +118,16 @@ class PlanItemController extends Controllers {
   ///   ]
   ///   'id':null
   /// }```
-  static Future<Map<String, dynamic>> update(Plan plan) async {
+  static Future<Map<String, dynamic>> update(PlanItem planItem) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
       'id': null,
     };
-    Map<String, dynamic> where = Controllers.getNullSafeWhere(
-        {'year': plan.year, 'type': plan.type, 'railway_id': plan.railwayId});
-    List uniqueChecked = await DBProvider.db.select(
-      _tableName,
-      columns: ['id'],
-      where: where['where'] + ' and id != ?',
-      whereArgs: where['whereArgs'] + [plan.id],
-    );
-    if (uniqueChecked.length > 0) {
-      res['code'] = -1;
-      res['message'] =
-          'There is already a $_tableName record with year=${plan.year}, type=${plan.type}, railway=${plan.railwayId}';
-      DBProvider.db
-          .insert('log', {'date': nowStr(), 'message': res.toString()});
-      return res;
-    }
-    await DBProvider.db.update(_tableName, plan.toJson()).then((resId) {
+    await DBProvider.db.update(_tableName, planItem.toJson()).then((resId) {
       res['code'] = 1;
       res['id'] = resId;
-      return SynController.edit(_tableName, resId, plan.odooId)
+      return SynController.edit(_tableName, resId, planItem.odooId)
           .catchError((err) {
         res['code'] = -2;
         res['message'] = 'Error updating syn';
@@ -191,16 +146,16 @@ class PlanItemController extends Controllers {
   ///   'message':[null|Error deleting from syn|Error deleting from $_tableName],
   ///   'id':null
   /// }```
-  static Future<Map<String, dynamic>> delete(Plan plan) async {
+  static Future<Map<String, dynamic>> delete(PlanItem planItem) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
       'id': null,
     };
-    plan.active = false;
-    await DBProvider.db.update(_tableName, plan.toJson()).then((value) {
+    planItem.active = false;
+    await DBProvider.db.update(_tableName, planItem.toJson()).then((value) {
       res['code'] = 1;
-      return SynController.delete(_tableName, plan.id, plan.odooId)
+      return SynController.delete(_tableName, planItem.id, planItem.odooId)
           .catchError((err) {
         res['code'] = -2;
         res['message'] = 'Error updating syn';
