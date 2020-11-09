@@ -37,6 +37,8 @@ class DBProvider {
             "CREATE TABLE userInfo(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT)");
         await db.execute(
             "CREATE TABLE plan(id INTEGER PRIMARY KEY, odoo_id INTEGER, type TEXT, name TEXT, railway_id INTEGER, year INTEGER, date_set TEXT, signer_name TEXT, signer_post TEXT, num_set TEXT, active TEXT, state TEXT)");
+        await db.execute(
+            "CREATE TABLE plan_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, department_txt TEXT, check_type INTEGER, period INTEGER, responsible TEXT, check_result TEXT, active TEXT)");
       },
       onOpen: (db) async {
         await db.execute(
