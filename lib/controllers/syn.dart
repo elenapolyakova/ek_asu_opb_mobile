@@ -94,6 +94,7 @@ class SynController extends Controllers {
     Map<String, dynamic> record = records[0];
 
     List<dynamic> args = [];
+    record['active'] = record['active'] == 'true' ? true : false;
     if (record['odoo_id'] != null) {
       int odooId = record['odoo_id'];
       if (syn.method == 'write')
