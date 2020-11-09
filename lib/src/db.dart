@@ -77,15 +77,6 @@ class DBProvider {
         "CREATE TABLE user(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT, search_field TEXT, user_role TEXT)");
   }
 
-  /*Future<void> reCreateTable() async {
-    final Database db = await database;
-    await db.execute("DROP TABLE IF EXISTS plan");
-    await db.execute(
-        "CREATE TABLE plan(id INTEGER PRIMARY KEY, odoo_id INTEGER, type TEXT, name TEXT, railway_id INTEGER, year INTEGER, date_set TEXT, user_set_id INTEGER, state TEXT)");
-
-    //todo пересоздавать таблицы с данными
-  }*/
-
 
   Future<int> insert(String tableName, Map<String, dynamic> values,
       {ConflictAlgorithm conflictAlgorithm = ConflictAlgorithm.replace}) async {

@@ -95,7 +95,7 @@ Future<bool> setUserData() async {
     if (oldUserInfo != null) {
       if (oldUserInfo.department_id != _currentUser.department_id) {
         await DBProvider.db.reCreateDictionary();
-        await DBProvider.db.reCreateTable();
+      //  await DBProvider.db.reCreateTable();
         await _storage.delete(key: 'lastDateUpdate');
       } else
         _isSameUser = true;
@@ -141,7 +141,7 @@ Future<bool> authorize(String login, String password) async {
         await _storage.delete(key: 'session');
         // await DBProvider.db.deleteAll('userInfo');
         await DBProvider.db.reCreateDictionary();
-        await DBProvider.db.reCreateTable();
+        //await DBProvider.db.reCreateTable();
 
         //todo так же удалять все данные из локально БД/пересоздавать таблицы
       }
