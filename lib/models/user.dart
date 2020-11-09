@@ -1,4 +1,3 @@
-
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
 
@@ -13,6 +12,7 @@ class User extends Models {
   String phone;
   String active;
   String function;
+  String user_role;
 
   User(
       {this.id,
@@ -24,7 +24,8 @@ class User extends Models {
       this.email,
       this.phone,
       this.active,
-      this.function});
+      this.function, 
+      this.user_role});
 
   User fromJson(Map<String, dynamic> json) {
     return User.fromJson(json);
@@ -41,7 +42,8 @@ class User extends Models {
         email: getStr(json["email"]),
         phone: getStr(json["phone"]),
         active: (json["active"] == true).toString(),
-        function:  getStr(json["function"]));
+        function: getStr(json["function"]),
+        user_role: getStr(json["user_role"]),);
   }
 
   Map<String, dynamic> toJson() {
@@ -56,8 +58,8 @@ class User extends Models {
       'phone': phone,
       'active': active,
       'function': function,
-      'search_field':
-          display_name.trim().toLowerCase()
+      'search_field': display_name.trim().toLowerCase(),
+      'user_role': user_role
     };
   }
 

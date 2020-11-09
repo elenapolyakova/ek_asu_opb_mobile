@@ -17,15 +17,15 @@ void LogOut(BuildContext context) async {
   OdooSession session = await getSession();
   try {
     if (session != null) {
-      controllers.Log.insert( 'User ${session.userLogin} logout');
+      controllers.Log.insert('User ${session.userLogin} logout');
       // если нет сети - не завершим сессию для Odoo
       controllers.Log.insert('destroy session for odoo');
       await OdooProxy.odooClient.destroySession();
       OdooProxy.odooClient.close();
-      controllers.Log.insert( 'success');
+      controllers.Log.insert('success');
     }
   } on OdooException catch (e) {
-   controllers.Log.insert('error');
+    controllers.Log.insert('error');
     print(e);
   }
 
@@ -67,8 +67,7 @@ Future<bool> checkSession(BuildContext context) async {
   } on OdooSessionExpiredException catch (e) {
     await _storage.delete(key: 'session');
 
-    Navigator.pushNamed(
-        context, '/login');
+    Navigator.pushNamed(context, '/login');
 
     controllers.Log.insert('Session expired');
     controllers.Log.insert('----------------------------------------');
@@ -103,7 +102,7 @@ Future<bool> setUserData() async {
     }
 
     await controllers.UserInfo.deleteAll();
-   await controllers.UserInfo.insert( _currentUser.toJson());
+    await controllers.UserInfo.insert(_currentUser.toJson());
 
     return true;
   } catch (e) {
@@ -117,6 +116,12 @@ Future<UserInfo> getUserInfo() async {
   if (session == null) return null;
 
   return await controllers.UserInfo.selectUserInfo();
+}
+
+Future<String> getUserRoleTxt() async {
+  UserInfo userInfo = await getUserInfo();
+  if (userInfo != null) return userInfo.f_user_role_txt;
+  return '';
 }
 
 Future<bool> authorize(String login, String password) async {

@@ -3,6 +3,7 @@ import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/screens/screens.dart' as screens;
+import 'package:ek_asu_opb_mobile/controllers/syn.dart';
 
 class InspectionScreen extends StatefulWidget {
   BuildContext context;
@@ -82,6 +83,15 @@ class _InspectionScreen extends State<InspectionScreen> {
     );
   }
 
+   Future<void> syncTask() async {
+    showLoadingDialog(context);
+    try {
+      bool result = await SynController.syncTask();
+    } catch (e) {} finally {
+      hideDialog(context);
+    }
+  }
+
   Widget getBodyContent() {
     String screenKey = _navigationMenu[_selectedIndex]["key"];
     if (screenList[screenKey] != null) return screenList[screenKey];
@@ -131,6 +141,11 @@ class _InspectionScreen extends State<InspectionScreen> {
                 //  automaticallyImplyLeading: false,
                 backgroundColor: Theme.of(context).primaryColorDark,
                 actions: <Widget>[
+                   TextIcon(
+                      icon: Icons.cached,
+                      text: 'Синхронизировать',
+                      onTap: syncTask,
+                      color: Theme.of(context).primaryColorLight),
                   TextIcon(
                       icon: Icons.plagiarism,
                       text: 'ИСП',

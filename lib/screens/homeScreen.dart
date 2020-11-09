@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
@@ -8,6 +7,7 @@ import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/screens/screens.dart' as screens;
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:ek_asu_opb_mobile/controllers/syn.dart';
 
 class HomeScreen extends StatefulWidget {
   BuildContext context;
@@ -73,7 +73,7 @@ class _HomeScreen extends State<HomeScreen> {
     }
     result.add(
         {'key': 'ncop', 'label': 'План НЦОП', 'icon': Icon(Icons.description)});
-  /*  result
+    /*  result
         .add({'key': 'map', 'label': 'Карта', 'icon': Icon(Icons.location_on)});
     result.add({
       'key': 'report',
@@ -98,6 +98,15 @@ class _HomeScreen extends State<HomeScreen> {
       context,
       '/ISP',
     );
+  }
+
+  Future<void> syncTask() async {
+    showLoadingDialog(context);
+    try {
+      bool result = await SynController.syncTask();
+    } catch (e) {} finally {
+      hideDialog(context);
+    }
   }
 
   Widget getBodyContent() {
@@ -149,6 +158,11 @@ class _HomeScreen extends State<HomeScreen> {
                 backgroundColor: Theme.of(context).primaryColorDark,
                 actions: <Widget>[
                   TextIcon(
+                      icon: Icons.cached,
+                      text: 'Синхронизировать',
+                      onTap: syncTask,
+                      color: Theme.of(context).primaryColorLight),
+                  TextIcon(
                       icon: Icons.plagiarism,
                       text: 'ИСП',
                       onTap: toISPScreen,
@@ -169,31 +183,30 @@ class _HomeScreen extends State<HomeScreen> {
         ),*/
 
             body: getBodyContent(),
-            
-            bottomNavigationBar:
-            ( _navigationMenu.length > 1) ?
-            BottomNavigationBar(
-                type: BottomNavigationBarType.fixed,
-                backgroundColor: Theme.of(context).bottomAppBarColor,
-                selectedItemColor: Theme.of(context).primaryColorDark,
-                unselectedItemColor: Theme.of(context).primaryColor,
-                selectedFontSize: 14,
-                unselectedFontSize: 14,
-                onTap: (value) {
-                  setState(() {
-                    _selectedIndex = value;
-                    // selectedMenu = _navigationMenu[value]["key"];
-                  });
-                },
-                currentIndex: _selectedIndex,
-                items: _navigationMenu == null
-                    ? []
-                    : List.generate(
-                        _navigationMenu.length,
-                        (i) => BottomNavigationBarItem(
-                              label: _navigationMenu[i]["label"],
-                              icon: _navigationMenu[i]["icon"],
-                            ))) : null,
+            bottomNavigationBar: (_navigationMenu.length > 1)
+                ? BottomNavigationBar(
+                    type: BottomNavigationBarType.fixed,
+                    backgroundColor: Theme.of(context).bottomAppBarColor,
+                    selectedItemColor: Theme.of(context).primaryColorDark,
+                    unselectedItemColor: Theme.of(context).primaryColor,
+                    selectedFontSize: 14,
+                    unselectedFontSize: 14,
+                    onTap: (value) {
+                      setState(() {
+                        _selectedIndex = value;
+                        // selectedMenu = _navigationMenu[value]["key"];
+                      });
+                    },
+                    currentIndex: _selectedIndex,
+                    items: _navigationMenu == null
+                        ? []
+                        : List.generate(
+                            _navigationMenu.length,
+                            (i) => BottomNavigationBarItem(
+                                  label: _navigationMenu[i]["label"],
+                                  icon: _navigationMenu[i]["icon"],
+                                )))
+                : null,
           );
   }
 }

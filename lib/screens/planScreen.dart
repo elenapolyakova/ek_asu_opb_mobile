@@ -253,11 +253,11 @@ class _PlanScreen extends State<PlanScreen> {
                           generateTableData(context, planItemHeader, planItems)
                         ])
                       ])),
-                  Container(
+                 /* Container(
                       child: MyButton(
                           text: 'test',
                           parentContext: context,
-                          onPress: testClicked))
+                          onPress: testClicked))*/
                 ])));
   }
 
@@ -905,8 +905,8 @@ class _PlanScreen extends State<PlanScreen> {
   Future<void> testClicked() async {
     print('test');
 
-    List result = await DBProvider.db.select('department',
-     columns: ['id', 'name', 'short_name'], where: 'railway_id IS NULL');
+    List result = await DBProvider.db.select('user',
+     columns: ['id', 'function']);
     print(result.length);
   }
 }

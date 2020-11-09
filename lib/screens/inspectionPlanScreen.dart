@@ -368,8 +368,6 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   }
 
   String getTimePeriod(DateTime dtBegin, DateTime dtEnd) {
-    print(dtBegin);
-    print(dtEnd);
     if (dtBegin != null) {
       if (dtEnd != null) {
         if (isDateEqual(dtBegin, dtEnd))

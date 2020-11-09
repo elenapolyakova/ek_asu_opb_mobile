@@ -3,6 +3,7 @@ import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart" as controllers;
+import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 
 final attemptCount = config.getItem('attemptCount') ?? 5;
 final limitRecord = config.getItem('limitRecord') ?? 80;
@@ -25,6 +26,8 @@ Future<List<Map<String, dynamic>>> getDictionaries(
   if (all)
     dicts = _dict;
   else if (dicts == null || dicts.length == 0) dicts = _dict;
+
+  String userRoleTxt = await auth.getUserRoleTxt();
 
   controllers.Log.insert('=========================================');
   controllers.Log.insert("Get dictionaries ${dicts.join(', ')}");
@@ -60,13 +63,19 @@ Future<List<Map<String, dynamic>>> getDictionaries(
           if (lastUpdate != null) domain.add(lastUpdate);
           listDepIds = await controllers.Department.selectIDs();
           if (listDepIds == null) continue;
-            if (listDepIds.length > 0)
+          if (listDepIds.length > 0)
+            if (userRoleTxt == ncopRole)
               domain.add(['department_id', 'in', listDepIds]);
           // domain.add(['department_id.role', 'in', ['cbt', 'ncop']]);
-          domain.add([
+          /* domain.add([
             'f_user_role_txt',
             'in',
             [cbtRole, ncopRole]
+          ]);*/
+          domain.add([
+            'user_role',
+            'in',
+            ['cbt', 'ncop']
           ]);
           data = await getDataWithAttemp('res.users', 'search_read', null, {
             'domain': domain,
@@ -80,7 +89,8 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               'email',
               'phone',
               'active',
-              'function'
+              'function',
+              'user_role'
             ]
           });
 
