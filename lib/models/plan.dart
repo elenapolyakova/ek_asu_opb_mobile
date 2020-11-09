@@ -15,8 +15,8 @@ class Plan extends Models {
   String signerName; //Подписант имя
   String signerPost; //Подписант должность
   String numSet; //Номер плана
-  bool active; //Действует
-  String state; //Состояние
+  bool active = true; //Действует
+  String state = 'draft'; //Состояние
 
   static Map<String, String> typeSelection = {
     'cbt': 'ЦБТ',

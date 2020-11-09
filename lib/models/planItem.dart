@@ -14,7 +14,7 @@ class PlanItem extends Models {
   int period; //Срок проверки
   String responsible; //Ответственные
   String checkResult; //Результат проверки
-  bool active; //Действует
+  bool active = true; //Действует
 
   static Map<int, String> checkTypeSelection = {
     1: 'Комплексный аудит',

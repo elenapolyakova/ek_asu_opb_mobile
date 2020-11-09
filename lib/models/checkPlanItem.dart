@@ -15,7 +15,7 @@ class CheckPlanItem extends Models {
   DateTime date; //Дата
   DateTime dtFrom; //Начало мероприятия
   DateTime dtTo; //Окончание мероприятия
-  bool active; //Действует
+  bool active = true; //Действует
 
   List<CheckPlanItem> get comUsers {
     //mob.check.plan.com_user
