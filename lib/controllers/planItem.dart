@@ -125,15 +125,15 @@ class PlanItemController extends Controllers {
   ///   ]
   ///   'id':null
   /// }```
-  static Future<Map<String, dynamic>> update(PlanItem sentPlanItem) async {
+  static Future<Map<String, dynamic>> update(PlanItem planItem) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
       'id': null,
     };
-    Future<int> odooId = selectOdooId(sentPlanItem.id);
+    Future<int> odooId = selectOdooId(planItem.id);
     await DBProvider.db
-        .update(_tableName, sentPlanItem.toJson())
+        .update(_tableName, planItem.toJson())
         .then((resId) async {
       res['code'] = 1;
       res['id'] = resId;

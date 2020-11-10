@@ -45,7 +45,7 @@ class SynController extends Controllers {
 
   /// If a record wasn't uploaded yet, do nothing.
   /// Else adds a record to edit into syn table
-  static Future<int> edit(localTableName, resId, odooId) async {
+  static Future<int> edit(String localTableName, int resId, int odooId) async {
     List toSyn = await DBProvider.db.select(
       _tableName,
       columns: ['method'],
