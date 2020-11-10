@@ -66,8 +66,8 @@ class PlanItem extends Models {
 
   factory PlanItem.fromJson(Map<String, dynamic> json) {
     PlanItem res = new PlanItem(
-      id: json["odoo_id"],
-      odooId: json["id"],
+      id: json["id"],
+      odooId: json["odoo_id"],
       parentId: (json["parent_id"] is List)
           ? unpackListId(json["parent_id"])['id']
           : json["parent_id"],

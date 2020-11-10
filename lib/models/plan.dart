@@ -67,8 +67,8 @@ class Plan extends Models {
 
   factory Plan.fromJson(Map<String, dynamic> json) {
     Plan res = new Plan(
-      odooId: json["odoo_id"],
       id: json["id"],
+      odooId: json["odoo_id"],
       type: getObj(json["type"]),
       name: getObj(json["name"]),
       railwayId: (json["railway_id"] is List)
