@@ -13,8 +13,12 @@ class User extends Controllers {
     return await DBProvider.db.deleteAll(_tableName);
   }
 
-  static Future<List<Map<String, dynamic>>> selectAll() async {
-    return await DBProvider.db.selectAll(_tableName);
+  static Future<List<model.User>> selectAll() async {
+    List<Map<String, dynamic>> userList =
+        await DBProvider.db.selectAll(_tableName);
+    if (userList != null)
+      return List.generate(
+          userList.length, (index) => model.User.fromJson(userList[index]));
   }
 
   static Future<model.User> selectById(int id) async {

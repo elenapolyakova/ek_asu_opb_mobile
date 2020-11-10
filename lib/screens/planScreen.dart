@@ -12,7 +12,6 @@ import 'dart:async';
 import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 import 'package:ek_asu_opb_mobile/src/db.dart';
 
-
 class PlanScreen extends StatefulWidget {
   String type;
   GlobalKey key;
@@ -35,7 +34,7 @@ class _PlanScreen extends State<PlanScreen> {
   Plan _plan;
   //создаём копию и при редактировании работаем с ней
   //если пользователь отменит или ошибка при сохранении - вернем на начальное значение _plan
-  Plan planCopy;
+
   List<Map<String, dynamic>> yearList;
   List<Map<String, dynamic>> railwayList;
   List<Map<String, dynamic>> stateList;
@@ -77,7 +76,7 @@ class _PlanScreen extends State<PlanScreen> {
     {'text': 'Результаты проведенной проверки', 'flex': 2.0}
   ];
 
-  List<PlanItem> _planItems = <PlanItem>[
+  /*List<PlanItem> _planItems = <PlanItem>[
     PlanItem(
         parentId: 1,
         id: 1,
@@ -112,7 +111,7 @@ class _PlanScreen extends State<PlanScreen> {
             'Комиссионно, под председательством руководителей или специалистов ЦБТ, НПЦ по ООС',
         checkResult: 'Протокол,  приказ, корректирующие меры',
         active: true),
-  ];
+  ];*/
 
   List<PlanItem> planItems = [];
   PlanItem planItemCopy;
@@ -157,7 +156,6 @@ class _PlanScreen extends State<PlanScreen> {
       typeInspectionList = makeListFromJson(PlanItem.checkTypeSelection);
       periodInspectionList = makeListFromJson(PlanItem.periodSelection);
       await reloadPlan();
-      //  reloadPlanItems(); //todo убрать отсюда
     } catch (e) {} finally {
       hideDialog(context);
       showLoading = false;
@@ -182,17 +180,25 @@ class _PlanScreen extends State<PlanScreen> {
           active: true,
           name: canEdit() ? emptyTableName : errorTableName);
 
-    await reloadPlanItems(_plan.id);
+    if (_plan.id != null)
+      planItems = await _plan.items;
+    else
+      planItems = [];
+    // await reloadPlanItems(_plan.id);
 
     setState(() => {/*_tableName = tableName*/});
   }
 
-  Future<void> reloadPlanItems(int planId) async {
-    if (canEdit()) //todo потом проверять planId != null
-      planItems = _planItems;
-    else
-      planItems = [];
-  }
+  /* Future<void> reloadPlanItems(int planId) async {
+    planItems = [];
+    if (canEdit() && planId != null)
+      planItems = await _plan
+          .items; //await controllers.PlanItemController.select(planId);
+
+    planItems = planItems ?? []; //todo вернуть []
+
+    return planItems;
+  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -253,11 +259,11 @@ class _PlanScreen extends State<PlanScreen> {
                           generateTableData(context, planItemHeader, planItems)
                         ])
                       ])),
-                 /* Container(
+                  Container(
                       child: MyButton(
                           text: 'test',
                           parentContext: context,
-                          onPress: testClicked))*/
+                          onPress: testClicked))
                 ])));
   }
 
@@ -406,12 +412,12 @@ class _PlanScreen extends State<PlanScreen> {
       return;
     }
     saveError = "";
-    planCopy = new Plan(
+    Plan planCopy = new Plan(
         odooId: _plan.odooId,
         id: _plan.id,
         type: _plan.type,
         year: _plan.year,
-        dateSet: _plan.dateSet?? DateTime.now(),
+        dateSet: _plan.dateSet ?? DateTime.now(),
         name: _plan.name,
         railwayId: _plan.railwayId,
         signerName: _plan.signerName,
@@ -422,12 +428,7 @@ class _PlanScreen extends State<PlanScreen> {
     setState(() {});
     bool result = await showPlanDialog(planCopy);
     if (result != null && result) //иначе перезагружать _plan?
-      setState(() {
-        _plan = planCopy;
-        _year = _plan.year;
-        _railway_id = _plan.railwayId;
-        reloadPlan();
-      });
+    {}
   }
 
   Future<void> addPlanItemClicked() async {
@@ -435,13 +436,17 @@ class _PlanScreen extends State<PlanScreen> {
       Scaffold.of(context).showSnackBar(errorSnackBar(text: errorTableName));
       return;
     }
-    PlanItem planItem = new PlanItem(id: null, parentId: _plan.id);
+    if (_plan.id == null) {
+      Scaffold.of(context).showSnackBar(
+          errorSnackBar(text: 'Сначала сохраните реквизиты плана'));
+      return;
+    }
+    PlanItem planItem =
+        new PlanItem(id: null, parentId: _plan.id, active: true);
     bool result = await showPlanItemDialog(planItem);
-    if (result != null && result)
-      setState(() {
-        planItems.add(planItem);
-        //todo refresh all list?
-      });
+    if (result != null && result) {
+      //todo refresh all list?
+    }
   }
 
   void _showCustomMenu(int planItemId, int index) {
@@ -475,6 +480,7 @@ class _PlanScreen extends State<PlanScreen> {
     PlanItem planItem =
         planItems.firstWhere((planItem) => planItem.id == planItemId);
     PlanItem planItemCopy = new PlanItem(
+        odooId: planItem.odooId,
         parentId: planItem.parentId,
         id: planItem.id,
         name: planItem.name,
@@ -483,14 +489,9 @@ class _PlanScreen extends State<PlanScreen> {
         period: planItem.period,
         responsible: planItem.responsible,
         checkResult: planItem.checkResult,
-        active: planItem.active
-        );
+        active: planItem.active);
     bool result = await showPlanItemDialog(planItemCopy);
-    if (result != null && result)
-      setState(() {
-        int index = planItems.indexOf(planItem);
-        planItems[index] = planItemCopy;
-      });
+    if (result != null && result) {}
   }
 
   Future<void> deletePlanItem(int planItemId) async {
@@ -500,9 +501,25 @@ class _PlanScreen extends State<PlanScreen> {
       PlanItem deletedPlanItem =
           planItems.firstWhere((planItem) => planItem.id == planItemId);
       if (deletedPlanItem == null) return;
-      planItems.remove(deletedPlanItem);
-      //todo delete from db
-      setState(() {});
+      //  deletedPlanItem.active = false;
+      bool hasErorr = false;
+      Map<String, dynamic> result;
+      try {
+        result = await controllers.PlanItemController.delete(planItemId);
+        hasErorr = result["code"] < 0;
+
+        if (hasErorr) {
+          Scaffold.of(context).showSnackBar(
+              errorSnackBar(text: 'Произошла ошибка при удалении'));
+          return;
+        }
+
+        planItems.remove(deletedPlanItem);
+        setState(() {});
+      } catch (e) {
+        Scaffold.of(context)
+            .showSnackBar(errorSnackBar(text: 'Произошла ошибка при удалении'));
+      }
     }
   }
 
@@ -636,7 +653,7 @@ class _PlanScreen extends State<PlanScreen> {
                                                   parentContext: context,
                                                   text: "Дата утверждения",
                                                   selectedDate: plan.dateSet ??
-                                                     DateTime.now(),
+                                                      DateTime.now(),
                                                   onChanged: ((DateTime date) {
                                                     //   setState(() {
                                                     plan.dateSet =
@@ -665,7 +682,7 @@ class _PlanScreen extends State<PlanScreen> {
                                     text: 'принять',
                                     parentContext: context,
                                     onPress: () {
-                                      submitPlan(setState);
+                                      submitPlan(plan, setState);
                                     }),
                                 Container(
                                     width: double.infinity,
@@ -733,8 +750,9 @@ class _PlanScreen extends State<PlanScreen> {
                                               text:
                                                   'Подразделение, подлежащее проверке',
                                               value: planItem.departmentTxt,
-                                              onSaved: (value) =>
-                                                  {planItem.departmentTxt = value},
+                                              onSaved: (value) => {
+                                                planItem.departmentTxt = value
+                                              },
                                               context: context,
                                               height: 100,
                                               maxLines: 3,
@@ -762,13 +780,13 @@ class _PlanScreen extends State<PlanScreen> {
                                                           child: MyDropdown(
                                                             text:
                                                                 'Вид проверки',
-                                                            dropdownValue:
-                                                                planItem.checkType !=
-                                                                        null
-                                                                    ? planItem
-                                                                        .checkType
-                                                                        .toString()
-                                                                    : null,
+                                                            dropdownValue: planItem
+                                                                        .checkType !=
+                                                                    null
+                                                                ? planItem
+                                                                    .checkType
+                                                                    .toString()
+                                                                : null,
                                                             items:
                                                                 typeInspectionList,
                                                             onChange: (value) {
@@ -791,13 +809,13 @@ class _PlanScreen extends State<PlanScreen> {
                                                           child: MyDropdown(
                                                             text:
                                                                 'Срок проведения проверки',
-                                                            dropdownValue: planItem
-                                                                        .period !=
-                                                                    null
-                                                                ? planItem
-                                                                    .period
-                                                                    .toString()
-                                                                : null,
+                                                            dropdownValue:
+                                                                planItem.period !=
+                                                                        null
+                                                                    ? planItem
+                                                                        .period
+                                                                        .toString()
+                                                                    : null,
                                                             items:
                                                                 periodInspectionList,
                                                             onChange: (value) {
@@ -822,8 +840,9 @@ class _PlanScreen extends State<PlanScreen> {
                                               text:
                                                   'Результаты проведенной проверки',
                                               value: planItem.checkResult,
-                                              onSaved: (value) =>
-                                                  {planItem.checkResult = value},
+                                              onSaved: (value) => {
+                                                planItem.checkResult = value
+                                              },
                                               context: context,
                                             ),
                                           ]))
@@ -832,12 +851,12 @@ class _PlanScreen extends State<PlanScreen> {
                                 child: MyButton(
                                     text: 'принять',
                                     parentContext: context,
-                                    onPress: submitPlanItem))
+                                    onPress: () => submitPlanItem(planItem)))
                           ]))))));
         });
   }
 
-  void submitPlan(setState) async {
+  void submitPlan(Plan planCopy, setState) async {
     var formPlanKey2 = formPlanKey;
     final form = formPlanKey.currentState;
     hideKeyboard();
@@ -872,6 +891,13 @@ class _PlanScreen extends State<PlanScreen> {
         } else {
           if (planCopy.id == null) planCopy.id = result["id"];
 
+          setState(() {
+            _plan = planCopy;
+            _year = _plan.year;
+            _railway_id = _plan.railwayId;
+            reloadPlan();
+          });
+
           Navigator.pop<bool>(context, true);
           Scaffold.of(context).showSnackBar(successSnackBar);
         }
@@ -882,19 +908,47 @@ class _PlanScreen extends State<PlanScreen> {
     }
   }
 
-  void submitPlanItem() {
+  void submitPlanItem(PlanItem planItem) async {
     final form = formPlanItemKey.currentState;
     hideKeyboard();
     if (form.validate()) {
       form.save();
-      bool result = true;
 
-      // if (planItemCopy.id == null) planItemCopy.id = result["id"];
-      Navigator.pop<bool>(context, result);
-      if (result)
-        Scaffold.of(context).showSnackBar(successSnackBar);
-      else
+      bool hasErorr = false;
+      Map<String, dynamic> result;
+      try {
+        if (planItem.id == null) {
+          result = await controllers.PlanItemController.insert(planItem);
+        } else {
+          result = await controllers.PlanItemController.update(planItem);
+        }
+        hasErorr = result["code"] < 0;
+
+        if (hasErorr) {
+          Navigator.pop<bool>(context, false);
+          Scaffold.of(context).showSnackBar(errorSnackBar());
+        } else {
+          if (planItem.id == null) {
+            planItem.id = result["id"];
+
+            setState(() {
+              planItems.add(planItem);
+            });
+          } else {
+            setState(() {
+              int index = planItems.indexOf(
+              planItems.firstWhere((element) => element.id == planItem.id));
+              planItems[index] = planItemCopy;
+            });
+          }
+
+          Navigator.pop<bool>(context, true);
+          Scaffold.of(context).showSnackBar(successSnackBar);
+        }
+      } catch (e) {
+        Navigator.pop<bool>(context, false);
         Scaffold.of(context).showSnackBar(errorSnackBar());
+      }
     }
   }
 
@@ -905,8 +959,7 @@ class _PlanScreen extends State<PlanScreen> {
   Future<void> testClicked() async {
     print('test');
 
-    List result = await DBProvider.db.select('user',
-     columns: ['id', 'function']);
+    List result = await DBProvider.db.selectAll('plan_item');
     print(result.length);
   }
 }

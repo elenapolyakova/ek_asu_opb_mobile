@@ -10,7 +10,7 @@ class User extends Models {
   int railway_id;
   String email;
   String phone;
-  String active;
+  bool active;
   String function;
   String user_role;
 
@@ -38,10 +38,10 @@ class User extends Models {
         f_user_role_txt: getStr(json["f_user_role_txt"]),
         display_name: getStr(json["display_name"]),
         department_id: getIdFromList(json["department_id"]),
-        railway_id: getIdFromList(json["rel_railway_id"]),
+        railway_id: (json["rel_railway_id"] != null) ? getIdFromList(json["rel_railway_id"]) : json["railway_id"],
         email: getStr(json["email"]),
         phone: getStr(json["phone"]),
-        active: (json["active"] == true).toString(),
+        active:  (json["active"].toString() == 'true'),
         function: getStr(json["function"]),
         user_role: getStr(json["user_role"]),);
   }
@@ -56,7 +56,7 @@ class User extends Models {
       'railway_id': railway_id,
       'email': email,
       'phone': phone,
-      'active': active,
+      'active':  (active == null || !active) ? 'false' : 'true',
       'function': function,
       'search_field': display_name.trim().toLowerCase(),
       'user_role': user_role

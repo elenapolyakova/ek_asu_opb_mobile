@@ -5,6 +5,7 @@ import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import 'package:workmanager/workmanager.dart';
 
 class InspectionItem {
   int id;
@@ -16,6 +17,7 @@ class InspectionItem {
   DateTime timeBegin; //Время начала проверки
   DateTime timeEnd; //Время окончания проверки
   int groupId; //члены комиссии
+  bool active;
   InspectionItem(
       {this.id,
       this.inspectionId,
@@ -25,16 +27,18 @@ class InspectionItem {
       this.date,
       this.timeBegin,
       this.timeEnd,
-      this.groupId});
+      this.groupId,
+      this.active = true});
 }
 
 //todo delete
 class InspectionPlanScreen extends StatefulWidget {
   BuildContext context;
   Map<String, dynamic> planItem;
+  Function(int) setCheckPlanId;
 
   @override
-  InspectionPlanScreen(this.context, this.planItem);
+  InspectionPlanScreen(this.context, this.planItem, this.setCheckPlanId);
 
   @override
   State<InspectionPlanScreen> createState() => _InspectionPlanScreen(planItem);
@@ -45,9 +49,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   bool showLoading = true;
   Map<String, dynamic> planItem;
   CheckPlan _inspection;
-  //создаём копию и при редактировании работаем с ней
-  //если пользователь отменит или ошибка при сохранении - вернем на начальное значение _inspection
-  CheckPlan inspectionCopy;
+
   String emptyTableName;
   String _tableName;
   List<Map<String, dynamic>> railwayList;
@@ -154,11 +156,13 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       stateList = makeListFromJson(Plan.stateSelection);
       eventList = getEventInspectionList();
       await reloadInspection(planItem['planItemId']);
+
       //  reloadPlanItems(); //todo убрать отсюда
     } catch (e) {} finally {
       hideDialog(context);
       showLoading = false;
       setState(() => {});
+      if (_inspection.id == null) editInspectionClicked();
     }
   }
 
@@ -170,10 +174,13 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
 
     if (_inspection == null)
       _inspection = new CheckPlan(
-          id: 1, //null, todo вернуть на null!!!!!
+          id: 1, // todo вернуть на null!!!!!
           parentId: planItemId,
           name: emptyTableName,
-          railwayId: planItem["railwayId"]);
+          railwayId: planItem["railwayId"],
+          active: true);
+
+    if (_inspection.id != null) widget.setCheckPlanId(_inspection.id);
 
     await reloadInspectionItems(_inspection.id);
     await reloadGroups(_inspection.id);
@@ -239,31 +246,32 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       tableName = '${_inspection.name}';
     }
 
-    return new Container(
-        decoration: BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage("assets/images/frameScreen.png"),
-                fit: BoxFit.fitWidth)),
-        child: showLoading
-            ? Text("")
-            : Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: Column(children: [
-                  ListTile(
-                      trailing: menu,
-                      contentPadding: EdgeInsets.all(0),
-                      title: Text(tableName, textAlign: TextAlign.center),
-                      onTap: () {}),
-                  Expanded(
-                      child: ListView(
-                          padding: const EdgeInsets.all(16),
-                          children: [
-                        Column(children: [
-                          generateTableData(
-                              context, inspectionItemHeader, inspectionItems)
-                        ])
-                      ])),
-                ])));
+    return Expanded(
+        child: Container(
+            decoration: BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage("assets/images/frameScreen.png"),
+                    fit: BoxFit.fitWidth)),
+            child: showLoading
+                ? Text("")
+                : Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    child: Column(children: [
+                      ListTile(
+                          trailing: menu,
+                          contentPadding: EdgeInsets.all(0),
+                          title: Text(tableName, textAlign: TextAlign.center),
+                          onTap: () {}),
+                      Expanded(
+                          child: ListView(
+                              padding: const EdgeInsets.all(16),
+                              children: [
+                            Column(children: [
+                              generateTableData(context, inspectionItemHeader,
+                                  inspectionItems)
+                            ])
+                          ])),
+                    ]))));
   }
 
   List<PopupMenuItem<String>> getMenu(BuildContext context) {
@@ -381,8 +389,8 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
 
   String getGroupById(int groupId) {
     if (groupId == null || groupList.length == 0) return '';
-    Map<String, dynamic> group =
-        groupList.firstWhere((group) => group["id"] == groupId);
+    Map<String, dynamic> group = groupList
+        .firstWhere((group) => group["id"] == groupId, orElse: () => null);
     return group != null ? group['value'] : '';
   }
 
@@ -423,7 +431,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   Future<bool> showInspectionDialog(CheckPlan inspection) {
     return showDialog<bool>(
         context: context,
-        barrierDismissible: true,
+        barrierDismissible: false,
         barrierColor: Color(0x88E6E6E6),
         builder: (BuildContext context) {
           return StatefulBuilder(builder: (context, StateSetter setState) {
@@ -431,10 +439,10 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12.0))),
                 backgroundColor: Theme.of(context).primaryColor,
-                content: Container(
+                content: SizedBox(
                     width: 700.0,
-                    margin: EdgeInsets.symmetric(horizontal: 13, vertical: 13),
-                    padding: EdgeInsets.symmetric(horizontal: 20.0),
+                    // margin: EdgeInsets.symmetric(horizontal: 13, vertical: 13),
+                    // padding: EdgeInsets.symmetric(horizontal: 20.0),
                     child: Scaffold(
                         backgroundColor: Theme.of(context).primaryColor,
                         body: Form(
@@ -443,144 +451,153 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                 child: Column(children: [
                               Expanded(
                                   child: Center(
-                                      child: SingleChildScrollView(
-                                          child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.spaceEvenly,
-                                              children: [
-                                    EditTextField(
-                                      text: 'Наименование',
-                                      value: inspection.name,
-                                      onSaved: (value) =>
-                                          {inspection.name = value},
-                                      context: context,
-                                      height: 100,
-                                      maxLines: 5,
-                                    ),
-                                    Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.baseline,
-                                        children: [
-                                          Container(
-                                              width: 200,
-                                              margin: EdgeInsets.only(left: 15),
-                                              child: MyDropdown(
-                                                text: 'Состояние',
-                                                dropdownValue: inspection.state,
-                                                items: stateList,
-                                                onChange: (value) {
-                                                  inspection.state = value;
-                                                },
-                                                parentContext: context,
-                                              )),
-                                          Container(
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 13),
-                                              child: DatePicker(
+                                      child:
+                                          ListView(shrinkWrap: true, children: [
+                                Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      EditTextField(
+                                        text: 'Наименование',
+                                        value: inspection.name,
+                                        onSaved: (value) =>
+                                            {inspection.name = value},
+                                        context: context,
+                                        height: 100,
+                                        maxLines: 5,
+                                      ),
+                                      Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.baseline,
+                                          children: [
+                                            Container(
+                                                width: 200,
+                                                margin:
+                                                    EdgeInsets.only(left: 15),
+                                                child: MyDropdown(
+                                                  text: 'Состояние',
+                                                  dropdownValue:
+                                                      inspection.state,
+                                                  items: stateList,
+                                                  onChange: (value) {
+                                                    inspection.state = value;
+                                                  },
                                                   parentContext: context,
-                                                  text: "Дата начала",
-                                                  width: 150,
-                                                  selectedDate:
-                                                      inspection.dateFrom ??
-                                                          DateTime.now(),
-                                                  onChanged: ((DateTime date) {
-                                                    //   setState(() {
-                                                    inspection.dateFrom = date;
-                                                    //  });
-                                                  }))),
-                                          Container(
-                                              padding:
-                                                  EdgeInsets.only(right: 13),
-                                              child: DatePicker(
-                                                  parentContext: context,
-                                                  text: "Дата окончания",
-                                                  width: 150,
-                                                  selectedDate:
-                                                      inspection.dateTo ??
-                                                          DateTime.now(),
-                                                  onChanged: ((DateTime date) {
-                                                    //   setState(() {
-                                                    inspection.dateTo = date;
-                                                    //  });
-                                                  })))
-                                        ]),
-                                    Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.baseline,
-                                        children: [
-                                          Container(
-                                              width: 450,
-                                              child: EditTextField(
-                                                text: 'Номер',
-                                                value: inspection.numSet,
-                                                onSaved: (value) =>
-                                                    {inspection.numSet = value},
-                                                context: context,
-                                              )),
-                                          Container(
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 13),
-                                              child: DatePicker(
-                                                  parentContext: context,
-                                                  text: "Дата утверждения",
-                                                  width: 150,
-                                                  selectedDate:
-                                                      inspection.dateSet ??
-                                                          DateTime.now(),
-                                                  onChanged: ((DateTime date) {
-                                                    //   setState(() {
-                                                    inspection.dateSet = date;
-                                                    //  });
-                                                  })))
-                                        ]),
-                                    Row(children: [
-                                      Expanded(
-                                          child: EditTextField(
-                                        text: 'Подписант, ФИО',
-                                        value: inspection.signerName,
-                                        onSaved: (value) =>
-                                            {inspection.signerName = value},
-                                        context: context,
-                                      )),
-                                      Expanded(
-                                          child: EditTextField(
-                                        text: 'Подписант, должность',
-                                        value: inspection.signerPost,
-                                        onSaved: (value) =>
-                                            {inspection.signerPost = value},
-                                        context: context,
-                                      ))
-                                    ]),
-                                    Row(children: [
-                                      Expanded(
-                                          child: EditTextField(
-                                        text: 'Утвержден, ФИО',
-                                        value: inspection.appName,
-                                        onSaved: (value) =>
-                                            {inspection.appName = value},
-                                        context: context,
-                                      )),
-                                      Expanded(
-                                          child: EditTextField(
-                                        text: 'Утвержден, должность',
-                                        value: inspection.appPost,
-                                        onSaved: (value) =>
-                                            {inspection.appPost = value},
-                                        context: context,
-                                      ))
-                                    ]),
-                                  ])))),
+                                                )),
+                                            Container(
+                                                padding: EdgeInsets.symmetric(
+                                                    horizontal: 13),
+                                                child: DatePicker(
+                                                    parentContext: context,
+                                                    text: "Дата начала",
+                                                    width: 150,
+                                                    selectedDate:
+                                                        inspection.dateFrom ??
+                                                            DateTime.now(),
+                                                    onChanged:
+                                                        ((DateTime date) {
+                                                      //   setState(() {
+                                                      inspection.dateFrom =
+                                                          date;
+                                                      //  });
+                                                    }))),
+                                            Container(
+                                                padding:
+                                                    EdgeInsets.only(right: 13),
+                                                child: DatePicker(
+                                                    parentContext: context,
+                                                    text: "Дата окончания",
+                                                    width: 150,
+                                                    selectedDate:
+                                                        inspection.dateTo ??
+                                                            DateTime.now(),
+                                                    onChanged:
+                                                        ((DateTime date) {
+                                                      //   setState(() {
+                                                      inspection.dateTo = date;
+                                                      //  });
+                                                    })))
+                                          ]),
+                                      Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.baseline,
+                                          children: [
+                                            Container(
+                                                width: 450,
+                                                child: EditTextField(
+                                                  text: 'Номер',
+                                                  value: inspection.numSet,
+                                                  onSaved: (value) => {
+                                                    inspection.numSet = value
+                                                  },
+                                                  context: context,
+                                                )),
+                                            Container(
+                                                padding: EdgeInsets.symmetric(
+                                                    horizontal: 13),
+                                                child: DatePicker(
+                                                    parentContext: context,
+                                                    text: "Дата утверждения",
+                                                    width: 150,
+                                                    selectedDate:
+                                                        inspection.dateSet ??
+                                                            DateTime.now(),
+                                                    onChanged:
+                                                        ((DateTime date) {
+                                                      //   setState(() {
+                                                      inspection.dateSet = date;
+                                                      //  });
+                                                    })))
+                                          ]),
+                                      Row(children: [
+                                        Expanded(
+                                            child: EditTextField(
+                                          text: 'Подписант, ФИО',
+                                          value: inspection.signerName,
+                                          onSaved: (value) =>
+                                              {inspection.signerName = value},
+                                          context: context,
+                                        )),
+                                        Expanded(
+                                            child: EditTextField(
+                                          text: 'Подписант, должность',
+                                          value: inspection.signerPost,
+                                          onSaved: (value) =>
+                                              {inspection.signerPost = value},
+                                          context: context,
+                                        ))
+                                      ]),
+                                      Row(children: [
+                                        Expanded(
+                                            child: EditTextField(
+                                          text: 'Утвержден, ФИО',
+                                          value: inspection.appName,
+                                          onSaved: (value) =>
+                                              {inspection.appName = value},
+                                          context: context,
+                                        )),
+                                        Expanded(
+                                            child: EditTextField(
+                                          text: 'Утвержден, должность',
+                                          value: inspection.appPost,
+                                          onSaved: (value) =>
+                                              {inspection.appPost = value},
+                                          context: context,
+                                        ))
+                                      ]),
+                                    ])
+                              ]))),
                               Container(
                                   child: Column(children: [
                                 MyButton(
                                     text: 'принять',
                                     parentContext: context,
                                     onPress: () {
-                                      submitInspection(setState);
+                                      submitInspection(inspection, setState);
                                     }),
                               ]))
                             ]))))));
@@ -1029,7 +1046,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   }
 
   Future<void> editInspectionClicked() async {
-    inspectionCopy = new CheckPlan(
+    CheckPlan inspectionCopy = new CheckPlan(
         id: _inspection.id,
         parentId: _inspection.parentId,
         name: _inspection.name,
@@ -1046,13 +1063,10 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     setState(() {});
     bool result = await showInspectionDialog(inspectionCopy);
     if (result != null && result) //иначе перезагружать _plan?
-      setState(() {
-        _inspection = inspectionCopy;
-        reloadInspection(_inspection.parentId);
-      });
+    {}
   }
 
-  Future<void> submitInspection(setState) async {
+  Future<void> submitInspection(CheckPlan inspectionCopy, setState) async {
     final form = formInspectionKey.currentState;
     hideKeyboard();
     if (form.validate()) {
@@ -1063,6 +1077,12 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
 
       Navigator.pop<bool>(context, true);
       Scaffold.of(context).showSnackBar(successSnackBar);
+
+       setState(() {
+        _inspection = inspectionCopy;
+        widget.setCheckPlanId(_inspection.id);
+        reloadInspection(_inspection.parentId);
+      });
 
       /* try {
         if (planCopy.id == null) {
@@ -1165,11 +1185,14 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   Future<void> addInspectionItemClicked() async {
     if (_inspection.id == null) {
       Scaffold.of(context).showSnackBar(
-          errorSnackBar(text: 'Сначала добавьте реквизиты плана проверок'));
+          errorSnackBar(text: 'Сначала сохраните реквизиты плана проверок'));
       return;
     }
     InspectionItem inspectionItem = new InspectionItem(
-        id: null, inspectionId: _inspection.id, date: DateTime.now());
+        id: null,
+        inspectionId: _inspection.id,
+        date: DateTime.now(),
+        active: true);
     bool result = await showInspectionItemDialog(inspectionItem, setState);
     if (result != null && result) {
       Map<String, dynamic> newValue = {
