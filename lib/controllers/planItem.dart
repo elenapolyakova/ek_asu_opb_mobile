@@ -26,6 +26,14 @@ class PlanItemController extends Controllers {
     return PlanItem.fromJson(json);
   }
 
+  static Future<int> selectOdooId(int id) async {
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(_tableName,
+        columns: ['odoo_id'], where: "id = ?", whereArgs: [id]);
+    if (queryRes == null || queryRes.length == 0)
+      throw 'No record of table $_tableName with id=$id exist.';
+    return queryRes[0]['odoo_id'];
+  }
+
   static loadFromOdoo([limit]) async {
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
@@ -117,16 +125,19 @@ class PlanItemController extends Controllers {
   ///   ]
   ///   'id':null
   /// }```
-  static Future<Map<String, dynamic>> update(PlanItem planItem) async {
+  static Future<Map<String, dynamic>> update(PlanItem sentPlanItem) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
       'id': null,
     };
-    await DBProvider.db.update(_tableName, planItem.toJson()).then((resId) {
+    Future<int> odooId = selectOdooId(sentPlanItem.id);
+    await DBProvider.db
+        .update(_tableName, sentPlanItem.toJson())
+        .then((resId) async {
       res['code'] = 1;
       res['id'] = resId;
-      return SynController.edit(_tableName, resId, planItem.odooId)
+      return SynController.edit(_tableName, resId, await odooId)
           .catchError((err) {
         res['code'] = -2;
         res['message'] = 'Error updating syn';
@@ -145,16 +156,17 @@ class PlanItemController extends Controllers {
   ///   'message':[null|Error deleting from syn|Error deleting from $_tableName],
   ///   'id':null
   /// }```
-  static Future<Map<String, dynamic>> delete(PlanItem planItem) async {
+  static Future<Map<String, dynamic>> delete(int id) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
       'id': null,
     };
-    planItem.active = false;
-    await DBProvider.db.update(_tableName, planItem.toJson()).then((value) {
+    Future<int> odooId = selectOdooId(id);
+    await DBProvider.db
+        .update(_tableName, {'id': id, 'active': 'false'}).then((value) async {
       res['code'] = 1;
-      return SynController.delete(_tableName, planItem.id, planItem.odooId)
+      return SynController.delete(_tableName, id, await odooId)
           .catchError((err) {
         res['code'] = -2;
         res['message'] = 'Error updating syn';
