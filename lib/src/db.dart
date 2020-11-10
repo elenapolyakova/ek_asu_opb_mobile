@@ -37,11 +37,11 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS userInfo(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS plan(id INTEGER PRIMARY KEY, odoo_id INTEGER, type TEXT, name TEXT, rw_id INTEGER, year INTEGER, date_set TEXT, signer_name TEXT, signer_post TEXT, num_set TEXT, active TEXT, state TEXT)");
+            "CREATE TABLE IF NOT EXISTS plan(id INTEGER PRIMARY KEY, odoo_id INTEGER, type TEXT, name TEXT, rw_id INTEGER, year INTEGER, date_set TEXT, state TEXT, signer_name TEXT, signer_post TEXT, num_set TEXT, active TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS plan_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, department_txt TEXT, check_type INTEGER, period INTEGER, responsible TEXT, check_result TEXT, active TEXT)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS plan_item_check(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, railway_id INTEGER, date_from TEXT, date_to TEXT, date_set TEXT, state TEXT, signer_name TEXT, signer_post TEXT, app_name TEXT, app_post TEXT, num_set TEXT, active TEXT, num_set TEXT)");
+            "CREATE TABLE IF NOT EXISTS plan_item_check(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, rw_id INTEGER, date_from TEXT, date_to TEXT, date_set TEXT, state TEXT, signer_name TEXT, signer_post TEXT, app_name TEXT, app_post TEXT, num_set TEXT, active TEXT, main_com_group_id INTEGER)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS plan_item_check_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, type INTEGER, department_id INTEGER, date TEXT, dt_from TEXT, dt_to TEXT, active TEXT, com_group_id INTEGER)");
         await db.execute(
