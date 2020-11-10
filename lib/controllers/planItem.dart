@@ -74,7 +74,8 @@ class PlanItemController extends Controllers {
       whereArgs: [parentId],
     );
     if (queryRes == null || queryRes.length == 0) return null;
-    List<PlanItem> planItems = queryRes.map((e) => PlanItem.fromJson(e));
+    List<PlanItem> planItems =
+        queryRes.map((e) => PlanItem.fromJson(e)).toList();
     return planItems;
   }
 
