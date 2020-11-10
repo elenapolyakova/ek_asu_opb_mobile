@@ -8,12 +8,31 @@ class SynController extends Controllers {
   static Map<String, String> localRemoteTableNameMap = {
     'plan': 'mob.main.plan',
   };
-  static Map<String, Map<String, String>> tableNameMany2oneFieldsMap = {
+  static Map<String, List<String>> tableBooleanFieldsMap = {
+    'plan': ['active'],
+    'plan_item': ['active'],
+    'plan_item_check': ['active'],
+    'plan_item_check_item': ['active'],
+    'plan_item_check_group': ['active'],
+    'com_group': ['active', 'is_main'],
+  };
+  static Map<String, Map<String, String>> tableMany2oneFieldsMap = {
     'plan': {},
     'plan_item': {
       'parent_id': 'plan',
     },
     'plan_item_check': {
+      'parent_id': 'plan_item',
+      'main_com_group_id': 'com_group',
+    },
+    'plan_item_check_item': {
+      'parent_id': 'plan_item_check',
+      'com_group_id': 'com_group',
+    },
+    'plan_item_check_group': {
+      'parent_id': 'plan_item_check',
+    },
+    'com_group': {
       'parent_id': 'plan_item_check',
     },
   };
@@ -35,7 +54,7 @@ class SynController extends Controllers {
   }
 
   /// Adds a record to create into syn table
-  static Future<int> create(localTableName, resId) async {
+  static Future<int> create(String localTableName, int resId) async {
     return DBProvider.db.insert(_tableName, {
       'record_id': resId,
       'local_table_name': localTableName,
@@ -68,7 +87,8 @@ class SynController extends Controllers {
 
   /// If a record to delete wasn't uploaded, removes existing records to sync.
   /// Else adds a record to delete into syn table.
-  static Future<int> delete(localTableName, resId, odooId) async {
+  static Future<int> delete(
+      String localTableName, int resId, int odooId) async {
     return edit(localTableName, resId, odooId);
     // List toSyn = await DBProvider.db.select(
     //   _tableName,
@@ -97,11 +117,21 @@ class SynController extends Controllers {
     Map<String, dynamic> record = records[0];
 
     List<dynamic> args = [];
-    record['active'] = record['active'] == 'true' ? true : false;
+
+    // turn local boolean text fields into boolean for odoo
+    final List<String> booleanFields =
+        tableBooleanFieldsMap[syn.localTableName];
+    // If a record contains any boolean fields
+    if (booleanFields != null && booleanFields.length > 0) {
+      // For each boolean field in a record
+      booleanFields.forEach((el) {
+        record[el] = record[el] == 'true' ? true : false;
+      });
+    }
 
     // turn local many2one ids into Odoo ids
     final Map<String, String> many2oneFields =
-        tableNameMany2oneFieldsMap[syn.localTableName];
+        tableMany2oneFieldsMap[syn.localTableName];
     // If a record contains any many2one fields
     if (many2oneFields != null && many2oneFields.length > 0) {
       // For each many2one field in a record

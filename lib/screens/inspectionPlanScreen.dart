@@ -1039,7 +1039,8 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                   child: MyButton(
                                       text: 'принять',
                                       parentContext: context,
-                                      onPress: submitInspectionItem))
+                                      onPress: () => submitInspectionItem(
+                                          inspectionItem, setState)))
                             ]))))));
           });
         });
@@ -1078,7 +1079,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       Navigator.pop<bool>(context, true);
       Scaffold.of(context).showSnackBar(successSnackBar);
 
-       setState(() {
+      setState(() {
         _inspection = inspectionCopy;
         widget.setCheckPlanId(_inspection.id);
         reloadInspection(_inspection.parentId);
@@ -1121,14 +1122,39 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     }
   }
 
-  Future<void> submitInspectionItem() async {
+  Future<void> submitInspectionItem(
+      InspectionItem inspectionItem, setState) async {
     final form = formInspectionItemKey.currentState;
     hideKeyboard();
     if (form.validate()) {
       form.save();
       bool result = true;
 
-      // if (inspectionItemCopy.id == null) inspectionItemCopy.id = result["id"];
+      if (inspectionItem.id == null) {
+        // inspectionItem.id = result["id"];
+
+        Map<String, dynamic> newValue = {
+          'item': inspectionItem,
+          'name': await depOrEventName(inspectionItem.eventId,
+              inspectionItem.departmentId, inspectionItem.eventName)
+        };
+        setState(() {
+          inspectionItems.add(newValue);
+          //todo refresh all list?
+        });
+      } else {
+        Map<String, dynamic> newValue = {
+          'item': inspectionItem,
+          'name': await depOrEventName(inspectionItem.eventId,
+              inspectionItem.departmentId, inspectionItem.eventName)
+        };
+
+        setState(() {
+          int index = inspectionItems.indexWhere((item) =>
+              (item["item"] as InspectionItem).id == inspectionItem.id);
+          inspectionItems[index] = newValue;
+        });
+      }
 
       Navigator.pop<bool>(context, result);
       if (result)
@@ -1153,19 +1179,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
         timeEnd: inspectionItem.timeEnd,
         groupId: inspectionItem.groupId);
     bool result = await showInspectionItemDialog(inspectionItemCopy, setState);
-    if (result != null && result) {
-      Map<String, dynamic> newValue = {
-        'item': inspectionItemCopy,
-        'name': await depOrEventName(inspectionItemCopy.eventId,
-            inspectionItemCopy.departmentId, inspectionItemCopy.eventName)
-      };
-
-      setState(() {
-        int index = inspectionItems.indexWhere((inspectionItem) =>
-            (inspectionItem["item"] as InspectionItem).id == inspectionItemId);
-        inspectionItems[index] = newValue;
-      });
-    }
+    if (result != null && result) {}
   }
 
   Future<void> deleteInspectionItem(int inspectionItemId) async {
@@ -1194,17 +1208,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
         date: DateTime.now(),
         active: true);
     bool result = await showInspectionItemDialog(inspectionItem, setState);
-    if (result != null && result) {
-      Map<String, dynamic> newValue = {
-        'item': inspectionItem,
-        'name': await depOrEventName(inspectionItem.eventId,
-            inspectionItem.departmentId, inspectionItem.eventName)
-      };
-      setState(() {
-        inspectionItems.add(newValue);
-        //todo refresh all list?
-      });
-    }
+    if (result != null && result) {}
   }
 
   Future<void> forwardInsDepartment(int inspectionItemId) async {

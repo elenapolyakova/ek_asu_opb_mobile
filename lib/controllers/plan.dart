@@ -40,7 +40,7 @@ class PlanController extends Controllers {
       [
         'type',
         'name',
-        'railway_id',
+        'rw_id',
         'year',
         'date_set',
         'signer_name',
@@ -66,7 +66,7 @@ class PlanController extends Controllers {
   /// Returns selected record or null.
   static Future<Plan> select(int year, String type, int railwayId) async {
     Map<String, dynamic> where = Controllers.getNullSafeWhere(
-        {'year': year, 'type': type, 'railway_id': railwayId});
+        {'year': year, 'type': type, 'rw_id': railwayId});
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       where: where['where'] + " and active = 'true'",
@@ -79,14 +79,14 @@ class PlanController extends Controllers {
       DBProvider.db.insert('log', {
         'date': nowStr(),
         'message':
-            "There is more than one record of $_tableName with year=$year, type=$type and railway_id=$railwayId"
+            "There is more than one record of $_tableName with year=$year, type=$type and rw_id=$railwayId"
       });
       plan = Plan.fromJson(queryRes[0]);
     } else
       DBProvider.db.insert('log', {
         'date': nowStr(),
         'message':
-            "There is no records of $_tableName with year=$year, type=$type and railway_id=$railwayId"
+            "There is no records of $_tableName with year=$year, type=$type and rw_id=$railwayId"
       });
     return plan;
   }
@@ -111,7 +111,7 @@ class PlanController extends Controllers {
       'id': null,
     };
     Map<String, dynamic> where = Controllers.getNullSafeWhere(
-        {'year': plan.year, 'type': plan.type, 'railway_id': plan.railwayId});
+        {'year': plan.year, 'type': plan.type, 'rw_id': plan.railwayId});
     List uniqueChecked = await DBProvider.db.select(
       _tableName,
       columns: ['id'],
@@ -162,7 +162,7 @@ class PlanController extends Controllers {
     };
     Future<int> odooId = selectOdooId(plan.id);
     Map<String, dynamic> where = Controllers.getNullSafeWhere(
-        {'year': plan.year, 'type': plan.type, 'railway_id': plan.railwayId});
+        {'year': plan.year, 'type': plan.type, 'rw_id': plan.railwayId});
     List uniqueChecked = await DBProvider.db.select(
       _tableName,
       columns: ['id'],
