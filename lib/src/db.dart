@@ -50,7 +50,7 @@ class DBProvider {
            await db.execute("DROP TABLE IF EXISTS plan");
            await db.execute("DROP TABLE IF EXISTS plan_item");   
 
-          await db.execute(
+        await db.execute(
             "CREATE TABLE IF NOT EXISTS plan(id INTEGER PRIMARY KEY, odoo_id INTEGER, type TEXT, name TEXT, rw_id INTEGER, year INTEGER, date_set TEXT, state TEXT, signer_name TEXT, signer_post TEXT, num_set TEXT, active TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS plan_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, department_txt TEXT, check_type INTEGER, period INTEGER, responsible TEXT, check_result TEXT, active TEXT)");
