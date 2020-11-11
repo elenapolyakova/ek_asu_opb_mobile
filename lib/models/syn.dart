@@ -33,6 +33,6 @@ class Syn extends Models {
 
   @override
   String toString() {
-    return 'Syn{record_id: $recordId, local_table_name: $localTableName, method: $method${error ?? ", error: " + error}}';
+    return 'Syn{record_id: $recordId, local_table_name: $localTableName, method: $method${error != null ? (", error: " + error) : ""}}';
   }
 }
