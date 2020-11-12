@@ -6,44 +6,70 @@ import "package:ek_asu_opb_mobile/models/models.dart";
 class Plan extends Models {
   int id;
   int odooId;
-  String type; //Принадлежность
-  String name; //Наименование
-  Railway _railway; //Дорога
-  int railwayId; //Дорога
-  int year; //Год
-  DateTime dateSet; //Дата утверждения
-  String signerName; //Подписант имя
-  String signerPost; //Подписант должность
-  String numSet; //Номер плана
-  bool active = true; //Действует
-  String state = 'draft'; //Состояние
 
+  ///Ключ принадлежности
+  String type;
+
+  ///Наименование
+  String name;
+
+  /// Id дороги
+  int railwayId;
+  Railway _railway;
+
+  ///Год
+  int year;
+
+  ///Дата утверждения
+  DateTime dateSet;
+
+  ///Подписант имя
+  String signerName;
+
+  ///Подписант должность
+  String signerPost;
+
+  ///Номер плана
+  String numSet;
+
+  ///Действует
+  bool active = true;
+
+  ///Ключ состояния
+  String state = 'draft';
+
+  ///Варианты выбора для принадлежности
   static Map<String, String> typeSelection = {
     'cbt': 'ЦБТ',
     'ncop': 'НЦОП',
   };
 
+  ///Варианты выбора для состояния
   static Map<String, String> stateSelection = {
     'draft': 'Черновик',
     'approved': 'Утверждено',
   };
 
+  ///Значение принадлежности
   String get typeDisplay {
     if (type != null && typeSelection.containsKey(type))
       return typeSelection[type];
     return type;
   }
 
+  ///Значение состояния
   String get stateDisplay {
     if (state != null && stateSelection.containsKey(state))
       return stateSelection[state];
     return state;
   }
 
+  ///Пункты плана
   Future<List<PlanItem>> get items async {
     return await PlanItemController.select(id);
   }
 
+  ///Дорога
   Future<Railway> get railway async {
     if (_railway == null)
       _railway = await controllers.Railway.selectById(railwayId);

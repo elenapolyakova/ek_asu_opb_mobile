@@ -27,8 +27,7 @@ String dateStr(DateTime dt) =>
 String dateDMY(DateTime dt) =>
     '${addZero(dt.day)}.${addZero(dt.month)}.${dt.year}';
 
-String dateHm(DateTime dt) =>
-    '${addZero(dt.hour)}:${addZero(dt.minute)}';
+String dateHm(DateTime dt) => '${addZero(dt.hour)}:${addZero(dt.minute)}';
 
 String nowStr() => dateStr(DateTime.now());
 
@@ -71,4 +70,15 @@ List<Map<String, dynamic>> makeListFromJson(Map<dynamic, dynamic> json) {
 
 bool isDateEqual(DateTime dt1, DateTime dt2) {
   return dt1.year == dt2.year && dt1.month == dt2.month && dt1.day == dt2.day;
+}
+
+DateTime stringToDateTime(dynamic date) {
+  if (date is bool && !date) return null;
+  return DateTime.tryParse(date);
+}
+
+String dateTimeToString(DateTime date, [bool includeTime = false]) {
+  List<String> dateSplit = date.toIso8601String().split(':');
+  if (!includeTime) return dateSplit[0];
+  return "${dateSplit[0]} ${dateSplit.sublist(1).join('')}";
 }

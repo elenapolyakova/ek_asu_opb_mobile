@@ -1,25 +1,78 @@
 import 'package:ek_asu_opb_mobile/controllers/checkPlan.dart';
+import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart' as controllers;
 import 'package:ek_asu_opb_mobile/models/checkPlan.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
+import 'package:ek_asu_opb_mobile/models/comGroup.dart';
 
 class CheckPlanItem extends Models {
   int id;
   int odooId;
-  int parentId; //План проверки
-  CheckPlan _parent; //План проверки
-  String name; //Наименование
-  int departmentId; //Предприятие
-  Department _department; //Предприятие
-  DateTime date; //Дата
-  DateTime dtFrom; //Начало мероприятия
-  DateTime dtTo; //Окончание мероприятия
-  bool active = true; //Действует
 
-  List<CheckPlanItem> get comUsers {
-    //mob.check.plan.com_user
-    return [];
+  ///Id плана проверки
+  int parentId;
+  CheckPlan _parent;
+
+  ///Наименование
+  String name;
+
+  ///Ключ действия
+  int type;
+
+  ///Id предприятия
+  int departmentId;
+  Department _department;
+
+  ///Дата
+  DateTime date;
+
+  ///Начало мероприятия (with time)
+  DateTime dtFrom;
+
+  ///Окончание мероприятия (with time)
+  DateTime dtTo;
+
+  ///Действует
+  bool active = true;
+
+  ///ID рабочей группы
+  int comGroupId;
+  ComGroup _comGroup;
+
+  static Map<int, String> typeSelection = {
+    1: 'Приезд',
+    2: 'Обед',
+    3: 'Выезд на объект',
+    4: 'Отъезд',
+    99: 'Прочее',
+  };
+
+  ///Значение состояния
+  String get stateDisplay {
+    if (type != null && typeSelection.containsKey(type))
+      return typeSelection[type];
+    return type.toString();
+  }
+
+  /// Рабочая группа
+  Future<ComGroup> get comGroup async {
+    if (_comGroup == null) _comGroup = await ComGroupController.selectById(id);
+    return _comGroup;
+  }
+
+  ///Предприятие
+  Future<Department> get department async {
+    if (_department == null)
+      _department = await controllers.Department.selectById(departmentId);
+    return _department;
+  }
+
+  ///План проверки
+  Future<CheckPlan> get parent async {
+    if (_parent == null)
+      _parent = await CheckPlanController.selectById(parentId);
+    return _parent;
   }
 
   CheckPlanItem({
@@ -27,40 +80,32 @@ class CheckPlanItem extends Models {
     this.odooId,
     this.parentId,
     this.name,
+    this.type,
     this.departmentId,
     this.date,
     this.dtFrom,
     this.dtTo,
     this.active,
+    this.comGroupId,
   });
-
-  Future<Department> get department async {
-    if (_department == null)
-      _department = await controllers.Department.selectById(departmentId);
-    return _department;
-  }
-
-  Future<CheckPlan> get parent async {
-    if (_parent == null)
-      _parent = await CheckPlanController.selectById(parentId);
-    return _parent;
-  }
 
   factory CheckPlanItem.fromJson(Map<String, dynamic> json) {
     CheckPlanItem res = new CheckPlanItem(
-      id: json["odoo_id"],
-      odooId: json["id"],
+      id: json["id"],
+      odooId: json["odoo_id"],
       parentId: (json["parent_id"] is List)
           ? unpackListId(json["parent_id"])['id']
           : json["parent_id"],
       name: getObj(json["name"]),
+      type: json["type"],
       departmentId: (json["department_id"] is List)
           ? unpackListId(json["department_id"])['id']
           : json["department_id"],
-      date: json["date"] == null ? null : DateTime.parse(json["date"]),
-      dtFrom: json["dt_from"] == null ? null : DateTime.parse(json["dt_from"]),
-      dtTo: json["dt_to"] == null ? null : DateTime.parse(json["dt_to"]),
+      date: stringToDateTime(json["date"]),
+      dtFrom: stringToDateTime(json["dt_from"]),
+      dtTo: stringToDateTime(json["dt_to"]),
       active: json["active"] == 'true',
+      comGroupId: json["com_group_id"],
     );
     return res;
   }
@@ -71,11 +116,13 @@ class CheckPlanItem extends Models {
       'odoo_id': odooId,
       'parent_id': parentId,
       'name': name,
+      'type': type,
       'department_id': departmentId,
-      'date': date.toIso8601String().split(':')[0],
-      'dt_from': dtFrom.toIso8601String().split(':')[0],
-      'dt_to': dtTo.toIso8601String().split(':')[0],
+      'date': dateTimeToString(date),
+      'dt_from': dateTimeToString(dtFrom, true),
+      'dt_to': dateTimeToString(dtTo, true),
       'active': (active == null || !active) ? 'false' : 'true',
+      'com_group_id': departmentId,
     };
     if (omitId) {
       res.remove('id');

@@ -1,12 +1,12 @@
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
-import 'package:ek_asu_opb_mobile/models/checkPlan.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
 import "package:ek_asu_opb_mobile/controllers/syn.dart";
+import 'package:ek_asu_opb_mobile/models/comGroup.dart';
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
-class CheckPlanController extends Controllers {
-  static String _tableName = "plan_item_check";
+class ComGroupController extends Controllers {
+  static String _tableName = "com_group";
 
   static Future<List<int>> selectIDs() async {
     List<Map<String, dynamic>> maps =
@@ -20,10 +20,10 @@ class CheckPlanController extends Controllers {
     return await DBProvider.db.selectAll(_tableName);
   }
 
-  static Future<CheckPlan> selectById(int id) async {
+  static Future<ComGroup> selectById(int id) async {
     if (id == null) return null;
     var json = await DBProvider.db.selectById(_tableName, id);
-    return CheckPlan.fromJson(json);
+    return ComGroup.fromJson(json);
   }
 
   static Future<int> selectOdooId(int id) async {
@@ -40,45 +40,54 @@ class CheckPlanController extends Controllers {
       [],
       [
         'parent_id',
-        'name',
-        'rw_id',
-        'date_from',
-        'date_to',
-        'date_set',
-        'state',
-        'signer_name',
-        'signer_post',
-        'app_name',
-        'app_post',
-        'num_set',
-        'main_com_group_id',
+        'head_id',
+        'group_num',
+        'is_main',
       ]
     ], {
       'limit': limit
     });
     DBProvider.db.deleteAll(_tableName);
-    json
-        .map((e) => {
-              ...e,
-              'id': null,
-              'odoo_id': e['id'],
-              'active': true,
-            })
-        .forEach((e) => insert(CheckPlan.fromJson(e), true));
+    json.map((e) {
+      return PlanController.selectById(e['parent_id']).then((Plan plan) {
+        var res = {
+          ...e,
+          'id': null,
+          'odoo_id': e['id'],
+          'parent_id': plan.id,
+          'active': 'true',
+        };
+        return res;
+      });
+    }).forEach((e) async => insert(ComGroup.fromJson(await e), true));
   }
 
-  /// Select the first record matching passed year, type and railwayId.
-  /// Returns selected record or null.
-  static Future<List<CheckPlan>> select(int parentId) async {
+  /// Select all records with matching parentId
+  /// Returns found records or null.
+  static Future<List<ComGroup>> select(int parentId) async {
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       where: "parent_id = ? and active = 'true'",
       whereArgs: [parentId],
     );
     if (queryRes == null || queryRes.length == 0) return null;
-    List<CheckPlan> planItemCheckPlans;
-    planItemCheckPlans = queryRes.map((e) => CheckPlan.fromJson(e)).toList();
-    return planItemCheckPlans;
+    List<ComGroup> planItems =
+        queryRes.map((e) => ComGroup.fromJson(e)).toList();
+    return planItems;
+  }
+
+  /// Select all records with matching parentId and isMain = false
+  /// Returns found records or null.
+  static Future<List<ComGroup>> selectWorkGroups(int parentId) async {
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
+      _tableName,
+      where: "parent_id = ? and is_main = 'false' and active = 'true'",
+      whereArgs: [parentId],
+    );
+    if (queryRes == null || queryRes.length == 0) return null;
+    List<ComGroup> planItems =
+        queryRes.map((e) => ComGroup.fromJson(e)).toList();
+    return planItems;
   }
 
   /// Try to insert into the table.
@@ -93,14 +102,14 @@ class CheckPlanController extends Controllers {
   ///   ]
   ///   'id':record_id
   /// }```
-  static Future<Map<String, dynamic>> insert(CheckPlan checkPlan,
+  static Future<Map<String, dynamic>> insert(ComGroup comGroup,
       [bool saveOdooId = false]) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
       'id': null,
     };
-    Map<String, dynamic> json = checkPlan.toJson(!saveOdooId);
+    Map<String, dynamic> json = comGroup.toJson(!saveOdooId);
     if (saveOdooId) json.remove('id');
     await DBProvider.db.insert(_tableName, json).then((resId) {
       res['code'] = 1;
@@ -128,15 +137,15 @@ class CheckPlanController extends Controllers {
   ///   ]
   ///   'id':null
   /// }```
-  static Future<Map<String, dynamic>> update(CheckPlan checkPlan) async {
+  static Future<Map<String, dynamic>> update(ComGroup comGroup) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
       'id': null,
     };
-    Future<int> odooId = selectOdooId(checkPlan.id);
+    Future<int> odooId = selectOdooId(comGroup.id);
     await DBProvider.db
-        .update(_tableName, checkPlan.toJson())
+        .update(_tableName, comGroup.toJson())
         .then((resId) async {
       res['code'] = 1;
       res['id'] = resId;
