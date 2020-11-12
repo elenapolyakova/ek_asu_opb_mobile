@@ -28,6 +28,16 @@ class UserController extends Controllers {
     return User.fromJson(json);
   }
 
+  static Future<List<User>> selectByIds(List<int> ids) async {
+    if (ids == null || ids.length == 0) return [];
+    var json = await DBProvider.db.select(
+      _tableName,
+      where: "id in ?",
+      whereArgs: [ids],
+    );
+    return json.map((e) => User.fromJson(e));
+  }
+
   static loadFromOdoo([limit]) async {
     List<dynamic> json = await getDataWithAttemp('res.users', 'search_read', [
       [],

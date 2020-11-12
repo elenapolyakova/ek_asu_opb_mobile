@@ -1,4 +1,5 @@
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
+import 'package:ek_asu_opb_mobile/controllers/relComGroupUser.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
 import "package:ek_asu_opb_mobile/controllers/syn.dart";
 import 'package:ek_asu_opb_mobile/models/comGroup.dart';
@@ -69,7 +70,7 @@ class ComGroupController extends Controllers {
         };
         return res;
       });
-    }).forEach((e) async => insert(ComGroup.fromJson(await e), true));
+    }).forEach((e) async => insert(ComGroup.fromJson(await e), [], true));
   }
 
   /// Select all records with matching parentId
@@ -102,18 +103,20 @@ class ComGroupController extends Controllers {
 
   /// Try to insert into the table.
   /// ======
-  /// Returns ```{
+  /// Returns
+  /// ```
+  /// {
   ///   'code':[1|-1|-2|-3],
-  ///   'message':[
-  ///     null|
-  ///     There is already a $_tableName record with year=${plan.year}, type=${plan.type}, railway=${plan.railwayId}|
-  ///     Error updating syn|
-  ///     Error inserting into $_tableName|
-  ///   ]
+  ///   'message':
+  ///     null||
+  ///     'rel_com_group_user'||
+  ///     'Error updating syn'||
+  ///     'Error inserting into com_group',
   ///   'id':record_id
-  /// }```
+  /// }
+  /// ```
   static Future<Map<String, dynamic>> insert(ComGroup comGroup,
-      [bool saveOdooId = false]) async {
+      [List<int> userIds = const [], bool saveOdooId = false]) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
@@ -122,11 +125,17 @@ class ComGroupController extends Controllers {
     Map<String, dynamic> json = comGroup.toJson(!saveOdooId);
     if (saveOdooId) json.remove('id');
     await DBProvider.db.insert(_tableName, json).then((resId) {
-      res['code'] = 1;
-      res['id'] = resId;
-      return SynController.create(_tableName, resId).catchError((err) {
-        res['code'] = -2;
-        res['message'] = 'Error updating syn';
+      return RelComGroupUserController.insertByComGroupId(resId, userIds)
+          .then((value) {
+        res['code'] = 1;
+        res['id'] = resId;
+        return SynController.create(_tableName, resId).catchError((err) {
+          res['code'] = -2;
+          res['message'] = 'Error updating syn';
+        });
+      }).catchError((err) {
+        res['code'] = -3;
+        res['message'] = 'Error inserting into rel_com_group_user';
       });
     }).catchError((err) {
       res['code'] = -3;
@@ -137,32 +146,39 @@ class ComGroupController extends Controllers {
   }
 
   /// Try to update a record of the table.
-  /// Returns ```{
+  /// Returns
+  /// ```
+  /// {
   ///   'code':[1|-1|-2|-3],
-  ///   'message':[
-  ///     null|
-  ///     There is already a $_tableName record with year=${plan.year}, type=${plan.type}, railway=${plan.railwayId}|
-  ///     Error updating syn|
-  ///     Error updating $_tableName|
-  ///   ]
-  ///   'id':null
-  /// }```
-  static Future<Map<String, dynamic>> update(ComGroup comGroup) async {
+  ///   'message':
+  ///     null||
+  ///     'There is already a com_group record with year, type, railway'||
+  ///     'Error updating syn'||
+  ///     'Error updating com_group',
+  ///   'id':updated record id
+  /// }
+  /// ```
+  static Future<Map<String, dynamic>> update(ComGroup comGroup,
+      [List<int> userIds = const []]) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
       'id': null,
     };
     Future<int> odooId = selectOdooId(comGroup.id);
-    await DBProvider.db
-        .update(_tableName, comGroup.toJson())
-        .then((resId) async {
-      res['code'] = 1;
-      res['id'] = resId;
-      return SynController.edit(_tableName, resId, await odooId)
-          .catchError((err) {
-        res['code'] = -2;
-        res['message'] = 'Error updating syn';
+    await DBProvider.db.update(_tableName, comGroup.toJson()).then((resId) {
+      return RelComGroupUserController.updateComGroupUsers(resId, userIds)
+          .then((value) async {
+        res['code'] = 1;
+        res['id'] = resId;
+        return SynController.edit(_tableName, resId, await odooId)
+            .catchError((err) {
+          res['code'] = -2;
+          res['message'] = 'Error updating syn';
+        });
+      }).catchError((err) {
+        res['code'] = -3;
+        res['message'] = 'Error updating rel_com_group_user';
       });
     }).catchError((err) {
       res['code'] = -3;
@@ -173,11 +189,17 @@ class ComGroupController extends Controllers {
   }
 
   /// Try to delete a record from the table.
-  /// Returns ```{
+  /// Returns
+  /// ```
+  /// {
   ///   'code':[1|-2|-3],
-  ///   'message':[null|Error deleting from syn|Error deleting from $_tableName],
+  ///   'message':
+  ///     null||
+  ///     'Error deleting from syn'||
+  ///     'Error deleting from com_group',
   ///   'id':null
-  /// }```
+  /// }
+  /// ```
   static Future<Map<String, dynamic>> delete(int id) async {
     Map<String, dynamic> res = {
       'code': null,
