@@ -116,6 +116,7 @@ class _PlanScreen extends State<PlanScreen> {
   List<PlanItem> planItems = [];
   PlanItem planItemCopy;
 
+
   @override
   void initState() {
     super.initState();
@@ -180,13 +181,12 @@ class _PlanScreen extends State<PlanScreen> {
           active: true,
           name: canEdit() ? emptyTableName : errorTableName);
 
-     planItems = [];
+    planItems = [];
 
-    if (_plan.id != null)
-      planItems = await _plan.items;
+    if (_plan.id != null) planItems = await _plan.items;
 
-     planItems = planItems ?? [];
- 
+    planItems = planItems ?? [];
+
     // await reloadPlanItems(_plan.id);
 
     setState(() => {/*_tableName = tableName*/});
@@ -258,15 +258,18 @@ class _PlanScreen extends State<PlanScreen> {
                       child: ListView(
                           padding: const EdgeInsets.all(16),
                           children: [
-                        if (_plan.id != null) Column(children: [
-                          generateTableData(context, planItemHeader, planItems)
-                        ])
+                        if (_plan.id != null)
+                          Column(children: [
+                            generateTableData(
+                                context, planItemHeader, planItems)
+                          ])
                       ])),
-                 /* Container(
+                  /*Container(
                       child: MyButton(
                           text: 'test',
                           parentContext: context,
                           onPress: testClicked))*/
+                
                 ])));
   }
 
@@ -565,6 +568,8 @@ class _PlanScreen extends State<PlanScreen> {
                             key: formPlanKey,
                             child: Container(
                                 child: Column(children: [
+                              FormTitle(
+                                  'Реквизиты плана ${plan.type == 'ncop' ? 'НЦОП' : 'ЦБТ'}'),
                               Expanded(
                                   child: Center(
                                       child: SingleChildScrollView(
@@ -721,6 +726,8 @@ class _PlanScreen extends State<PlanScreen> {
                           key: formPlanItemKey,
                           child: Container(
                               child: Column(children: [
+                            FormTitle(
+                                '${planItem.id == null ? 'Добавление' : 'Редактирование'} пункта плана'),
                             Expanded(
                                 child: Center(
                                     child: SingleChildScrollView(
@@ -940,7 +947,7 @@ class _PlanScreen extends State<PlanScreen> {
           } else {
             setState(() {
               int index = planItems.indexOf(
-              planItems.firstWhere((element) => element.id == planItem.id));
+                  planItems.firstWhere((element) => element.id == planItem.id));
               planItems[index] = planItem;
             });
           }
@@ -962,7 +969,9 @@ class _PlanScreen extends State<PlanScreen> {
   Future<void> testClicked() async {
     print('test');
 
-    List result = await DBProvider.db.selectAll('plan_item');
-    print(result.length);
+    // List result = await DBProvider.db.selectAll('plan_item');
+    //await DBProvider.db.deleteAll('plan_item');
+    //await DBProvider.db.deleteAll('plan');
+    // print(result.length);
   }
 }

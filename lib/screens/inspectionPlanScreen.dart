@@ -455,6 +455,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                             key: formInspectionKey,
                             child: Container(
                                 child: Column(children: [
+                                  FormTitle('Реквизиты плана проверок'),
                               Expanded(
                                   child: Center(
                                       child:
@@ -648,6 +649,8 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                             key: formInspectionItemKey,
                             child: Container(
                                 child: Column(children: [
+                                  FormTitle('${inspectionItem.id == null ? 'Добавление' : 'Редактирование'} пункта плана проверок'),
+
                               Expanded(
                                   child: Center(
                                       child: SingleChildScrollView(
