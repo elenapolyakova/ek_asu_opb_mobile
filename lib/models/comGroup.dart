@@ -17,7 +17,7 @@ class ComGroup extends Models {
   User _head;
 
   ///Номер группы
-  int groupNum;
+  String groupNum;
 
   ///Группа - комиссия
   bool isMain;
@@ -68,7 +68,7 @@ class ComGroup extends Models {
       headId: (json["head_id"] is List)
           ? unpackListId(json["head_id"])['id']
           : json["head_id"],
-      groupNum: json["group_num"],
+      groupNum: getObj(json["group_num"]),
       isMain: json["is_main"] == 'true',
       active: json["active"] == 'true',
     );

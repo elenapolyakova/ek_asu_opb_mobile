@@ -46,7 +46,7 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS plan_item_check_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, type INTEGER, department_id INTEGER, date TEXT, dt_from TEXT, dt_to TEXT, active TEXT, com_group_id INTEGER)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS com_group(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, head_id INTEGER, group_num INTEGER, is_main TEXT, active TEXT)");
+            "CREATE TABLE IF NOT EXISTS com_group(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, head_id INTEGER, group_num TEXT, is_main TEXT, active TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS rel_com_group_user(id INTEGER PRIMARY KEY, com_group_id INTEGER, user_id INTEGER, active TEXT)");
       },
@@ -79,6 +79,16 @@ class DBProvider {
           await db
               .execute('ALTER TABLE rel_com_group_user ADD COLUMN active TEXT');
         }
+        if (version == 9) {
+          await db.transaction((txn) async {
+            await txn.execute(
+                'CREATE TABLE new_com_group(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, head_id INTEGER, group_num TEXT, is_main TEXT, active TEXT)');
+            await txn
+                .execute('INSERT INTO new_com_group SELECT * FROM com_group');
+            await txn.execute('DROP TABLE com_group');
+            await txn.execute('ALTER TABLE new_com_group RENAME TO com_group');
+          });
+        }
       },
       onOpen: (db) async {
         await db.execute(
@@ -91,7 +101,7 @@ class DBProvider {
 
       // Set the version. This executes the onCreate function and provides a
       // path to perform database upgrades and downgrades.
-      version: 8,
+      version: 9,
     );
   }
 
