@@ -125,7 +125,7 @@ class SynController extends Controllers {
     if (booleanFields != null && booleanFields.length > 0) {
       // For each boolean field in a record
       booleanFields.forEach((el) {
-        record[el] = record[el] == 'true' ? true : false;
+        record[el] = record[el] == 'true';
       });
     }
 
@@ -140,18 +140,44 @@ class SynController extends Controllers {
         // If the record has a many2one
         if (many2oneFieldId != null) {
           final String localTable = el.value;
-          return DBProvider.db.select(
+          // Replace many2one with odoo_id of its related record
+          return DBProvider.db
+              .select(
             localTable,
+            columns: ['odoo_id'],
             where: "id = ?",
             whereArgs: [many2oneFieldId],
-          ).then((List<Map<String, dynamic>> many2oneRecord) {
+          )
+              .then((List<Map<String, dynamic>> many2oneRecord) async {
             if (many2oneRecord == null || many2oneRecord.length == 0) {
+              // If no record is found, log error and exit
+              print(
+                  'Tried to synchronize record $syn. Specified record has ${el.key}=$many2oneFieldId. But no record of table $localTable with id=$many2oneFieldId was found');
               DBProvider.db.insert('log', {
                 'date': nowStr(),
                 'message':
                     "Tried to synchronize record $syn. Specified record has ${el.key}=$many2oneFieldId. But no record of table $localTable with id=$many2oneFieldId was found"
               });
-              return;
+              return false;
+            } else if (many2oneRecord[0]['odoo_id'] == null) {
+              // If a record was found, but is has no odoo_id
+              List<Map<String, dynamic>> synList = await DBProvider.db.select(
+                _tableName,
+                limit: 1,
+                where: "record_id = ? and localTableName = ? and method = ?",
+                whereArgs: [many2oneRecord[0]['id'], localTable, 'create'],
+              );
+              print(
+                  'Tried to synchronize record $syn. Specified record has ${el.key}=$many2oneFieldId. Synchronizing it first...');
+              DBProvider.db.insert('log', {
+                'date': nowStr(),
+                'message':
+                    "Tried to synchronize record $syn. Specified record has ${el.key}=$many2oneFieldId. Synchronizing it first..."
+              });
+              // Synchronize the related record first
+              await doSync(Syn.fromJson(synList[0]));
+              // Try to synchronize the original record again
+              return doSync(syn);
             }
             record[el.key] = many2oneRecord[0]['odoo_id'];
           });
@@ -159,6 +185,9 @@ class SynController extends Controllers {
       });
     }
 
+    // If odoo_id exists, then method must be write.
+    // Unlinking was removed in favor of setting active to false.
+    // If odoo_id does not exist, then method must be create
     if (record['odoo_id'] != null) {
       int odooId = record['odoo_id'];
       if (syn.method == 'write')
