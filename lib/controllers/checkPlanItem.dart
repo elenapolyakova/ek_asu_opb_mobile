@@ -68,7 +68,7 @@ class CheckPlanItemController extends Controllers {
     }).forEach((e) async => insert(CheckPlanItem.fromJson(await e), true));
   }
 
-  /// Select all records with matching parentId
+  /// Select all records with provided parentId
   /// Returns found records or null.
   static Future<List<CheckPlanItem>> select(int parentId) async {
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(

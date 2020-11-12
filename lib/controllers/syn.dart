@@ -7,13 +7,16 @@ class SynController extends Controllers {
   static String _tableName = "syn";
   static Map<String, String> localRemoteTableNameMap = {
     'plan': 'mob.main.plan',
+    'plan_item': 'mob.main.plan.item',
+    'plan_item_check': 'mob.check.plan',
+    'plan_item_check_item': 'mob.check.plan.item',
+    'com_group': 'mob.check.plan.com_group',
   };
   static Map<String, List<String>> tableBooleanFieldsMap = {
     'plan': ['active'],
     'plan_item': ['active'],
     'plan_item_check': ['active'],
     'plan_item_check_item': ['active'],
-    'plan_item_check_group': ['active'],
     'com_group': ['active', 'is_main'],
   };
   static Map<String, Map<String, String>> tableMany2oneFieldsMap = {
@@ -28,9 +31,6 @@ class SynController extends Controllers {
     'plan_item_check_item': {
       'parent_id': 'plan_item_check',
       'com_group_id': 'com_group',
-    },
-    'plan_item_check_group': {
-      'parent_id': 'plan_item_check',
     },
     'com_group': {
       'parent_id': 'plan_item_check',

@@ -67,7 +67,7 @@ class CheckPlanController extends Controllers {
         .forEach((e) => insert(CheckPlan.fromJson(e), true));
   }
 
-  /// Select the first record matching passed year, type and railwayId.
+  /// Select a list of CheckPlan with provided parentId
   /// Returns selected record or null.
   static Future<List<CheckPlan>> select(int parentId) async {
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(

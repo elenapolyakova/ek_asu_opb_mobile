@@ -26,6 +26,16 @@ class ComGroupController extends Controllers {
     return ComGroup.fromJson(json);
   }
 
+  static Future<List<ComGroup>> selectByIds(List<int> ids) async {
+    if (ids == null || ids.length == 0) return null;
+    var json = await DBProvider.db.select(
+      _tableName,
+      where: "id in ?",
+      whereArgs: [ids],
+    );
+    return json.map((e) => ComGroup.fromJson(e));
+  }
+
   static Future<int> selectOdooId(int id) async {
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(_tableName,
         columns: ['odoo_id'], where: "id = ?", whereArgs: [id]);
