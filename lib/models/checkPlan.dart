@@ -1,7 +1,10 @@
+import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
+import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import 'package:ek_asu_opb_mobile/controllers/planItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/railway.dart'
     as railwayController;
 import 'package:ek_asu_opb_mobile/models/checkPlanItem.dart';
+import 'package:ek_asu_opb_mobile/models/comGroup.dart';
 import 'package:ek_asu_opb_mobile/models/planItem.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
@@ -9,49 +12,100 @@ import "package:ek_asu_opb_mobile/models/models.dart";
 class CheckPlan extends Models {
   int id;
   int odooId;
-  int parentId; //План проверки
-  PlanItem _parent; //План проверки
-  String name; //Наименование
-  Railway _railway; //Дорога
-  int railwayId; //Дорога
-  DateTime dateFrom; //Начало проверки
-  DateTime dateTo; //Окончание проверки
-  DateTime dateSet; //Дата утверждения
-  String state = 'draft'; //Состояние
-  String signerName; //Подписант. Имя
-  String signerPost; //Подписант. Должность
-  String appName; //Кто утвердил. Имя
-  String appPost; //Кто утвердил. Должность
-  String numSet; //Номер
-  bool active = true; //Действует
 
+  ///Id плана проверки
+  int parentId;
+  PlanItem _parent;
+
+  ///Наименование
+  String name;
+
+  ///Дорога
+  int railwayId;
+  Railway _railway;
+
+  ///Начало проверки
+  DateTime dateFrom;
+
+  ///Окончание проверки
+  DateTime dateTo;
+
+  ///Дата утверждения
+  DateTime dateSet;
+
+  ///Ключ состояния
+  String state = 'draft';
+
+  ///Подписант. Имя
+  String signerName;
+
+  ///Подписант. Должность
+  String signerPost;
+
+  ///Кто утвердил. Имя
+  String appName;
+
+  ///Кто утвердил. Должность
+  String appPost;
+
+  ///Номер
+  String numSet;
+
+  ///Действует
+  bool active = true;
+
+  ///Id комиссии
+  int mainComGroupId;
+  ComGroup _mainComGroup;
+
+  ///Варианты состояния
   static Map<String, String> stateSelection = {
     'draft': 'Черновик',
     'approved': 'Утверждено',
   };
 
+  ///Значение состояния
   String get stateDisplay {
     if (state != null && stateSelection.containsKey(state))
       return stateSelection[state];
     return state;
   }
 
-  List<CheckPlanItem> get items {
-    //mob.check.plan.item
-    return [];
+  ///Пункты плана
+  Future<List<CheckPlanItem>> get items async {
+    return await CheckPlanItemController.select(id);
   }
 
-  List<CheckPlanItem> get comUsers {
-    //mob.check.plan.com_user
-    return [];
+  ///Рабочие группы
+  Future<List<ComGroup>> get comGroups async {
+    return await ComGroupController.selectWorkGroups(id);
   }
 
+  ///Комиссия
+  Future<ComGroup> get mainComGroup async {
+    if (_mainComGroup == null)
+      _mainComGroup = await ComGroupController.selectById(mainComGroupId);
+    return _mainComGroup;
+  }
+
+  ///Председатель комиссии
+  Future<User> get mainComGroupHead async {
+    return await (await mainComGroup).head;
+  }
+
+  ///Члены комиссии
+  Future<List<User>> get mainComGroupUsers async {
+    return await (await mainComGroup).comUsers;
+  }
+
+  ///Дорога
   Future<Railway> get railway async {
     if (_railway == null)
       _railway = await railwayController.Railway.selectById(railwayId);
     return _railway;
   }
 
+  ///Пункт плана
   Future<PlanItem> get parent async {
     if (_parent == null)
       _parent = await PlanItemController.selectById(parentId);
@@ -78,20 +132,18 @@ class CheckPlan extends Models {
 
   factory CheckPlan.fromJson(Map<String, dynamic> json) {
     CheckPlan res = new CheckPlan(
-      odooId: json["odoo_id"],
       id: json["id"],
+      odooId: json["odoo_id"],
       parentId: (json["parent_id"] is List)
           ? unpackListId(json["parent_id"])['id']
           : json["parent_id"],
       name: getObj(json["name"]),
-      railwayId: (json["railway_id"] is List)
-          ? unpackListId(json["railway_id"])['id']
-          : json["railway_id"],
-      dateFrom:
-          json["date_from"] == null ? null : DateTime.parse(json["date_from"]),
-      dateTo: json["date_to"] == null ? null : DateTime.parse(json["date_to"]),
-      dateSet:
-          json["date_set"] == null ? null : DateTime.parse(json["date_set"]),
+      railwayId: (json["rw_id"] is List)
+          ? unpackListId(json["rw_id"])['id']
+          : json["rw_id"],
+      dateFrom: stringToDateTime(json["date_from"]),
+      dateTo: stringToDateTime(json["date_to"]),
+      dateSet: stringToDateTime(json["date_set"]),
       state: getObj(json["state"]),
       signerName: getObj(json["signer_name"]),
       signerPost: getObj(json["signer_post"]),
@@ -109,10 +161,10 @@ class CheckPlan extends Models {
       'id': id,
       'parent_id': parentId,
       'name': name,
-      'railway_id': railwayId,
-      'date_from': dateFrom.toIso8601String().split(':')[0],
-      'date_to': dateTo.toIso8601String().split(':')[0],
-      'date_set': dateSet.toIso8601String().split(':')[0],
+      'rw_id': railwayId,
+      'date_from': dateTimeToString(dateFrom),
+      'date_to': dateTimeToString(dateTo),
+      'date_set': dateTimeToString(dateSet),
       'state': state,
       'signer_name': signerName,
       'signer_post': signerPost,
