@@ -17,6 +17,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
   UserInfo _userInfo;
   int checkPlanItemId;
   bool showLoading = true;
+  String depName;
 
   @override
   _InfoCheckScreen(this.checkPlanItemId);
@@ -55,41 +56,64 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
     final textStyle = TextStyle(fontSize: 16.0, color: color);
 
     return Expanded(
-        child: Container(
-            decoration: BoxDecoration(
-                image: DecorationImage(
-                    image: AssetImage("assets/images/frameScreen.png"),
-                    fit: BoxFit.fitWidth)),
-            child: showLoading
-                ? Text("")
-                : Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    child: Column(children: [
-                      Expanded(
-                          child: ListView(
-                              padding: const EdgeInsets.all(16),
-                              children: [
-                                Row(
-                                   crossAxisAlignment: CrossAxisAlignment.start,
+        child: Scaffold(
+            body: Container(
+                decoration: BoxDecoration(
+                  
+                    image: DecorationImage(
+                        image: AssetImage("assets/images/frameScreen.png"),
+                        fit: BoxFit.fitWidth)),
+                child: showLoading
+                    ? Text("")
+                    : Padding(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        child: Column(children: [
+                          Expanded(
+                              child: ListView(
+                                  padding: const EdgeInsets.all(16),
                                   children: [
-                                  Expanded(child: 
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                  Container(
-                                    child: Text('Предприятие', style: textStyle,))]),
-                                  flex: 3),
-                                  Expanded(child: 
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                          Text('Статус: ', style: textStyle,),
-                                          Text('не проводилась'),
-                                          Icon(Icons.circle, color: Colors.red)
-                                          ]),
-                                  flex: 1)
-                                ],)
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                        child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              
+                                                EditTextField(
+                                                  text:
+                                                      'Наименование структурного подразделения',
+                                                  value:
+                                                      depName, //planItem.departmentTxt,
+                                                  onSaved: (value) => {
+                                                    depName = value
+                                                    //planItem.departmentTxt = value
+                                                  },
+                                                  context: widget.context,
+                                                  
+                                                  showEditDialog: true,
+                                                ),
+                                              ]),
+                                        flex: 3),
+                                    Expanded(
+                                        child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              Text(
+                                                'Статус: ',
+                                                style: textStyle,
+                                              ),
+                                              Text('не проводилась'),
+                                              Icon(Icons.circle,
+                                                  color: Colors.red)
+                                            ]),
+                                        flex: 1)
+                                  ],
+                                )
                               ]))
-                    ]))));
+                        ])))));
   }
 }

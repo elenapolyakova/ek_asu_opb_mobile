@@ -577,13 +577,8 @@ class _CommissionScreen extends State<CommissionScreen> {
                             key: formGroupKey,
                             child: Container(
                                 child: Column(children: [
-                              Container(
-                                child: Text('Формирование группы',
-                                    style: TextStyle(
-                                        fontSize: 30,
-                                        color: Theme.of(context)
-                                            .primaryColorDark)),
-                              ),
+                             
+                               FormTitle('Формирование группы'),
                               Container(
                                 child: EditTextField(
                                   text: 'Название группы',
@@ -747,12 +742,8 @@ class _CommissionScreen extends State<CommissionScreen> {
                         backgroundColor: Theme.of(context).primaryColor,
                         body: Container(
                             child: Column(children: [
-                          Container(
-                            child: Text('Формирование комиссии',
-                                style: TextStyle(
-                                    fontSize: 30,
-                                    color: Theme.of(context).primaryColorDark)),
-                          ),
+                              FormTitle('Формирование комиссии'),
+                        
                           Container(
                             child: SingleChildScrollView(
                                 padding:

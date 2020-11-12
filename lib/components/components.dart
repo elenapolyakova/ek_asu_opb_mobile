@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:flutter/material.dart';
@@ -47,7 +48,6 @@ class _TextIcon extends State<TextIcon> {
 }
 
 showLoadingDialog(BuildContext context) {
-  //AnimationController(vsync: this);
   showDialog(
     context: context,
     barrierDismissible: false,
@@ -1108,5 +1108,21 @@ class _SearchBox extends State<SearchBox> {
                           ])))
           ],
         ));
+  }
+}
+
+class FormTitle extends StatelessWidget {
+  String title;
+  double fontSize;
+  Color color;
+
+  @override
+  FormTitle(this.title, {this.fontSize = 30.0, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    TextStyle textStyle = TextStyle(
+        fontSize: fontSize, color: color ?? Theme.of(context).primaryColorDark);
+    return Container(child: Text(title, style: textStyle));
   }
 }
