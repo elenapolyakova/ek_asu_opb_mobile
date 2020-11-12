@@ -1,4 +1,4 @@
-import 'package:ek_asu_opb_mobile/controllers/controllers.dart' as controllers;
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:ek_asu_opb_mobile/controllers/planItem.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
@@ -72,7 +72,7 @@ class Plan extends Models {
   ///Дорога
   Future<Railway> get railway async {
     if (_railway == null)
-      _railway = await controllers.Railway.selectById(railwayId);
+      _railway = await RailwayController.selectById(railwayId);
     return _railway;
   }
 

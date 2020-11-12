@@ -1,3 +1,4 @@
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/models/userInfo.dart';
@@ -6,7 +7,6 @@ import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import 'package:convert/convert.dart';
 import 'package:odoo_rpc/odoo_rpc.dart';
-import "package:ek_asu_opb_mobile/controllers/controllers.dart" as controllers;
 import 'package:ek_asu_opb_mobile/src/db.dart';
 
 final _storage = FlutterSecureStorage();
@@ -17,15 +17,15 @@ void LogOut(BuildContext context) async {
   OdooSession session = await getSession();
   try {
     if (session != null) {
-      controllers.Log.insert('User ${session.userLogin} logout');
+      LogController.insert('User ${session.userLogin} logout');
       // если нет сети - не завершим сессию для Odoo
-      controllers.Log.insert('destroy session for odoo');
+      LogController.insert('destroy session for odoo');
       await OdooProxy.odooClient.destroySession();
       OdooProxy.odooClient.close();
-      controllers.Log.insert('success');
+      LogController.insert('success');
     }
   } on OdooException catch (e) {
-    controllers.Log.insert('error');
+    LogController.insert('error');
     print(e);
   }
 
@@ -58,10 +58,10 @@ Future<bool> checkSession(BuildContext context) async {
   String session = await _storage.read(key: 'session');
   try {
     if (session != null) {
-      controllers.Log.insert('checking Session');
+      LogController.insert('checking Session');
       OdooProxy.odooClient.checkSession();
-      controllers.Log.insert('success');
-      controllers.Log.insert('----------------------------------------');
+      LogController.insert('success');
+      LogController.insert('----------------------------------------');
       return true;
     }
   } on OdooSessionExpiredException catch (e) {
@@ -69,8 +69,8 @@ Future<bool> checkSession(BuildContext context) async {
 
     Navigator.pushNamed(context, '/login');
 
-    controllers.Log.insert('Session expired');
-    controllers.Log.insert('----------------------------------------');
+    LogController.insert('Session expired');
+    LogController.insert('----------------------------------------');
     print(e);
     return false;
   } catch (e) {
@@ -95,14 +95,14 @@ Future<bool> setUserData() async {
     if (oldUserInfo != null) {
       if (oldUserInfo.department_id != _currentUser.department_id) {
         await DBProvider.db.reCreateDictionary();
-      //  await DBProvider.db.reCreateTable();
+        //  await DBProvider.db.reCreateTable();
         await _storage.delete(key: 'lastDateUpdate');
       } else
         _isSameUser = true;
     }
 
-    await controllers.UserInfo.deleteAll();
-    await controllers.UserInfo.insert(_currentUser.toJson());
+    await UserInfoController.deleteAll();
+    await UserInfoController.insert(_currentUser.toJson());
 
     return true;
   } catch (e) {
@@ -115,7 +115,7 @@ Future<UserInfo> getUserInfo() async {
   OdooSession session = await getSession();
   if (session == null) return null;
 
-  return await controllers.UserInfo.selectUserInfo();
+  return await UserInfoController.selectUserInfo();
 }
 
 Future<String> getUserRoleTxt() async {

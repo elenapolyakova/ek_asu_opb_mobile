@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:ek_asu_opb_mobile/controllers/controllers.dart' as controllers;
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ek_asu_opb_mobile/components/flutter_rounded_date_picker/rounded_picker.dart';
@@ -872,7 +872,7 @@ class _DepartmentSelect extends State<DepartmentSelect> {
 
   Future<List<dynamic>> onSearch(String template, int railwayId) async {
     List<dep.Department> list =
-        await controllers.Department.select(template, railwayId);
+        await DepartmentController.select(template, railwayId);
     if (list == null) return null;
     List<dynamic> result = List.generate(list.length, (index) {
       return {
@@ -953,8 +953,9 @@ class _DepartmentSelect extends State<DepartmentSelect> {
                                       text: 'принять',
                                       parentContext: parentContext,
                                       onPress: () async {
-                                        selecteDepartment = await controllers
-                                            .Department.selectById(selectedId);
+                                        selecteDepartment =
+                                            await DepartmentController
+                                                .selectById(selectedId);
                                         Navigator.pop<dep.Department>(
                                             context, selecteDepartment);
                                       }),

@@ -1,8 +1,7 @@
 import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import 'package:ek_asu_opb_mobile/controllers/planItem.dart';
-import 'package:ek_asu_opb_mobile/controllers/railway.dart'
-    as railwayController;
+import 'package:ek_asu_opb_mobile/controllers/railway.dart';
 import 'package:ek_asu_opb_mobile/models/checkPlanItem.dart';
 import 'package:ek_asu_opb_mobile/models/comGroup.dart';
 import 'package:ek_asu_opb_mobile/models/planItem.dart';
@@ -101,7 +100,7 @@ class CheckPlan extends Models {
   ///Дорога
   Future<Railway> get railway async {
     if (_railway == null)
-      _railway = await railwayController.Railway.selectById(railwayId);
+      _railway = await RailwayController.selectById(railwayId);
     return _railway;
   }
 

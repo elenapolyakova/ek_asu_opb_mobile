@@ -1,11 +1,10 @@
-import 'package:ek_asu_opb_mobile/controllers/controllers.dart' as controllers;
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
-import 'package:workmanager/workmanager.dart';
 
 class InspectionItem {
   int id;
@@ -20,9 +19,8 @@ class InspectionItem {
   int groupId; //члены комиссии
   bool active;
   InspectionItem(
-   
       {this.id,
-       this.odooId,
+      this.odooId,
       this.inspectionId,
       this.departmentId,
       this.eventId,
@@ -80,7 +78,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
         groupId: null),
     InspectionItem(
         id: 2,
-         odooId: 2,
+        odooId: 2,
         inspectionId: 1,
         departmentId: null,
         eventId: 2,
@@ -91,7 +89,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
         groupId: 1),
     InspectionItem(
         id: 3,
-         odooId: 3,
+        odooId: 3,
         inspectionId: 1,
         departmentId: 32229,
         eventId: 1,
@@ -219,7 +217,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   Future<String> depOrEventName(
       int eventId, int departmentId, String eventName) async {
     if (departmentId != null)
-      return (await controllers.Department.selectById(departmentId)).name;
+      return (await DepartmentController.selectById(departmentId)).name;
     return eventName ?? "";
   }
 
@@ -616,7 +614,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   Future<bool> showInspectionItemDialog(
       InspectionItem inspectionItem, setState) async {
     Department tempDepartment = inspectionItem.departmentId != null
-        ? await controllers.Department.selectById(inspectionItem.departmentId)
+        ? await DepartmentController.selectById(inspectionItem.departmentId)
         : null;
     setState(() {
       hasTimeBegin = inspectionItem.timeBegin != null;
@@ -1166,7 +1164,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
         as InspectionItem;
     InspectionItem inspectionItemCopy = new InspectionItem(
         id: inspectionItem.id,
-        odooId:inspectionItem.odooId,
+        odooId: inspectionItem.odooId,
         inspectionId: inspectionItem.inspectionId,
         departmentId: inspectionItem.departmentId,
         eventId: inspectionItem.eventId,
@@ -1212,13 +1210,13 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     InspectionItem inspectionItem = (inspectionItems.firstWhere((item) =>
             (item["item"] as InspectionItem).id == inspectionItemId))["item"]
         as InspectionItem;
-     Map<String, dynamic> args = {
+    Map<String, dynamic> args = {
       'id': inspectionItem.id,
-     // 'filial': planItem.filial,
-     // 'typeName': getTypeInspectionById(planItem.typeId)["value"],
-     // 'railwayId': _railway_id,
-     // 'typePlan': _type,
-     // 'year': _year
+      // 'filial': planItem.filial,
+      // 'typeName': getTypeInspectionById(planItem.typeId)["value"],
+      // 'railwayId': _railway_id,
+      // 'typePlan': _type,
+      // 'year': _year
     };
     Navigator.pushNamed(context, '/checkItem', arguments: args);
   }

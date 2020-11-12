@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:ek_asu_opb_mobile/controllers/controllers.dart' as controllers;
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:ek_asu_opb_mobile/screens/screens.dart';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
@@ -140,8 +140,8 @@ class _CommissionScreen extends State<CommissionScreen> {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
-      _userList = await controllers.User.selectAll();
-      userList = await controllers.User.selectAll();
+      _userList = await UserController.selectAll();
+      userList = await UserController.selectAll();
       _userList.sort(
           (a, b) => a.display_name.trim().compareTo(b.display_name.trim()));
       userList.sort(
@@ -158,7 +158,7 @@ class _CommissionScreen extends State<CommissionScreen> {
 
   Future<String> depName(int department_id) async {
     if (department_id == null) return '';
-    return (await controllers.Department.selectById(department_id)).short_name;
+    return (await DepartmentController.selectById(department_id)).short_name;
   }
 
   loadGroups() {
@@ -979,9 +979,9 @@ class _CommissionScreen extends State<CommissionScreen> {
 
       /* try {
         if (planCopy.id == null) {
-          result = await controllers.PlanController.insert(planCopy);
+          result = await PlanController.insert(planCopy);
         } else {
-          result = await controllers.PlanController.update(planCopy);
+          result = await PlanController.update(planCopy);
         }
         hasErorr = result["code"] < 0;
 
@@ -1036,9 +1036,9 @@ class _CommissionScreen extends State<CommissionScreen> {
 
     /* try {
         if (planCopy.id == null) {
-          result = await controllers.PlanController.insert(planCopy);
+          result = await PlanController.insert(planCopy);
         } else {
-          result = await controllers.PlanController.update(planCopy);
+          result = await PlanController.update(planCopy);
         }
         hasErorr = result["code"] < 0;
 

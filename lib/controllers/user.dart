@@ -1,11 +1,11 @@
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
-import "package:ek_asu_opb_mobile/models/models.dart" as model;
+import "package:ek_asu_opb_mobile/models/models.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 
-class User extends Controllers {
+class UserController extends Controllers {
   static String _tableName = "user";
   static Future<dynamic> insert(Map<String, dynamic> json) async {
-    model.User user = model.User.fromJson(json);
+    User user = User.fromJson(json);
     return await DBProvider.db.insert(_tableName, user.toJson());
   }
 
@@ -13,18 +13,18 @@ class User extends Controllers {
     return await DBProvider.db.deleteAll(_tableName);
   }
 
-  static Future<List<model.User>> selectAll() async {
+  static Future<List<User>> selectAll() async {
     List<Map<String, dynamic>> userList =
         await DBProvider.db.selectAll(_tableName);
     if (userList != null)
       return List.generate(
-          userList.length, (index) => model.User.fromJson(userList[index]));
+          userList.length, (index) => User.fromJson(userList[index]));
   }
 
-  static Future<model.User> selectById(int id) async {
+  static Future<User> selectById(int id) async {
     if (id == null) return null;
     var json = await DBProvider.db.selectById(_tableName, id);
-    return model.User.fromJson(json);
+    return User.fromJson(json);
   }
 
   static loadFromOdoo([limit]) async {

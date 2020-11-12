@@ -1,6 +1,4 @@
-import 'package:ek_asu_opb_mobile/controllers/controllers.dart' as controllers;
-
-
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 
 const _resultList = [
   {"id": 1, "value": "Приказ"},
@@ -16,17 +14,13 @@ const _eventList = [
   {"id": 100, "value": "Прочее"},
 ];
 
-
-
-
 List<Map<String, Object>> getResultList() => _resultList;
 Map<String, Object> getResultById(int _id) =>
     _resultList.firstWhere((result) => result["id"] == _id);
 
 Future<List<Map<String, dynamic>>> getRailwayList() async {
   List<Map<String, dynamic>> result = [];
-  List<Map<String, dynamic>> railwayList =
-      await controllers.Railway.selectAll();
+  List<Map<String, dynamic>> railwayList = await RailwayController.selectAll();
 
   railwayList.forEach((railway) {
     result

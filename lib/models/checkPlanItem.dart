@@ -1,6 +1,6 @@
 import 'package:ek_asu_opb_mobile/controllers/checkPlan.dart';
 import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
-import 'package:ek_asu_opb_mobile/controllers/controllers.dart' as controllers;
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:ek_asu_opb_mobile/models/checkPlan.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
@@ -64,7 +64,7 @@ class CheckPlanItem extends Models {
   ///Предприятие
   Future<Department> get department async {
     if (_department == null)
-      _department = await controllers.Department.selectById(departmentId);
+      _department = await DepartmentController.selectById(departmentId);
     return _department;
   }
 

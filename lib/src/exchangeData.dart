@@ -1,8 +1,8 @@
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:ek_asu_opb_mobile/src/odooClient.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
-import "package:ek_asu_opb_mobile/controllers/controllers.dart" as controllers;
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 
 final attemptCount = config.getItem('attemptCount') ?? 5;
@@ -29,12 +29,12 @@ Future<List<Map<String, dynamic>>> getDictionaries(
 
   String userRoleTxt = await auth.getUserRoleTxt();
 
-  controllers.Log.insert('=========================================');
-  controllers.Log.insert("Get dictionaries ${dicts.join(', ')}");
+  LogController.insert('=========================================');
+  LogController.insert("Get dictionaries ${dicts.join(', ')}");
 
   for (int i = 0; i < dicts.length; i++) {
     try {
-      controllers.Log.insert(dicts[i]);
+      LogController.insert(dicts[i]);
       dynamic lastUpdate = isLastUpdate ? await getLastUpdate(dicts[i]) : null;
       switch (dicts[i]) {
         case 'railway':
@@ -61,11 +61,10 @@ Future<List<Map<String, dynamic>>> getDictionaries(
           List<dynamic> domain = new List<dynamic>();
 
           if (lastUpdate != null) domain.add(lastUpdate);
-          listDepIds = await controllers.Department.selectIDs();
+          listDepIds = await DepartmentController.selectIDs();
           if (listDepIds == null) continue;
-          if (listDepIds.length > 0)
-            if (userRoleTxt == ncopRole)
-              domain.add(['department_id', 'in', listDepIds]);
+          if (listDepIds.length > 0) if (userRoleTxt == ncopRole)
+            domain.add(['department_id', 'in', listDepIds]);
           // domain.add(['department_id.role', 'in', ['cbt', 'ncop']]);
           /* domain.add([
             'f_user_role_txt',
@@ -101,24 +100,23 @@ Future<List<Map<String, dynamic>>> getDictionaries(
         for (int j = 0; j < dataList.length; j++) {
           switch (dicts[i]) {
             case 'railway':
-              await controllers.Railway.insert(
+              await RailwayController.insert(
                   dataList[j] as Map<String, dynamic>);
               break;
             case 'department':
-              await controllers.Department.insert(
+              await DepartmentController.insert(
                   dataList[j] as Map<String, dynamic>);
               break;
             case 'user':
-              await controllers.User.insert(
-                  dataList[j] as Map<String, dynamic>);
+              await UserController.insert(dataList[j] as Map<String, dynamic>);
               break;
           } //switch
         } //for j
 
         var recordCount = (data as List<dynamic>).length.toString();
         print('Recived $recordCount records');
-        controllers.Log.insert('Recived $recordCount records');
-        controllers.Log.insert("----------------------------------------");
+        LogController.insert('Recived $recordCount records');
+        LogController.insert("----------------------------------------");
 
         result.add({
           dicts[i]: [1, recordCount]
@@ -129,13 +127,13 @@ Future<List<Map<String, dynamic>>> getDictionaries(
     } //try
     catch (e) {
       print(e);
-      controllers.Log.insert('error: $e');
+      LogController.insert('error: $e');
       result.add({
         dicts[i]: [-1, e.toString()]
       });
     }
   } //for i
-  controllers.Log.insert('=========================================');
+  LogController.insert('=========================================');
   return result;
 }
 
@@ -151,7 +149,7 @@ Future<dynamic> getDataWithAttemp(String model, String method, dynamic args,
 
   while (curAttempt++ < attemptCount) {
     print('Attempt ${curAttempt.toString()}..........');
-    controllers.Log.insert('Attempt ${curAttempt.toString()}..........');
+    LogController.insert('Attempt ${curAttempt.toString()}..........');
     var data = await getData(model, method, args, kwargs);
     if (data == null) continue;
     return data;

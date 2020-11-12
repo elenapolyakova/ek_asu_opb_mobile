@@ -1,5 +1,5 @@
 import 'package:ek_asu_opb_mobile/controllers/checkPlan.dart';
-import 'package:ek_asu_opb_mobile/controllers/controllers.dart' as controllers;
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:ek_asu_opb_mobile/models/checkPlan.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
@@ -39,7 +39,7 @@ class ComGroup extends Models {
 
   ///Руководитель
   Future<User> get head async {
-    if (_head == null) _head = await controllers.User.selectById(headId);
+    if (_head == null) _head = await UserController.selectById(headId);
     return _head;
   }
 

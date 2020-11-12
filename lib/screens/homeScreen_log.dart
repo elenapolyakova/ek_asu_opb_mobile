@@ -1,11 +1,10 @@
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/src/exchangeData.dart' as exchange;
 //import 'package:ek_asu_opb_mobile/src/db.dart';
 import '../utils/network.dart';
-import "package:ek_asu_opb_mobile/controllers/controllers.dart" as controllers;
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -31,12 +30,12 @@ class _HomeScreen extends State<HomeScreen> {
           if (isConnect) {
             auth.checkSession(context).then((isSessionExist) {
               if (isSessionExist) {
-                controllers.Railway.selectAll().then((rows) {
-                  controllers.Log.insert('railway count ${rows.length}');
-                  controllers.Department.selectAll().then((rows) {
-                    controllers.Log.insert('department count ${rows.length}');
-                    controllers.User.selectAll().then((rows) {
-                      controllers.Log.insert('user count ${rows.length}');
+                RailwayController.selectAll().then((rows) {
+                  LogController.insert('railway count ${rows.length}');
+                  DepartmentController.selectAll().then((rows) {
+                    LogController.insert('department count ${rows.length}');
+                    UserController.selectAll().then((rows) {
+                      LogController.insert('user count ${rows.length}');
                       exchange.getDictionaries(all: true).then((result) {
                         loadLog();
                       }); //getDictionary
@@ -57,7 +56,7 @@ class _HomeScreen extends State<HomeScreen> {
 
   void loadLog() {
     logRows.clear();
-   controllers.Log.selectAll().then((data) {
+    LogController.selectAll().then((data) {
       data.forEach((logItem) {
         logRows.add("${logItem['date']}: ${logItem['message']}");
       }); //forEach
@@ -66,7 +65,7 @@ class _HomeScreen extends State<HomeScreen> {
   }
 
   void clearLog() {
-   controllers.Log.deleteAll();
+    LogController.deleteAll();
     setState(() {
       logRows.clear();
     });

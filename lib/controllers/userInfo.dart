@@ -1,11 +1,11 @@
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
-import "package:ek_asu_opb_mobile/models/models.dart" as model;
+import "package:ek_asu_opb_mobile/models/models.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 
-class UserInfo extends Controllers {
+class UserInfoController extends Controllers {
   static String _tableName = "userInfo";
   static Future<dynamic> insert(Map<String, dynamic> json) async {
-    model.UserInfo user = model.UserInfo.fromJson(json);
+    UserInfo user = UserInfo.fromJson(json);
     return await DBProvider.db.insert(_tableName, user.toJson());
   }
 
@@ -13,11 +13,11 @@ class UserInfo extends Controllers {
     return await DBProvider.db.deleteAll(_tableName);
   }
 
-  static Future<model.UserInfo> selectUserInfo() async {
+  static Future<UserInfo> selectUserInfo() async {
     List<Map<String, dynamic>> userInfoFromDb =
         await DBProvider.db.selectAll(_tableName);
     if (userInfoFromDb == null || userInfoFromDb.length == 0) return null;
-    return model.UserInfo.fromJson(userInfoFromDb[0]);
+    return UserInfo.fromJson(userInfoFromDb[0]);
   }
 
   static Future<List<Map<String, dynamic>>> selectAll() async {
