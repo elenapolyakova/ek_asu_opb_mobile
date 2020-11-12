@@ -76,7 +76,10 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS com_group(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, head_id INTEGER, group_num INTEGER, is_main TEXT, active TEXT)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS rel_com_group_user(id INTEGER PRIMARY KEY, com_group_id INTEGER, user_id INTEGER, active TEXT)");
+            "CREATE TABLE IF NOT EXISTS rel_com_group_user(id INTEGER PRIMARY KEY, com_group_id INTEGER, user_id INTEGER)");
+        }
+        if (version == 8){
+           await db.execute('ALTER TABLE rel_com_group_user ADD COLUMN active TEXT');
         }
       },
       onOpen: (db) async {
@@ -90,7 +93,7 @@ class DBProvider {
 
       // Set the version. This executes the onCreate function and provides a
       // path to perform database upgrades and downgrades.
-      version: 7,
+      version: 8,
     );
   }
 
