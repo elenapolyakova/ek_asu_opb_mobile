@@ -9,6 +9,7 @@ import 'package:workmanager/workmanager.dart';
 
 class InspectionItem {
   int id;
+  int odooId;
   int inspectionId;
   int departmentId; //если проверка СП
   int eventId; //для обеда, отъезда, ужина и тд
@@ -19,7 +20,9 @@ class InspectionItem {
   int groupId; //члены комиссии
   bool active;
   InspectionItem(
+   
       {this.id,
+       this.odooId,
       this.inspectionId,
       this.departmentId,
       this.eventId,
@@ -66,6 +69,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   List<InspectionItem> _inspectionItems = <InspectionItem>[
     InspectionItem(
         id: 1,
+        odooId: 1,
         inspectionId: 1,
         departmentId: null,
         eventId: 2,
@@ -76,6 +80,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
         groupId: null),
     InspectionItem(
         id: 2,
+         odooId: 2,
         inspectionId: 1,
         departmentId: null,
         eventId: 2,
@@ -86,6 +91,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
         groupId: 1),
     InspectionItem(
         id: 3,
+         odooId: 3,
         inspectionId: 1,
         departmentId: 32229,
         eventId: 1,
@@ -140,7 +146,8 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       if (isLogin) {
         auth.getUserInfo().then((userInfo) {
           _userInfo = userInfo;
-          emptyTableName = '${planItem["typeName"]} ${planItem["filial"]}';
+          emptyTableName =
+              'Для редактирования плана проверок, выберите в меню редактировать план...';
 
           loadData();
         });
@@ -176,7 +183,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       _inspection = new CheckPlan(
           id: 1, // todo вернуть на null!!!!!
           parentId: planItemId,
-          name: emptyTableName,
+          name: '${planItem["typeName"]} ${planItem["filial"]}',
           railwayId: planItem["railwayId"],
           active: true);
 
@@ -266,10 +273,11 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                           child: ListView(
                               padding: const EdgeInsets.all(16),
                               children: [
-                            Column(children: [
-                              generateTableData(context, inspectionItemHeader,
-                                  inspectionItems)
-                            ])
+                            if (_inspection.id != null)
+                              Column(children: [
+                                generateTableData(context, inspectionItemHeader,
+                                    inspectionItems)
+                              ])
                           ])),
                     ]))));
   }
@@ -418,7 +426,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
           deleteInspectionItem(inspectionItemId);
           break;
         case 'forward':
-          forwardInsDepartment(inspectionItemId);
+          forwardCheckItem(inspectionItemId);
           break;
       }
     });
@@ -431,7 +439,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   Future<bool> showInspectionDialog(CheckPlan inspection) {
     return showDialog<bool>(
         context: context,
-        barrierDismissible: false,
+        barrierDismissible: true,
         barrierColor: Color(0x88E6E6E6),
         builder: (BuildContext context) {
           return StatefulBuilder(builder: (context, StateSetter setState) {
@@ -1049,6 +1057,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   Future<void> editInspectionClicked() async {
     CheckPlan inspectionCopy = new CheckPlan(
         id: _inspection.id,
+        odooId: _inspection.odooId,
         parentId: _inspection.parentId,
         name: _inspection.name,
         signerName: _inspection.signerName,
@@ -1074,7 +1083,6 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       form.save();
       bool hasErorr = false;
       Map<String, dynamic> result;
-// if (planItemCopy.id == null) planItemCopy.id = result["id"];
 
       Navigator.pop<bool>(context, true);
       Scaffold.of(context).showSnackBar(successSnackBar);
@@ -1085,30 +1093,18 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
         reloadInspection(_inspection.parentId);
       });
 
-      /* try {
-        if (planCopy.id == null) {
-          result = await controllers.PlanController.insert(planCopy);
+      /*   try {
+        if (inspectionCopy.id == null) {
+          result = await controllers.CheckPlanController.insert(inspectionCopy);
         } else {
-          result = await controllers.PlanController.update(planCopy);
+          result = await controllers.CheckPlanController.update(inspectionCopy);
         }
         hasErorr = result["code"] < 0;
 
         if (hasErorr) {
-          if (result["code"] == -1)
-            setState(() {
-              saveError = 'Уже существует план на ${planCopy.year} год';
-              Timer(new Duration(seconds: 3), () {
-                setState(() {
-                  saveError = "";
-                });
-              });
-            });
-          //  Scaffold.of(context).showSnackBar(errorSnackBar(
-          //      text: 'Уже существует план на ${planCopy.year} год'));
-          else {
+         
             Navigator.pop<bool>(context, false);
             Scaffold.of(context).showSnackBar(errorSnackBar());
-          }
         } else {
           if (planCopy.id == null) planCopy.id = result["id"];
 
@@ -1170,6 +1166,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
         as InspectionItem;
     InspectionItem inspectionItemCopy = new InspectionItem(
         id: inspectionItem.id,
+        odooId:inspectionItem.odooId,
         inspectionId: inspectionItem.inspectionId,
         departmentId: inspectionItem.departmentId,
         eventId: inspectionItem.eventId,
@@ -1211,18 +1208,18 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     if (result != null && result) {}
   }
 
-  Future<void> forwardInsDepartment(int inspectionItemId) async {
+  Future<void> forwardCheckItem(int inspectionItemId) async {
     InspectionItem inspectionItem = (inspectionItems.firstWhere((item) =>
             (item["item"] as InspectionItem).id == inspectionItemId))["item"]
         as InspectionItem;
-    /* Map<String, dynamic> args = {
-      'planItemId': planItemId,
-      'filial': planItem.filial,
-      'typeName': getTypeInspectionById(planItem.typeId)["value"],
-      'railwayId': _railway_id,
-      'typePlan': _type,
-      'year': _year
+     Map<String, dynamic> args = {
+      'id': inspectionItem.id,
+     // 'filial': planItem.filial,
+     // 'typeName': getTypeInspectionById(planItem.typeId)["value"],
+     // 'railwayId': _railway_id,
+     // 'typePlan': _type,
+     // 'year': _year
     };
-    Navigator.pushNamed(context, '/inspection', arguments: args);*/
+    Navigator.pushNamed(context, '/checkItem', arguments: args);
   }
 }

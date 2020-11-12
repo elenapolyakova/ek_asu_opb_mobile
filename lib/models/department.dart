@@ -36,6 +36,8 @@ class Department extends Models {
       parent_id: getIdFromList(json["parent_id"]),
       active: (json["active"].toString() == 'true'));
 
+ 
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,

@@ -7,8 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:workmanager/workmanager.dart' as WM;
 import 'package:ek_asu_opb_mobile/screens/loginPage.dart';
 import 'package:ek_asu_opb_mobile/screens/homeScreen.dart';
-import 'package:ek_asu_opb_mobile/screens/ISPScreen.dart';
-import 'package:ek_asu_opb_mobile/screens/inspectionScreen.dart';
+import 'package:ek_asu_opb_mobile/screens/screens.dart';
 import 'package:ek_asu_opb_mobile/src/exchangeData.dart' as exchange;
 import 'utils/authenticate.dart' as auth;
 import 'utils/config.dart' as config;
@@ -89,6 +88,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
           bottomAppBarColor: Colors.white,
           shadowColor: Color(0xFFE6E6E6), //cерый для зебры таблицы
           textTheme: TextTheme(bodyText2: TextStyle(color: Colors.black)),
+          splashColor: Colors.white
         ),
         navigatorObservers: [routeObserver],
         home: RouteAwareWidget('/home', child: HomeScreen()),
@@ -99,6 +99,9 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
           '/ISP': (context) => RouteAwareWidget('/ISP', child: ISPScreen()),
           '/inspection': (context) => RouteAwareWidget('/inspection',
               child: InspectionScreen(context: context)),
+          '/checkItem':(context) => RouteAwareWidget('/checkItem',
+              child: CheckScreen(context: context)),
+
           /* '/planCbt': (context) =>
               RouteAwareWidget('planCbt', child: PlanCbtScreen()),
           '/planCbtEdit': (context) =>

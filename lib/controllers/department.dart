@@ -18,6 +18,7 @@ class Department extends Controllers {
     return List.generate(maps.length, (index) => maps[index]["id"]);
   }
 
+
   static Future<model.Department> selectById(int id) async {
     if (id == null) return null;
     var json = await DBProvider.db.selectById(_tableName, id);
@@ -28,9 +29,10 @@ class Department extends Controllers {
     return await DBProvider.db.selectAll(_tableName);
   }
 
-  static Future<List<model.Department>> select(String template, int railwayId) async {
+  static Future<List<model.Department>> select(
+      String template, int railwayId) async {
     String railwayWhere =
-        railwayId != null ? 'railway_id = ?' :'railway_id IS NULL';
+        railwayId != null ? 'railway_id = ?' : 'railway_id IS NULL';
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       where: 'search_field like ? and $railwayWhere',

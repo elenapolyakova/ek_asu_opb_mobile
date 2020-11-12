@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 import 'package:ek_asu_opb_mobile/models/department.dart' as dep;
+export 'search/search.dart';
 
 class TextIcon extends StatefulWidget {
   IconData icon;
@@ -46,6 +47,7 @@ class _TextIcon extends State<TextIcon> {
 }
 
 showLoadingDialog(BuildContext context) {
+  //AnimationController(vsync: this);
   showDialog(
     context: context,
     barrierDismissible: false,
@@ -799,15 +801,16 @@ class DepartmentSelect extends StatefulWidget {
 class _DepartmentSelect extends State<DepartmentSelect> {
   dep.Department _department;
   int _railwayId;
-  dep.Department selecteDepartment; 
-  int selectedRailwayId; 
+  dep.Department selecteDepartment;
+  int selectedRailwayId;
   int selectedId;
 
   String _value;
   _DepartmentSelect(dep.Department department, int railway_id) {
     _department = department;
     _railwayId = railway_id;
-     selectedRailwayId = _railwayId ?? (_department != null ? _department.railway_id : null);
+    selectedRailwayId =
+        _railwayId ?? (_department != null ? _department.railway_id : null);
   }
 
   void onRailwaySelected(railwayId) {
@@ -1104,23 +1107,5 @@ class _SearchBox extends State<SearchBox> {
                           ])))
           ],
         ));
-
-    /*GestureDetector(
-        onTap: widget.onTap,
-        child: Container(
-            margin: EdgeInsets.symmetric(horizontal: widget.margin),
-            child: Row(children: <Widget>[
-              IconButton(
-                  padding: EdgeInsets.all(0),
-                  icon: Icon(widget.icon), //Icons.logout),
-                  color: widget.color,
-                  onPressed: () => widget.onTap),
-              new Text(
-                widget.text,
-                style: TextStyle(
-                  color: widget.color,
-                ),
-              )
-            ])));*/
   }
 }

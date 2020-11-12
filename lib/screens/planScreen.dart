@@ -180,10 +180,13 @@ class _PlanScreen extends State<PlanScreen> {
           active: true,
           name: canEdit() ? emptyTableName : errorTableName);
 
+     planItems = [];
+
     if (_plan.id != null)
       planItems = await _plan.items;
-    else
-      planItems = [];
+
+     planItems = planItems ?? [];
+ 
     // await reloadPlanItems(_plan.id);
 
     setState(() => {/*_tableName = tableName*/});
@@ -255,15 +258,15 @@ class _PlanScreen extends State<PlanScreen> {
                       child: ListView(
                           padding: const EdgeInsets.all(16),
                           children: [
-                        Column(children: [
+                        if (_plan.id != null) Column(children: [
                           generateTableData(context, planItemHeader, planItems)
                         ])
                       ])),
-                  Container(
+                 /* Container(
                       child: MyButton(
                           text: 'test',
                           parentContext: context,
-                          onPress: testClicked))
+                          onPress: testClicked))*/
                 ])));
   }
 
@@ -938,7 +941,7 @@ class _PlanScreen extends State<PlanScreen> {
             setState(() {
               int index = planItems.indexOf(
               planItems.firstWhere((element) => element.id == planItem.id));
-              planItems[index] = planItemCopy;
+              planItems[index] = planItem;
             });
           }
 

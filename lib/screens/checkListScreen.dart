@@ -10,6 +10,7 @@ class CheckListScreen extends StatefulWidget {
 
 class _CheckListScreen extends State<CheckListScreen> {
   UserInfo _userInfo;
+  bool showLoading = true;
 
   @override
   void initState() {
@@ -20,14 +21,42 @@ class _CheckListScreen extends State<CheckListScreen> {
         auth.getUserInfo().then((userInfo) {
           _userInfo = userInfo;
 
-          setState(() {});
+          loadData();
         });
       } //isLogin == true
     }); //checkLoginStatus
   }
 
+  Future<void> loadData() async {
+    try {
+      showLoadingDialog(context);
+      setState(() => {showLoading = true});
+
+      //  reloadPlanItems(); //todo убрать отсюда
+    } catch (e) {} finally {
+      hideDialog(context);
+      showLoading = false;
+      setState(() => {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return new Text("Здесь будут чек-листы");
+    return Expanded(
+        child: Container(
+            decoration: BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage("assets/images/frameScreen.png"),
+                    fit: BoxFit.fitWidth)),
+            child: showLoading
+                ? Text("")
+                : Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    child: Column(children: [
+                      Expanded(
+                          child: ListView(
+                              padding: const EdgeInsets.all(16),
+                              children: [Text("чек-листы")]))
+                    ]))));
   }
 }
