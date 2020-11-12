@@ -19,6 +19,7 @@ class UserController extends Controllers {
     if (userList != null)
       return List.generate(
           userList.length, (index) => User.fromJson(userList[index]));
+    return [];
   }
 
   static Future<User> selectById(int id) async {

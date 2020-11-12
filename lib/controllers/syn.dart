@@ -45,7 +45,7 @@ class SynController extends Controllers {
     List<Map<String, dynamic>> maps =
         await DBProvider.db.select(_tableName, distinct: true, columns: ["id"]);
 
-    if (maps.isEmpty) return null;
+    if (maps.isEmpty) return [];
     return List.generate(maps.length, (index) => maps[index]["id"]);
   }
 

@@ -14,7 +14,7 @@ class DepartmentController extends Controllers {
     List<Map<String, dynamic>> maps =
         await DBProvider.db.select(_tableName, distinct: true, columns: ["id"]);
 
-    if (maps.isEmpty) return null;
+    if (maps.isEmpty) return [];
     return List.generate(maps.length, (index) => maps[index]["id"]);
   }
 
@@ -29,14 +29,18 @@ class DepartmentController extends Controllers {
   }
 
   static Future<List<Department>> select(String template, int railwayId) async {
-    String railwayWhere =
-        railwayId != null ? 'railway_id = ?' : 'railway_id IS NULL';
+    Map<String, dynamic> where =
+        Controllers.getNullSafeWhere({'railway_id': railwayId});
+    // String railwayWhere =
+    //     railwayId != null ? 'railway_id = ?' : 'railway_id IS NULL';
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
-      where: 'search_field like ? and $railwayWhere',
-      whereArgs: ['%$template%', railwayId],
+      where: where['where'] + " and search_field like ?",
+      whereArgs: where['whereArgs'] + ['%$template%'],
+      //where: 'search_field like ? and $railwayWhere',
+      //whereArgs: ['%$template%', railwayId],
     );
-    if (queryRes.isEmpty) return null;
+    if (queryRes.isEmpty) return [];
     List<Department> result = List.generate(
         queryRes.length, (index) => Department.fromJson(queryRes[index]));
 

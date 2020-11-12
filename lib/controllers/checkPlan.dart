@@ -12,7 +12,7 @@ class CheckPlanController extends Controllers {
     List<Map<String, dynamic>> maps =
         await DBProvider.db.select(_tableName, distinct: true, columns: ["id"]);
 
-    if (maps.isEmpty) return null;
+    if (maps.isEmpty) return [];
     return List.generate(maps.length, (index) => maps[index]["id"]);
   }
 
@@ -75,7 +75,7 @@ class CheckPlanController extends Controllers {
       where: "parent_id = ? and active = 'true'",
       whereArgs: [parentId],
     );
-    if (queryRes == null || queryRes.length == 0) return null;
+    if (queryRes == null || queryRes.length == 0) return [];
     List<CheckPlan> planItemCheckPlans;
     planItemCheckPlans = queryRes.map((e) => CheckPlan.fromJson(e)).toList();
     return planItemCheckPlans;

@@ -12,7 +12,7 @@ class ComGroupController extends Controllers {
     List<Map<String, dynamic>> maps =
         await DBProvider.db.select(_tableName, distinct: true, columns: ["id"]);
 
-    if (maps.isEmpty) return null;
+    if (maps.isEmpty) return [];
     return List.generate(maps.length, (index) => maps[index]["id"]);
   }
 
@@ -27,7 +27,7 @@ class ComGroupController extends Controllers {
   }
 
   static Future<List<ComGroup>> selectByIds(List<int> ids) async {
-    if (ids == null || ids.length == 0) return null;
+    if (ids == null || ids.length == 0) return [];
     var json = await DBProvider.db.select(
       _tableName,
       where: "id in ?",
@@ -80,7 +80,7 @@ class ComGroupController extends Controllers {
       where: "parent_id = ? and active = 'true'",
       whereArgs: [parentId],
     );
-    if (queryRes == null || queryRes.length == 0) return null;
+    if (queryRes == null || queryRes.length == 0) return [];
     List<ComGroup> planItems =
         queryRes.map((e) => ComGroup.fromJson(e)).toList();
     return planItems;
@@ -94,7 +94,7 @@ class ComGroupController extends Controllers {
       where: "parent_id = ? and is_main = 'false' and active = 'true'",
       whereArgs: [parentId],
     );
-    if (queryRes == null || queryRes.length == 0) return null;
+    if (queryRes == null || queryRes.length == 0) return [];
     List<ComGroup> planItems =
         queryRes.map((e) => ComGroup.fromJson(e)).toList();
     return planItems;
