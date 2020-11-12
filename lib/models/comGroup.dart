@@ -1,5 +1,6 @@
 import 'package:ek_asu_opb_mobile/controllers/checkPlan.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
+import 'package:ek_asu_opb_mobile/controllers/relComGroupUser.dart';
 import 'package:ek_asu_opb_mobile/models/checkPlan.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
@@ -27,7 +28,7 @@ class ComGroup extends Models {
 
   ///Участники
   Future<List<User>> get comUsers async {
-    return null;
+    return RelComGroupUserController.selectByComGroupId(id);
   }
 
   ///План проверки
