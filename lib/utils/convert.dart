@@ -78,7 +78,8 @@ DateTime stringToDateTime(dynamic date) {
 }
 
 String dateTimeToString(DateTime date, [bool includeTime = false]) {
-  List<String> dateSplit = date.toIso8601String().split(':');
+  if (date == null) return null;
+  List<String> dateSplit = date.toIso8601String().split('T');
   if (!includeTime) return dateSplit[0];
   return "${dateSplit[0]} ${dateSplit.sublist(1).join('')}";
 }

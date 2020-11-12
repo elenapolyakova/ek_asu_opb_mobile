@@ -149,11 +149,11 @@ class ComGroupController extends Controllers {
   /// Returns
   /// ```
   /// {
-  ///   'code':[1|-1|-2|-3],
+  ///   'code':[1|-2|-3],
   ///   'message':
   ///     null||
-  ///     'There is already a com_group record with year, type, railway'||
   ///     'Error updating syn'||
+  ///     'Error updating rel_com_group_user',
   ///     'Error updating com_group',
   ///   'id':updated record id
   /// }
