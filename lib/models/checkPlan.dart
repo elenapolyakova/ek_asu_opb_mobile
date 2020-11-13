@@ -89,11 +89,13 @@ class CheckPlan extends Models {
 
   ///Председатель комиссии
   Future<User> get mainComGroupHead async {
+    if (await mainComGroup == null) return null;
     return await (await mainComGroup).head;
   }
 
   ///Члены комиссии
   Future<List<User>> get mainComGroupUsers async {
+    if (await mainComGroup == null) return null;
     return await (await mainComGroup).comUsers;
   }
 
