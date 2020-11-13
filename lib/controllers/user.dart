@@ -33,7 +33,7 @@ class UserController extends Controllers {
     List<Map<String, dynamic>> json = await DBProvider.db.select(
       _tableName,
       where: ids.map((e) => "id = ?").join(' or '),
-      whereArgs: [ids],
+      whereArgs: ids,
     );
     return json.map((e) => User.fromJson(e)).toList();
   }
