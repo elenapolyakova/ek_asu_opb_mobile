@@ -180,6 +180,7 @@ class _CommissionScreen extends State<CommissionScreen> {
   }
 
   loadGroups() async {
+    _groups = [];
     List<ComGroup> groups = await ComGroupController.select(checkPlanId);
     ComGroup commision;
     if (groups.length > 0) {
