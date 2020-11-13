@@ -120,7 +120,7 @@ class Plan extends Models {
       'name': name,
       'rw_id': railwayId,
       'year': year,
-      'date_set': dateSet.toIso8601String().split(':')[0],
+      'date_set': dateTimeToString(dateSet),
       'signer_name': signerName,
       'signer_post': signerPost,
       'num_set': numSet,

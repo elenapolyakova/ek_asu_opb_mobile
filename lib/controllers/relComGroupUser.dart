@@ -98,7 +98,7 @@ class RelComGroupUserController extends Controllers {
       where: "com_group_id = ?",
       whereArgs: [comGroupId],
     );
-    List<int> oldUserIds = queryRes.map((e) => e['user_id']);
+    List<int> oldUserIds = queryRes.map((e) => e['user_id'] as int);
     List<int> toDelete = [];
     List<int> toInsert = [];
 
