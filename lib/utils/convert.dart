@@ -73,7 +73,7 @@ bool isDateEqual(DateTime dt1, DateTime dt2) {
 }
 
 DateTime stringToDateTime(dynamic date) {
-  if (date is bool && !date) return null;
+  if (date == null || date is bool && !date) return null;
   return DateTime.tryParse(date);
 }
 
