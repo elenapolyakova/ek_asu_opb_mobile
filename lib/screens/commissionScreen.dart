@@ -570,9 +570,24 @@ class _CommissionScreen extends State<CommissionScreen> {
           _groups.firstWhere((group) => group.group.id == groupId);
 
       if (deletedGroup == null) return;
-      _groups.remove(deletedGroup);
-      //todo delete from db
-      setState(() {});
+
+      bool hasErorr = false;
+      Map<String, dynamic> result;
+      try {
+        result = await ComGroupController.delete(groupId);
+        hasErorr = result["code"] < 0;
+
+        if (hasErorr) {
+          Scaffold.of(context).showSnackBar(
+              errorSnackBar(text: 'Произошла ошибка при удалении'));
+          return;
+        }
+        _groups.remove(deletedGroup);
+        setState(() {});
+      } catch (e) {
+        Scaffold.of(context)
+            .showSnackBar(errorSnackBar(text: 'Произошла ошибка при удалении'));
+      }
     }
   }
 

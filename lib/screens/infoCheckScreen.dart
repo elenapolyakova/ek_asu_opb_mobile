@@ -66,9 +66,8 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
 
     return result;
   }
-  void editInfoClicked(){
-    
-  }
+
+  void editInfoClicked() {}
 
   @override
   Widget build(BuildContext context) {
@@ -120,6 +119,14 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
+                                              ListTile(
+                                                  trailing: menu,
+                                                  contentPadding:
+                                                      EdgeInsets.all(0),
+                                                  title: Text('Сведения опредприятии',
+                                                      textAlign:
+                                                          TextAlign.center),
+                                                  onTap: () {}),
                                               EditTextField(
                                                 text:
                                                     'Наименование структурного подразделения',

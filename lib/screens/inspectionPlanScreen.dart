@@ -67,6 +67,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   int eventId;
   String eventName;
   Department department;
+  int checkTypeId = 3;
 
   List<CheckPlanItem> _inspectionItems;
 
@@ -153,6 +154,8 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     //загружаем пункты плана проверок
     inspectionItems = [];
     _inspectionItems = await _inspection.items;
+    //загружаем группы/комиссию
+    groupList = [];
 
     if (_inspection.id != null) {
       for (int i = 0; i < _inspectionItems.length; i++) {
@@ -161,18 +164,24 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
             await depOrEventName(item.type, item.departmentId, item.name);
         inspectionItems.add({'item': item, 'name': name});
       }
+
+      try {
+        List<ComGroup> _groupList = await _inspection.comGroups;
+        _groupList.forEach((group) {
+          groupList.add({
+            'id': group.id.toString(),
+            'value': group.isMain ? 'Все члены комиссии' : group.groupNum
+          });
+        });
+      } catch (e) {
+      }
+
+      if (_inspection.mainComGroupId != null)
+        groupList.add({
+          'id': _inspection.mainComGroupId.toString(),
+          'value': 'Все члены комиссии'
+        });
     }
-
-    //загружаем группы/комиссию
-    groupList = [];
-
-    List<ComGroup> _groupList = await _inspection.comGroups;
-    _groupList.forEach((group) {
-      groupList.add({
-        'id': group.id,
-        'value': group.isMain ? 'Все члены комиссии' : group.groupNum
-      });
-    });
 
     setState(() => {});
   }
@@ -372,7 +381,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
         items: <PopupMenuEntry<Map<String, dynamic>>>[
           CustomPopMenu(
             context: context,
-            choices: (eventId == 1 && departmentId != null)
+            choices: (eventId == checkTypeId && departmentId != null)
                 ? choicesWithInspection
                 : choices,
           )
@@ -587,7 +596,6 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       department = tempDepartment;
     });
 
-    int checkTypeId = 3;
     double widthDepartment = 500;
     final TextStyle enableText =
         TextStyle(fontSize: 16.0, color: Theme.of(context).buttonColor);
@@ -934,7 +942,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                 dropdownValue: inspectionItem
                                                             .comGroupId !=
                                                         null
-                                                    ? inspectionItem.comGroup
+                                                    ? inspectionItem.comGroupId
                                                         .toString()
                                                     : null,
                                                 items: groupList,
@@ -1079,7 +1087,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     if (form.validate()) {
       form.save();
       bool hasErorr = false;
-     Map<String, dynamic> result;
+      Map<String, dynamic> result;
 
       try {
         if (inspectionItem.id == null) {
@@ -1145,9 +1153,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
         active: inspectionItem.active);
     bool result = await showInspectionItemDialog(inspectionItemCopy, setState);
     if (result != null && result) {
-      setState(() {
-        
-      });
+      setState(() {});
     }
   }
 
@@ -1159,9 +1165,24 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
           (item) => (item["item"] as CheckPlanItem).id == inspectionItemId);
 
       if (deletedInspectionItem == null) return;
-      inspectionItems.remove(deletedInspectionItem);
-      //todo delete from db
-      setState(() {});
+
+      bool hasErorr = false;
+      Map<String, dynamic> result;
+      try {
+        result = await CheckPlanItemController.delete(inspectionItemId);
+        hasErorr = result["code"] < 0;
+
+        if (hasErorr) {
+          Scaffold.of(context).showSnackBar(
+              errorSnackBar(text: 'Произошла ошибка при удалении'));
+          return;
+        }
+        inspectionItems.remove(deletedInspectionItem);
+        setState(() {});
+      } catch (e) {
+        Scaffold.of(context)
+            .showSnackBar(errorSnackBar(text: 'Произошла ошибка при удалении'));
+      }
     }
   }
 
