@@ -74,7 +74,7 @@ class RelComGroupUserController extends Controllers {
     );
     if (queryRes == null || queryRes.length == 0) return [];
     return UserController.selectByIds(
-        queryRes.map((e) => e['user_id']).toList() as List<int>);
+        queryRes.map((e) => e['user_id'] as int).toList());
   }
 
   static Future insertByComGroupId(int comGroupId, List<int> userIds) async {

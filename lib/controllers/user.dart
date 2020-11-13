@@ -32,7 +32,7 @@ class UserController extends Controllers {
     if (ids == null || ids.length == 0) return [];
     var json = await DBProvider.db.select(
       _tableName,
-      where: "id in ?",
+      where: ids.map((e) => "id = ?").join(' or '),
       whereArgs: [ids],
     );
     return json.map((e) => User.fromJson(e));
