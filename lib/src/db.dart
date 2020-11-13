@@ -105,7 +105,7 @@ class DBProvider {
               await txn.execute(
                   "CREATE TABLE new_plan(id INTEGER PRIMARY KEY, odoo_id INTEGER, type TEXT, name TEXT, rw_id INTEGER, year INTEGER, date_set TEXT, state TEXT, signer_name TEXT, signer_post TEXT, num_set TEXT, active TEXT)");
               await txn.execute(
-                  'INSERT INTO new_plan SELECT id, odoo_id, type, name, rw_id, year, state, signer_name, signer_port, num_set, active FROM plan');
+                  'INSERT INTO new_plan SELECT id, odoo_id, type, name, rw_id, year, state, signer_name, signer_post, num_set, active FROM plan');
               await txn.execute('DROP TABLE plan');
               await txn.execute('ALTER TABLE new_plan RENAME TO plan');
 
