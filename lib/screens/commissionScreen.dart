@@ -1,6 +1,8 @@
 import 'dart:ui';
 
+import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
+import 'package:ek_asu_opb_mobile/models/comGroup.dart';
 import 'package:ek_asu_opb_mobile/screens/screens.dart';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
@@ -10,9 +12,7 @@ import 'package:search_widget/search_widget.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'dart:async';
 
-import 'package:workmanager/workmanager.dart';
-
-class Group {
+/*class Group {
   int id;
   int odooId;
   int checkPlanId;
@@ -28,6 +28,12 @@ class Group {
       this.isCommision,
       this.active,
       this.members});
+}
+*/
+class MyGroup {
+  ComGroup group;
+  List<Member> members;
+  MyGroup(this.group, this.members);
 }
 
 class Member {
@@ -57,8 +63,8 @@ class _CommissionScreen extends State<CommissionScreen> {
   var _tapPosition;
   String commissionName;
   String emptyCommissionName;
-  Group _commision;
-  List<Group> _groups;
+  MyGroup _commision;
+  List<MyGroup> _groups;
   List<Member> _commissionList;
   List<Member> _groupList;
   List<Member> _availableList;
@@ -152,8 +158,20 @@ class _CommissionScreen extends State<CommissionScreen> {
       hideDialog(context);
       showLoading = false;
       setState(() => {});
-      if (_commision == null || _commision.id == null) editCommissionClicked();
+      if (_commision == null || _commision.group.id == null)
+        editCommissionClicked();
     }
+  }
+
+  Future<List<Member>> getMembers(ComGroup group) async {
+    List<User> users = (await group.comUsers) ?? [];
+    User head = await group.head;
+    List<Member> result =
+        List.generate(users.length, (index) => Member(users[index]));
+    if (head != null)
+      result.add(Member(head,
+          roleId: group.isMain ? headCommissionRole : headGroupRole));
+    return result;
   }
 
   Future<String> depName(int department_id) async {
@@ -161,33 +179,42 @@ class _CommissionScreen extends State<CommissionScreen> {
     return (await DepartmentController.selectById(department_id)).short_name;
   }
 
-  loadGroups() {
-    _groups = []; //checkPlanId // загружать из базы
-
-    if (_groups.length > 0)
-      _commision = _groups.firstWhere((group) => group.isCommision == true,
+  loadGroups() async {
+    List<ComGroup> groups = await ComGroupController.select(checkPlanId);
+    ComGroup commision;
+    if (groups.length > 0) {
+      commision = groups.firstWhere((group) => group.isMain == true,
           orElse: () => null);
-    else
+
+      _commision = new MyGroup(commision, await getMembers(commision));
+
+      // groups.remove(commision);
+      for (var i = 0; i < groups.length; i++)
+        if (!groups[i].isMain)
+          _groups.add(MyGroup(groups[i], await getMembers(groups[i])));
+    } else
       _commision = null;
 
     if (_commision != null)
       commissionName = getMemberName(
-          _commision.members, _commision.isCommision); //_commision.name;
+          _commision.members, commision.isMain); //_commision.name;
     else {
       commissionName = emptyCommissionName;
-      _commision = new Group(
-          id: null,
-          odooId: null,
-          checkPlanId: checkPlanId,
-          name: '',
-          isCommision: true,
-          active: true,
-          members: []); // !![];
+      _commision = new MyGroup(
+          ComGroup(
+              id: null,
+              odooId: null,
+              parentId: checkPlanId,
+              groupNum: null,
+              isMain: true,
+              active: true),
+          []);
+      // !![];
     }
   }
 
   Widget generateTableData(BuildContext context,
-      List<Map<String, dynamic>> headers, List<Group> rows) {
+      List<Map<String, dynamic>> headers, List<MyGroup> rows) {
     int i = 0;
     Map<int, TableColumnWidth> columnWidths = Map.fromIterable(headers,
         key: (item) => i++,
@@ -212,16 +239,16 @@ class _CommissionScreen extends State<CommissionScreen> {
     int rowIndex = 0;
     rows.forEach((row) {
       rowIndex++;
-      if (!row.isCommision) {
+      if (!row.group.isMain) {
         TableRow tableRow = TableRow(
             decoration: BoxDecoration(
                 color: (rowIndex % 2 == 0
                     ? Theme.of(context).shadowColor
                     : Colors.white)),
             children: [
-              getRowCell(row.name, row.id, 0),
-              getRowCell(
-                  getMemberName(row.members, row.isCommision), row.id, 1),
+              getRowCell(row.group.groupNum, row.group.id, 0),
+              getRowCell(getMemberName(row.members, row.group.isMain),
+                  row.group.id, 1),
             ]);
         tableRows.add(tableRow);
       }
@@ -452,12 +479,16 @@ class _CommissionScreen extends State<CommissionScreen> {
   }
 
   Future<void> editCommissionClicked() async {
-    Group commissionCopy = new Group(
-        id: _commision.id,
-        odooId: _commision.id,
-        name: _commision.name,
-        isCommision: _commision.isCommision,
-        members: []);
+    MyGroup commissionCopy = new MyGroup(
+        ComGroup(
+            id: _commision.group.id,
+            parentId: _commision.group.parentId,
+            odooId: _commision.group.odooId,
+            groupNum: _commision.group.groupNum,
+            isMain: _commision.group.isMain,
+            active: _commision.group.active,
+            headId: _commision.group.headId),
+        []);
     _commision.members.forEach((member) {
       commissionCopy.members.add(Member(
           User(
@@ -474,19 +505,20 @@ class _CommissionScreen extends State<CommissionScreen> {
   }
 
   Future<void> addGroupClicked() async {
-    if (_commision.id == null) {
+    if (_commision.group.id == null) {
       Scaffold.of(context)
           .showSnackBar(errorSnackBar(text: 'Сначала сохраните комиссию'));
       return;
     }
-    Group group = new Group(
-        id: null,
-        checkPlanId: checkPlanId,
-        odooId: null,
-        name: '',
-        isCommision: false,
-        members: [],
-        active: true);
+    MyGroup group = new MyGroup(
+        ComGroup(
+            id: null,
+            parentId: checkPlanId,
+            odooId: null,
+            groupNum: null,
+            isMain: false,
+            active: true),
+        []);
     bool result = await showGroupDialog(group, setState);
     if (result != null && result) {
       setState(() {});
@@ -494,18 +526,21 @@ class _CommissionScreen extends State<CommissionScreen> {
   }
 
   Future<void> editGroup(int groupId) async {
-    Group group =
-        _groups.firstWhere((group) => group.id == groupId, orElse: () => null);
+    MyGroup group = _groups.firstWhere((item) => item.group.id == groupId,
+        orElse: () => null);
     if (group == null) return;
 
-    Group groupCopy = new Group(
-        id: group.id,
-        odooId: group.odooId,
-        checkPlanId: group.checkPlanId,
-        name: group.name,
-        isCommision: group.isCommision,
-        members: [],
-        active: group.active);
+    MyGroup groupCopy = new MyGroup(
+      ComGroup(
+          id: group.group.id,
+          odooId: group.group.odooId,
+          parentId: group.group.parentId,
+          groupNum: group.group.groupNum,
+          isMain: group.group.isMain,
+          active: group.group.active,
+          headId: group.group.headId),
+      [],
+    );
     group.members.forEach((member) {
       groupCopy.members.add(Member(
           User(
@@ -530,7 +565,8 @@ class _CommissionScreen extends State<CommissionScreen> {
     bool result = await showConfirmDialog(
         'Вы уверены, что хотите удалить группу?', context);
     if (result != null && result) {
-      Group deletedGroup = _groups.firstWhere((group) => group.id == groupId);
+      MyGroup deletedGroup =
+          _groups.firstWhere((group) => group.group.id == groupId);
 
       if (deletedGroup == null) return;
       _groups.remove(deletedGroup);
@@ -539,7 +575,7 @@ class _CommissionScreen extends State<CommissionScreen> {
     }
   }
 
-  Future<bool> showGroupDialog(Group group, setState) {
+  Future<bool> showGroupDialog(MyGroup group, setState) {
     setState(() {
       _groupList = group.members;
       _availableList = [];
@@ -577,14 +613,13 @@ class _CommissionScreen extends State<CommissionScreen> {
                             key: formGroupKey,
                             child: Container(
                                 child: Column(children: [
-                             
-                               FormTitle('Формирование группы'),
+                              FormTitle('Формирование группы'),
                               Container(
                                 child: EditTextField(
                                   text: 'Название группы',
-                                  value: group.name,
+                                  value: group.group.groupNum,
                                   onSaved: (value) => setState(() {
-                                    group.name = value;
+                                    group.group.groupNum = value;
                                   }),
                                   context: context,
                                 ),
@@ -712,7 +747,7 @@ class _CommissionScreen extends State<CommissionScreen> {
         });
   }
 
-  Future<bool> showCommissionDialog(Group commission, setState) {
+  Future<bool> showCommissionDialog(MyGroup commission, setState) {
     setState(() {
       _commissionList = [];
       _commision.members.forEach((member) {
@@ -742,8 +777,7 @@ class _CommissionScreen extends State<CommissionScreen> {
                         backgroundColor: Theme.of(context).primaryColor,
                         body: Container(
                             child: Column(children: [
-                              FormTitle('Формирование комиссии'),
-                        
+                          FormTitle('Формирование комиссии'),
                           Container(
                             child: SingleChildScrollView(
                                 padding:
@@ -862,7 +896,7 @@ class _CommissionScreen extends State<CommissionScreen> {
   }
 
   List<Widget> generateList(List<Member> members, setState,
-      {onTapdown, typeList, onTap, Group group}) {
+      {onTapdown, typeList, onTap, MyGroup group}) {
     if (members == null || members.length == 0)
       return [Text('')]; //'Список членов комиссии пуст')];
     return List.generate(members.length, (i) {
@@ -942,7 +976,24 @@ class _CommissionScreen extends State<CommissionScreen> {
     Navigator.pop<bool>(context, null);
   }
 
-  Future<void> submitGroup(Group group, setState) async {
+  Map<String, dynamic> makeHeadAndUids(MyGroup group) {
+    ComGroup comGroup = group.group;
+    Member head = group.members.firstWhere(
+        (member) =>
+            member.roleId ==
+            (group.group.isMain ? headCommissionRole : headGroupRole),
+        orElse: () => null);
+    if (head != null) {
+      comGroup.headId = head.user.id;
+      group.members.remove(head);
+    } else
+      comGroup.headId = null;
+    List<int> ids = List.generate(
+        group.members.length, (index) => group.members[index].user.id);
+    return {'comGroup': comGroup, 'ids': ids};
+  }
+
+  Future<void> submitGroup(MyGroup group, setState) async {
     final form = formGroupKey.currentState;
     hideKeyboard();
     if (form.validate()) {
@@ -950,50 +1001,35 @@ class _CommissionScreen extends State<CommissionScreen> {
       bool hasErorr = false;
       Map<String, dynamic> result;
 
-      if (group.id == null) {
-        group.id = 1;
+      Map<String, dynamic> data = makeHeadAndUids(group);
+      group.group = data['comGroup'];
 
-        setState(() {
-          _groups.add(group);
-
-          //loadGroups(); todo раскоментировать как появится база
-        });
-      } else {
-        setState(() {
-          int index = _groups.indexWhere((item) => item.id == group.id);
-          _groups[index] = group;
-        });
-      }
-
-      Navigator.pop<bool>(context, true);
-      Scaffold.of(context).showSnackBar(successSnackBar);
-
-      /* try {
-        if (planCopy.id == null) {
-          result = await PlanController.insert(planCopy);
+      try {
+        if (group.group.id == null) {
+          result =
+              await ComGroupController.insert(data['comGroup'], data['ids']);
         } else {
-          result = await PlanController.update(planCopy);
+          result =
+              await ComGroupController.update(data['comGroup'], data['ids']);
         }
         hasErorr = result["code"] < 0;
 
         if (hasErorr) {
-          if (result["code"] == -1)
-            setState(() {
-              saveError = 'Уже существует план на ${planCopy.year} год';
-              Timer(new Duration(seconds: 3), () {
-                setState(() {
-                  saveError = "";
-                });
-              });
-            });
-          //  Scaffold.of(context).showSnackBar(errorSnackBar(
-          //      text: 'Уже существует план на ${planCopy.year} год'));
-          else {
-            Navigator.pop<bool>(context, false);
-            Scaffold.of(context).showSnackBar(errorSnackBar());
-          }
+          Navigator.pop<bool>(context, false);
+          Scaffold.of(context).showSnackBar(errorSnackBar());
         } else {
-          if (planCopy.id == null) planCopy.id = result["id"];
+          if (group.group.id == null) {
+            group.group.id = result["id"];
+            setState(() {
+              _groups.add(group);
+            });
+          } else {
+            setState(() {
+              int index =
+                  _groups.indexWhere((item) => item.group.id == group.group.id);
+              _groups[index] = group;
+            });
+          }
 
           Navigator.pop<bool>(context, true);
           Scaffold.of(context).showSnackBar(successSnackBar);
@@ -1002,64 +1038,43 @@ class _CommissionScreen extends State<CommissionScreen> {
         Navigator.pop<bool>(context, false);
         Scaffold.of(context).showSnackBar(errorSnackBar());
       }
-      }*/
     }
   }
 
-  Future<void> submitCommission(Group commission, setState) async {
+  Future<void> submitCommission(MyGroup commission, setState) async {
     bool hasErorr = false;
     Map<String, dynamic> result;
-    commission.name = 'Все члены комиссии';
-    if (commission.id == null) {
-      commission.id = 1;
-    }
 
-    setState(() {
-      _commision = commission;
+    Map<String, dynamic> data = makeHeadAndUids(commission);
+    commission.group = data['comGroup'];
+    //commission.group.groupNum = 'Все члены комиссии';
 
-      //loadGroups(); todo раскоментировать как появится база
-      commissionName =
-          getMemberName(commission.members, commission.isCommision);
-    });
+    try {
+      if (commission.group.id == null) {
+        result = await ComGroupController.insert(data['comGroup'], data['ids']);
+      } else {
+        result = await ComGroupController.update(data['comGroup'], data['ids']);
+      }
+      hasErorr = result["code"] < 0;
 
-    Navigator.pop<bool>(context, true);
-    Scaffold.of(context).showSnackBar(successSnackBar);
-
-    /* try {
-        if (planCopy.id == null) {
-          result = await PlanController.insert(planCopy);
-        } else {
-          result = await PlanController.update(planCopy);
-        }
-        hasErorr = result["code"] < 0;
-
-        if (hasErorr) {
-          if (result["code"] == -1)
-            setState(() {
-              saveError = 'Уже существует план на ${planCopy.year} год';
-              Timer(new Duration(seconds: 3), () {
-                setState(() {
-                  saveError = "";
-                });
-              });
-            });
-          //  Scaffold.of(context).showSnackBar(errorSnackBar(
-          //      text: 'Уже существует план на ${planCopy.year} год'));
-          else {
-            Navigator.pop<bool>(context, false);
-            Scaffold.of(context).showSnackBar(errorSnackBar());
-          }
-        } else {
-          if (planCopy.id == null) planCopy.id = result["id"];
-
-          Navigator.pop<bool>(context, true);
-          Scaffold.of(context).showSnackBar(successSnackBar);
-        }
-      } catch (e) {
+      if (hasErorr) {
         Navigator.pop<bool>(context, false);
         Scaffold.of(context).showSnackBar(errorSnackBar());
+      } else {
+        if (commission.group.id == null) commission.group.id = result["id"];
+        setState(() {
+          _commision = commission;
+          commissionName =
+              getMemberName(commission.members, commission.group.isMain);
+        });
+
+        Navigator.pop<bool>(context, true);
+        Scaffold.of(context).showSnackBar(successSnackBar);
       }
-    }*/
+    } catch (e) {
+      Navigator.pop<bool>(context, false);
+      Scaffold.of(context).showSnackBar(errorSnackBar());
+    }
   }
 
   List<PopupMenuItem<String>> getMenu(BuildContext context) {
@@ -1136,7 +1151,7 @@ class _CommissionScreen extends State<CommissionScreen> {
                           child: ListView(
                               padding: const EdgeInsets.all(16),
                               children: [
-                            if (_commision.id != null)
+                            if (_commision.group.id != null)
                               Column(children: [
                                 generateTableData(context, groupHeader, _groups)
                               ])

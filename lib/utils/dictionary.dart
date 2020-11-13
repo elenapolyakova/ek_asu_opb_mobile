@@ -6,13 +6,6 @@ const _resultList = [
   {"id": 3, "value": "Корректирующие меры"},
 ];
 
-const _eventList = [
-  {"id": 1, "value": "Проверка"},
-  {"id": 2, "value": "Встреча"},
-  {"id": 3, "value": "Отъезд"},
-  {"id": 4, "value": "Обед"},
-  {"id": 100, "value": "Прочее"},
-];
 
 List<Map<String, Object>> getResultList() => _resultList;
 Map<String, Object> getResultById(int _id) =>
@@ -30,6 +23,3 @@ Future<List<Map<String, dynamic>>> getRailwayList() async {
   return result;
 }
 
-List<Map<String, Object>> getEventInspectionList() => _eventList;
-Map<String, Object> getEventInspectionById(int _id) =>
-    _eventList.firstWhere((result) => result["id"] == _id);

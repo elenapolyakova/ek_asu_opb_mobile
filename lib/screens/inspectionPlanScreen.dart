@@ -1,4 +1,8 @@
+import 'dart:io';
+
+import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
+import 'package:ek_asu_opb_mobile/models/comGroup.dart';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
@@ -6,7 +10,7 @@ import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
-class InspectionItem {
+/*class InspectionItem {
   int id;
   int odooId;
   int inspectionId;
@@ -31,7 +35,7 @@ class InspectionItem {
       this.groupId,
       this.active = true});
 }
-
+*/
 //todo delete
 class InspectionPlanScreen extends StatefulWidget {
   BuildContext context;
@@ -64,41 +68,8 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   String eventName;
   Department department;
 
-  List<InspectionItem> _inspectionItems = <InspectionItem>[
-    InspectionItem(
-        id: 1,
-        odooId: 1,
-        inspectionId: 1,
-        departmentId: null,
-        eventId: 2,
-        eventName: 'Встреча членов комиссии. Размещение в гостинице',
-        date: DateTime(2020, 5, 19),
-        timeBegin: null,
-        timeEnd: null,
-        groupId: null),
-    InspectionItem(
-        id: 2,
-        odooId: 2,
-        inspectionId: 1,
-        departmentId: null,
-        eventId: 2,
-        eventName: 'Встреча c руководством Оренбургского региона',
-        date: DateTime(2020, 5, 20),
-        timeBegin: DateTime(2020, 5, 20, 8, 0),
-        timeEnd: DateTime(2020, 5, 20, 8, 30),
-        groupId: 1),
-    InspectionItem(
-        id: 3,
-        odooId: 3,
-        inspectionId: 1,
-        departmentId: 32229,
-        eventId: 1,
-        eventName: null,
-        date: DateTime(2020, 5, 20),
-        timeBegin: DateTime(2020, 5, 20, 8, 30),
-        timeEnd: DateTime(2020, 5, 20, 12, 30),
-        groupId: 2),
-  ];
+  List<CheckPlanItem> _inspectionItems;
+
   List<Map<String, dynamic>> inspectionItems = [];
   final formInspectionKey = new GlobalKey<FormState>();
   final formInspectionItemKey = new GlobalKey<FormState>();
@@ -119,18 +90,6 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     {'text': 'Наименование структурного подразделения', 'flex': 5.0},
     {'text': 'Время проверки (мест. вр)', 'flex': 2.0},
     {'text': 'Члены комиссии', 'flex': 2.0}
-  ];
-
-  //todo delete
-  List<Map<String, dynamic>> _groupList = [
-    {
-      'id': 1,
-      'value': 'Все члены комисии',
-    },
-    {
-      'id': 2,
-      'value': 'Группа 1',
-    }
   ];
 
   @override
@@ -159,7 +118,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       setState(() => {showLoading = true});
       railwayList = await getRailwayList();
       stateList = makeListFromJson(Plan.stateSelection);
-      eventList = getEventInspectionList();
+      eventList = makeListFromJson(CheckPlanItem.typeSelection);
       await reloadInspection(planItem['planItemId']);
 
       //  reloadPlanItems(); //todo убрать отсюда
@@ -172,46 +131,50 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   }
 
   Future<void> reloadInspection(int planItemId) async {
-    /* try {
-      _inspection =
-          await controllers.InspectionController.select(planItemId);
-    } catch (e) {}*/
+    try {
+      _inspection = null;
+      List<CheckPlan> insp = await CheckPlanController.select(planItemId);
+      if (!insp.isEmpty) _inspection = insp[0];
+    } catch (e) {}
 
     if (_inspection == null)
       _inspection = new CheckPlan(
-          id: 1, // todo вернуть на null!!!!!
+          id: null,
+          odooId: null,
           parentId: planItemId,
           name: '${planItem["typeName"]} ${planItem["filial"]}',
           railwayId: planItem["railwayId"],
           active: true);
 
-    if (_inspection.id != null) widget.setCheckPlanId(_inspection.id);
+    if (_inspection.id != null)
+      widget.setCheckPlanId(_inspection
+          .id); //если сохранили план проверок  - передаем в родителя id для комиссии, карты и тд...
 
-    await reloadInspectionItems(_inspection.id);
-    await reloadGroups(_inspection.id);
-
-    setState(() => {});
-  }
-
-  Future<void> reloadInspectionItems(int inspectionId) async {
+    //загружаем пункты плана проверок
     inspectionItems = [];
-    if (inspectionId != null) {
-      //todo потом проверять planId <> null
-      //_inspectionItems; //получать из базы
+    _inspectionItems = await _inspection.items;
+
+    if (_inspection.id != null) {
       for (int i = 0; i < _inspectionItems.length; i++) {
-        InspectionItem item = _inspectionItems[i];
-        String name = await depOrEventName(
-            item.eventId, item.departmentId, item.eventName);
+        CheckPlanItem item = _inspectionItems[i];
+        String name =
+            await depOrEventName(item.type, item.departmentId, item.name);
         inspectionItems.add({'item': item, 'name': name});
       }
     }
-  }
 
-  Future<void> reloadGroups(int inspectionId) async {
-    if (inspectionId != null) //todo потом проверять planId <> null
-      groupList = _groupList; //получать из базы
-    else
-      groupList = [];
+    //загружаем группы/комиссию
+    groupList = [];
+
+    List<ComGroup> _groupList = await _inspection.comGroups;
+    _groupList.forEach((group) {
+      groupList.add({
+        'id': group.id,
+        'value': group.isMain ? 'Все члены комиссии' : group.groupNum
+      });
+    });
+
+    setState(() => {});
   }
 
   Future<String> depOrEventName(
@@ -334,7 +297,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     int rowIndex = 0;
     rows.forEach((row) {
       rowIndex++;
-      InspectionItem item = row["item"] as InspectionItem;
+      CheckPlanItem item = row["item"] as CheckPlanItem;
       TableRow tableRow = TableRow(
           decoration: BoxDecoration(
               color: (rowIndex % 2 == 0
@@ -342,14 +305,13 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                   : Colors.white)),
           children: [
             getRowCell(
-                dateDMY(item.date), item.id, 0, item.eventId, item.departmentId,
+                dateDMY(item.date), item.id, 0, item.type, item.departmentId,
                 textAlign: TextAlign.center),
-            getRowCell(
-                row['name'], item.id, 1, item.eventId, item.departmentId),
-            getRowCell(getTimePeriod(item.timeBegin, item.timeEnd), item.id, 2,
-                item.eventId, item.departmentId,
+            getRowCell(row['name'], item.id, 1, item.type, item.departmentId),
+            getRowCell(getTimePeriod(item.dtFrom, item.dtTo), item.id, 2,
+                item.type, item.departmentId,
                 textAlign: TextAlign.center),
-            getRowCell(getGroupById(item.groupId), item.id, 4, item.eventId,
+            getRowCell(getGroupById(item.comGroupId), item.id, 4, item.type,
                 item.departmentId,
                 textAlign: TextAlign.center),
           ]);
@@ -455,7 +417,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                             key: formInspectionKey,
                             child: Container(
                                 child: Column(children: [
-                                  FormTitle('Реквизиты плана проверок'),
+                              FormTitle('Реквизиты плана проверок'),
                               Expanded(
                                   child: Center(
                                       child:
@@ -613,19 +575,19 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   }
 
   Future<bool> showInspectionItemDialog(
-      InspectionItem inspectionItem, setState) async {
+      CheckPlanItem inspectionItem, setState) async {
     Department tempDepartment = inspectionItem.departmentId != null
         ? await DepartmentController.selectById(inspectionItem.departmentId)
         : null;
     setState(() {
-      hasTimeBegin = inspectionItem.timeBegin != null;
-      hasTimeEnd = inspectionItem.timeEnd != null;
-      eventId = inspectionItem.eventId ?? null;
-      eventName = inspectionItem.eventName ?? "";
+      hasTimeBegin = inspectionItem.dtFrom != null;
+      hasTimeEnd = inspectionItem.dtTo != null;
+      eventId = inspectionItem.type ?? null;
+      eventName = inspectionItem.name ?? "";
       department = tempDepartment;
     });
 
-    int checkTypeId = 1;
+    int checkTypeId = 3;
     double widthDepartment = 500;
     final TextStyle enableText =
         TextStyle(fontSize: 16.0, color: Theme.of(context).buttonColor);
@@ -649,8 +611,8 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                             key: formInspectionItemKey,
                             child: Container(
                                 child: Column(children: [
-                                  FormTitle('${inspectionItem.id == null ? 'Добавление' : 'Редактирование'} пункта плана проверок'),
-
+                              FormTitle(
+                                  '${inspectionItem.id == null ? 'Добавление' : 'Редактирование'} пункта плана проверок'),
                               Expanded(
                                   child: Center(
                                       child: SingleChildScrollView(
@@ -676,30 +638,27 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                   child: MyDropdown(
                                                     text: 'Тип события',
                                                     dropdownValue:
-                                                        inspectionItem
-                                                                    .eventId !=
+                                                        inspectionItem.type !=
                                                                 null
                                                             ? inspectionItem
-                                                                .eventId
+                                                                .type
                                                                 .toString()
                                                             : null,
                                                     items: eventList,
                                                     onChange: (value) {
-                                                      inspectionItem.eventId =
+                                                      inspectionItem.type =
                                                           int.tryParse(value);
                                                       setState(() {
                                                         eventId =
                                                             int.tryParse(value);
-                                                        if (eventId >
+                                                        if (eventId !=
                                                             checkTypeId) if (eventId < 100)
-                                                          eventName =
-                                                              getEventInspectionById(
-                                                                      eventId)[
-                                                                  "value"];
+                                                          eventName = CheckPlanItem
+                                                                  .typeSelection[
+                                                              eventId];
                                                         else
                                                           eventName = "";
-                                                        inspectionItem
-                                                                .eventName =
+                                                        inspectionItem.name =
                                                             eventName;
                                                       });
                                                     },
@@ -782,8 +741,8 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                                               onChanged: (value) {
                                                                                 setState(() {
                                                                                   hasTimeBegin = value;
-                                                                                  if (value && inspectionItem.timeBegin == null) inspectionItem.timeBegin = DateTime.now();
-                                                                                  if (!value) inspectionItem.timeBegin = null;
+                                                                                  if (value && inspectionItem.dtFrom == null) inspectionItem.dtFrom = DateTime.now();
+                                                                                  if (!value) inspectionItem.dtFrom = null;
                                                                                 });
                                                                               },
                                                                               checkColor: Theme.of(context).primaryColor,
@@ -804,7 +763,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                                       ])),
                                                               TimePicker(
                                                                 time: inspectionItem
-                                                                        .timeBegin ??
+                                                                        .dtFrom ??
                                                                     DateTime
                                                                         .now(),
                                                                 enable:
@@ -818,7 +777,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                                 onTimeChange:
                                                                     (time) {
                                                                   inspectionItem
-                                                                          .timeBegin =
+                                                                          .dtFrom =
                                                                       time;
                                                                 },
                                                               )
@@ -861,8 +820,8 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                                               onChanged: (value) {
                                                                                 setState(() {
                                                                                   hasTimeEnd = value;
-                                                                                  if (value && inspectionItem.timeEnd == null) inspectionItem.timeEnd = DateTime.now();
-                                                                                  if (!value) inspectionItem.timeEnd = null;
+                                                                                  if (value && inspectionItem.dtTo == null) inspectionItem.dtTo = DateTime.now();
+                                                                                  if (!value) inspectionItem.dtTo = null;
                                                                                 });
                                                                               },
                                                                               checkColor: Theme.of(context).primaryColor,
@@ -889,7 +848,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                                   enable:
                                                                       hasTimeEnd,
                                                                   selectedDate: inspectionItem
-                                                                          .timeEnd ??
+                                                                          .dtTo ??
                                                                       DateTime
                                                                           .now(),
                                                                   onChanged:
@@ -897,7 +856,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                                           date) {
                                                                     // setState(() {
                                                                     inspectionItem
-                                                                            .timeEnd =
+                                                                            .dtTo =
                                                                         date;
                                                                     // });
                                                                   })),
@@ -950,7 +909,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                               TimePicker(
                                                                 time:
                                                                     inspectionItem
-                                                                        .timeEnd,
+                                                                        .dtTo,
                                                                 enable:
                                                                     hasTimeEnd,
                                                                 minutesInterval:
@@ -962,7 +921,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                                 onTimeChange:
                                                                     (time) {
                                                                   inspectionItem
-                                                                          .timeEnd =
+                                                                          .dtTo =
                                                                       time;
                                                                 },
                                                               )
@@ -972,16 +931,16 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                               width: 450,
                                               child: MyDropdown(
                                                 text: 'Члены комиссии',
-                                                dropdownValue:
-                                                    inspectionItem.groupId !=
-                                                            null
-                                                        ? inspectionItem.groupId
-                                                            .toString()
-                                                        : null,
+                                                dropdownValue: inspectionItem
+                                                            .comGroupId !=
+                                                        null
+                                                    ? inspectionItem.comGroup
+                                                        .toString()
+                                                    : null,
                                                 items: groupList,
                                                 onChange: (value) {
                                                   setState(() {
-                                                    inspectionItem.groupId =
+                                                    inspectionItem.comGroupId =
                                                         int.tryParse(value);
                                                   });
                                                 },
@@ -1029,8 +988,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                 value: eventName,
                                                 onSaved: (value) {
                                                   eventName = value;
-                                                  inspectionItem.eventName =
-                                                      value;
+                                                  inspectionItem.name = value;
                                                 },
                                                 context: context,
                                                 height: 250,
@@ -1085,29 +1043,24 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       bool hasErorr = false;
       Map<String, dynamic> result;
 
-      Navigator.pop<bool>(context, true);
-      Scaffold.of(context).showSnackBar(successSnackBar);
-
-      setState(() {
-        _inspection = inspectionCopy;
-        widget.setCheckPlanId(_inspection.id);
-        reloadInspection(_inspection.parentId);
-      });
-
-      /*   try {
+      try {
         if (inspectionCopy.id == null) {
-          result = await controllers.CheckPlanController.insert(inspectionCopy);
+          result = await CheckPlanController.insert(inspectionCopy);
         } else {
-          result = await controllers.CheckPlanController.update(inspectionCopy);
+          result = await CheckPlanController.update(inspectionCopy);
         }
         hasErorr = result["code"] < 0;
 
         if (hasErorr) {
-         
-            Navigator.pop<bool>(context, false);
-            Scaffold.of(context).showSnackBar(errorSnackBar());
+          Navigator.pop<bool>(context, false);
+          Scaffold.of(context).showSnackBar(errorSnackBar());
         } else {
-          if (planCopy.id == null) planCopy.id = result["id"];
+          if (inspectionCopy.id == null) inspectionCopy.id = result["id"];
+          setState(() {
+            _inspection = inspectionCopy;
+            widget.setCheckPlanId(_inspection.id);
+            reloadInspection(_inspection.parentId);
+          });
 
           Navigator.pop<bool>(context, true);
           Scaffold.of(context).showSnackBar(successSnackBar);
@@ -1115,77 +1068,95 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       } catch (e) {
         Navigator.pop<bool>(context, false);
         Scaffold.of(context).showSnackBar(errorSnackBar());
-      }*/
+      }
     }
   }
 
   Future<void> submitInspectionItem(
-      InspectionItem inspectionItem, setState) async {
+      CheckPlanItem inspectionItem, setState) async {
     final form = formInspectionItemKey.currentState;
     hideKeyboard();
     if (form.validate()) {
       form.save();
-      bool result = true;
+      bool hasErorr = false;
+     Map<String, dynamic> result;
 
-      if (inspectionItem.id == null) {
-        // inspectionItem.id = result["id"];
+      try {
+        if (inspectionItem.id == null) {
+          result = await CheckPlanItemController.insert(inspectionItem);
+        } else {
+          result = await CheckPlanItemController.update(inspectionItem);
+        }
+        hasErorr = result["code"] < 0;
 
-        Map<String, dynamic> newValue = {
-          'item': inspectionItem,
-          'name': await depOrEventName(inspectionItem.eventId,
-              inspectionItem.departmentId, inspectionItem.eventName)
-        };
-        setState(() {
-          inspectionItems.add(newValue);
-          //todo refresh all list?
-        });
-      } else {
-        Map<String, dynamic> newValue = {
-          'item': inspectionItem,
-          'name': await depOrEventName(inspectionItem.eventId,
-              inspectionItem.departmentId, inspectionItem.eventName)
-        };
+        if (hasErorr) {
+          Navigator.pop<bool>(context, false);
+          Scaffold.of(context).showSnackBar(errorSnackBar());
+        } else {
+          if (inspectionItem.id == null) {
+            inspectionItem.id = result["id"];
+            Map<String, dynamic> newValue = {
+              'item': inspectionItem,
+              'name': await depOrEventName(inspectionItem.type,
+                  inspectionItem.departmentId, inspectionItem.name)
+            };
+            setState(() {
+              inspectionItems.add(newValue);
+            });
+          } else {
+            Map<String, dynamic> newValue = {
+              'item': inspectionItem,
+              'name': await depOrEventName(inspectionItem.type,
+                  inspectionItem.departmentId, inspectionItem.name)
+            };
 
-        setState(() {
-          int index = inspectionItems.indexWhere((item) =>
-              (item["item"] as InspectionItem).id == inspectionItem.id);
-          inspectionItems[index] = newValue;
-        });
-      }
+            setState(() {
+              int index = inspectionItems.indexWhere((item) =>
+                  (item["item"] as CheckPlanItem).id == inspectionItem.id);
+              inspectionItems[index] = newValue;
+            });
+          }
 
-      Navigator.pop<bool>(context, result);
-      if (result)
-        Scaffold.of(context).showSnackBar(successSnackBar);
-      else
+          Navigator.pop<bool>(context, true);
+          Scaffold.of(context).showSnackBar(successSnackBar);
+        }
+      } catch (e) {
+        Navigator.pop<bool>(context, false);
         Scaffold.of(context).showSnackBar(errorSnackBar());
+      }
     }
   }
 
   Future<void> editInspectionItem(int inspectionItemId) async {
-    InspectionItem inspectionItem = (inspectionItems.firstWhere((item) =>
-            (item["item"] as InspectionItem).id == inspectionItemId))["item"]
-        as InspectionItem;
-    InspectionItem inspectionItemCopy = new InspectionItem(
+    CheckPlanItem inspectionItem = (inspectionItems.firstWhere((item) =>
+            (item["item"] as CheckPlanItem).id == inspectionItemId))["item"]
+        as CheckPlanItem;
+    CheckPlanItem inspectionItemCopy = new CheckPlanItem(
         id: inspectionItem.id,
         odooId: inspectionItem.odooId,
-        inspectionId: inspectionItem.inspectionId,
+        parentId: inspectionItem.parentId,
         departmentId: inspectionItem.departmentId,
-        eventId: inspectionItem.eventId,
-        eventName: inspectionItem.eventName,
+        type: inspectionItem.type,
+        name: inspectionItem.name,
         date: inspectionItem.date,
-        timeBegin: inspectionItem.timeBegin,
-        timeEnd: inspectionItem.timeEnd,
-        groupId: inspectionItem.groupId);
+        dtFrom: inspectionItem.dtFrom,
+        dtTo: inspectionItem.dtTo,
+        comGroupId: inspectionItem.comGroupId,
+        active: inspectionItem.active);
     bool result = await showInspectionItemDialog(inspectionItemCopy, setState);
-    if (result != null && result) {}
+    if (result != null && result) {
+      setState(() {
+        
+      });
+    }
   }
 
   Future<void> deleteInspectionItem(int inspectionItemId) async {
     bool result = await showConfirmDialog(
-        'Вы уверены, что хотите удалить проверку?', context);
+        'Вы уверены, что хотите удалить пункт плана проверок?', context);
     if (result != null && result) {
       Map<String, dynamic> deletedInspectionItem = inspectionItems.firstWhere(
-          (item) => (item["item"] as InspectionItem).id == inspectionItemId);
+          (item) => (item["item"] as CheckPlanItem).id == inspectionItemId);
 
       if (deletedInspectionItem == null) return;
       inspectionItems.remove(deletedInspectionItem);
@@ -1200,19 +1171,22 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
           errorSnackBar(text: 'Сначала сохраните реквизиты плана проверок'));
       return;
     }
-    InspectionItem inspectionItem = new InspectionItem(
+    CheckPlanItem inspectionItem = new CheckPlanItem(
         id: null,
-        inspectionId: _inspection.id,
+        odooId: null,
+        parentId: _inspection.id,
         date: DateTime.now(),
         active: true);
     bool result = await showInspectionItemDialog(inspectionItem, setState);
-    if (result != null && result) {}
+    if (result != null && result) {
+      setState(() {});
+    }
   }
 
   Future<void> forwardCheckItem(int inspectionItemId) async {
-    InspectionItem inspectionItem = (inspectionItems.firstWhere((item) =>
-            (item["item"] as InspectionItem).id == inspectionItemId))["item"]
-        as InspectionItem;
+    CheckPlanItem inspectionItem = (inspectionItems.firstWhere((item) =>
+            (item["item"] as CheckPlanItem).id == inspectionItemId))["item"]
+        as CheckPlanItem;
     Map<String, dynamic> args = {
       'id': inspectionItem.id,
       // 'filial': planItem.filial,

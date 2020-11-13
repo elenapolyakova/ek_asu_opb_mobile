@@ -307,8 +307,8 @@ class _PlanScreen extends State<PlanScreen> {
           children: [
             getRowCell(row.name, row.id, 0),
             getRowCell(row.departmentTxt, row.id, 1),
-            getRowCell(row.checkTypeDisplay, row.id, 2),
-            getRowCell(row.periodDisplay, row.id, 3),
+            getRowCell(row.checkTypeDisplay.toString() == 'null' ? '' : row.checkTypeDisplay, row.id, 2),
+            getRowCell(row.periodDisplay.toString() == 'null' ? '' : row.periodDisplay, row.id, 3),
             getRowCell(row.responsible, row.id, 4),
             getRowCell(row.checkResult, row.id, 5),
           ]);
