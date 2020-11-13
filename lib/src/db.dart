@@ -105,14 +105,14 @@ class DBProvider {
               await txn.execute(
                   "CREATE TABLE new_plan(id INTEGER PRIMARY KEY, odoo_id INTEGER, type TEXT, name TEXT, rw_id INTEGER, year INTEGER, date_set TEXT, state TEXT, signer_name TEXT, signer_post TEXT, num_set TEXT, active TEXT)");
               await txn.execute(
-                  'INSERT INTO new_plan SELECT id, odoo_id, type, name, rw_id, year, state, signer_name, signer_post, num_set, active FROM plan');
+                  'INSERT INTO new_plan(id, odoo_id, type, name, rw_id, year, state, signer_name, signer_post, num_set, active) SELECT id, odoo_id, type, name, rw_id, year, state, signer_name, signer_post, num_set, active FROM plan');
               await txn.execute('DROP TABLE plan');
               await txn.execute('ALTER TABLE new_plan RENAME TO plan');
 
               await txn.execute(
                   "CREATE TABLE new_plan_item_check(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, rw_id INTEGER, date_from TEXT, date_to TEXT, date_set TEXT, state TEXT, signer_name TEXT, signer_post TEXT, app_name TEXT, app_post TEXT, num_set TEXT, active TEXT, main_com_group_id INTEGER)");
               await txn.execute(
-                  'INSERT INTO new_plan_item_check SELECT id, odoo_id, parent_id, name, rw_id, state, signer_name, signer_post, app_name, app_post, num_set, active, main_com_group_id FROM plan_item_check');
+                  'INSERT INTO new_plan_item_check(id, odoo_id, parent_id, name, rw_id, state, signer_name, signer_post, app_name, app_post, num_set, active, main_com_group_id) SELECT id, odoo_id, parent_id, name, rw_id, state, signer_name, signer_post, app_name, app_post, num_set, active, main_com_group_id FROM plan_item_check');
               await txn.execute('DROP TABLE plan_item_check');
               await txn.execute(
                   'ALTER TABLE new_plan_item_check RENAME TO plan_item_check');
@@ -120,7 +120,7 @@ class DBProvider {
               await txn.execute(
                   "CREATE TABLE new_plan_item_check_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, type INTEGER, department_id INTEGER, date TEXT, dt_from TEXT, dt_to TEXT, active TEXT, com_group_id INTEGER)");
               await txn.execute(
-                  'INSERT INTO new_plan_item_check_item SELECT id, odoo_id, parent_id, name, type, department_id, active, com_group_id FROM plan_item_check_item');
+                  'INSERT INTO new_plan_item_check_item(id, odoo_id, parent_id, name, type, department_id, active, com_group_id) SELECT id, odoo_id, parent_id, name, type, department_id, active, com_group_id FROM plan_item_check_item');
               await txn.execute('DROP TABLE plan_item_check_item');
               await txn.execute(
                   'ALTER TABLE new_plan_item_check_item RENAME TO plan_item_check_item');

@@ -21,11 +21,12 @@ int getIdFromList(dynamic source) {
   return null;
 }
 
-String dateStr(DateTime dt) =>
-    '${addZero(dt.day)}.${addZero(dt.month)}.${dt.year} ${addZero(dt.hour)}:${addZero(dt.minute)}:${addZero(dt.second)}';
+String dateStr(DateTime dt) => dt == null
+    ? ''
+    : '${addZero(dt.day)}.${addZero(dt.month)}.${dt.year} ${addZero(dt.hour)}:${addZero(dt.minute)}:${addZero(dt.second)}';
 
 String dateDMY(DateTime dt) =>
-    '${addZero(dt.day)}.${addZero(dt.month)}.${dt.year}';
+    dt == null ? '' : '${addZero(dt.day)}.${addZero(dt.month)}.${dt.year}';
 
 String dateHm(DateTime dt) => '${addZero(dt.hour)}:${addZero(dt.minute)}';
 
