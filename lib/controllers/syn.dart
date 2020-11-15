@@ -164,7 +164,7 @@ class SynController extends Controllers {
               List<Map<String, dynamic>> synList = await DBProvider.db.select(
                 _tableName,
                 limit: 1,
-                where: "record_id = ? and localTableName = ? and method = ?",
+                where: "record_id = ? and local_table_name = ? and method = ?",
                 whereArgs: [many2oneRecord[0]['id'], localTable, 'create'],
               );
               print(
