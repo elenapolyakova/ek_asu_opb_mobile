@@ -10,6 +10,7 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreen extends State<MapScreen> {
   UserInfo _userInfo;
+  bool showLoading = true;
 
   @override
   void initState() {
@@ -20,14 +21,43 @@ class _MapScreen extends State<MapScreen> {
         auth.getUserInfo().then((userInfo) {
           _userInfo = userInfo;
 
-          setState(() {});
+          loadData();
         });
       } //isLogin == true
     }); //checkLoginStatus
   }
 
+  Future<void> loadData() async {
+    try {
+      showLoadingDialog(context);
+      setState(() => {showLoading = true});
+
+    } catch (e) {} finally {
+      hideDialog(context);
+      showLoading = false;
+      setState(() => {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return new Text("Здесь будет карта");
+    return Expanded(
+        child:
+      Container(
+            decoration: BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage("assets/images/frameScreen.png"),
+                    fit: BoxFit.fitWidth)),
+            child: showLoading
+                ? Text("")
+                : Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    child: Column(children: [
+                      Expanded(
+                          child: ListView(
+                              padding: const EdgeInsets.all(16),
+                              children: [Text("Карта")]))
+                    ])))
+    );
   }
 }

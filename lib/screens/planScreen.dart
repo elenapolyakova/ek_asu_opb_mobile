@@ -48,6 +48,10 @@ class _PlanScreen extends State<PlanScreen> {
   String saveError;
   String _tableName;
 
+  double widthPlan = 800;
+  double heightPlan = 700;
+  double widthPlanItem = 1100;
+
   _PlanScreen(type) {
     _type = type;
   }
@@ -81,7 +85,7 @@ class _PlanScreen extends State<PlanScreen> {
         parentId: 1,
         id: 1,
         name:
-            'Центральная дирекция по ремонту тягового подвижного состава (ЦТР)',
+            'Комплексная проверка Центральная дирекция по ремонту тягового подвижного состава (ЦТР)',
         departmentTxt: 'Все ТР, ЦТР',
         checkType: 1,
         period: 1,
@@ -116,7 +120,6 @@ class _PlanScreen extends State<PlanScreen> {
   List<PlanItem> planItems = [];
   PlanItem planItemCopy;
 
-
   @override
   void initState() {
     super.initState();
@@ -127,7 +130,7 @@ class _PlanScreen extends State<PlanScreen> {
       saveError = "";
       emptyTableName =
           "ПЛАН\nпроведения комплексных аудитов и целевых проверок организации работы по экологической безопасности"; // на ${_year.toString()} год";
-      errorTableName = "Выберите дорогу для загрузки плана...";
+      errorTableName = "Выберите дорогу для загрузки плана";
       //showLoading = false;
       _tableName = "";
 
@@ -269,7 +272,6 @@ class _PlanScreen extends State<PlanScreen> {
                           text: 'test',
                           parentContext: context,
                           onPress: testClicked))*/
-                
                 ])));
   }
 
@@ -307,8 +309,16 @@ class _PlanScreen extends State<PlanScreen> {
           children: [
             getRowCell(row.name, row.id, 0),
             getRowCell(row.departmentTxt, row.id, 1),
-            getRowCell(row.checkTypeDisplay.toString() == 'null' ? '' : row.checkTypeDisplay, row.id, 2),
-            getRowCell(row.periodDisplay.toString() == 'null' ? '' : row.periodDisplay, row.id, 3),
+            getRowCell(
+                row.checkTypeDisplay.toString() == 'null'
+                    ? ''
+                    : row.checkTypeDisplay,
+                row.id,
+                2),
+            getRowCell(
+                row.periodDisplay.toString() == 'null' ? '' : row.periodDisplay,
+                row.id,
+                3),
             getRowCell(row.responsible, row.id, 4),
             getRowCell(row.checkResult, row.id, 5),
           ]);
@@ -534,8 +544,8 @@ class _PlanScreen extends State<PlanScreen> {
         planItems.firstWhere((planItem) => planItem.id == planItemId);
     Map<String, dynamic> args = {
       'planItemId': planItemId,
-      'filial': planItem.name,
-      'typeName': planItem.checkTypeDisplay,
+      'filial': planItem.name.toString() != null ? planItem.name : '',
+      'typeName': planItem.checkTypeDisplay.toString() != 'null'?  planItem.checkTypeDisplay : '',
       'railwayId': _railway_id,
       'typePlan': _type,
       'year': _year
@@ -554,156 +564,168 @@ class _PlanScreen extends State<PlanScreen> {
         barrierColor: Color(0x88E6E6E6),
         builder: (BuildContext context) {
           return StatefulBuilder(builder: (context, StateSetter setState) {
-            return AlertDialog(
+            return /*AlertDialog(
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12.0))),
                 backgroundColor: Theme.of(context).primaryColor,
-                content: Container(
-                    width: 700.0,
-                    margin: EdgeInsets.symmetric(horizontal: 13, vertical: 13),
-                    padding: EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Scaffold(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        body: Form(
-                            key: formPlanKey,
-                            child: Container(
+                content:*/
+                Stack(alignment: Alignment.center, children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  "assets/images/app.jpg",
+                  fit: BoxFit.fill,
+                  height: heightPlan,
+                  width: widthPlan,
+                ),
+              ),
+              Container(
+                  width: widthPlan - 100,
+                  margin: EdgeInsets.symmetric(horizontal: 13, vertical: 13),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+                  child: Scaffold(
+                      backgroundColor: Colors.transparent,
+                      body: Form(
+                          key: formPlanKey,
+                          child: Container(
+                              child: Column(children: [
+                            FormTitle(
+                                'Реквизиты плана ${plan.type == 'ncop' ? 'НЦОП' : 'ЦБТ'}'),
+                            Expanded(
+                                child: Center(
+                                    child: SingleChildScrollView(
+                                        child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                  EditTextField(
+                                    text: 'Наименование',
+                                    value: plan.name,
+                                    onSaved: (value) => {plan.name = value},
+                                    context: context,
+                                    height: 100,
+                                    maxLines: 5,
+                                  ),
+                                  Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.baseline,
+                                      children: [
+                                        Container(
+                                            width: 200,
+                                            margin: EdgeInsets.only(left: 15),
+                                            child: MyDropdown(
+                                              text: 'Состояние',
+                                              dropdownValue: plan.state,
+                                              items: stateList,
+                                              onChange: (value) {
+                                                plan.state = value;
+                                              },
+                                              parentContext: context,
+                                            )),
+                                        Container(
+                                            width: 100,
+                                            child: MyDropdown(
+                                              text: 'Год',
+                                              dropdownValue:
+                                                  plan.year.toString(),
+                                              items: yearList,
+                                              onChange: (value) {
+                                                plan.year = int.parse(value);
+                                              },
+                                              parentContext: context,
+                                            )),
+                                        Container(
+                                            width: 200,
+                                            height:
+                                                (_userInfo.f_user_role_txt ==
+                                                            cbtRole &&
+                                                        plan.type == 'ncop')
+                                                    ? null
+                                                    : 0,
+                                            margin: EdgeInsets.only(right: 15),
+                                            child: MyDropdown(
+                                              text: 'Дорога',
+                                              dropdownValue: plan.railwayId !=
+                                                      null
+                                                  ? plan.railwayId.toString()
+                                                  : null, // railwayList[0]['id'].toString(),
+                                              items: railwayList,
+                                              onChange: (value) {
+                                                plan.railwayId =
+                                                    int.parse(value.toString());
+                                              },
+                                              parentContext: context,
+                                            )),
+                                      ]),
+                                  Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.baseline,
+                                      children: [
+                                        Container(
+                                            width: 400,
+                                            child: EditTextField(
+                                              text: 'Номер',
+                                              value: plan.numSet,
+                                              onSaved: (value) =>
+                                                  {plan.numSet = value},
+                                              context: context,
+                                            )),
+                                        Container(
+                                            padding: EdgeInsets.symmetric(
+                                                horizontal: 13),
+                                            child: DatePicker(
+                                                parentContext: context,
+                                                text: "Дата утверждения",
+                                                selectedDate: plan.dateSet ??
+                                                    DateTime.now(),
+                                                onChanged: ((DateTime date) {
+                                                  //   setState(() {
+                                                  plan.dateSet =
+                                                      date; //.toString();
+                                                  //  });
+                                                })))
+                                      ]),
+                                  EditTextField(
+                                    text: 'Подписант, ФИО',
+                                    value: plan.signerName,
+                                    onSaved: (value) =>
+                                        {plan.signerName = value},
+                                    context: context,
+                                  ),
+                                  EditTextField(
+                                    text: 'Подписант, должность',
+                                    value: plan.signerPost,
+                                    onSaved: (value) =>
+                                        {plan.signerPost = value},
+                                    context: context,
+                                  )
+                                ])))),
+                            Container(
                                 child: Column(children: [
-                              FormTitle(
-                                  'Реквизиты плана ${plan.type == 'ncop' ? 'НЦОП' : 'ЦБТ'}'),
-                              Expanded(
-                                  child: Center(
-                                      child: SingleChildScrollView(
-                                          child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.spaceEvenly,
-                                              children: [
-                                    EditTextField(
-                                      text: 'Наименование',
-                                      value: plan.name,
-                                      onSaved: (value) => {plan.name = value},
-                                      context: context,
-                                      height: 100,
-                                      maxLines: 5,
-                                    ),
-                                    Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.baseline,
-                                        children: [
-                                          Container(
-                                              width: 200,
-                                              margin: EdgeInsets.only(left: 15),
-                                              child: MyDropdown(
-                                                text: 'Состояние',
-                                                dropdownValue: plan.state,
-                                                items: stateList,
-                                                onChange: (value) {
-                                                  plan.state = value;
-                                                },
-                                                parentContext: context,
-                                              )),
-                                          Container(
-                                              width: 100,
-                                              child: MyDropdown(
-                                                text: 'Год',
-                                                dropdownValue:
-                                                    plan.year.toString(),
-                                                items: yearList,
-                                                onChange: (value) {
-                                                  plan.year = int.parse(value);
-                                                },
-                                                parentContext: context,
-                                              )),
-                                          Container(
-                                              width: 200,
-                                              height:
-                                                  (_userInfo.f_user_role_txt ==
-                                                              cbtRole &&
-                                                          plan.type == 'ncop')
-                                                      ? null
-                                                      : 0,
-                                              margin:
-                                                  EdgeInsets.only(right: 15),
-                                              child: MyDropdown(
-                                                text: 'Дорога',
-                                                dropdownValue: plan.railwayId !=
-                                                        null
-                                                    ? plan.railwayId.toString()
-                                                    : null, // railwayList[0]['id'].toString(),
-                                                items: railwayList,
-                                                onChange: (value) {
-                                                  plan.railwayId = int.parse(
-                                                      value.toString());
-                                                },
-                                                parentContext: context,
-                                              )),
-                                        ]),
-                                    Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.baseline,
-                                        children: [
-                                          Container(
-                                              width: 400,
-                                              child: EditTextField(
-                                                text: 'Номер',
-                                                value: plan.numSet,
-                                                onSaved: (value) =>
-                                                    {plan.numSet = value},
-                                                context: context,
-                                              )),
-                                          Container(
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 13),
-                                              child: DatePicker(
-                                                  parentContext: context,
-                                                  text: "Дата утверждения",
-                                                  selectedDate: plan.dateSet ??
-                                                      DateTime.now(),
-                                                  onChanged: ((DateTime date) {
-                                                    //   setState(() {
-                                                    plan.dateSet =
-                                                        date; //.toString();
-                                                    //  });
-                                                  })))
-                                        ]),
-                                    EditTextField(
-                                      text: 'Подписант, ФИО',
-                                      value: plan.signerName,
-                                      onSaved: (value) =>
-                                          {plan.signerName = value},
-                                      context: context,
-                                    ),
-                                    EditTextField(
-                                      text: 'Подписант, должность',
-                                      value: plan.signerPost,
-                                      onSaved: (value) =>
-                                          {plan.signerPost = value},
-                                      context: context,
-                                    )
-                                  ])))),
+                              MyButton(
+                                  text: 'принять',
+                                  parentContext: context,
+                                  onPress: () {
+                                    submitPlan(plan, setState);
+                                  }),
                               Container(
-                                  child: Column(children: [
-                                MyButton(
-                                    text: 'принять',
-                                    parentContext: context,
-                                    onPress: () {
-                                      submitPlan(plan, setState);
-                                    }),
-                                Container(
-                                    width: double.infinity,
-                                    height: 20,
-                                    color: (saveError != "")
-                                        ? Color(0xAAE57373)
-                                        : Color(0x00E57373),
-                                    child: Text('$saveError',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                            color: Color(0xFF252A0E))))
-                              ]))
-                            ]))))));
+                                  width: double.infinity,
+                                  height: 20,
+                                  color: (saveError != "")
+                                      ? Color(0xAAE57373)
+                                      : Color(0x00E57373),
+                                  child: Text('$saveError',
+                                      textAlign: TextAlign.center,
+                                      style:
+                                          TextStyle(color: Color(0xFF252A0E))))
+                            ]))
+                          ])))))
+            ]);
           });
         });
   }
@@ -714,155 +736,162 @@ class _PlanScreen extends State<PlanScreen> {
         barrierDismissible: true,
         barrierColor: Color(0x88E6E6E6),
         builder: (BuildContext context) {
-          return AlertDialog(
+          return /*AlertDialog(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(12.0))),
               backgroundColor: Theme.of(context).primaryColor,
-              content: Container(
-                  width: 1000.0,
-                  child: Scaffold(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      body: Form(
-                          key: formPlanItemKey,
-                          child: Container(
-                              child: Column(children: [
-                            FormTitle(
-                                '${planItem.id == null ? 'Добавление' : 'Редактирование'} пункта плана'),
-                            Expanded(
-                                child: Center(
-                                    child: SingleChildScrollView(
-                                        child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceEvenly,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                  Expanded(
-                                      child: EditTextField(
-                                        text:
-                                            'Наименование проверяемого филиала',
-                                        value: planItem.name,
-                                        onSaved: (value) =>
-                                            {planItem.name = value},
-                                        context: context,
-                                        height: 350,
-                                        maxLines: 17,
-                                        // color: Theme.of(context).primaryColorDark,
-                                      ),
-                                      flex: 1),
-                                  Expanded(
-                                      flex: 2,
-                                      child: Column(
+              content: */
+              Stack(alignment: Alignment.center, children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                "assets/images/app.jpg",
+                fit: BoxFit.fill,
+                height: heightPlan,
+                width: widthPlanItem,
+              ),
+            ),
+            Container(
+                width: widthPlanItem,
+                margin: EdgeInsets.symmetric(horizontal: 13, vertical: 13),
+                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+                child: Scaffold(
+                    backgroundColor: Colors.transparent,
+                    body: Form(
+                        key: formPlanItemKey,
+                        child: Container(
+                            child: Column(children: [
+                          FormTitle(
+                              '${planItem.id == null ? 'Добавление' : 'Редактирование'} пункта плана'),
+                          Expanded(
+                              child: Center(
+                                  child: SingleChildScrollView(
+                                      child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceEvenly,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            EditTextField(
-                                              text:
-                                                  'Подразделение, подлежащее проверке',
-                                              value: planItem.departmentTxt,
-                                              onSaved: (value) => {
-                                                planItem.departmentTxt = value
-                                              },
-                                              context: context,
-                                              height: 100,
-                                              maxLines: 3,
-                                            ),
-                                            /* EditTextField(
+                                Expanded(
+                                    child: EditTextField(
+                                      text: 'Наименование проверяемого филиала',
+                                      value: planItem.name,
+                                      onSaved: (value) =>
+                                          {planItem.name = value},
+                                      context: context,
+                                      height: 350,
+                                      maxLines: 17,
+                                      // color: Theme.of(context).primaryColorDark,
+                                    ),
+                                    flex: 1),
+                                Expanded(
+                                    flex: 2,
+                                    child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          EditTextField(
+                                            text:
+                                                'Подразделение, подлежащее проверке',
+                                            value: planItem.departmentTxt,
+                                            onSaved: (value) => {
+                                              planItem.departmentTxt = value
+                                            },
+                                            context: context,
+                                            height: 100,
+                                            maxLines: 3,
+                                          ),
+                                          /* EditTextField(
                                           text: 'Вид проверки',
                                           value: planItem.type,
                                           onSaved: (value) =>
                                               {planItem.type = value},
                                           context: context,
                                         ),*/
-                                            Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.baseline,
-                                                children: [
-                                                  Expanded(
-                                                      child: Container(
-                                                          margin: EdgeInsets
-                                                              .symmetric(
-                                                                  horizontal:
-                                                                      15),
-                                                          padding:
-                                                              EdgeInsets.only(
-                                                                  bottom: 15),
-                                                          child: MyDropdown(
-                                                            text:
-                                                                'Вид проверки',
-                                                            dropdownValue: planItem
-                                                                        .checkType !=
-                                                                    null
-                                                                ? planItem
-                                                                    .checkType
-                                                                    .toString()
-                                                                : null,
-                                                            items:
-                                                                typeInspectionList,
-                                                            onChange: (value) {
-                                                              planItem.checkType =
-                                                                  int.tryParse(
-                                                                      value);
-                                                            },
-                                                            parentContext:
-                                                                context,
-                                                          ))),
-                                                  Expanded(
-                                                      child: Container(
-                                                          margin: EdgeInsets
-                                                              .symmetric(
-                                                                  horizontal:
-                                                                      15),
-                                                          padding:
-                                                              EdgeInsets.only(
-                                                                  bottom: 15),
-                                                          child: MyDropdown(
-                                                            text:
-                                                                'Срок проведения проверки',
-                                                            dropdownValue:
-                                                                planItem.period !=
-                                                                        null
-                                                                    ? planItem
-                                                                        .period
-                                                                        .toString()
-                                                                    : null,
-                                                            items:
-                                                                periodInspectionList,
-                                                            onChange: (value) {
-                                                              planItem.period =
-                                                                  int.tryParse(
-                                                                      value);
-                                                            },
-                                                            parentContext:
-                                                                context,
-                                                          )))
-                                                ]),
-                                            EditTextField(
-                                              text:
-                                                  'Ответственные за организацию и проведение проверки',
-                                              value: planItem.responsible,
-                                              onSaved: (value) => {
-                                                planItem.responsible = value
-                                              },
-                                              context: context,
-                                            ),
-                                            EditTextField(
-                                              text:
-                                                  'Результаты проведенной проверки',
-                                              value: planItem.checkResult,
-                                              onSaved: (value) => {
-                                                planItem.checkResult = value
-                                              },
-                                              context: context,
-                                            ),
-                                          ]))
-                                ])))),
-                            Container(
-                                child: MyButton(
-                                    text: 'принять',
-                                    parentContext: context,
-                                    onPress: () => submitPlanItem(planItem)))
-                          ]))))));
+                                          Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.baseline,
+                                              children: [
+                                                Expanded(
+                                                    child: Container(
+                                                        margin: EdgeInsets
+                                                            .symmetric(
+                                                                horizontal: 15),
+                                                        padding:
+                                                            EdgeInsets.only(
+                                                                bottom: 15),
+                                                        child: MyDropdown(
+                                                          text: 'Вид проверки',
+                                                          dropdownValue:
+                                                              planItem.checkType !=
+                                                                      null
+                                                                  ? planItem
+                                                                      .checkType
+                                                                      .toString()
+                                                                  : null,
+                                                          items:
+                                                              typeInspectionList,
+                                                          onChange: (value) {
+                                                            planItem.checkType =
+                                                                int.tryParse(
+                                                                    value);
+                                                          },
+                                                          parentContext:
+                                                              context,
+                                                        ))),
+                                                Expanded(
+                                                    child: Container(
+                                                        margin: EdgeInsets
+                                                            .symmetric(
+                                                                horizontal: 15),
+                                                        padding:
+                                                            EdgeInsets.only(
+                                                                bottom: 15),
+                                                        child: MyDropdown(
+                                                          text:
+                                                              'Срок проведения проверки',
+                                                          dropdownValue: planItem
+                                                                      .period !=
+                                                                  null
+                                                              ? planItem.period
+                                                                  .toString()
+                                                              : null,
+                                                          items:
+                                                              periodInspectionList,
+                                                          onChange: (value) {
+                                                            planItem.period =
+                                                                int.tryParse(
+                                                                    value);
+                                                          },
+                                                          parentContext:
+                                                              context,
+                                                        )))
+                                              ]),
+                                          EditTextField(
+                                            text:
+                                                'Ответственные за организацию и проведение проверки',
+                                            value: planItem.responsible,
+                                            onSaved: (value) =>
+                                                {planItem.responsible = value},
+                                            context: context,
+                                          ),
+                                          EditTextField(
+                                            text:
+                                                'Результаты проведенной проверки',
+                                            value: planItem.checkResult,
+                                            onSaved: (value) =>
+                                                {planItem.checkResult = value},
+                                            context: context,
+                                          ),
+                                        ]))
+                              ])))),
+                          Container(
+                              child: MyButton(
+                                  text: 'принять',
+                                  parentContext: context,
+                                  onPress: () => submitPlanItem(planItem)))
+                        ])))))
+          ]);
         });
   }
 

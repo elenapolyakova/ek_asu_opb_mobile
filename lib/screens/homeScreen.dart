@@ -24,6 +24,7 @@ class _HomeScreen extends State<HomeScreen> {
   bool showLoading = true;
   final sizeTextBlack = TextStyle(fontSize: 17.0, color: Color(0xFF252A0E));
   final spinkit = SpinKitFadingCircle(color: Color(0xFFADB439));
+  Map<String, dynamic> arguments;
 
   Map<String, dynamic> screenList = {};
 
@@ -36,30 +37,37 @@ class _HomeScreen extends State<HomeScreen> {
     super.initState();
     WidgetsFlutterBinding.ensureInitialized();
 
-    // _navigationMenu = getNavigationMenu("");
     auth.checkLoginStatus(context).then((isLogin) {
       if (isLogin) {
         showLoadingDialog(context);
         auth.getUserInfo().then((userInfo) {
           _userInfo = userInfo;
           _navigationMenu = getNavigationMenu(userInfo.f_user_role_txt);
-
           setState(() {});
-          checkConnection().then((isConnect) {
-            if (isConnect) {
-              auth.checkSession(context).then((isSessionExist) {
-                if (isSessionExist) {
-                  exchange.getDictionaries(all: true).then((result) {
-                    setState(() {
-                      showLoading = false;
-                      hideDialog(context);
-                    });
-                  }); //getDictionary
-                } //isSessionExist = true
-              }); //checkSession
 
-            } //isConnect == true
-          }); //checkConnection
+          try {
+            if (arguments == null || arguments['first']) {
+              checkConnection().then((isConnect) {
+                if (isConnect) {
+                  auth.checkSession(context).then((isSessionExist) {
+                    if (isSessionExist) {
+                      exchange
+                          .getDictionaries(all: true)
+                          .then((result) {}); //getDictionary
+                    } //isSessionExist = true
+                  }); //checkSession
+
+                } //isConnect == true
+              });
+            }
+          } catch (e) {} finally {
+            setState(() {
+              showLoading = false;
+              hideDialog(context);
+            });
+          }
+
+          //checkConnection
         });
       } //isLogin == true
     }); //checkLoginStatus
@@ -79,12 +87,14 @@ class _HomeScreen extends State<HomeScreen> {
       'key': 'report',
       'label': 'Отчеты',
       'icon': Icon(Icons.insert_drive_file)
-    });
-    result.add({
-      'key': 'checkList',
-      'label': 'Чек-листы',
-      'icon': Icon(Icons.fact_check)
     });*/
+    if (role_txt == config.getItem('cbtRole')) {
+      result.add({
+        'key': 'checkListTemplate',
+        'label': 'Шаблоны',
+        'icon': Icon(Icons.fact_check)
+      });
+    }
 
     return result;
   }
@@ -127,8 +137,8 @@ class _HomeScreen extends State<HomeScreen> {
       case "report":
         screenList[screenKey] = screens.ReportScreen();
         break;
-      case "checkList":
-        screenList[screenKey] = screens.CheckListScreen();
+      case "checkListTemplate":
+        screenList[screenKey] = screens.CheckListTemplateScreen();
         break;
       default:
         return Text("");
@@ -138,6 +148,9 @@ class _HomeScreen extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    setState(() {
+      arguments = ModalRoute.of(context).settings.arguments;
+    });
     //, controller: _controller);
     return showLoading
         ? new ConstrainedBox(
@@ -154,7 +167,7 @@ class _HomeScreen extends State<HomeScreen> {
                     text: '${_userInfo != null ? _userInfo.display_name : ""}',
                     onTap: null,
                     color: Theme.of(context).primaryColorLight),
-                automaticallyImplyLeading: false,
+                automaticallyImplyLeading: arguments != null && !arguments['first'],
                 backgroundColor: Theme.of(context).primaryColorDark,
                 actions: <Widget>[
                   TextIcon(

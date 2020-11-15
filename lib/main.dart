@@ -76,20 +76,19 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
         supportedLocales: [const Locale('ru', 'RU')],
         navigatorKey: MyApp.navKey,
         theme: ThemeData(
-          primaryColor: Color(0xFFADB439), //салатовый
-          cardColor: Color(0x00ADB439), //салатовый,
-          accentColor: Color(0xFF465C0B), //оливковый
-          primaryColorLight: Color(0xFFEFF0D7), //бежевый
-          primaryColorDark: Color(0xFF465C0B), //оливковый
-          buttonColor: Color(0xFF252A0E), //почти черный
-          backgroundColor: Colors.white,
-          focusColor: Color(0xFF465C0B),
-          cursorColor: Color(0xFF252A0E),
-          bottomAppBarColor: Colors.white,
-          shadowColor: Color(0xFFE6E6E6), //cерый для зебры таблицы
-          textTheme: TextTheme(bodyText2: TextStyle(color: Colors.black)),
-          splashColor: Colors.white
-        ),
+            primaryColor: Color(0xFFADB439), //салатовый
+            cardColor: Color(0x00ADB439), //салатовый,
+            accentColor: Color(0xFF465C0B), //оливковый
+            primaryColorLight: Color(0xFFEFF0D7), //бежевый
+            primaryColorDark: Color(0xFF465C0B), //оливковый
+            buttonColor: Color(0xFF252A0E), //почти черный
+            backgroundColor: Colors.white,
+            focusColor: Color(0xFF465C0B),
+            cursorColor: Color(0xFF252A0E),
+            bottomAppBarColor: Colors.white,
+            shadowColor: Color(0xFFE6E6E6), //cерый для зебры таблицы
+            textTheme: TextTheme(bodyText2: TextStyle(color: Colors.black)),
+            splashColor: Colors.white),
         navigatorObservers: [routeObserver],
         home: RouteAwareWidget('/home', child: HomeScreen()),
         routes: <String, WidgetBuilder>{
@@ -99,7 +98,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
           '/ISP': (context) => RouteAwareWidget('/ISP', child: ISPScreen()),
           '/inspection': (context) => RouteAwareWidget('/inspection',
               child: InspectionScreen(context: context)),
-          '/checkItem':(context) => RouteAwareWidget('/checkItem',
+          '/checkItem': (context) => RouteAwareWidget('/checkItem',
               child: CheckScreen(context: context)),
 
           /* '/planCbt': (context) =>
@@ -179,19 +178,22 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
           _isPinDialogShow = false;
           _showErrorPin = false;
         });
-        checkConnection().then((isConnect) {
-          if (isConnect) {
-            auth.checkSession(context).then((isSessionExist) {
-              if (isSessionExist) {
-                exchange
-                    .getDictionaries(all: true, isLastUpdate: true)
-                    .then((result) {
-                  //?
-                }); //getDictionary
-              } //isSessionExist = true
-            }); //checkSession
-          } //isConnect == true
-        }); //checkConnection
+        try {
+          checkConnection().then((isConnect) {
+            if (isConnect) {
+              auth.checkSession(context).then((isSessionExist) {
+                if (isSessionExist) {
+                  exchange
+                      .getDictionaries(all: true, isLastUpdate: true)
+                      .then((result) {
+                    //?
+                  }); //getDictionary
+                } //isSessionExist = true
+              }); //checkSession
+            } //isConnect == true
+          });
+        } catch (e) {}
+//checkConnection
         Navigator.pop(context, true);
       }
     }

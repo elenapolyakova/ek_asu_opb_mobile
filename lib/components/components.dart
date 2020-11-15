@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:ui';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:flutter/material.dart';
@@ -85,7 +84,13 @@ class EditTextField extends StatefulWidget {
   Color color;
   bool showEditDialog;
   double height;
+  double margin;
   int maxLines;
+  TextInputType textInputType;
+  Function(String) validator;
+  Color backgroundColor;
+  Function(TapDownDetails) onTapDown;
+  Function() onLongPress;
 
   EditTextField(
       {this.text = "",
@@ -95,7 +100,13 @@ class EditTextField extends StatefulWidget {
       this.onSaved,
       this.showEditDialog = true,
       this.height = 35.0,
-      this.maxLines = 1});
+      this.margin = 13.0,
+      this.maxLines = 1,
+      this.textInputType = TextInputType.text,
+      this.validator,
+      this.backgroundColor,
+      this.onTapDown,
+      this.onLongPress});
   @override
   State<EditTextField> createState() => _EditTextField(value);
 }
@@ -112,43 +123,67 @@ class _EditTextField extends State<EditTextField> {
     final color = widget.color ?? Theme.of(widget.context).buttonColor;
     final textStyle = TextStyle(fontSize: 16.0, color: color);
     return Container(
-        margin: EdgeInsets.symmetric(horizontal: 13, vertical: 13),
+        margin: EdgeInsets.symmetric(
+          horizontal: widget.margin,
+          vertical: widget.margin,
+        ),
         child: Column(children: <Widget>[
-          Container(
-              alignment: Alignment.bottomLeft,
-              padding: EdgeInsets.only(bottom: 5.0),
-              child: Text(widget.text,
-                  textAlign: TextAlign.left, style: textStyle)),
-          Container(
-            height: widget.height,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.white, width: 1.5),
-              borderRadius: BorderRadius.all(Radius.circular(12)),
-              color: Colors.white,
-            ),
-            child: TextFormField(
-              readOnly: widget.showEditDialog,
-              controller: TextEditingController.fromValue(TextEditingValue(
-                  text: widget.value != null ? widget.value.toString() : "")),
-              decoration: new InputDecoration(
-                  border: OutlineInputBorder(borderSide: BorderSide.none),
-                  contentPadding: EdgeInsets.all(5.0)),
-              // initialValue:
-              //     _value, //widget.value != null ? widget.value.toString() : '',
+          if (widget.text != null)
+            Container(
+                alignment: Alignment.bottomLeft,
+                padding: EdgeInsets.only(bottom: 5.0),
+                child: Text(widget.text,
+                    textAlign: TextAlign.left, style: textStyle)),
+          GestureDetector(
+              onLongPress: widget.onLongPress,
+              onTapDown: widget.onTapDown,
               onTap: () {
                 if (!widget.showEditDialog) return;
-                showEdit(widget.value, widget.text, widget.context)
-                    .then((newValue) => setState(() {
-                          widget.value = newValue ?? "";
-                        }));
+                showEdit(
+                  widget.value,
+                  widget.text,
+                  widget.context,
+                  textInputType: widget.textInputType,
+                  validator: widget.validator ?? (val) => null,
+                ).then((newValue) => setState(() {
+                      widget.value = newValue ?? "";
+                      if (widget.onSaved != null)
+                        return widget.onSaved(newValue);
+                    }));
               },
-              cursorColor: widget.color,
-              style: textStyle,
-              onSaved: widget.onSaved,
-              maxLines: widget.maxLines,
-              // maxLength: 256,
-            ),
-          )
+              child: Container(
+                  height: widget.height,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: widget.backgroundColor ?? Colors.white,
+                        width: 1.5),
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    color: widget.backgroundColor ?? Colors.white,
+                  ),
+                  child: AbsorbPointer(
+                    child: TextFormField(
+                      readOnly: widget.showEditDialog,
+                      keyboardType: widget.textInputType,
+                      validator: widget.validator ?? (val) => null,
+                      controller: TextEditingController.fromValue(
+                          TextEditingValue(
+                              text: widget.value != null
+                                  ? widget.value.toString()
+                                  : "")),
+                      decoration: new InputDecoration(
+                          border:
+                              OutlineInputBorder(borderSide: BorderSide.none),
+                          contentPadding: EdgeInsets.all(5.0)),
+                      // initialValue:
+                      //     _value, //widget.value != null ? widget.value.toString() : '',
+
+                      cursorColor: widget.color,
+                      style: textStyle,
+                      onSaved: widget.onSaved,
+                      maxLines: widget.maxLines,
+                      // maxLength: 256,
+                    ),
+                  )))
         ]));
   }
 }
@@ -177,7 +212,9 @@ SnackBar errorSnackBar({String text}) => SnackBar(
 class CustomPopMenu extends PopupMenuEntry<Map<String, dynamic>> {
   BuildContext context;
   List<Map<String, dynamic>> choices;
-  CustomPopMenu({this.context, this.choices});
+  Color color;
+  Color fontColor;
+  CustomPopMenu({this.context, this.choices, this.color, this.fontColor});
 
   @override
   double height = 1; //100;
@@ -198,7 +235,7 @@ class _CustomPopMenu extends State<CustomPopMenu> {
   Widget build(BuildContext context) {
     return Container(
         decoration: BoxDecoration(
-            color: Theme.of(widget.context).primaryColor,
+            color: widget.color ?? Theme.of(widget.context).primaryColor,
             borderRadius: BorderRadius.all(Radius.circular(12.0))),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -208,7 +245,7 @@ class _CustomPopMenu extends State<CustomPopMenu> {
                 text: widget.choices[index]['title'],
                 onTap: () => selectMenu(widget.choices[index]),
                 icon: widget.choices[index]['icon'],
-                color: Theme.of(widget.context).primaryColorDark);
+                color: widget.fontColor ?? Theme.of(widget.context).primaryColorDark);
           }),
         ));
   }
@@ -289,8 +326,15 @@ class EditPopUp extends StatefulWidget {
   String sourceValue;
   String text;
   BuildContext parentContext;
+  TextInputType textInputType;
+  Function(String) validator;
 
-  EditPopUp({this.parentContext, this.text, this.sourceValue});
+  EditPopUp(
+      {this.parentContext,
+      this.text,
+      this.sourceValue,
+      this.textInputType,
+      this.validator});
 
   @override
   State<EditPopUp> createState() => _EditPopUp();
@@ -310,7 +354,7 @@ class _EditPopUp extends State<EditPopUp> {
             borderRadius: BorderRadius.all(Radius.circular(12.0))),
         backgroundColor: Theme.of(context).primaryColor,
         content: ConstrainedBox(
-            constraints: BoxConstraints.tight(new Size(700, 200)),
+            constraints: BoxConstraints.tight(new Size(700, 220)),
             child: Form(
                 key: formKey,
                 child: Column(
@@ -327,23 +371,26 @@ class _EditPopUp extends State<EditPopUp> {
                             ),
                           )),
                       Container(
+                        height: 140,
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.white, width: 1.5),
                           borderRadius: BorderRadius.all(Radius.circular(10)),
                           color: Colors.white,
                         ),
                         child: TextFormField(
-                          decoration: new InputDecoration(
-                              border: OutlineInputBorder(
-                                  borderSide: BorderSide.none),
-                              contentPadding: EdgeInsets.all(5.0)),
-                          initialValue: widget.sourceValue ?? '',
-                          cursorColor: color,
-                          style: textStyle,
-                          onSaved: (value) => newValue = value,
-                          maxLines: 5,
-                          // maxLength: 256,
-                        ),
+                            decoration: new InputDecoration(
+                                border: OutlineInputBorder(
+                                    borderSide: BorderSide.none),
+                                contentPadding: EdgeInsets.all(5.0)),
+                            initialValue: widget.sourceValue ?? '',
+                            cursorColor: color,
+                            style: textStyle,
+                            onSaved: (value) => newValue = value,
+                            maxLines: 7,
+                            keyboardType: widget.textInputType,
+                            validator: widget.validator
+                            // maxLength: 256,
+                            ),
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -372,8 +419,10 @@ class _EditPopUp extends State<EditPopUp> {
   void submitEditPopUp() {
     final form = formKey.currentState;
     hideKeyboard();
-    form.save();
-    Navigator.pop<String>(context, newValue);
+    if (form.validate()) {
+      form.save();
+      Navigator.pop<String>(context, newValue);
+    }
   }
 }
 
@@ -382,17 +431,19 @@ void hideKeyboard() {
 }
 
 Future<String> showEdit(
-    String sourceValue, String text, BuildContext parentContext) {
+    String sourceValue, String text, BuildContext parentContext,
+    {TextInputType textInputType, Function(String) validator}) {
   return showDialog<String>(
       context: parentContext,
       barrierDismissible: false,
       barrierColor: Color(0x88E6E6E6),
       builder: (context) {
         return EditPopUp(
-          sourceValue: sourceValue,
-          text: text,
-          parentContext: parentContext,
-        );
+            sourceValue: sourceValue,
+            text: text,
+            parentContext: parentContext,
+            textInputType: textInputType,
+            validator: validator);
       });
 }
 
@@ -1124,5 +1175,64 @@ class FormTitle extends StatelessWidget {
     TextStyle textStyle = TextStyle(
         fontSize: fontSize, color: color ?? Theme.of(context).primaryColorDark);
     return Container(child: Text(title, style: textStyle));
+  }
+}
+
+class MyRichText extends StatelessWidget {
+  String title;
+  String value;
+
+  @override
+  MyRichText(this.title, this.value);
+
+  @override
+  Widget build(BuildContext context) {
+    TextStyle textStyleTitle = TextStyle(
+        fontStyle: FontStyle.italic,
+        fontSize: 17,
+        color: Theme.of(context).buttonColor);
+
+    TextStyle textStyleValue = TextStyle(
+        fontWeight: FontWeight.normal,
+        fontStyle: FontStyle.normal,
+        fontSize: 20,
+        color: Theme.of(context).primaryColorDark);
+
+    return Container(
+        padding: EdgeInsets.all(5),
+        child: RichText(
+          text: TextSpan(
+              text: title,
+              style: textStyleTitle,
+              children: <TextSpan>[
+                TextSpan(text: value, style: textStyleValue)
+              ]),
+        ));
+  }
+}
+
+class HomeIcon extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    Color color = Theme.of(context).primaryColorLight;
+    TextStyle textStyle = TextStyle(fontSize: 12, color: color);
+
+    goHome() {
+      Navigator.pushNamed(context, '/home', arguments: {'first': false});
+    }
+
+    return GestureDetector(
+        onTap: goHome,
+        child: Column(children: [
+          Container(
+              height: 20,
+              width: 20,
+              child: IconButton(
+                  padding: EdgeInsets.all(0),
+                  icon: Icon(Icons.home), //Icons.logout),
+                  color: color,
+                  onPressed: goHome)),
+          new Text('Главная страница', style: textStyle)
+        ]));
   }
 }

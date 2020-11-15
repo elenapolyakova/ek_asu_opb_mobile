@@ -3,12 +3,12 @@ import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 
-class CheckListScreen extends StatefulWidget {
+class DepartmentDocumentScreen extends StatefulWidget {
   @override
-  State<CheckListScreen> createState() => _CheckListScreen();
+  State<DepartmentDocumentScreen> createState() => _DepartmentDocumentScreen();
 }
 
-class _CheckListScreen extends State<CheckListScreen> {
+class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
   UserInfo _userInfo;
   bool showLoading = true;
 
@@ -56,7 +56,7 @@ class _CheckListScreen extends State<CheckListScreen> {
                       Expanded(
                           child: ListView(
                               padding: const EdgeInsets.all(16),
-                              children: [Text("чек-листы")]))
+                              children: [Text("Документы по предприятию")]))
                     ])))
     );
   }

@@ -17,6 +17,7 @@ class _LoginPage extends State<LoginPage> {
   //bool _showErrorUser = false;
   String _errorMessage = "";
   bool _showErrorPin = false;
+  bool isLoginProccess = false;
 
   final _sizeTextBlack =
       const TextStyle(fontSize: 20.0, color: Color(0xFF252A0E));
@@ -129,14 +130,19 @@ class _LoginPage extends State<LoginPage> {
                         color: Theme.of(context).buttonColor,
                       ),
                       child: new MaterialButton(
-                        onPressed: submit,
+                        onPressed: !isLoginProccess ? submit : null,
                         /*color: Theme.of(context).accentColor,
                       height: 50.0,
                       minWidth: 400.0,*/
-                        child: new Text(
-                          "ВОЙТИ",
-                          style: _sizeTextWhite,
-                        ),
+                        child: !isLoginProccess
+                            ? new Text(
+                                "ВОЙТИ",
+                                style: _sizeTextWhite,
+                              )
+                            : CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Theme.of(context).primaryColorLight),
+                              ),
                       ),
                     )
                   ],
@@ -152,6 +158,9 @@ class _LoginPage extends State<LoginPage> {
     hideKeyboard();
     if (form.validate()) {
       form.save();
+      setState(() {
+        isLoginProccess = true;
+      });
       signIn();
     }
   }
@@ -161,7 +170,7 @@ class _LoginPage extends State<LoginPage> {
   }
 
   signIn() async {
-    bool isAuthorize = await auth.authorize(_email, _password);
+    bool isAuthorize = await auth.authorize(_email.trim(), _password);
     bool isSet = false;
     bool isValidRole = false;
     List<String> roleList = [];
@@ -177,6 +186,9 @@ class _LoginPage extends State<LoginPage> {
     }
 
     setState(() {
+      setState(() {
+        isLoginProccess = false;
+      });
       if (!isAuthorize)
         _errorMessage = "Неверное имя пользователя или пароль";
       else if (!isSet)

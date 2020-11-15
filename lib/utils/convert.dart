@@ -84,3 +84,11 @@ String dateTimeToString(DateTime date, [bool includeTime = false]) {
   if (!includeTime) return dateSplit[0];
   return "${dateSplit[0]} ${dateSplit.sublist(1).join('')}";
 }
+
+String emailValidator(String value) {
+  if (value == '') return null;
+  return !RegExp(r'^.+@.+\..+$', multiLine: false, caseSensitive: false)
+          .hasMatch(value)
+      ? "Неверный e-mail"
+      : null;
+}

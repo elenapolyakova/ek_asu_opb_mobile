@@ -23,6 +23,7 @@ class _CheckScreen extends State<CheckScreen> {
   final sizeTextBlack = TextStyle(fontSize: 17.0, color: Color(0xFF252A0E));
   Map<String, dynamic> checkPlanItem;
   int _checkPlanItemId;
+  int _departmentId;
 
   Map<String, dynamic> screenList = {};
 
@@ -47,6 +48,11 @@ class _CheckScreen extends State<CheckScreen> {
       'label': 'Чек-листы',
       'icon': Icon(Icons.fact_check)
     });
+     result.add({
+      'key': 'documents',
+      'label': 'Документы',
+      'icon': Icon(Icons.folder_special)
+    });
     result
         .add({'key': 'map', 'label': 'Карта', 'icon': Icon(Icons.location_on)});
 
@@ -55,11 +61,7 @@ class _CheckScreen extends State<CheckScreen> {
       'label': 'Отчеты',
       'icon': Icon(Icons.insert_drive_file)
     });
-    /*  result.add({
-      'key': 'checkList',
-      'label': 'Чек-листы',
-      'icon': Icon(Icons.fact_check)
-    });*/
+    
 
     return result;
   }
@@ -89,7 +91,8 @@ class _CheckScreen extends State<CheckScreen> {
     if (screenList[screenKey] != null) return screenList[screenKey];
     switch (screenKey) {
       case 'info':
-        screenList[screenKey] = screens.InfoCheckScreen(context, _checkPlanItemId);
+        screenList[screenKey] =
+            screens.InfoCheckScreen(context, _departmentId);
         break;
       case "map":
         screenList[screenKey] = screens.MapScreen();
@@ -99,6 +102,9 @@ class _CheckScreen extends State<CheckScreen> {
         break;
       case "checkList":
         screenList[screenKey] = screens.CheckListScreen();
+        break;
+      case "documents":
+        screenList[screenKey] = screens.DepartmentDocumentScreen();
         break;
       default:
         return Text("");
@@ -111,8 +117,9 @@ class _CheckScreen extends State<CheckScreen> {
     setState(() {
       checkPlanItem = ModalRoute.of(context).settings.arguments;
       _checkPlanItemId = checkPlanItem["id"];
+      _departmentId = checkPlanItem["department_id"];
     });
-    //, controller: _controller);
+   
     return showLoading
         ? new ConstrainedBox(
             child:
@@ -123,12 +130,15 @@ class _CheckScreen extends State<CheckScreen> {
         : new Scaffold(
             appBar: new AppBar(
                 //leading: null,
-                title: TextIcon(
+                title:Container (
+                  child: Row (children: [
+                    Container(child: TextIcon(
                     icon: Icons.account_circle_rounded,
                     text: '${_userInfo != null ? _userInfo.display_name : ""}',
                     onTap: null,
-                    color: Theme.of(context).primaryColorLight),
-                //  automaticallyImplyLeading: false,
+                    color: Theme.of(context).primaryColorLight),),
+                  Expanded(child: Center(child: HomeIcon()))
+                  ])),
                 backgroundColor: Theme.of(context).primaryColorDark,
                 actions: <Widget>[
                   TextIcon(
@@ -159,7 +169,6 @@ class _CheckScreen extends State<CheckScreen> {
             body: Column(children: [
               getBodyContent(),
               //  if (errorText != '')
-             
             ]),
             bottomNavigationBar: BottomNavigationBar(
                 type: BottomNavigationBarType.fixed,
@@ -169,13 +178,11 @@ class _CheckScreen extends State<CheckScreen> {
                 selectedFontSize: 14,
                 unselectedFontSize: 14,
                 onTap: (value) {
-                
-                    setState(() {
-                      _selectedIndex = value;
+                  setState(() {
+                    _selectedIndex = value;
 
-                      // selectedMenu = _navigationMenu[value]["key"];
-                    });
-                 
+                    // selectedMenu = _navigationMenu[value]["key"];
+                  });
                 },
                 currentIndex: _selectedIndex,
                 items: _navigationMenu == null

@@ -567,7 +567,7 @@ class _CommissionScreen extends State<CommissionScreen> {
         'Вы уверены, что хотите удалить группу?', context);
     if (result != null && result) {
       MyGroup deletedGroup =
-          _groups.firstWhere((group) => group.group.id == groupId);
+          _groups.firstWhere((group) => group.group.id == groupId, orElse:  () => null);
 
       if (deletedGroup == null) return;
 

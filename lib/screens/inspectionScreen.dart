@@ -154,13 +154,19 @@ class _InspectionScreen extends State<InspectionScreen> {
         : new Scaffold(
             appBar: new AppBar(
                 //leading: null,
-                title: TextIcon(
+
+                title: Container (
+                  child: Row (children: [
+                    Container(child: TextIcon(
                     icon: Icons.account_circle_rounded,
                     text: '${_userInfo != null ? _userInfo.display_name : ""}',
                     onTap: null,
-                    color: Theme.of(context).primaryColorLight),
+                    color: Theme.of(context).primaryColorLight),),
+                  Expanded(child: Center(child: HomeIcon()))
+                  ])),
                 //  automaticallyImplyLeading: false,
                 backgroundColor: Theme.of(context).primaryColorDark,
+                
                 actions: <Widget>[
                   TextIcon(
                       icon: Icons.cached,
