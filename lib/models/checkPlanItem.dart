@@ -122,7 +122,7 @@ class CheckPlanItem extends Models {
       'dt_from': dateTimeToString(dtFrom, true),
       'dt_to': dateTimeToString(dtTo, true),
       'active': (active == null || !active) ? 'false' : 'true',
-      'com_group_id': departmentId,
+      'com_group_id': comGroupId,
     };
     if (omitId) {
       res.remove('id');
