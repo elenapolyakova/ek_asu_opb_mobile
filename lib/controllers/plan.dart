@@ -69,7 +69,7 @@ class PlanController extends Controllers {
         {'year': year, 'type': type, 'rw_id': railwayId});
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
-      where: where['where'] + " and active = 'true'",
+      where: where['where'],// + " and active = 'true'",
       whereArgs: where['whereArgs'],
     );
     Plan plan;

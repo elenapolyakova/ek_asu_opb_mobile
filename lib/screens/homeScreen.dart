@@ -51,9 +51,9 @@ class _HomeScreen extends State<HomeScreen> {
                 if (isConnect) {
                   auth.checkSession(context).then((isSessionExist) {
                     if (isSessionExist) {
-                      exchange
-                          .getDictionaries(all: true)
-                          .then((result) {}); //getDictionary
+                      try {
+                        exchange.getDictionaries(all: true).then((result) {});
+                      } catch (e) {} //getDictionary
                     } //isSessionExist = true
                   }); //checkSession
 
@@ -167,7 +167,8 @@ class _HomeScreen extends State<HomeScreen> {
                     text: '${_userInfo != null ? _userInfo.display_name : ""}',
                     onTap: null,
                     color: Theme.of(context).primaryColorLight),
-                automaticallyImplyLeading: arguments != null && !arguments['first'],
+                automaticallyImplyLeading:
+                    arguments != null && !arguments['first'],
                 backgroundColor: Theme.of(context).primaryColorDark,
                 actions: <Widget>[
                   TextIcon(
