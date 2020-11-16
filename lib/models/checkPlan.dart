@@ -87,6 +87,12 @@ class CheckPlan extends Models {
     return _mainComGroup;
   }
 
+  Future<List<ComGroup>> get allComGroups async {
+    List<ComGroup> res = List.from(await comGroups);
+    res.add(await mainComGroup);
+    return res;
+  }
+
   ///Председатель комиссии
   Future<User> get mainComGroupHead async {
     if (await mainComGroup == null) return null;
