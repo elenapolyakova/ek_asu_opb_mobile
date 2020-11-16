@@ -60,16 +60,16 @@ class Department extends Models {
           : json["railway_id"],
       parent_id: getIdFromList(json["parent_id"]),
       active: (json["active"].toString() == 'true'),
-      inn: getStr(json["inn"]),
-      ogrn: getStr(json["ogrn"]),
-      okpo: getStr(json["okpo"]),
-      addr: getStr(json["addr"]),
-      director_fio: getStr(json["director_fio"]),
-      director_email: getStr(json["director_email"]),
-      director_phone: getStr(json["director_phone"]),
-      deputy_fio: getStr(json["deputy_fio"]),
-      deputy_email: getStr(json["deputy_email"]),
-      deputy_phone: getStr(json["deputy_phone"]));
+      inn: getObj(json["inn"]),
+      ogrn: getObj(json["ogrn"]),
+      okpo: getObj(json["okpo"]),
+      addr: getObj(json["addr"]),
+      director_fio: getObj(json["director_fio"]),
+      director_email: getObj(json["director_email"]),
+      director_phone: getObj(json["director_phone"]),
+      deputy_fio: getObj(json["deputy_fio"]),
+      deputy_email: getObj(json["deputy_email"]),
+      deputy_phone: getObj(json["deputy_phone"]));
 
   Map<String, dynamic> toJson() {
     return {
