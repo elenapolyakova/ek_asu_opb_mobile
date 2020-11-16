@@ -5,8 +5,9 @@ import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 class DepartmentController extends Controllers {
   static String _tableName = "department";
   static Future<dynamic> insert(Map<String, dynamic> json) async {
-    Department department =
-        Department.fromJson(json); //нужно, чтобы преобразовать одоо rel в id
+    Department department = Department.fromJson(json);
+    print('Departments json');
+    print(department); //нужно, чтобы преобразовать одоо rel в id
     return await DBProvider.db.insert(_tableName, department.toJson());
   }
 
@@ -55,12 +56,24 @@ class DepartmentController extends Controllers {
         'name',
         'short_name',
         'rel_railway_id',
+        'inn',
+        'ogrn',
+        'okpo',
+        'addr',
+        'director_fio',
+        'director_email',
+        'director_phone',
+        'deputy_fio',
+        'deputy_phone',
+        'deputy_email',
         'active',
       ]
     ], {
       'limit': limit
     });
     DBProvider.db.deleteAll(_tableName);
+    print("Load from odoo!");
+    print(json);
     json.forEach((e) => print(e));
   }
 }
