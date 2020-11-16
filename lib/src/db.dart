@@ -28,15 +28,13 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS railway(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER,  active TEXT, search_field TEXT)");
+            "CREATE TABLE IF NOT EXISTS department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER,  active TEXT, search_field TEXT, inn TEXT, ogrn TEXT, okpo TEXT, addr TEXT, director_fio TEXT, director_email TEXT, director_phone TEXT, deputy_fio TEXT, deputy_email TEXT, deputy_phone TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS user(id INTEGER PRIMARY KEY, login TEXT,  display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT, search_field TEXT,  user_role TEXT)");
-
         await db
             .execute("CREATE TABLE IF NOT EXISTS log(date TEXT, message TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS userInfo(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT)");
-
         await db.execute(
             "CREATE TABLE IF NOT EXISTS plan(id INTEGER PRIMARY KEY, odoo_id INTEGER, type TEXT, name TEXT, rw_id INTEGER, year INTEGER, date_set TEXT, state TEXT, signer_name TEXT, signer_post TEXT, num_set TEXT, active TEXT)");
         await db.execute(
@@ -128,6 +126,18 @@ class DBProvider {
             continue v10;
           v10:
           case 10:
+            await db.transaction((txn) async {
+              await txn.execute(
+                  "CREATE TABLE new_department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER, active TEXT, search_field TEXT, inn TEXT, ogrn TEXT, okpo TEXT, addr TEXT, director_fio TEXT, director_email TEXT, director_phone TEXT, deputy_fio TEXT, deputy_email TEXT, deputy_phone TEXT)");
+              await txn.execute(
+                  "INSERT INTO new_department(id, name, short_name, railway_id, parent_id, active, search_field, inn, ogrn, okpo, addr, director_fio, director_email, director_phone, deputy_fio, deputy_email, deputy_fio) SELECT id, name, short_name, railway_id, parent_id, active, search_field, inn, ogrn, okpo, addr, director_fio, director_email, director_phone, deputy_fio, deputy_email, deputy_fio FROM department");
+              await txn.execute("DROP TABLE department");
+              await txn
+                  .execute("ALTER TABLE new_department RENAME TO department");
+            });
+            continue v11;
+          v11:
+          case 11:
           default:
         }
       },
