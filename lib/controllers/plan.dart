@@ -69,7 +69,7 @@ class PlanController extends Controllers {
         {'year': year, 'type': type, 'rw_id': railwayId});
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
-      where: where['where'],// + " and active = 'true'",
+      where: where['where'], // + " and active = 'true'",
       whereArgs: where['whereArgs'],
     );
     Plan plan;
@@ -179,8 +179,8 @@ class PlanController extends Controllers {
     }
     await DBProvider.db.update(_tableName, plan.toJson()).then((resId) async {
       res['code'] = 1;
-      res['id'] = resId;
-      return SynController.edit(_tableName, resId, await odooId)
+      res['id'] = plan.id;
+      return SynController.edit(_tableName, plan.id, await odooId)
           .catchError((err) {
         res['code'] = -2;
         res['message'] = 'Error updating syn';

@@ -167,11 +167,11 @@ class ComGroupController extends Controllers {
     };
     Future<int> odooId = selectOdooId(comGroup.id);
     await DBProvider.db.update(_tableName, comGroup.toJson()).then((resId) {
-      return RelComGroupUserController.updateComGroupUsers(resId, userIds)
+      return RelComGroupUserController.updateComGroupUsers(comGroup.id, userIds)
           .then((value) async {
         res['code'] = 1;
-        res['id'] = resId;
-        return SynController.edit(_tableName, resId, await odooId)
+        res['id'] = comGroup.id;
+        return SynController.edit(_tableName, comGroup.id, await odooId)
             .catchError((err) {
           res['code'] = -2;
           res['message'] = 'Error updating syn';
