@@ -7,7 +7,7 @@ class DepartmentController extends Controllers {
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     Department department = Department.fromJson(json);
     print('Departments json');
-    print(department); //нужно, чтобы преобразовать одоо rel в id
+    print(json); //нужно, чтобы преобразовать одоо rel в id
     return await DBProvider.db.insert(_tableName, department.toJson());
   }
 
@@ -75,5 +75,37 @@ class DepartmentController extends Controllers {
     print("Load from odoo!");
     print(json);
     json.forEach((e) => print(e));
+  }
+
+  static Future<int> getOdooId(int id) async {
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(_tableName,
+        columns: ['odooId'], where: "id = ?", whereArgs: [id]);
+    if (queryRes == null || queryRes.length == 0)
+      throw 'No record of table $_tableName with id=$id exist.';
+    return queryRes[0]['odooId'];
+  }
+
+  /// Try to update a record of the table.
+  /// Returns ```{
+  ///   'code':[1|-1|-2|-3],
+  ///   'message':[
+  ///     null|
+  ///     There is already a $_tableName record with year=${plan.year}, type=${plan.type}, railway=${plan.railwayId}|
+  ///     Error updating syn|
+  ///     Error updating $_tableName|
+  ///   ]
+  ///   'id':null
+  /// }```
+  static Future<Map<String, dynamic>> update(Department department) async {
+    Map<String, dynamic> res = {
+      'code': null,
+      'message': null,
+      'id': null,
+    };
+
+    Future<int> odooId = getOdooId(department.id);
+
+    print("Update department record!");
+    print("Odoo id $odooId");
   }
 }
