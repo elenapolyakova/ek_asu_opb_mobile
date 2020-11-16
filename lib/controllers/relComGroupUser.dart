@@ -72,6 +72,7 @@ class RelComGroupUserController extends Controllers {
       where: "com_group_id = ?", // and active = 'true'",
       whereArgs: [comGroupId],
     );
+    var a = await DBProvider.db.selectAll(_tableName);
     if (queryRes == null || queryRes.length == 0) return [];
     return UserController.selectByIds(
         queryRes.map((e) => e['user_id'] as int).toList());
@@ -94,19 +95,19 @@ class RelComGroupUserController extends Controllers {
       int comGroupId, List<int> newUserIds) async {
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
-      columns: ['user_id'],
+      columns: ['user_id', 'id'],
       where: "com_group_id = ?",
       whereArgs: [comGroupId],
     );
-    List<int> oldUserIds = queryRes.map((e) => e['user_id'] as int).toList();
     List<int> toDelete = [];
     List<int> toInsert = [];
 
-    oldUserIds.forEach((element) {
-      if (!newUserIds.contains(element)) {
-        toDelete.add(element);
+    queryRes.forEach((element) {
+      if (!newUserIds.contains(element['user_id'])) {
+        toDelete.add(element['id']);
       }
     });
+    List<int> oldUserIds = queryRes.map((e) => e['user_id'] as int).toList();
     newUserIds.forEach((element) {
       if (!oldUserIds.contains(element)) {
         toInsert.add(element);

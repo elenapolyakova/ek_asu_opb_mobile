@@ -267,11 +267,11 @@ class _PlanScreen extends State<PlanScreen> {
                                 context, planItemHeader, planItems)
                           ])
                       ])),
-                  /*Container(
+                Container(
                       child: MyButton(
                           text: 'test',
                           parentContext: context,
-                          onPress: testClicked))*/
+                          onPress: testClicked))
                 ])));
   }
 
@@ -998,9 +998,11 @@ class _PlanScreen extends State<PlanScreen> {
   Future<void> testClicked() async {
     print('test');
 
-    // List result = await DBProvider.db.selectAll('plan_item');
+   //  List result = await DBProvider.db.selectAll('plan');
+       List result = await DBProvider.db.select('plan', where: "year = ? and type = ? and rw_id is null active = 1", whereArgs: [2020, 'cbt']);
+
     //await DBProvider.db.deleteAll('plan_item');
     //await DBProvider.db.deleteAll('plan');
-    // print(result.length);
+     print(result.length);
   }
 }

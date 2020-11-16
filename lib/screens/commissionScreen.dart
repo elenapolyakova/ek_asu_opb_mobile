@@ -76,6 +76,10 @@ class _CommissionScreen extends State<CommissionScreen> {
   int selectedGroupUserId;
   int selectedCommissionUserId;
 
+  double heightCommision = 700.0;
+  double widthCommision = 800.0;
+  double widthGroup = 1000.0;
+
   String _errorText;
 
   @override
@@ -165,12 +169,14 @@ class _CommissionScreen extends State<CommissionScreen> {
 
   Future<List<Member>> getMembers(ComGroup group) async {
     List<User> users = (await group.comUsers) ?? [];
-    User head = await group.head;
-    List<Member> result =
-        List.generate(users.length, (index) => Member(users[index]));
-    if (head != null)
-      result.add(Member(head,
-          roleId: group.isMain ? headCommissionRole : headGroupRole));
+    int headId = await group.headId;
+    List<Member> result = List.generate(users.length, (index) {
+      if (headId == users[index].id)
+        return Member(users[index],
+            roleId: group.isMain ? headCommissionRole : headGroupRole);
+      return Member(users[index]);
+    });
+
     return result;
   }
 
@@ -566,8 +572,8 @@ class _CommissionScreen extends State<CommissionScreen> {
     bool result = await showConfirmDialog(
         'Вы уверены, что хотите удалить группу?', context);
     if (result != null && result) {
-      MyGroup deletedGroup =
-          _groups.firstWhere((group) => group.group.id == groupId, orElse:  () => null);
+      MyGroup deletedGroup = _groups
+          .firstWhere((group) => group.group.id == groupId, orElse: () => null);
 
       if (deletedGroup == null) return;
 
@@ -615,150 +621,161 @@ class _CommissionScreen extends State<CommissionScreen> {
         barrierColor: Color(0x88E6E6E6),
         builder: (BuildContext context) {
           return StatefulBuilder(builder: (context, StateSetter setState) {
-            return AlertDialog(
+            return /*AlertDialog(
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12.0))),
                 backgroundColor: Theme.of(context).primaryColor,
                 content: SizedBox(
-                    width: 1000.0,
-                    // margin: EdgeInsets.symmetric(horizontal: 13, vertical: 13),
-                    // padding: EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Scaffold(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        body: Form(
-                            key: formGroupKey,
-                            child: Container(
-                                child: Column(children: [
-                              FormTitle('Формирование группы'),
-                              Container(
-                                child: EditTextField(
-                                  text: 'Название группы',
-                                  value: group.group.groupNum,
-                                  onSaved: (value) => setState(() {
-                                    group.group.groupNum = value;
-                                  }),
-                                  context: context,
-                                ),
+                  content:*/
+                Stack(alignment: Alignment.center, children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  "assets/images/app.jpg",
+                  fit: BoxFit.fill,
+                  height: heightCommision,
+                  width: widthGroup,
+                ),
+              ),
+              Container(
+                  width: widthGroup,
+                  margin: EdgeInsets.symmetric(horizontal: 13, vertical: 13),
+                  padding: EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Scaffold(
+                      backgroundColor: Colors.transparent,
+                      body: Form(
+                          key: formGroupKey,
+                          child: Container(
+                              child: Column(children: [
+                            FormTitle('Формирование группы'),
+                            Container(
+                              child: EditTextField(
+                                text: 'Название группы',
+                                value: group.group.groupNum,
+                                onSaved: (value) => setState(() {
+                                  group.group.groupNum = value;
+                                }),
+                                context: context,
                               ),
+                            ),
+                            Expanded(
+                                child: Row(children: [
                               Expanded(
-                                  child: Row(children: [
-                                Expanded(
-                                    child: Column(children: [
-                                  Container(
-                                      child: Text(
-                                        'Члены коммиссии:',
-                                        style: textStyle,
-                                        textAlign: TextAlign.left,
-                                      ),
-                                      width: double.maxFinite,
-                                      padding: EdgeInsets.only(bottom: 5)),
-                                  Expanded(
-                                      child: Container(
-                                          height: double.infinity,
-                                          width: 1000, //костыль
-                                          margin: EdgeInsets.only(bottom: 10),
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                            color: Colors.white,
-                                          ),
-                                          child: SingleChildScrollView(
-                                              child: Column(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.start,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: generateList(
-                                                      _availableList, setState,
-                                                      typeList: TYPE_LIST
-                                                          .available)))))
-                                ])),
+                                  child: Column(children: [
                                 Container(
-                                    // height: double.infinity,
-                                    child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    MyButton(
-                                      parentContext: context,
-                                      text: '>>',
-                                      width: 100,
-                                      onPress: () {
-                                        addUserToGroup(setState);
-                                      },
+                                    child: Text(
+                                      'Члены коммиссии:',
+                                      style: textStyle,
+                                      textAlign: TextAlign.left,
                                     ),
-                                    Container(height: 30, child: Text('')),
-                                    MyButton(
-                                      parentContext: context,
-                                      text: '<<',
-                                      width: 100,
-                                      onPress: () {
-                                        removeUserFromGroup(setState);
-                                      },
-                                    )
-                                  ],
-                                )),
+                                    width: double.maxFinite,
+                                    padding: EdgeInsets.only(bottom: 5)),
                                 Expanded(
-                                    child: Column(children: [
-                                  Container(
-                                      child: Text(
-                                        'Участники группы:',
-                                        textAlign: TextAlign.left,
-                                        style: textStyle,
-                                      ),
-                                      width: double.maxFinite,
-                                      padding: EdgeInsets.only(bottom: 5)),
-                                  Expanded(
-                                      child: Container(
-                                          height: double.infinity,
-                                          width: 1000, //костыль
-                                          margin: EdgeInsets.only(bottom: 10),
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                            color: Colors.white,
-                                          ),
-                                          child: SingleChildScrollView(
-                                              child: Column(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.start,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: generateList(
-                                                      _groupList, setState,
-                                                      typeList:
-                                                          TYPE_LIST.group)))))
-                                ])),
+                                    child: Container(
+                                        height: double.infinity,
+                                        width: 1000, //костыль
+                                        margin: EdgeInsets.only(bottom: 10),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(12.0),
+                                          color: Colors.white,
+                                        ),
+                                        child: SingleChildScrollView(
+                                            child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: generateList(
+                                                    _availableList, setState,
+                                                    typeList:
+                                                        TYPE_LIST.available)))))
                               ])),
                               Container(
-                                  child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                    MyButton(
-                                        text: 'принять',
-                                        parentContext: context,
-                                        onPress: () {
-                                          group.members = _groupList;
-                                          submitGroup(group, setState);
-                                        }),
-                                    MyButton(
-                                        text: 'отменить',
-                                        parentContext: context,
-                                        onPress: () {
-                                          cancelCommission();
-                                        }),
-                                  ])),
-                              Container(
-                                  width: double.infinity,
-                                  height: 20,
-                                  color: (_errorText != "")
-                                      ? Color(0xAAE57373)
-                                      : Color(0x00E57373),
-                                  child: Text('$_errorText',
-                                      textAlign: TextAlign.center,
-                                      style:
-                                          TextStyle(color: Color(0xFF252A0E))))
-                            ]))))));
+                                  // height: double.infinity,
+                                  child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  MyButton(
+                                    parentContext: context,
+                                    text: '>>',
+                                    width: 100,
+                                    onPress: () {
+                                      addUserToGroup(setState);
+                                    },
+                                  ),
+                                  Container(height: 30, child: Text('')),
+                                  MyButton(
+                                    parentContext: context,
+                                    text: '<<',
+                                    width: 100,
+                                    onPress: () {
+                                      removeUserFromGroup(setState);
+                                    },
+                                  )
+                                ],
+                              )),
+                              Expanded(
+                                  child: Column(children: [
+                                Container(
+                                    child: Text(
+                                      'Участники группы:',
+                                      textAlign: TextAlign.left,
+                                      style: textStyle,
+                                    ),
+                                    width: double.maxFinite,
+                                    padding: EdgeInsets.only(bottom: 5)),
+                                Expanded(
+                                    child: Container(
+                                        height: double.infinity,
+                                        width: 1000, //костыль
+                                        margin: EdgeInsets.only(bottom: 10),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(12.0),
+                                          color: Colors.white,
+                                        ),
+                                        child: SingleChildScrollView(
+                                            child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: generateList(
+                                                    _groupList, setState,
+                                                    typeList:
+                                                        TYPE_LIST.group)))))
+                              ])),
+                            ])),
+                            Container(
+                                child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                  MyButton(
+                                      text: 'принять',
+                                      parentContext: context,
+                                      onPress: () {
+                                        group.members = _groupList;
+                                        submitGroup(group, setState);
+                                      }),
+                                  MyButton(
+                                      text: 'отменить',
+                                      parentContext: context,
+                                      onPress: () {
+                                        cancelCommission();
+                                      }),
+                                ])),
+                            Container(
+                                width: double.infinity,
+                                height: 20,
+                                color: (_errorText != "")
+                                    ? Color(0xAAE57373)
+                                    : Color(0x00E57373),
+                                child: Text('$_errorText',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(color: Color(0xFF252A0E))))
+                          ])))))
+            ]);
           });
         });
   }
@@ -781,116 +798,125 @@ class _CommissionScreen extends State<CommissionScreen> {
         barrierColor: Color(0x88E6E6E6),
         builder: (BuildContext context) {
           return StatefulBuilder(builder: (context, StateSetter setState) {
-            return AlertDialog(
+            return /*AlertDialog(
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12.0))),
                 backgroundColor: Theme.of(context).primaryColor,
-                content: SizedBox(
-                    width: 700.0,
-                    // margin: EdgeInsets.symmetric(horizontal: 13, vertical: 13),
-                    // padding: EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Scaffold(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        body: Container(
-                            child: Column(children: [
-                          FormTitle('Формирование комиссии'),
-                          Container(
-                            child: SingleChildScrollView(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 16),
-                                child: Column(
-                                  children: <Widget>[
-                                    const SizedBox(
-                                      height: 16,
-                                    ),
-                                    if (_show)
-                                      new SearchWidget<User>(
-                                        key: Key('userList${userList.length}'),
-                                        dataList: userList,
-                                        hideSearchBoxWhenItemSelected: false,
-                                        listContainerHeight:
-                                            MediaQuery.of(context).size.height /
-                                                4,
-                                        queryBuilder: (query, list) {
-                                          return list
-                                              .where((item) => item.display_name
-                                                  .toLowerCase()
-                                                  .contains(
-                                                      query.toLowerCase()))
-                                              .toList();
-                                        },
-                                        popupListItemBuilder: (item) {
-                                          return PopupListItemWidget(
-                                              item.display_name);
-                                        },
-                                        selectedItemBuilder:
-                                            (selectedItem, deleteSelectedItem) {
-                                          return Text('');
-                                          // return SelectedItemWidget(
-                                          //      selectedItem, deleteSelectedItem);
-                                        },
-                                        // widget customization
-                                        noItemsFoundWidget: NoItemsFound(),
-                                        textFieldBuilder:
-                                            (controller, focusNode) {
-                                          return MyTextField(
-                                              controller, focusNode,
-                                              hintText:
-                                                  'Введите ФИО сотрудника');
-                                        },
-                                        onItemSelected: (item) {
-                                          _commissionList.add(Member(item));
-
-                                          userList.removeWhere(
-                                              (user) => user.id == item.id);
-                                          setState(() {
-                                            //_selectedItem = item;
-                                          });
-                                        },
-                                      ),
-                                    const SizedBox(
-                                      height: 32,
-                                    )
-                                  ],
-                                )),
-                          ),
-                          Expanded(
-                              child: Container(
-                                  width: 650,
-                                  margin: EdgeInsets.only(bottom: 10),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12.0),
-                                    color: Colors.white,
+                content:*/
+                Stack(alignment: Alignment.center, children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  "assets/images/app.jpg",
+                  fit: BoxFit.fill,
+                  height: heightCommision,
+                  width: widthCommision,
+                ),
+              ),
+              Container(
+                  width: widthCommision,
+                  margin: EdgeInsets.symmetric(horizontal: 13, vertical: 13),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+                  child: Scaffold(
+                      backgroundColor: Colors.transparent,
+                      body: Container(
+                          child: Column(children: [
+                        FormTitle('Формирование комиссии'),
+                        Container(
+                          child: SingleChildScrollView(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              child: Column(
+                                children: <Widget>[
+                                  const SizedBox(
+                                    height: 16,
                                   ),
-                                  child: SingleChildScrollView(
-                                      child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: generateList(
-                                              _commissionList, setState,
-                                              typeList:
-                                                  TYPE_LIST.commission))))),
-                          Container(
-                              child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                MyButton(
-                                    text: 'принять',
-                                    parentContext: context,
-                                    onPress: () {
-                                      commission.members = _commissionList;
-                                      submitCommission(commission, setState);
-                                    }),
-                                MyButton(
-                                    text: 'отменить',
-                                    parentContext: context,
-                                    onPress: () {
-                                      cancelCommission();
-                                    }),
-                              ]))
-                        ])))));
+                                  if (_show)
+                                    new SearchWidget<User>(
+                                      key: Key('userList${userList.length}'),
+                                      dataList: userList,
+                                      hideSearchBoxWhenItemSelected: false,
+                                      listContainerHeight:
+                                          MediaQuery.of(context).size.height /
+                                              4,
+                                      queryBuilder: (query, list) {
+                                        return list
+                                            .where((item) => item.display_name
+                                                .toLowerCase()
+                                                .contains(query.toLowerCase()))
+                                            .toList();
+                                      },
+                                      popupListItemBuilder: (item) {
+                                        return PopupListItemWidget(
+                                            item.display_name);
+                                      },
+                                      selectedItemBuilder:
+                                          (selectedItem, deleteSelectedItem) {
+                                        return Text('');
+                                        // return SelectedItemWidget(
+                                        //      selectedItem, deleteSelectedItem);
+                                      },
+                                      // widget customization
+                                      noItemsFoundWidget: NoItemsFound(),
+                                      textFieldBuilder:
+                                          (controller, focusNode) {
+                                        return MyTextField(
+                                            controller, focusNode,
+                                            hintText: 'Введите ФИО сотрудника');
+                                      },
+                                      onItemSelected: (item) {
+                                        _commissionList.add(Member(item));
+
+                                        userList.removeWhere(
+                                            (user) => user.id == item.id);
+                                        setState(() {
+                                          //_selectedItem = item;
+                                        });
+                                      },
+                                    ),
+                                  const SizedBox(
+                                    height: 32,
+                                  )
+                                ],
+                              )),
+                        ),
+                        Expanded(
+                            child: Container(
+                                width: 650,
+                                margin: EdgeInsets.only(bottom: 10),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                  color: Colors.white,
+                                ),
+                                child: SingleChildScrollView(
+                                    child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: generateList(
+                                            _commissionList, setState,
+                                            typeList: TYPE_LIST.commission))))),
+                        Container(
+                            child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                              MyButton(
+                                  text: 'принять',
+                                  parentContext: context,
+                                  onPress: () {
+                                    commission.members = _commissionList;
+                                    submitCommission(commission, setState);
+                                  }),
+                              MyButton(
+                                  text: 'отменить',
+                                  parentContext: context,
+                                  onPress: () {
+                                    cancelCommission();
+                                  }),
+                            ]))
+                      ]))))
+            ]);
           });
         });
   }
@@ -994,18 +1020,16 @@ class _CommissionScreen extends State<CommissionScreen> {
 
   Map<String, dynamic> makeHeadAndUids(MyGroup group) {
     ComGroup comGroup = group.group;
-    Member head = group.members.firstWhere(
-        (member) =>
-            member.roleId ==
-            (group.group.isMain ? headCommissionRole : headGroupRole),
-        orElse: () => null);
-    if (head != null) {
-      comGroup.headId = head.user.id;
-      group.members.remove(head);
-    } else
-      comGroup.headId = null;
-    List<int> ids = List.generate(
-        group.members.length, (index) => group.members[index].user.id);
+
+    comGroup.headId = null;
+    List<int> ids = [];
+    group.members.forEach((member) {
+      if (member.roleId ==
+          (group.group.isMain ? headCommissionRole : headGroupRole))
+        comGroup.headId = member.user.id;
+      // else
+      ids.add(member.user.id);
+    });
     return {'comGroup': comGroup, 'ids': ids};
   }
 

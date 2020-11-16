@@ -82,9 +82,16 @@ class CheckPlan extends Models {
 
   ///Комиссия
   Future<ComGroup> get mainComGroup async {
-    if (_mainComGroup == null)
-      _mainComGroup = await ComGroupController.selectById(mainComGroupId);
+    if (_mainComGroup == null) {
+      _mainComGroup = await ComGroupController.selectMainGroup(id);
+      mainComGroupId = _mainComGroup.id;
+    }
     return _mainComGroup;
+  }
+
+  ///Все группы данного плана
+  Future<List<ComGroup>> get allComGroups async {
+    return await ComGroupController.selectAllGroups(id);
   }
 
   ///Председатель комиссии

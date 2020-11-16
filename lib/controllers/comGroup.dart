@@ -101,6 +101,32 @@ class ComGroupController extends Controllers {
     return planItems;
   }
 
+  /// Select all records with matching parentId and isMain = false
+  /// Returns found records or null.
+  static Future<ComGroup> selectMainGroup(int parentId) async {
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
+      _tableName,
+      where: "parent_id = ? and is_main = 'true' and active = 'true'",
+      whereArgs: [parentId],
+    );
+    if (queryRes == null || queryRes.length == 0) return null;
+    return ComGroup.fromJson(queryRes.single);
+  }
+
+  /// Select all records with matching parentId.
+  /// Returns found records or null.
+  static Future<List<ComGroup>> selectAllGroups(int parentId) async {
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
+      _tableName,
+      where: "parent_id = ? and active = 'true'",
+      whereArgs: [parentId],
+    );
+    if (queryRes == null || queryRes.length == 0) return [];
+    List<ComGroup> planItems =
+        queryRes.map((e) => ComGroup.fromJson(e)).toList();
+    return planItems;
+  }
+
   /// Try to insert into the table.
   /// ======
   /// Returns
@@ -167,11 +193,11 @@ class ComGroupController extends Controllers {
     };
     Future<int> odooId = selectOdooId(comGroup.id);
     await DBProvider.db.update(_tableName, comGroup.toJson()).then((resId) {
-      return RelComGroupUserController.updateComGroupUsers(resId, userIds)
+      return RelComGroupUserController.updateComGroupUsers(comGroup.id, userIds)
           .then((value) async {
         res['code'] = 1;
-        res['id'] = resId;
-        return SynController.edit(_tableName, resId, await odooId)
+        res['id'] = comGroup.id;
+        return SynController.edit(_tableName, comGroup.id, await odooId)
             .catchError((err) {
           res['code'] = -2;
           res['message'] = 'Error updating syn';
