@@ -169,12 +169,14 @@ class _CommissionScreen extends State<CommissionScreen> {
 
   Future<List<Member>> getMembers(ComGroup group) async {
     List<User> users = (await group.comUsers) ?? [];
-    User head = await group.head;
-    List<Member> result =
-        List.generate(users.length, (index) => Member(users[index]));
-    if (head != null)
-      result.add(Member(head,
-          roleId: group.isMain ? headCommissionRole : headGroupRole));
+    int headId = await group.headId;
+    List<Member> result = List.generate(users.length, (index) {
+      if (headId == users[index].id)
+        return Member(users[index],
+            roleId: group.isMain ? headCommissionRole : headGroupRole);
+      return Member(users[index]);
+    });
+
     return result;
   }
 
@@ -1025,8 +1027,8 @@ class _CommissionScreen extends State<CommissionScreen> {
       if (member.roleId ==
           (group.group.isMain ? headCommissionRole : headGroupRole))
         comGroup.headId = member.user.id;
-      else
-        ids.add(member.user.id);
+      // else
+      ids.add(member.user.id);
     });
     return {'comGroup': comGroup, 'ids': ids};
   }
