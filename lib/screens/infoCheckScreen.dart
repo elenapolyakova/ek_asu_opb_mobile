@@ -7,37 +7,6 @@ import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 
-//TODO delete
-class MyDepartment {
-  int department_id;
-  String inn;
-  String ogrn;
-  String okpo;
-  String addr;
-  String director_fio;
-  String director_email;
-  String director_phone;
-  String deputy_fio;
-  String deputy_email;
-  String deputy_phone;
-  String name;
-  MyDepartment(
-      {this.department_id,
-      this.inn,
-      this.ogrn,
-      this.okpo,
-      this.addr,
-      this.director_fio,
-      this.director_email,
-      this.deputy_phone,
-      this.deputy_fio,
-      this.deputy_email,
-      this.director_phone,
-      this.name});
-}
-
-//TODO delete
-
 class InfoCheckScreen extends StatefulWidget {
   int departmentId;
   BuildContext context;
@@ -52,10 +21,11 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
   UserInfo _userInfo;
   int departmentId;
   bool showLoading = true;
-  Department department;
-  MyDepartment _department;
+  Department _department;
   final formKey = new GlobalKey<FormState>();
   String saveError;
+  String _ogrn;
+  String _inn;
 
   @override
   _InfoCheckScreen(this.departmentId);
@@ -70,6 +40,8 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
         auth.getUserInfo().then((userInfo) {
           _userInfo = userInfo;
           saveError = '';
+          _inn = '7708503727';
+          _ogrn = '1037739877295';
           loadData();
         });
       } //isLogin == true
@@ -81,13 +53,9 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
 
-      department = await DepartmentController.selectById(departmentId);
-      _department = MyDepartment(
-          department_id: departmentId,
-          inn: '7708503727',
-          ogrn: '1037739877295',
-          name: department.name,
-          director_fio: 'Иванов И.И.');
+      _department = await DepartmentController.selectById(departmentId);
+      if ([null, '', 'null'].contains(_department.inn)) _department.inn = _inn;
+      if ([null, '', 'null'].contains(_department.ogrn)) _department.ogrn = _ogrn;
     } catch (e) {} finally {
       hideDialog(context);
       showLoading = false;
@@ -114,8 +82,8 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
 
   Future<void> editInfoClicked() async {
     saveError = '';
-    MyDepartment departmentCopy = MyDepartment(
-      department_id: _department.department_id,
+    Department departmentCopy = Department(
+      id: _department.id,
       name: _department.name,
       inn: _department.inn,
       ogrn: _department.ogrn,
@@ -135,7 +103,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
     }
   }
 
-  Future<bool> showEditDialog(MyDepartment departmentCopy, setState) {
+  Future<bool> showEditDialog(Department departmentCopy, setState) {
     return showDialog<bool>(
         context: context,
         barrierDismissible: true,
@@ -343,7 +311,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
         });
   }
 
-  void submitPlan(MyDepartment departmentCopy, setState) async {
+  void submitPlan(Department departmentCopy, setState) async {
     //  var formPlanKey2 = formKey;
     final form = formKey.currentState;
     hideKeyboard();

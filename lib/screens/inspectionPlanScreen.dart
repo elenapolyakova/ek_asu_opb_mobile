@@ -168,7 +168,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       }
 
       try {
-        List<ComGroup> _groupList = await _inspection.comGroups;
+        List<ComGroup> _groupList = await _inspection.allComGroups;
         _groupList.forEach((group) {
           groupList.add({
             'id': group.id.toString(),
@@ -368,7 +368,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   String getGroupById(int groupId) {
     if (groupId == null || groupList.length == 0) return '';
     Map<String, dynamic> group = groupList
-        .firstWhere((group) => group["id"] == groupId, orElse: () => null);
+        .firstWhere((group) => group["id"] == groupId.toString(), orElse: () => null);
     return group != null ? group['value'] : '';
   }
 
