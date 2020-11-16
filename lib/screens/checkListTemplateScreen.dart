@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
@@ -223,11 +225,12 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
   }
 
   // Future<void> editCheckListItem(int checkListItemId, int parentId) async {}
-  Future<void> deleteCheckListItem(int rowIndex, StateSetter dialogSetter) async {
+  Future<void> deleteCheckListItem(
+      int rowIndex, StateSetter dialogSetter) async {
     setState(() {
       _currentCheckList.items.removeAt(rowIndex);
     });
-   dialogSetter((){});
+    dialogSetter(() {});
   }
 
   Future<bool> showCheckListDialog(StateSetter setState) {
@@ -290,7 +293,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
                               child: Container(
                                   child: Column(children: [
                                 FormTitle(
-                                    '${_currentCheckList.id == null ? 'Добавление' : 'Редактирование'} чек-листа'),
+                                    '${_currentCheckList.id == null ? 'Добавление' : 'Редактирование'} шаблона чек-листа'),
                                 //   Container(child: refresh ? Text('') : Text('')),
                                 Container(
                                     child: Row(
@@ -394,7 +397,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
         Scaffold.of(context).showSnackBar(errorSnackBar());
       } else {
         if (_currentCheckList.id == null) {
-          _currentCheckList.id = result["id"];
+          _currentCheckList.id = 1000; //result["id"];
           setState(() {
             _items.add(_currentCheckList);
           });
@@ -481,7 +484,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
             FlexColumnWidth(double.parse(item['flex'].toString())));
 
     TableRow headerTableRow = TableRow(
-        decoration: BoxDecoration(color: Theme.of(context).primaryColor),
+        decoration: BoxDecoration(color: Theme.of(context).primaryColorDark),
         children: List.generate(
             headers.length,
             (index) => Column(
@@ -491,6 +494,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
                         child: Text(
                           headers[index]["text"],
                           textAlign: TextAlign.center,
+                          style: TextStyle(color:Theme.of(context).primaryColorLight ),
                         )),
                   ],
                 )));
@@ -506,7 +510,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
           children: [
             getRowCellItem(row.name, row.itemId, 0,
                 isItem: true,
-                  dialogSetter: dialogSetter,
+                dialogSetter: dialogSetter,
                 rowIndex: rowIndex, onSaved: (value) {
               row.name = value;
               //  _currentCheckList.items[rowIndex].name = value;
@@ -515,9 +519,8 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
             }),
             getRowCellItem(row.question, row.itemId, 0,
                 isItem: true,
-                rowIndex: rowIndex, 
-                dialogSetter: dialogSetter,
-                onSaved: (value) {
+                rowIndex: rowIndex,
+                dialogSetter: dialogSetter, onSaved: (value) {
               row.question = value;
               //  _currentCheckList.items[rowIndex].name = value;
               setState(() {});
@@ -668,7 +671,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
                       trailing: menu,
                       contentPadding: EdgeInsets.all(0),
                       title: Text(
-                          'Чтобы добавить новый чек-лист, выберите в меню "Добавить чек-лист" ',
+                          'Чтобы добавить новый шаблон чек-лист, выберите в меню "Добавить чек-лист" ',
                           textAlign: TextAlign.center),
                       onTap: () {}),
                   Expanded(

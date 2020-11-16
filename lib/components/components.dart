@@ -35,7 +35,8 @@ class _TextIcon extends State<TextIcon> {
                   padding: EdgeInsets.all(0),
                   icon: Icon(widget.icon), //Icons.logout),
                   color: widget.color,
-                  onPressed: () => widget.onTap),
+                  onPressed: widget.onTap
+                 ),
               new Text(
                 widget.text,
                 style: TextStyle(
