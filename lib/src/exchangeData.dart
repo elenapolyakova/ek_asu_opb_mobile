@@ -53,9 +53,25 @@ Future<List<Map<String, dynamic>>> getDictionaries(
           data =
               await getDataWithAttemp('eco.department', 'search_read', null, {
             'domain': domain,
-            'fields': ['id', 'name', 'short_name', 'rel_railway_id', 'active']
+            'fields': [
+              'id',
+              'name',
+              'short_name',
+              'rel_railway_id',
+              'active',
+              'inn',
+              'ogrn',
+              'okpo',
+              'addr',
+              'director_fio',
+              'director_email',
+              'director_phone',
+              'deputy_fio',
+              'deputy_email',
+              'deputy_phone',
+            ]
           });
-
+          print("Get data with attempt $data");
           break;
         case 'user':
           List<dynamic> domain = new List<dynamic>();
