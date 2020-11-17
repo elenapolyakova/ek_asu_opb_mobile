@@ -7,8 +7,7 @@ class DepartmentController extends Controllers {
   static String _tableName = "department";
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     Department department = Department.fromJson(json);
-    print('Departments json');
-    print(json); //нужно, чтобы преобразовать одоо rel в id
+    //нужно, чтобы преобразовать одоо rel в id
     return await DBProvider.db.insert(_tableName, department.toJson());
   }
 
@@ -91,11 +90,9 @@ class DepartmentController extends Controllers {
       'message': null,
       'id': null,
     };
-    // department from form come with active null
-    department.active = true;
 
     await DBProvider.db
-        .update(_tableName, department.toJson())
+        .update(_tableName, department.prepareForUpdate())
         .then((resId) async {
       res['code'] = 1;
       res['id'] = department.id;
