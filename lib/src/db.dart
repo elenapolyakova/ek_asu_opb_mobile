@@ -28,7 +28,7 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS railway(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS department(id INTEGER PRIMARY KEY, odooId INTEGER, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER,  active TEXT, search_field TEXT, inn TEXT, ogrn TEXT, okpo TEXT, addr TEXT, director_fio TEXT, director_email TEXT, director_phone TEXT, deputy_fio TEXT, deputy_email TEXT, deputy_phone TEXT)");
+            "CREATE TABLE IF NOT EXISTS department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER,  active TEXT, search_field TEXT, inn TEXT, ogrn TEXT, okpo TEXT, addr TEXT, director_fio TEXT, director_email TEXT, director_phone TEXT, deputy_fio TEXT, deputy_email TEXT, deputy_phone TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS user(id INTEGER PRIMARY KEY, login TEXT,  display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT, search_field TEXT,  user_role TEXT)");
         await db
@@ -128,9 +128,9 @@ class DBProvider {
           case 10:
             await db.transaction((txn) async {
               await txn.execute(
-                  "CREATE TABLE new_department(id INTEGER PRIMARY KEY, odooId INTEGER, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER, active TEXT, search_field TEXT, inn TEXT, ogrn TEXT, okpo TEXT, addr TEXT, director_fio TEXT, director_email TEXT, director_phone TEXT, deputy_fio TEXT, deputy_email TEXT, deputy_phone TEXT)");
+                  "CREATE TABLE new_department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER, active TEXT, search_field TEXT, inn TEXT, ogrn TEXT, okpo TEXT, addr TEXT, director_fio TEXT, director_email TEXT, director_phone TEXT, deputy_fio TEXT, deputy_email TEXT, deputy_phone TEXT)");
               await txn.execute(
-                  "INSERT INTO new_department(id, odooId, name, short_name, railway_id, parent_id, active, search_field, inn, ogrn, okpo, addr, director_fio, director_email, director_phone, deputy_fio, deputy_email, deputy_fio) SELECT id, odooId, name, short_name, railway_id, parent_id, active, search_field, inn, ogrn, okpo, addr, director_fio, director_email, director_phone, deputy_fio, deputy_email, deputy_fio FROM department");
+                  "INSERT INTO new_department(id, name, short_name, railway_id, parent_id, active, search_field, inn, ogrn, okpo, addr, director_fio, director_email, director_phone, deputy_fio, deputy_email, deputy_fio) SELECT id, name, short_name, railway_id, parent_id, active, search_field, inn, ogrn, okpo, addr, director_fio, director_email, director_phone, deputy_fio, deputy_email, deputy_fio FROM department");
               await txn.execute("DROP TABLE department");
               await txn
                   .execute("ALTER TABLE new_department RENAME TO department");
@@ -152,7 +152,7 @@ class DBProvider {
 
       // Set the version. This executes the onCreate function and provides a
       // path to perform database upgrades and downgrades.
-      version: 10,
+      version: 11,
     );
   }
 
@@ -232,6 +232,11 @@ class DBProvider {
   Future<int> update(String tableName, Map<String, dynamic> values) async {
     // Get a reference to the database.
     final Database db = await database;
+
+    print("Values for update");
+    print(values);
+
+    print("Table name : $tableName");
 
     return db.update(
       tableName,

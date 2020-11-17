@@ -1,6 +1,7 @@
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import "package:ek_asu_opb_mobile/models/models.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
+import "package:ek_asu_opb_mobile/utils/convert.dart";
 
 class DepartmentController extends Controllers {
   static String _tableName = "department";
@@ -56,24 +57,12 @@ class DepartmentController extends Controllers {
         'name',
         'short_name',
         'rel_railway_id',
-        'inn',
-        'ogrn',
-        'okpo',
-        'addr',
-        'director_fio',
-        'director_email',
-        'director_phone',
-        'deputy_fio',
-        'deputy_phone',
-        'deputy_email',
         'active',
       ]
     ], {
       'limit': limit
     });
     DBProvider.db.deleteAll(_tableName);
-    print("Load from odoo!");
-    print(json);
     json.forEach((e) => print(e));
   }
 
@@ -102,10 +91,19 @@ class DepartmentController extends Controllers {
       'message': null,
       'id': null,
     };
+    // department from form come with active null
+    department.active = true;
 
-    Future<int> odooId = getOdooId(department.id);
-
-    print("Update department record!");
-    print("Odoo id $odooId");
+    await DBProvider.db
+        .update(_tableName, department.toJson())
+        .then((resId) async {
+      res['code'] = 1;
+      res['id'] = department.id;
+    }).catchError((err) {
+      res['code'] = -3;
+      res['message'] = 'Error updating $_tableName';
+    });
+    DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
+    return res;
   }
 }

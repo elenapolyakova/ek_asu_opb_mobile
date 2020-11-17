@@ -322,7 +322,12 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
       Map<String, dynamic> result;
       departmentCopy;
       try {
-        // result = await controllers.PlanController.update(departmentCopy);
+        print("dep copy");
+        print(departmentCopy);
+        result = await DepartmentController.update(departmentCopy);
+
+        print("submitPlan() happened!");
+        print(result);
 
         hasErorr = false; //result["code"] < 0; TODO вернуть
 
