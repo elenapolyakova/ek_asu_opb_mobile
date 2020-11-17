@@ -14,7 +14,6 @@ String departmantToJson(Department data) {
 
 class Department extends Models {
   int id;
-  int odooId;
   String name;
   String short_name;
   int railway_id;
@@ -33,7 +32,6 @@ class Department extends Models {
 
   Department(
       {this.id,
-      this.odooId,
       this.name,
       this.short_name,
       this.railway_id,
@@ -52,7 +50,6 @@ class Department extends Models {
 
   factory Department.fromJson(Map<String, dynamic> json) => new Department(
       id: json["id"],
-      odooId: json["id"],
       name: getStr(json["name"]),
       short_name: getStr(json["short_name"]),
       railway_id: json["rel_railway_id"] != null
@@ -74,7 +71,6 @@ class Department extends Models {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'odooId': odooId,
       'name': name,
       'short_name': short_name,
       'railway_id': railway_id,
@@ -97,6 +93,6 @@ class Department extends Models {
 
   @override
   String toString() {
-    return 'Department{id: $id, name: $name, short_name: $short_name }';
+    return 'Department{id: $id, name: $name, short_name: $short_name, addr: $addr, inn: $inn, ogrn: $ogrn, okpo: $okpo, director_fio: $director_fio, director_phone: $director_phone, director_email: $director_email, deputy_fio: $deputy_fio, deputy_phone: $deputy_phone, deputy_email: $deputy_email }';
   }
 }
