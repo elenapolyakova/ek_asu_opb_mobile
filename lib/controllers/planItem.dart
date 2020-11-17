@@ -26,6 +26,13 @@ class PlanItemController extends Controllers {
     return PlanItem.fromJson(json);
   }
 
+  static Future<PlanItem> selectByOdooId(int odooId) async {
+    if (odooId == null) return null;
+    var json = await DBProvider.db
+        .select(_tableName, where: "odoo_id = ?", whereArgs: [odooId]);
+    return PlanItem.fromJson(json.single);
+  }
+
   static Future<int> selectOdooId(int id) async {
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(_tableName,
         columns: ['odoo_id'], where: "id = ?", whereArgs: [id]);
@@ -34,35 +41,90 @@ class PlanItemController extends Controllers {
     return queryRes[0]['odoo_id'];
   }
 
-  static loadFromOdoo([limit]) async {
-    List<dynamic> json = await getDataWithAttemp(
-        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-      [],
-      [
-        'parent_id',
+  static firstLoadFromOdoo([bool loadRelated = false, int limit]) async {
+    List<String> fields;
+    if (loadRelated)
+      fields = ['parent_id'];
+    else
+      fields = [
         'name',
         'department_txt',
         'check_type',
         'period',
         'responsible',
         'check_result',
-      ]
-    ], {
-      'limit': limit
-    });
-    DBProvider.db.deleteAll(_tableName);
-    json.map((e) {
-      return PlanController.selectById(e['parent_id']).then((Plan plan) {
-        var res = {
+      ];
+    List<dynamic> json = await getDataWithAttemp(
+        SynController.localRemoteTableNameMap[_tableName],
+        'search_read',
+        [[], fields],
+        {'limit': limit});
+    if (!loadRelated) DBProvider.db.deleteAll(_tableName);
+    return Future.forEach(json, (e) async {
+      if (loadRelated) {
+        Plan plan = await PlanController.selectByOdooId(e['parent_id']);
+        assert(plan != null, "Model plan has to be loaded before $_tableName");
+        PlanItem planItem = await selectByOdooId(e['id']);
+        Map<String, dynamic> res = {
+          'id': planItem.id,
+          'parent_id': plan.id,
+        };
+        return DBProvider.db.update(_tableName, res);
+      } else {
+        Map<String, dynamic> res = {
           ...e,
           'id': null,
           'odoo_id': e['id'],
-          'parent_id': plan.id,
           'active': 'true',
         };
-        return res;
-      });
-    }).forEach((e) async => insert(PlanItem.fromJson(await e), true));
+        return insert(PlanItem.fromJson(res), true);
+      }
+    });
+  }
+
+  static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
+    List<String> fields;
+    if (loadRelated)
+      fields = ['parent_id'];
+    else
+      fields = [
+        'name',
+        'department_txt',
+        'check_type',
+        'period',
+        'responsible',
+        'check_result',
+      ];
+    List<String> domain = await getLastSyncDateDomain(_tableName);
+    List<dynamic> json = await getDataWithAttemp(
+        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
+      [domain],
+      fields
+    ], {
+      'limit': limit
+    });
+    return Future.forEach(json, (e) async {
+      PlanItem planItem = await selectByOdooId(e['id']);
+      if (loadRelated) {
+        Plan plan = await PlanController.selectByOdooId(e['parent_id']);
+        assert(plan != null, "Model plan has to be loaded before $_tableName");
+        Map<String, dynamic> res = {
+          'id': planItem.id,
+          'parent_id': plan.id,
+        };
+        return DBProvider.db.update(_tableName, res);
+      } else {
+        Map<String, dynamic> res = {
+          ...e,
+          'id': planItem.id,
+        };
+        return DBProvider.db.update(_tableName, res);
+      }
+    });
+  }
+
+  static startSync() {
+    setLastSyncDateForDomain(_tableName);
   }
 
   /// Select all records with matching parentId

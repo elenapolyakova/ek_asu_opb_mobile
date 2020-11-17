@@ -57,7 +57,8 @@ class CheckPlanItem extends Models {
 
   /// Рабочая группа
   Future<ComGroup> get comGroup async {
-    if (_comGroup == null) _comGroup = await ComGroupController.selectById(id);
+    if (_comGroup == null)
+      _comGroup = await ComGroupController.selectById(comGroupId);
     return _comGroup;
   }
 

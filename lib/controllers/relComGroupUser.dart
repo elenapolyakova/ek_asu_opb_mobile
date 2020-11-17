@@ -27,7 +27,7 @@ class RelComGroupUserController extends Controllers {
     return json;
   }
 
-  static loadFromOdoo([limit]) async {
+  static loadFromOdoo([int limit]) async {
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap['com_group'], 'search_read', [
       [],

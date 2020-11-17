@@ -25,6 +25,13 @@ class PlanController extends Controllers {
     return Plan.fromJson(json);
   }
 
+  static Future<Plan> selectByOdooId(int odooId) async {
+    if (odooId == null) return null;
+    var json = await DBProvider.db
+        .select(_tableName, where: "odoo_id = ?", whereArgs: [odooId]);
+    return Plan.fromJson(json.single);
+  }
+
   static Future<int> selectOdooId(int id) async {
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(_tableName,
         columns: ['odoo_id'], where: "id = ?", whereArgs: [id]);
@@ -33,7 +40,7 @@ class PlanController extends Controllers {
     return queryRes[0]['odoo_id'];
   }
 
-  static loadFromOdoo([limit]) async {
+  static firstLoadFromOdoo([int limit]) async {
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
       [],
@@ -52,14 +59,44 @@ class PlanController extends Controllers {
       'limit': limit
     });
     DBProvider.db.deleteAll(_tableName);
-    json
-        .map((e) => {
-              ...e,
-              'id': null,
-              'odoo_id': e['id'],
-              'active': 'true',
-            })
-        .forEach((e) => insert(Plan.fromJson(e), true));
+    return Future.forEach(json, (e) async {
+      Map<String, dynamic> res = {
+        ...e,
+        'id': null,
+        'odoo_id': e['id'],
+        'active': 'true',
+      };
+      return insert(Plan.fromJson(res), true);
+    }).then((value) => setLastSyncDateForDomain(_tableName));
+  }
+
+  static Future loadChangesFromOdoo([int limit]) async {
+    List<String> domain = await getLastSyncDateDomain(_tableName);
+    List<dynamic> json = await getDataWithAttemp(
+        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
+      [domain],
+      [
+        'type',
+        'name',
+        'rw_id',
+        'year',
+        'date_set',
+        'signer_name',
+        'signer_post',
+        'num_set',
+        'state',
+      ]
+    ], {
+      'limit': limit
+    });
+    return Future.forEach(json, (e) async {
+      Plan plan = await selectByOdooId(e['id']);
+      Map<String, dynamic> res = {
+        ...e,
+        'id': plan.id,
+      };
+      return DBProvider.db.update(_tableName, res);
+    }).then((value) => setLastSyncDateForDomain(_tableName));
   }
 
   /// Select the first record matching passed year, type and railwayId.
@@ -69,7 +106,7 @@ class PlanController extends Controllers {
         {'year': year, 'type': type, 'rw_id': railwayId});
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
-      where: where['where'], // + " and active = 'true'",
+      where: where['where'] + " and active = 'true'",
       whereArgs: where['whereArgs'],
     );
     Plan plan;
