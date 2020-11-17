@@ -91,6 +91,22 @@ class Department extends Models {
     };
   }
 
+  // Make json suitable for update() in local DB
+  Map<String, dynamic> prepareForUpdate() {
+    return {
+      'id': id,
+      'inn': inn,
+      'ogrn': ogrn,
+      'okpo': okpo,
+      'director_fio': director_fio,
+      'director_email': director_email,
+      'director_phone': director_phone,
+      'deputy_fio': deputy_fio,
+      'deputy_email': deputy_email,
+      'deputy_phone': deputy_phone,
+    };
+  }
+
   @override
   String toString() {
     return 'Department{id: $id, name: $name, short_name: $short_name, addr: $addr, inn: $inn, ogrn: $ogrn, okpo: $okpo, director_fio: $director_fio, director_phone: $director_phone, director_email: $director_email, deputy_fio: $deputy_fio, deputy_phone: $deputy_phone, deputy_email: $deputy_email }';
