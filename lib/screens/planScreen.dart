@@ -999,7 +999,7 @@ class _PlanScreen extends State<PlanScreen> {
     print('test');
 
    //  List result = await DBProvider.db.selectAll('plan');
-       List result = await DBProvider.db.select('plan', where: "year = ? and type = ? and rw_id is null active = 1", whereArgs: [2020, 'cbt']);
+       List result = await DBProvider.db.select('plan', where: "active = '1'");
 
     //await DBProvider.db.deleteAll('plan_item');
     //await DBProvider.db.deleteAll('plan');

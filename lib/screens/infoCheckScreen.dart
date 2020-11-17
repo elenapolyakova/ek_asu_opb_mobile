@@ -55,7 +55,8 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
 
       _department = await DepartmentController.selectById(departmentId);
       if ([null, '', 'null'].contains(_department.inn)) _department.inn = _inn;
-      if ([null, '', 'null'].contains(_department.ogrn)) _department.ogrn = _ogrn;
+      if ([null, '', 'null'].contains(_department.ogrn))
+        _department.ogrn = _ogrn;
     } catch (e) {} finally {
       hideDialog(context);
       showLoading = false;
@@ -319,6 +320,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
       form.save();
       bool hasErorr = false;
       Map<String, dynamic> result;
+      departmentCopy;
       try {
         // result = await controllers.PlanController.update(departmentCopy);
 

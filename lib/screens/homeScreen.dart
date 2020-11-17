@@ -87,14 +87,14 @@ class _HomeScreen extends State<HomeScreen> {
       'key': 'report',
       'label': 'Отчеты',
       'icon': Icon(Icons.insert_drive_file)
-    });*/
+    });
     if (role_txt == config.getItem('cbtRole')) {
       result.add({
         'key': 'checkListTemplate',
         'label': 'Шаблоны',
         'icon': Icon(Icons.fact_check)
       });
-    }
+    }*/
 
     return result;
   }

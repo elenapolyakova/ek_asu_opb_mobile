@@ -5,8 +5,9 @@ import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import 'package:ek_asu_opb_mobile/screens/checkListScreen.dart';
 
-class CheckList {
+/*class CheckList {
   int id;
   int odooId;
   int parentIdcheck; //PlanItemId; //для рабочих чек-листов
@@ -46,7 +47,7 @@ class CheckListItem {
       this.result,
       this.description,
       this.active});
-}
+}*/
 
 class CheckListTemplateScreen extends StatefulWidget {
   @override
@@ -494,7 +495,8 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
                         child: Text(
                           headers[index]["text"],
                           textAlign: TextAlign.center,
-                          style: TextStyle(color:Theme.of(context).primaryColorLight ),
+                          style: TextStyle(
+                              color: Theme.of(context).primaryColorLight),
                         )),
                   ],
                 )));

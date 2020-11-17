@@ -12,59 +12,11 @@ class DepartmentDocumentScreen extends StatefulWidget {
 class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
   UserInfo _userInfo;
   bool showLoading = true;
-  bool docsOpen;
-
-//////////////////////////////////////////////
-  List<Node> nodes = [
-    Node(
-      label: 'Documents',
-      key: 'docs',
-      expanded: true,
-      icon: NodeIcon(
-        codePoint:
-            // docsOpen ? Icons.folder_open.codePoint :
-            Icons.folder.codePoint,
-        color: "blue",
-      ),
-      children: [
-        Node(
-            label: 'Job Search',
-            key: 'd3',
-            icon: NodeIcon.fromIconData(Icons.input),
-            children: [
-              Node(
-                  label: 'Resume.docx',
-                  key: 'pd1',
-                  icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
-              Node(
-                  label: 'Cover Letter.docx',
-                  key: 'pd2',
-                  icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
-            ]),
-        Node(
-          label: 'Inspection.docx',
-          key: 'd1',
-        ),
-        Node(
-            label: 'Invoice.docx',
-            key: 'd2',
-            icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
-      ],
-    ),
-    Node(
-        label: 'MeetingReport.xls',
-        key: 'mrxls',
-        icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
-    Node(
-        label: 'MeetingReport.pdf',
-        key: 'mrpdf',
-        icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
-    Node(
-        label: 'Demo.zip',
-        key: 'demo',
-        icon: NodeIcon.fromIconData(Icons.archive)),
-  ];
-//////////////////////////////////////////////
+  String _selectedNode;
+  bool docsOpen = true;
+  bool deepExpanded = true;
+  TreeViewController _treeViewController;
+  List<Node> _nodes = [];
 
   @override
   void initState() {
@@ -74,7 +26,6 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
       if (isLogin) {
         auth.getUserInfo().then((userInfo) {
           _userInfo = userInfo;
-          docsOpen = false;
           loadData();
         });
       } //isLogin == true
@@ -88,17 +39,111 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
     } catch (e) {} finally {
       hideDialog(context);
       showLoading = false;
+      loadNodes();
+      _treeViewController = TreeViewController(
+        children: _nodes,
+        selectedKey: _selectedNode,
+      );
       setState(() => {});
     }
   }
 
-  dynamic _expandNodeHandler(String key, bool isExpand) {}
+  Future<void> loadNodes() async {
+    _nodes = [
+      Node(
+        label: 'Документы',
+        key: 'docs',
+        expanded: docsOpen,
+        icon: NodeIcon(
+          codePoint:
+              docsOpen ? Icons.folder_open.codePoint : Icons.folder.codePoint,
+          // color: 'green'//Theme.of(context).primaryColor.toString(),
+        ),
+        children: [
+          Node(
+              label: 'Воздух',
+              key: 'air',
+              icon: NodeIcon.fromIconData(Icons.input),
+              expanded: true,
+              children: [
+                Node(
+                    label: 'ПДВ.docx',
+                    key: 'air_1',
+                    icon: NodeIcon.fromIconData(Icons.get_app)),
+                Node(
+                    label: 'ВСВ.pdf',
+                    key: 'air_2',
+                    icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
+              ]),
+               Node(
+              label: 'Вода',
+              key: 'water',
+              expanded: true,
+              icon: NodeIcon.fromIconData(Icons.input),
+              children: [
+                Node(
+                    label: 'ПДС.pdf',
+                    key: 'water_1',
+                    icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
+                Node(
+                    label: 'ВСС.pdf',
+                    key: 'water_2',
+                    icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
+              ]),
+               Node(
+              label: 'Отходы',
+              key: 'waste',
+              expanded: true,
+              icon: NodeIcon.fromIconData(Icons.input),
+              children: [
+                Node(
+                    label: 'Лимит.docx',
+                    key: 'waste_1',
+                    icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
+                    
+                Node(
+                    label: 'Разрешение.docx',
+                    key: 'waste_2',
+                    icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
+              ]),
+         
+        ],
+      )
+    ];
+  }
+
+ 
+  _expandNodeHandler(String key, bool expanded) {
+    String msg = '${expanded ? "Expanded" : "Collapsed"}: $key';
+    debugPrint(msg);
+    Node node = _treeViewController.getNode(key);
+    if (node != null) {
+      List<Node> updated;
+      if (key == 'docs') {
+        updated = _treeViewController.updateNode(
+          key,
+          node.copyWith(
+              expanded: expanded,
+              icon: NodeIcon(
+                codePoint: expanded
+                    ? Icons.folder_open.codePoint
+                    : Icons.folder.codePoint,
+                // color: expanded ? "blue600" : "grey700",
+              )),
+        );
+      } else {
+        updated = _treeViewController.updateNode(
+            key, node.copyWith(expanded: expanded));
+      }
+      setState(() {
+        if (key == 'docs') docsOpen = expanded;
+        _treeViewController = _treeViewController.copyWith(children: updated);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    TreeViewController _treeViewController =
-        TreeViewController(children: nodes);
-
     return Expanded(
         child: Container(
             decoration: BoxDecoration(
@@ -108,20 +153,25 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
             child: showLoading
                 ? Text("")
                 : Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: EdgeInsets.symmetric(horizontal: 80, vertical: 10),
                     child: Column(children: [
                       Expanded(
                         child: TreeView(
-                            controller: _treeViewController,
-                            allowParentSelect: false,
-                            supportParentDoubleTap: false,
-                            onExpansionChanged: _expandNodeHandler,
-                            onNodeTap: (key) {
-                              setState(() {
-                                _treeViewController = _treeViewController
-                                    .copyWith(selectedKey: key);
-                              });
-                            }),
+                          controller: _treeViewController,
+                          allowParentSelect: false,
+                          supportParentDoubleTap: false,
+                          onExpansionChanged: (key, expanded) =>
+                              _expandNodeHandler(key, expanded),
+                          onNodeTap: (key) {
+                            debugPrint('Selected: $key');
+                            setState(() {
+                              _selectedNode = key;
+                              _treeViewController = _treeViewController
+                                  .copyWith(selectedKey: key);
+                            });
+                          },
+                          theme: getTreeViewTheme(context)
+                        ),
                       )
                     ]))));
   }

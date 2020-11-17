@@ -9,6 +9,7 @@ import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 import 'package:ek_asu_opb_mobile/models/department.dart' as dep;
 export 'search/search.dart';
+import 'package:flutter_treeview/tree_view.dart';
 
 class TextIcon extends StatefulWidget {
   IconData icon;
@@ -35,8 +36,7 @@ class _TextIcon extends State<TextIcon> {
                   padding: EdgeInsets.all(0),
                   icon: Icon(widget.icon), //Icons.logout),
                   color: widget.color,
-                  onPressed: widget.onTap
-                 ),
+                  onPressed: widget.onTap),
               new Text(
                 widget.text,
                 style: TextStyle(
@@ -246,7 +246,8 @@ class _CustomPopMenu extends State<CustomPopMenu> {
                 text: widget.choices[index]['title'],
                 onTap: () => selectMenu(widget.choices[index]),
                 icon: widget.choices[index]['icon'],
-                color: widget.fontColor ?? Theme.of(widget.context).primaryColorDark);
+                color: widget.fontColor ??
+                    Theme.of(widget.context).primaryColorDark);
           }),
         ));
   }
@@ -1236,4 +1237,44 @@ class HomeIcon extends StatelessWidget {
           new Text('Главная страница', style: textStyle)
         ]));
   }
+}
+
+TreeViewTheme getTreeViewTheme(BuildContext context) {
+  return TreeViewTheme(
+    expanderTheme: ExpanderThemeData(
+      type: ExpanderType.caret,
+      modifier: ExpanderModifier.none,
+      position: ExpanderPosition.start,
+      color: Theme.of(context).primaryColorDark,
+      size: 22,
+    ),
+    labelStyle: TextStyle(
+      fontSize: 18,
+      letterSpacing: 0.3,
+    ),
+    parentLabelStyle: TextStyle(
+      fontSize: 20,
+      letterSpacing: 0.1,
+      fontWeight: FontWeight.w800,
+      color: Theme.of(context).primaryColorDark,
+    ),
+    iconTheme: IconThemeData(
+      size: 22,
+      color: Colors.grey.shade800,
+    ),
+    colorScheme: ColorScheme(
+        primary: Theme.of(context).primaryColorLight,
+        onPrimary: Theme.of(context).primaryColorDark,
+        primaryVariant: Theme.of(context).primaryColor,
+        secondary: Theme.of(context).primaryColorDark,
+        secondaryVariant: Theme.of(context).primaryColorDark,
+        onSecondary: Theme.of(context).primaryColorDark,
+        onSurface: Theme.of(context).primaryColor,
+        surface: Theme.of(context).primaryColor,
+        onBackground: Theme.of(context).primaryColorDark,
+        error: Color(0xFF252A0E),
+        onError: Color(0xFF252A0E),
+        background: Colors.transparent,
+        brightness: Theme.of(context).brightness),
+  );
 }
