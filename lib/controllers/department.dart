@@ -2,6 +2,7 @@ import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import "package:ek_asu_opb_mobile/models/models.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 import "package:ek_asu_opb_mobile/utils/convert.dart";
+import "package:ek_asu_opb_mobile/controllers/syn.dart";
 
 class DepartmentController extends Controllers {
   static String _tableName = "department";
@@ -56,21 +57,22 @@ class DepartmentController extends Controllers {
         'name',
         'short_name',
         'rel_railway_id',
-        'active',
+        'inn',
+        'ogrn',
+        'okpo',
+        'addr',
+        'director_fio',
+        'director_email',
+        'director_phone',
+        'deputy_fio',
+        'deputy_email',
+        'deputy_phone',
       ]
     ], {
       'limit': limit
     });
     DBProvider.db.deleteAll(_tableName);
     json.forEach((e) => print(e));
-  }
-
-  static Future<int> getOdooId(int id) async {
-    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(_tableName,
-        columns: ['odooId'], where: "id = ?", whereArgs: [id]);
-    if (queryRes == null || queryRes.length == 0)
-      throw 'No record of table $_tableName with id=$id exist.';
-    return queryRes[0]['odooId'];
   }
 
   /// Try to update a record of the table.
@@ -90,16 +92,22 @@ class DepartmentController extends Controllers {
       'message': null,
       'id': null,
     };
-
+    int odooId = department.id;
     await DBProvider.db
         .update(_tableName, department.prepareForUpdate())
         .then((resId) async {
       res['code'] = 1;
-      res['id'] = department.id;
+      res['id'] = resId;
+      return SynController.edit(_tableName, department.id, odooId)
+          .catchError((err) {
+        res['code'] = -2;
+        res['message'] = 'Error updating syn';
+      });
     }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error updating $_tableName';
     });
+
     DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
     return res;
   }

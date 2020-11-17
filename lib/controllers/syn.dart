@@ -11,6 +11,7 @@ class SynController extends Controllers {
     'plan_item_check': 'mob.check.plan',
     'plan_item_check_item': 'mob.check.plan.item',
     'com_group': 'mob.check.plan.com_group',
+    'department': 'eco.department',
   };
   static Map<String, List<String>> tableBooleanFieldsMap = {
     'plan': ['active'],
@@ -185,10 +186,15 @@ class SynController extends Controllers {
       });
     }
 
+    // If there is no odoo_id in model,
+    // then we are operating with a model we can't create records for
+    if (!record.containsKey('odoo_id')) {
+      if (syn.method == 'write') args = [record['id'], record];
+    }
     // If odoo_id exists, then method must be write.
     // Unlinking was removed in favor of setting active to false.
     // If odoo_id does not exist, then method must be create
-    if (record['odoo_id'] != null) {
+    else if (record['odoo_id'] != null) {
       int odooId = record['odoo_id'];
       if (syn.method == 'write')
         args = [odooId, record];
@@ -202,7 +208,6 @@ class SynController extends Controllers {
       else
         return Future.value(false);
     }
-
     // Upload to backend
     return await getDataWithAttemp(
             localRemoteTableNameMap[syn.localTableName], syn.method, args, {})
