@@ -208,12 +208,13 @@ class SynController extends Controllers {
             localRemoteTableNameMap[syn.localTableName], syn.method, args, {})
         .then((value) async {
       if (syn.method == 'create') {
-        print(value);
-        record['odoo_id'] = int.parse(value.toString());
-        await DBProvider.db.update(syn.localTableName, record);
+        print(
+            "Created ${syn.localTableName} with id = ${syn.recordId}. New odoo_id = $value");
+        await DBProvider.db.update(syn.localTableName,
+            {'id': syn.recordId, 'odoo_id': int.parse(value.toString())});
       }
       // If successful, delete syn and return true
-      print(syn.id);
+      print("Deleting $syn");
       await DBProvider.db.delete(_tableName, syn.id);
       return true;
     }).catchError((err) {
