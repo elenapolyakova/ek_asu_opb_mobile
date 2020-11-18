@@ -28,7 +28,7 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS railway(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER,  active TEXT, search_field TEXT, inn TEXT, ogrn TEXT, okpo TEXT, addr TEXT, director_fio TEXT, director_email TEXT, director_phone TEXT, deputy_fio TEXT, deputy_email TEXT, deputy_phone TEXT, fact_sector_id INTEGER, fact_sector_name TEXT)");
+            "CREATE TABLE IF NOT EXISTS department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER,  active TEXT, search_field TEXT, inn TEXT, ogrn TEXT, okpo TEXT, addr TEXT, director_fio TEXT, director_email TEXT, director_phone TEXT, deputy_fio TEXT, deputy_email TEXT, deputy_phone TEXT, rel_sector_id INTEGER, rel_sector_name TEXT, f_coord_n REAL, f_coord_e REAL)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS user(id INTEGER PRIMARY KEY, login TEXT,  display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT, search_field TEXT,  user_role TEXT)");
         await db
@@ -140,9 +140,9 @@ class DBProvider {
           case 11:
             await db.transaction((txn) async {
               await txn.execute(
-                  "CREATE TABLE new_department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER, active TEXT, search_field TEXT, inn TEXT, ogrn TEXT, okpo TEXT, addr TEXT, director_fio TEXT, director_email TEXT, director_phone TEXT, deputy_fio TEXT, deputy_email TEXT, deputy_phone TEXT, fact_sector_id INTEGER, fact_sector_name TEXT)");
+                  "CREATE TABLE new_department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER, active TEXT, search_field TEXT, inn TEXT, ogrn TEXT, okpo TEXT, addr TEXT, director_fio TEXT, director_email TEXT, director_phone TEXT, deputy_fio TEXT, deputy_email TEXT, deputy_phone TEXT, rel_sector_id INTEGER, rel_sector_name TEXT, f_coord_n REAL, f_coord_e REAL)");
               await txn.execute(
-                  "INSERT INTO new_department(id, name, short_name, railway_id, parent_id, active, search_field, inn, ogrn, okpo, addr, director_fio, director_email, director_phone, deputy_fio, deputy_email, deputy_fio, fact_sector_id, fact_sector_name) SELECT id, name, short_name, railway_id, parent_id, active, search_field, inn, ogrn, okpo, addr, director_fio, director_email, director_phone, deputy_fio, deputy_email, deputy_fio, fact_sector_id, fact_sector_name FROM department");
+                  "INSERT INTO new_department(id, name, short_name, railway_id, parent_id, active, search_field, inn, ogrn, okpo, addr, director_fio, director_email, director_phone, deputy_fio, deputy_email, deputy_fio, rel_sector_id, rel_sector_name, f_coord_n, f_coord_e) SELECT id, name, short_name, railway_id, parent_id, active, search_field, inn, ogrn, okpo, addr, director_fio, director_email, director_phone, deputy_fio, deputy_email, deputy_fio FROM department");
               await txn.execute("DROP TABLE department");
               await txn
                   .execute("ALTER TABLE new_department RENAME TO department");
