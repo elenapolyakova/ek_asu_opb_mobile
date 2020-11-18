@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:ek_asu_opb_mobile/controllers/checkListTemplate.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:ek_asu_opb_mobile/src/odooClient.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
@@ -13,7 +14,7 @@ final limitRecord = config.getItem('limitRecord') ?? 80;
 final cbtRole = config.getItem('cbtRole') ?? 'cbt';
 final ncopRole = config.getItem('ncopRole') ?? 'ncop';
 final _storage = FlutterSecureStorage();
-final List<String> _dict = ['railway', 'department', 'user'];
+final List<String> _dict = ['railway', 'department', 'user', 'cListTemplate'];
 
 //загрузка справочников
 //Возвращает List[
@@ -24,7 +25,6 @@ Future<List<Map<String, dynamic>>> getDictionaries(
     {List<String> dicts, bool all: true, bool isLastUpdate: true}) async {
   List<Map<String, dynamic>> result = new List<Map<String, dynamic>>();
   dynamic data;
-  dynamic promAreaData;
   List<dynamic> listDepIds;
 
   if (all)
@@ -54,18 +54,6 @@ Future<List<Map<String, dynamic>>> getDictionaries(
         case 'department':
           List<dynamic> domain = new List<dynamic>();
           if (lastUpdate != null) domain.add(lastUpdate);
-          // promAreaData =
-          //     await getDataWithAttemp('eco.prom_area', 'search_read', null, {
-          //   'domain': [
-          //     ['is_main', '=', true]
-          //   ],
-          //   'fields': [
-          //     'id',
-          //     'department_id',
-          //     'fact_sector_id',
-          //   ]
-          // });
-
           data =
               await getDataWithAttemp('eco.department', 'search_read', null, {
             'domain': domain,
@@ -129,6 +117,48 @@ Future<List<Map<String, dynamic>>> getDictionaries(
           });
 
           break;
+        case 'cListTemplate':
+          data =
+              await getDataWithAttemp('mob.check.list', 'search_read', null, {
+            'domain': [
+              ['parent_id', '=', null],
+              ['is_base', '=', true]
+            ],
+            'fields': [
+              'id',
+              'name',
+              'type',
+              'active',
+              'type',
+              'is_base',
+              'child_ids'
+            ]
+          });
+          if (data.length > 0) {
+            for (var element in data) {
+              var assignedQuestions = await getDataWithAttemp(
+                  'mob.check.list.item', 'search_read', null, {
+                'domain': [
+                  ['id', 'in', element["child_ids"]]
+                ],
+                'fields': ['id', 'question']
+              });
+
+              if (assignedQuestions.length > 0) {
+                for (var question in assignedQuestions) {
+                  if (element.containsKey("questions")) {
+                    element["questions"]
+                        .add({question["id"]: question["question"]});
+                  } else {
+                    element["questions"] = [
+                      {question["id"]: question["question"]}
+                    ];
+                  }
+                }
+              }
+            }
+          }
+          break;
       } //switch
       if (data != null) {
         List<dynamic> dataList = data as List<dynamic>;
@@ -144,6 +174,10 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               break;
             case 'user':
               await UserController.insert(dataList[j] as Map<String, dynamic>);
+              break;
+            case 'cListTemplate':
+              await CListTemplateController.insert(
+                  dataList[j] as Map<String, dynamic>);
               break;
           } //switch
         } //for j
