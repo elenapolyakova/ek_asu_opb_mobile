@@ -29,6 +29,8 @@ class Department extends Models {
   String deputy_fio;
   String deputy_email;
   String deputy_phone;
+  int fact_sector_id;
+  String fact_sector_name;
 
   Department(
       {this.id,
@@ -46,7 +48,9 @@ class Department extends Models {
       this.director_phone,
       this.deputy_fio,
       this.deputy_email,
-      this.deputy_phone});
+      this.deputy_phone,
+      this.fact_sector_id,
+      this.fact_sector_name});
 
   factory Department.fromJson(Map<String, dynamic> json) => new Department(
       id: json["id"],
@@ -66,7 +70,9 @@ class Department extends Models {
       director_phone: getObj(json["director_phone"]),
       deputy_fio: getObj(json["deputy_fio"]),
       deputy_email: getObj(json["deputy_email"]),
-      deputy_phone: getObj(json["deputy_phone"]));
+      deputy_phone: getObj(json["deputy_phone"]),
+      fact_sector_id: getObj(json["fact_sector_id"]),
+      fact_sector_name: getObj(json["fact_sector_name"]));
 
   Map<String, dynamic> toJson() {
     return {
@@ -86,6 +92,8 @@ class Department extends Models {
       'deputy_fio': deputy_fio,
       'deputy_email': deputy_email,
       'deputy_phone': deputy_phone,
+      'fact_sector_id': fact_sector_id,
+      'fact_sector_name': fact_sector_name,
       'search_field':
           name.trim().toLowerCase() + ' ' + short_name.trim().toLowerCase()
     };
@@ -109,6 +117,6 @@ class Department extends Models {
 
   @override
   String toString() {
-    return 'Department{id: $id, name: $name, short_name: $short_name, addr: $addr, inn: $inn, ogrn: $ogrn, okpo: $okpo, director_fio: $director_fio, director_phone: $director_phone, director_email: $director_email, deputy_fio: $deputy_fio, deputy_phone: $deputy_phone, deputy_email: $deputy_email }';
+    return 'Department{id: $id, name: $name, short_name: $short_name, addr: $addr, inn: $inn, ogrn: $ogrn, okpo: $okpo, director_fio: $director_fio, director_phone: $director_phone, director_email: $director_email, deputy_fio: $deputy_fio, deputy_phone: $deputy_phone, deputy_email: $deputy_email, fact_sector_id: $fact_sector_id, fact_sector_name: $fact_sector_name}';
   }
 }
