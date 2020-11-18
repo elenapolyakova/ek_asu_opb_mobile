@@ -437,40 +437,43 @@ class _CommissionScreen extends State<CommissionScreen> {
   }
 
   void addUserToGroup(setState) {
-    if (selectedAvailibleUserId == null) {
+    /*if (selectedAvailibleUserId == null) {
       showError("Выберите пользователя для добавления в группу", setState);
       return;
-    }
+    }*/
     Member member = _availableList.firstWhere(
         (available) => available.user.id == selectedAvailibleUserId,
         orElse: () => null);
     if (member != null) {
-      setState(() {
-        _groupList.add(member);
-        _availableList.remove(member);
-        selectedAvailibleUserId = null;
-      });
+      _groupList.add(member);
+      _availableList.remove(member);
+      selectedAvailibleUserId =
+          (_availableList.length > 0) ? _availableList.first.user.id : null;
+      if (selectedGroupUserId == null) selectedGroupUserId = member.user.id;
+      setState(() {});
     }
   }
 
   void removeUserFromGroup(setState) {
-    if (selectedGroupUserId == null) {
+    /* if (selectedGroupUserId == null) {
       showError("Выберите пользователя для исключения из группы", setState);
       return;
-    }
+    }*/
 
     Member member = _groupList.firstWhere(
         (group) => group.user.id == selectedGroupUserId,
         orElse: () => null);
 
     if (member != null) {
-      setState(() {
-        _groupList.remove(member);
-        if (_commision.members
-            .any((commission) => commission.user.id == selectedGroupUserId))
-          _availableList.add(member);
-        selectedGroupUserId = null;
-      });
+      _groupList.remove(member);
+      if (_commision.members
+          .any((commission) => commission.user.id == selectedGroupUserId))
+        _availableList.add(member);
+      selectedGroupUserId =
+          (_groupList.length > 0) ? _groupList.first.user.id : null;
+      if (selectedAvailibleUserId == null)
+        selectedAvailibleUserId = member.user.id;
+      setState(() {});
     }
   }
 
@@ -607,9 +610,12 @@ class _CommissionScreen extends State<CommissionScreen> {
           _availableList.add(member);
       });
 
-      selectedAvailibleUserId = null;
-      selectedGroupUserId = null;
+      selectedAvailibleUserId =
+          _availableList.length > 0 ? _availableList.first.user.id : null;
+      selectedGroupUserId =
+          _groupList.length > 0 ? _groupList.first.user.id : null;
       selectedCommissionUserId = null;
+      // _commissionList.length > 0 ? _commissionList.first.user.id : null;
     });
 
     final color = Theme.of(widget.context).buttonColor;
@@ -699,6 +705,8 @@ class _CommissionScreen extends State<CommissionScreen> {
                                   MyButton(
                                     parentContext: context,
                                     text: '>>',
+                                    disabled: !(_availableList != null &&
+                                        _availableList.length > 0),
                                     width: 100,
                                     onPress: () {
                                       addUserToGroup(setState);
@@ -707,6 +715,8 @@ class _CommissionScreen extends State<CommissionScreen> {
                                   Container(height: 30, child: Text('')),
                                   MyButton(
                                     parentContext: context,
+                                    disabled: !(_groupList != null &&
+                                        _groupList.length > 0),
                                     text: '<<',
                                     width: 100,
                                     onPress: () {

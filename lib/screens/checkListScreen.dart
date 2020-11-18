@@ -1,22 +1,65 @@
+import 'package:ek_asu_opb_mobile/screens/commissionScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
+List<Map<String, dynamic>> statusSelection = [
+  {
+    'id': 1,
+    'name': 'Не рассматривался',
+    'value': STATUS.template,
+    'color': Colors.grey.shade200
+  },
+  {
+    'id': 2,
+    'name': 'Пройдено без замечаний',
+    'value': STATUS.success,
+    'color': Colors.green.shade200
+  },
+  {
+    'id': 3,
+    'name': 'Есть нарушения',
+    'value': STATUS.fault,
+    'color': Colors.red.shade200
+  }
+];
+
+getStatusById(int id) {
+  Map<String, dynamic> statusItem = statusSelection
+      .firstWhere((status) => status['id'] == id, orElse: () => null);
+  if (statusItem != null) return statusItem["value"];
+  return null;
+}
+
+getColorByStatus(STATUS status) {
+  Map<String, dynamic> statusItem = statusSelection
+      .firstWhere((item) => item['value'] == status, orElse: () => null);
+  if (statusItem != null) return statusItem["color"];
+  return Colors.grey.shade200;
+}
+
+enum STATUS { template, success, fault }
+
+/////////////////////////////////////////////////
+/////MODELS
+/////////////////////////////////////////////////
 class CheckList {
   int id;
   int odooId;
-  int parentIdcheck; //PlanItemId; //для рабочих чек-листов
+  int parentId; //CheckPlanItem.id; //для рабочих чек-листов
   bool is_base; //является ли шаблоном
   int type; //вода/воздух/отходы
   String name; //наименование
   bool active;
-  int status; //1: 'Не рассматривался',
+  int base_id; //базовая запись - CheckList.id, id шаблона для рабочего чек-листа
+  List<CheckListItem> items; //вопросы
+  STATUS
+      status; //вычислять на основе статуса пунктов + is_base //1: 'Не рассматривался',
   //  2: 'Пройдено без замечаний',
   //  3: 'Есть нарушения'
 
-  List<CheckListItem> items;
   CheckList(
       {this.id,
       this.odooId,
@@ -25,38 +68,64 @@ class CheckList {
       this.name,
       this.active,
       this.items,
-      this.status});
+      this.status,
+      this.base_id});
 
   ///Варианты типов чек-листов
   static Map<int, String> typeSelection = {1: 'Воздух', 2: 'Вода', 3: 'Отходы'};
-  static Map<int, String> statusSelection = {
-    1: 'Не рассматривался',
-    2: 'Пройдено без замечаний',
-    3: 'Есть нарушения'
-  };
 }
 
-enum STATUS { template, success, fault }
-
 class CheckListItem {
-  int itemId;
+  int id;
   int odooId;
-  int parentId;
-  String name;
-  String question;
-  String result;
-  String description;
+  int parentId; //checkLIst.id
+  String name; //Наименование
+  String question; //Вопрос
+  String result; //Результат
+  String description; //Комментарий
+  STATUS status; //добавить в одоо
+  List<Fault> faultItems;
+  int base_id; //базовая запись ?? зачем
   bool active;
   CheckListItem(
-      {this.itemId,
+      {this.id,
       this.odooId,
       this.parentId,
       this.name,
       this.question,
       this.result,
       this.description,
+      this.faultItems,
+      this.status,
+      this.base_id,
       this.active});
 }
+
+class Fault {
+  int id;
+  int odooId;
+  int parentId; //checkListItem.id
+  String name; //Наименование
+  String desc; //Описание
+  DateTime date; //Дата фиксации
+  String fine_desc; //Штраф. Описание
+  int fine; //Штраф. Сумма
+  int koap_id;
+  Fault(
+      {this.id,
+      this.odooId,
+      this.parentId,
+      this.name,
+      this.desc,
+      this.date,
+      this.fine,
+      this.fine_desc,
+      this.koap_id}); //Статья КОАП
+}
+
+/////////////////////////////////////////////////
+/////MODELS
+/////////////////////////////////////////////////
 
 class CheckListScreen extends StatefulWidget {
   @override
@@ -71,10 +140,12 @@ class _CheckListScreen extends State<CheckListScreen> {
   int _selectedType = 0;
   List<CheckList> _items;
   CheckList _currentCheckList;
+  CheckListItem _currentCheckListItem;
   var _tapPosition;
   double heightCheckList = 700;
-  double widthCheckList = 1000;
-  final formKey = new GlobalKey<FormState>();
+  double widthCheckList = 1200;
+  final formFaultKey = new GlobalKey<FormState>();
+  final formCheckListKey = new GlobalKey<FormState>();
 
   List<Map<String, dynamic>> choices = [
     {'title': "Перейти к чек-листу", 'icon': Icons.forward, 'key': 'edit'},
@@ -84,8 +155,10 @@ class _CheckListScreen extends State<CheckListScreen> {
   ];
 
   List<Map<String, dynamic>> itemHeader = [
-    {'text': 'Наименование', 'flex': 1.0},
-    {'text': 'Вопрос', 'flex': 3.0},
+    {'text': 'Наименование', 'flex': 3.0},
+    {'text': 'Вопрос', 'flex': 10.0},
+    {'text': 'Пройден', 'flex': 1.0, 'fontSize': 12.0},
+    {'text': 'Наруше-\nния', 'flex': 1.0, 'fontSize': 12.0},
   ];
 
   List<CheckList> items = [
@@ -96,20 +169,23 @@ class _CheckListScreen extends State<CheckListScreen> {
         name: 'Чек-лист 1',
         type: 1,
         active: true,
-        status: 2,
+        status: getStatusById(2),
         items: [
           CheckListItem(
-              itemId: 1,
+              id: 1,
               odooId: 1,
               parentId: 1,
               name: 'пункт 1',
+              status: getStatusById(2),
               question: 'вопрос 1\nдлинный вопрос\nочень длинный'),
           CheckListItem(
-              itemId: 2,
+              id: 2,
               odooId: 2,
               parentId: 1,
               name: 'пункт 2',
-              question: 'вопрос 2')
+              status: getStatusById(3),
+              question: 'вопрос 2',
+              faultItems: [Fault(), Fault()])
         ]),
     CheckList(
         id: 2,
@@ -117,7 +193,7 @@ class _CheckListScreen extends State<CheckListScreen> {
         is_base: true,
         name: 'Чек-лист 2',
         type: 1,
-        status: 1,
+        status: getStatusById(1),
         active: true,
         items: []),
     CheckList(
@@ -126,7 +202,7 @@ class _CheckListScreen extends State<CheckListScreen> {
         is_base: true,
         name: 'Чек-лист 3',
         type: 1,
-        status: 3,
+        status: getStatusById(3),
         active: true,
         items: [])
   ];
@@ -182,12 +258,30 @@ class _CheckListScreen extends State<CheckListScreen> {
       _currentCheckList.items = [];
       checkList.items.forEach((item) {
         CheckListItem itemCopy = CheckListItem(
-            itemId: item.itemId,
+            id: item.id,
             odooId: item.odooId,
             parentId: item.parentId,
             name: item.name,
             question: item.question,
-            active: item.active);
+            result: item.result,
+            description: item.description,
+            status: item.status,
+            base_id: item.base_id,
+            active: item.active,
+            faultItems: []);
+        if (item.faultItems != null)
+          item.faultItems.forEach((faultItem) {
+            itemCopy.faultItems.add(Fault(
+              id: faultItem.id,
+              odooId: faultItem.odooId,
+              parentId: faultItem.parentId,
+              name: faultItem.name,
+              desc: faultItem.desc,
+              date: faultItem.date,
+              fine_desc: faultItem.fine_desc,
+              fine: faultItem.fine,
+            ));
+          });
         _currentCheckList.items.add(itemCopy);
       });
     });
@@ -246,7 +340,10 @@ class _CheckListScreen extends State<CheckListScreen> {
           case 'add':
             setState(() {
               _currentCheckList.items.add(CheckListItem(
-                  itemId: null, odooId: null, parentId: _currentCheckList.id));
+                  id: null,
+                  odooId: null,
+                  parentId: _currentCheckList.id,
+                  status: null));
               dialogSetter(() {});
               //refresh = true;
             });
@@ -265,12 +362,13 @@ class _CheckListScreen extends State<CheckListScreen> {
 
     return showDialog<bool>(
         context: context,
-        barrierDismissible: true,
+        barrierDismissible: false,
         barrierColor: Color(0x88E6E6E6),
         builder: (BuildContext context) {
           return StatefulBuilder(builder: (context, StateSetter setState) {
             dialogSetter = setState;
             return Stack(alignment: Alignment.center,
+            key: Key('checkListItem'),
                 // key: Key(
                 //     'checkList${_currentCheckList.items != null ? _currentCheckList.items.length : '0'}'),
                 children: [
@@ -285,26 +383,27 @@ class _CheckListScreen extends State<CheckListScreen> {
                   ),
                   Container(
                       width: widthCheckList,
-                      margin:
-                          EdgeInsets.symmetric(horizontal: 13, vertical: 13),
                       padding: EdgeInsets.symmetric(
-                          horizontal: 20.0, vertical: 20.0),
+                          horizontal: 30.0, vertical: 20.0),
                       child: Scaffold(
                           backgroundColor: Colors.transparent,
                           body: Form(
-                              key: formKey,
+                              key: formCheckListKey,
                               child: Container(
                                   child: Column(children: [
-                                FormTitle(
-                                    '${_currentCheckList.id == null ? 'Добавление' : 'Редактирование'} чек-листа'),
+                                ListTile(
+                                    trailing: menu,
+                                    contentPadding: EdgeInsets.all(0),
+                                    title: Center(
+                                        child:
+                                            FormTitle(_currentCheckList.name)),
+                                    onTap: () {}),
                                 //   Container(child: refresh ? Text('') : Text('')),
-                               
+
                                 Expanded(
                                     child: ListView(
                                         key: Key(_currentCheckList.items.length
                                             .toString()),
-                                        padding: EdgeInsets.symmetric(
-                                            vertical: 16, horizontal: 50),
                                         children: [
                                       Column(children: [
                                         generateItemTable(context, itemHeader,
@@ -336,6 +435,126 @@ class _CheckListScreen extends State<CheckListScreen> {
                 ]);
           });
         });
+  }
+
+  Future<bool> showFaultDialog(StateSetter setState) {
+    StateSetter dialogSetter;
+    final menu = PopupMenuButton(
+      itemBuilder: (_) => getMenuItem(context),
+      padding: EdgeInsets.all(0.0),
+      onSelected: (value) {
+        switch (value) {
+          case 'add':
+            setState(() {
+              if (_currentCheckListItem.faultItems == null)
+                _currentCheckListItem.faultItems = [];
+              _currentCheckListItem.faultItems.add(Fault(
+                  id: null, odooId: null, parentId: _currentCheckListItem.id));
+              dialogSetter(() {});
+              //refresh = true;
+            });
+            break;
+        }
+      },
+      icon: Icon(
+        Icons.more_vert,
+        color: Theme.of(context).primaryColorDark,
+        size: 30,
+      ),
+      color: Theme.of(context).primaryColor,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12.0))),
+    );
+
+    return showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        barrierColor: Color(0x88E6E6E6),
+        builder: (BuildContext context) {
+          return StatefulBuilder(builder: (context, StateSetter setState) {
+            dialogSetter = setState;
+            return Stack(alignment: Alignment.center,
+                 key: Key('FaultList'),
+
+                //     'checkList${_currentCheckList.items != null ? _currentCheckList.items.length : '0'}'),
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      "assets/images/app.jpg",
+                      fit: BoxFit.fill,
+                      height: heightCheckList,
+                      width: widthCheckList,
+                    ),
+                  ),
+                  Container(
+                      width: widthCheckList,
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 30.0, vertical: 20.0),
+                      child: Scaffold(
+                          backgroundColor: Colors.transparent,
+                          body: Form(
+                              key: formFaultKey,
+                              child: Container(
+                                  child: Column(children: [
+                                ListTile(
+                                    trailing: menu,
+                                    contentPadding: EdgeInsets.all(0),
+                                    title: Center(
+                                        child: FormTitle(
+                                            'Перечень нарушений к ${_currentCheckListItem.name} ${_currentCheckListItem.question}')),
+                                    onTap: () {}),
+                                //   Container(child: refresh ? Text('') : Text('')),
+
+                                Expanded(
+                                    child: ListView(
+                                        key: Key(_currentCheckList.items.length
+                                            .toString()),
+                                        children: [
+                                      Column(children: [
+                                        generateFualtTable(
+                                            context,
+                                            /*itemHeader,*/
+                                            _currentCheckListItem.faultItems,
+                                            dialogSetter: dialogSetter
+                                            // setState: setState
+                                            )
+                                      ])
+                                    ])),
+                                Container(
+                                    child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                      MyButton(
+                                          text: 'принять',
+                                          parentContext: context,
+                                          onPress: () {
+                                            submitFaultList();
+                                          }),
+                                      MyButton(
+                                          text: 'отменить',
+                                          parentContext: context,
+                                          onPress: () {
+                                            cancelCheckList();
+                                          }),
+                                    ])),
+                              ])))))
+                ]);
+          });
+        });
+  }
+
+  Widget generateFualtTable(
+      BuildContext context,
+      /*List<Map<String, dynamic>> headers,*/ List<Fault> rows,
+      {/*StateSetter setState,*/ StateSetter dialogSetter}) {
+    return Text('Тут будет список нарушений');
+  }
+
+  Future<void> submitFaultList() async {
+    Navigator.pop<bool>(context, true);
+    Scaffold.of(context).showSnackBar(successSnackBar);
   }
 
   Future<void> submitCheckList() async {
@@ -416,6 +635,7 @@ class _CheckListScreen extends State<CheckListScreen> {
                           headers[index]["text"],
                           textAlign: TextAlign.center,
                           style: TextStyle(
+                              fontSize: headers[index]["fontSize"] ?? 16.0,
                               color: Theme.of(context).primaryColorLight),
                         )),
                   ],
@@ -424,31 +644,52 @@ class _CheckListScreen extends State<CheckListScreen> {
     int rowIndex = 0;
 
     rows.forEach((row) {
-      TableRow tableRow = TableRow(
-          decoration: BoxDecoration(
-              color: (rowIndex % 2 == 0
-                  ? Colors.white
-                  : Theme.of(context).shadowColor)),
-          children: [
-            getRowCellItem(row.name, row.itemId, 0,
-                isItem: true,
-                dialogSetter: dialogSetter,
-                rowIndex: rowIndex, onSaved: (value) {
-              row.name = value;
-              //  _currentCheckList.items[rowIndex].name = value;
-              setState(() {});
-              dialogSetter(() {});
-            }),
-            getRowCellItem(row.question, row.itemId, 0,
-                isItem: true,
-                rowIndex: rowIndex,
-                dialogSetter: dialogSetter, onSaved: (value) {
-              row.question = value;
-              //  _currentCheckList.items[rowIndex].name = value;
-              setState(() {});
-              dialogSetter(() {});
-            }),
-          ]);
+      Color color = getColorByStatus(row.status);
+      bool hasFault =
+          row.faultItems != null ? row.faultItems.length > 0 : false;
+      if (hasFault) row.status = STATUS.fault;
+      TableRow tableRow =
+          TableRow(decoration: BoxDecoration(color: color), children: [
+        getRowCellItem(row.name, row.id, 0,
+            isItem: true,
+            color: color,
+            dialogSetter: dialogSetter,
+            rowIndex: rowIndex, onSaved: (value) {
+          row.name = value;
+          //  _currentCheckList.items[rowIndex].name = value;
+          setState(() {});
+          dialogSetter(() {});
+        }),
+        getRowCellItem(row.question, row.id, 0,
+            isItem: true,
+            color: color,
+            dialogSetter: dialogSetter, onSaved: (value) {
+          row.question = value;
+          //  _currentCheckList.items[rowIndex].name = value;
+          setState(() {});
+          dialogSetter(() {});
+        }),
+        getCheckCellItem(
+            row.status, row.faultItems != null ? row.faultItems.length : 0,
+            (value) {
+          row.status = value == true
+              ? STATUS.success
+              : STATUS.fault; //value == false ? STATUS.fault : STATUS.template;
+          setState(() {});
+          dialogSetter(() {});
+        }),
+        getFaultCellItem(
+            row.status, row.faultItems != null ? row.faultItems.length : 0,
+            () async {
+          setState(() {
+            _currentCheckListItem = row;
+          });
+          bool result = await showFaultDialog(setState);
+          if (result != null && result) {
+            setState(() {});
+          }
+        })
+      ]);
       tableRows.add(tableRow);
       rowIndex++;
     });
@@ -464,11 +705,7 @@ class _CheckListScreen extends State<CheckListScreen> {
     int rowIndex = 0;
     rows.forEach((row) {
       rowIndex++;
-      Color color = Theme.of(context).shadowColor;
-      if (row.status == STATUS.success.index)
-        color = Colors.green.shade200;
-      else if (row.status == STATUS.fault.index) color = Colors.red.shade200;
-
+      Color color = getColorByStatus(row.status);
       TableRow tableRow =
           TableRow(decoration: BoxDecoration(color: color), children: [
         getRowCell(row.name, row.id, 0),
@@ -476,12 +713,17 @@ class _CheckListScreen extends State<CheckListScreen> {
       tableRows.add(tableRow);
     });
 
-    return Table(border: TableBorder.all(), children: tableRows);
+    return Table(
+      border: TableBorder.all(),
+      children: tableRows,
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+    );
   }
 
   Widget getRowCellItem(String text, int checkListId, int index,
       {TextAlign textAlign = TextAlign.left,
       bool isItem: false,
+      Color color,
       Function(String) onSaved,
       int rowIndex,
       StateSetter dialogSetter}) {
@@ -494,15 +736,54 @@ class _CheckListScreen extends State<CheckListScreen> {
       margin: 0,
       maxLines: null,
       height: null,
-      backgroundColor: (rowIndex != null && rowIndex % 2 == 1)
-          ? Theme.of(context).shadowColor
-          : Colors.white,
+      backgroundColor: color ??
+          ((rowIndex != null && rowIndex % 2 == 1)
+              ? Theme.of(context).shadowColor
+              : Colors.white),
       onTapDown: _storePosition,
       onLongPress: () {
         _showCustomMenu(checkListId, index,
             isItem: isItem, rowIndex: rowIndex, dialogSetter: dialogSetter);
       },
     ));
+  }
+
+  Widget getCheckCellItem(
+      STATUS status, int faultCount, Function(bool) onChanged) {
+    return Container(
+        // child: SizedBox(
+        //height: 24,
+        // width: 24,
+        child: Checkbox(
+      tristate: true,
+      value: status == STATUS.success
+          ? true
+          : (status == STATUS.fault ? false : null),
+      onChanged: (_value) {
+        bool value = _value;
+        if (faultCount > 0) _value = false;
+        return onChanged(_value);
+      },
+      checkColor: Theme.of(context).primaryColor,
+      //)
+    ));
+  }
+
+  Widget getFaultCellItem(STATUS status, int faultCount, Function() onTap) {
+    if (status == STATUS.success && faultCount == 0)
+      return Container(
+          padding: EdgeInsets.symmetric(vertical: 10),
+          child: Center(child: Text('нет')));
+    return GestureDetector(
+        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Text(faultCount != null ? faultCount.toString() : '0'),
+          Icon(
+            Icons.more_vert,
+            color: Theme.of(context).primaryColorDark,
+            size: 30,
+          ),
+        ]),
+        onTap: onTap);
   }
 
   Widget getRowCell(String text, int checkListId, int index,
@@ -577,7 +858,7 @@ class _CheckListScreen extends State<CheckListScreen> {
                           children: [
                             Expanded(
                                 child: Center(
-                                    child: FormTitle("Список чек-листов:")),
+                                    child: FormTitle("Перечень чек-листов:")),
                                 flex: 2),
                             Expanded(
                                 child: MyDropdown(

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:ek_asu_opb_mobile/src/odooClient.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
+import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
@@ -224,6 +225,26 @@ Future<void> setLastUpdate(modelName) async {
   else {
     lastUpdate = json.decode(sLastUpdate);
     lastUpdate[modelName] = DateTime.now().toString();
+  }
+
+  await _storage.write(key: 'lastDateUpdate', value: json.encode(lastUpdate));
+}
+
+Future<List<String>> getLastSyncDateDomain(modelName) async {
+  String sLastUpdate = await _storage.read(key: 'lastDateUpdate');
+  if (sLastUpdate == null) return [];
+  String lastUpdate = json.decode(sLastUpdate);
+  return ['write_date', '>', lastUpdate[modelName] ?? '1970-01-01'];
+}
+
+Future<void> setLastSyncDateForDomain(modelName) async {
+  String sLastUpdate = await _storage.read(key: 'lastDateUpdate');
+  Map<String, dynamic> lastUpdate;
+  if (sLastUpdate == null)
+    lastUpdate = {modelName: dateTimeToString(DateTime.now())};
+  else {
+    lastUpdate = json.decode(sLastUpdate);
+    lastUpdate[modelName] = dateTimeToString(DateTime.now());
   }
 
   await _storage.write(key: 'lastDateUpdate', value: json.encode(lastUpdate));

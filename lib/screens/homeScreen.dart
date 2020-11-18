@@ -31,6 +31,12 @@ class _HomeScreen extends State<HomeScreen> {
 //SpinKitFadingCircle(color: Color(0xFFADB439));
 
   List<dynamic> logRows = []; // = ['test', 'test2'];
+  void hideLoading() {
+    setState(() {
+      showLoading = false;
+      hideDialog(context);
+    });
+  }
 
   @override
   void initState() {
@@ -51,21 +57,21 @@ class _HomeScreen extends State<HomeScreen> {
                 if (isConnect) {
                   auth.checkSession(context).then((isSessionExist) {
                     if (isSessionExist) {
-                      try {
-                        exchange.getDictionaries(all: true).then((result) {});
-                      } catch (e) {} //getDictionary
+                      exchange.getDictionaries(all: true).then((result) {
+                        hideLoading();
+                      }).catchError((err) {
+                        hideLoading();
+                      });
+                      //getDictionary
                     } //isSessionExist = true
                   }); //checkSession
 
                 } //isConnect == true
               });
             }
-          } catch (e) {} finally {
-            setState(() {
-              showLoading = false;
-              hideDialog(context);
-            });
-          }
+          } catch (e) {
+            hideLoading();
+          } finally {}
 
           //checkConnection
         });

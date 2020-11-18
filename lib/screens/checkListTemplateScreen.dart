@@ -90,13 +90,13 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
         active: true,
         items: [
           CheckListItem(
-              itemId: 1,
+              id: 1,
               odooId: 1,
               parentId: 1,
               name: 'пункт 1',
               question: 'вопрос 1\nдлинный вопрос\nочень длинный'),
           CheckListItem(
-              itemId: 2,
+              id: 2,
               odooId: 2,
               parentId: 1,
               name: 'пункт 2',
@@ -180,7 +180,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
       _currentCheckList.items = [];
       checkList.items.forEach((item) {
         CheckListItem itemCopy = CheckListItem(
-            itemId: item.itemId,
+            id: item.id,
             odooId: item.odooId,
             parentId: item.parentId,
             name: item.name,
@@ -244,7 +244,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
           case 'add':
             setState(() {
               _currentCheckList.items.add(CheckListItem(
-                  itemId: null, odooId: null, parentId: _currentCheckList.id));
+                  id: null, odooId: null, parentId: _currentCheckList.id));
               dialogSetter(() {});
               //refresh = true;
             });
@@ -510,7 +510,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
                   ? Colors.white
                   : Theme.of(context).shadowColor)),
           children: [
-            getRowCellItem(row.name, row.itemId, 0,
+            getRowCellItem(row.name, row.id, 0,
                 isItem: true,
                 dialogSetter: dialogSetter,
                 rowIndex: rowIndex, onSaved: (value) {
@@ -519,7 +519,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
               setState(() {});
               dialogSetter(() {});
             }),
-            getRowCellItem(row.question, row.itemId, 0,
+            getRowCellItem(row.question, row.id, 0,
                 isItem: true,
                 rowIndex: rowIndex,
                 dialogSetter: dialogSetter, onSaved: (value) {

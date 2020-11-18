@@ -27,6 +27,13 @@ class ComGroupController extends Controllers {
     return ComGroup.fromJson(json);
   }
 
+  static Future<ComGroup> selectByOdooId(int odooId) async {
+    if (odooId == null) return null;
+    var json = await DBProvider.db
+        .select(_tableName, where: "odoo_id = ?", whereArgs: [odooId]);
+    return ComGroup.fromJson(json.single);
+  }
+
   static Future<List<ComGroup>> selectByIds(List<int> ids) async {
     if (ids == null || ids.length == 0) return [];
     var json = await DBProvider.db.select(
@@ -45,32 +52,93 @@ class ComGroupController extends Controllers {
     return queryRes[0]['odoo_id'];
   }
 
-  static loadFromOdoo([limit]) async {
-    List<dynamic> json = await getDataWithAttemp(
-        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-      [],
-      [
-        'parent_id',
+  static firstLoadFromOdoo([bool loadRelated = false, int limit]) async {
+    List<String> fields;
+    if (loadRelated)
+      fields = ['parent_id', 'com_user_ids'];
+    else
+      fields = [
         'head_id',
         'group_num',
         'is_main',
-      ]
-    ], {
-      'limit': limit
-    });
-    DBProvider.db.deleteAll(_tableName);
-    json.map((e) {
-      return PlanController.selectById(e['parent_id']).then((Plan plan) {
-        var res = {
+      ];
+    List<dynamic> json = await getDataWithAttemp(
+        SynController.localRemoteTableNameMap[_tableName],
+        'search_read',
+        [[], fields],
+        {'limit': limit});
+    if (!loadRelated) DBProvider.db.deleteAll(_tableName);
+    return Future.forEach(json, (e) async {
+      if (loadRelated) {
+        CheckPlan checkPlan =
+            await CheckPlanController.selectByOdooId(e['parent_id']);
+        assert(checkPlan != null,
+            "Model plan_item_check has to be loaded before $_tableName");
+        ComGroup comGroup = await selectByOdooId(e['id']);
+        Map<String, dynamic> res = {
+          'id': comGroup.id,
+          'parent_id': checkPlan.id,
+        };
+        await DBProvider.db.update(_tableName, res);
+        return RelComGroupUserController.updateComGroupUsers(
+            comGroup.id, e['com_user_ids'].map((userId) => userId as int));
+      } else {
+        Map<String, dynamic> res = {
           ...e,
           'id': null,
           'odoo_id': e['id'],
-          'parent_id': plan.id,
           'active': 'true',
+          'is_main': e['is_main'] ? 'true' : 'false',
         };
-        return res;
-      });
-    }).forEach((e) async => insert(ComGroup.fromJson(await e), [], true));
+        return insert(ComGroup.fromJson(res), [], true);
+      }
+    });
+  }
+
+  static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
+    List<String> fields;
+    if (loadRelated)
+      fields = ['parent_id', 'com_user_ids'];
+    else
+      fields = [
+        'head_id',
+        'group_num',
+        'is_main',
+      ];
+    List<String> domain = await getLastSyncDateDomain(_tableName);
+    List<dynamic> json = await getDataWithAttemp(
+        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
+      [domain],
+      fields
+    ], {
+      'limit': limit
+    });
+    return Future.forEach(json, (e) async {
+      ComGroup comGroup = await selectByOdooId(e['id']);
+      if (loadRelated) {
+        CheckPlan checkPlan =
+            await CheckPlanController.selectByOdooId(e['parent_id']);
+        assert(checkPlan != null,
+            "Model plan_item_check has to be loaded before $_tableName");
+        Map<String, dynamic> res = {
+          'id': comGroup.id,
+          'parent_id': checkPlan.id,
+        };
+        await DBProvider.db.update(_tableName, res);
+        return RelComGroupUserController.updateComGroupUsers(
+            comGroup.id, e['com_user_ids'].map((userId) => userId as int));
+      } else {
+        Map<String, dynamic> res = {
+          ...e,
+          'id': comGroup.id,
+        };
+        return DBProvider.db.update(_tableName, res);
+      }
+    });
+  }
+
+  static startSync() {
+    setLastSyncDateForDomain(_tableName);
   }
 
   /// Select all records with matching parentId

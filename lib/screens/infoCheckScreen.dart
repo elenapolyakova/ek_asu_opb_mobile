@@ -85,6 +85,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
     saveError = '';
     Department departmentCopy = Department(
       id: _department.id,
+      railway_id: _department.railway_id,
       name: _department.name,
       inn: _department.inn,
       ogrn: _department.ogrn,
@@ -320,7 +321,6 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
       form.save();
       bool hasErorr = false;
       Map<String, dynamic> result;
-      departmentCopy;
       try {
         print("dep copy");
         print(departmentCopy);
@@ -329,7 +329,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
         print("submitPlan() happened!");
         print(result);
 
-        hasErorr = false; //result["code"] < 0; TODO вернуть
+        hasErorr = result["code"] < 0; //TODO вернуть
 
         if (hasErorr) {
           Navigator.pop<bool>(context, false);

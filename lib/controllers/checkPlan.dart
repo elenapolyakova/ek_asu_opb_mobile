@@ -1,5 +1,7 @@
+import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import 'package:ek_asu_opb_mobile/models/checkPlan.dart';
+import 'package:ek_asu_opb_mobile/models/comGroup.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
 import "package:ek_asu_opb_mobile/controllers/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
@@ -26,6 +28,13 @@ class CheckPlanController extends Controllers {
     return CheckPlan.fromJson(json);
   }
 
+  static Future<CheckPlan> selectByOdooId(int odooId) async {
+    if (odooId == null) return null;
+    var json = await DBProvider.db
+        .select(_tableName, where: "odoo_id = ?", whereArgs: [odooId]);
+    return CheckPlan.fromJson(json.single);
+  }
+
   static Future<int> selectOdooId(int id) async {
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(_tableName,
         columns: ['odoo_id'], where: "id = ?", whereArgs: [id]);
@@ -34,12 +43,12 @@ class CheckPlanController extends Controllers {
     return queryRes[0]['odoo_id'];
   }
 
-  static loadFromOdoo([limit]) async {
-    List<dynamic> json = await getDataWithAttemp(
-        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-      [],
-      [
-        'parent_id',
+  static firstLoadFromOdoo([bool loadRelated = false, int limit]) async {
+    List<String> fields;
+    if (loadRelated)
+      fields = ['parent_id', 'main_com_group_id'];
+    else
+      fields = [
         'name',
         'rw_id',
         'date_from',
@@ -51,20 +60,99 @@ class CheckPlanController extends Controllers {
         'app_name',
         'app_post',
         'num_set',
-        'main_com_group_id',
-      ]
-    ], {
-      'limit': limit
+      ];
+    List<dynamic> json = await getDataWithAttemp(
+        SynController.localRemoteTableNameMap[_tableName],
+        'search_read',
+        [[], fields],
+        {'limit': limit});
+    if (!loadRelated) DBProvider.db.deleteAll(_tableName);
+    return Future.forEach(json, (e) async {
+      if (loadRelated) {
+        PlanItem planItem =
+            await PlanItemController.selectByOdooId(e['parent_id']);
+        assert(planItem != null,
+            "Model plan_item has to be loaded before $_tableName");
+        ComGroup comGroup =
+            await ComGroupController.selectByOdooId(e['main_com_group_id']);
+        assert(comGroup != null,
+            "Model com_group has to be loaded before $_tableName");
+        CheckPlan checkPlan = await selectByOdooId(e['id']);
+        Map<String, dynamic> res = {
+          'id': checkPlan,
+          'parent_id': planItem.id,
+          'main_com_group_id': comGroup.id,
+        };
+        return DBProvider.db.update(_tableName, res);
+      } else {
+        Map<String, dynamic> res = {
+          ...e,
+          'id': null,
+          'odoo_id': e['id'],
+          'active': 'true',
+        };
+        return insert(CheckPlan.fromJson(res), true);
+      }
     });
-    DBProvider.db.deleteAll(_tableName);
-    json
-        .map((e) => {
-              ...e,
-              'id': null,
-              'odoo_id': e['id'],
-              'active': true,
-            })
-        .forEach((e) => insert(CheckPlan.fromJson(e), true));
+  }
+
+  static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
+    List<String> fields;
+    if (loadRelated)
+      fields = ['parent_id', 'main_com_group_id'];
+    else
+      fields = [
+        'name',
+        'rw_id',
+        'date_from',
+        'date_to',
+        'date_set',
+        'state',
+        'signer_name',
+        'signer_post',
+        'app_name',
+        'app_post',
+        'num_set',
+      ];
+    List<String> domain = await getLastSyncDateDomain(_tableName);
+    List<dynamic> json = await getDataWithAttemp(
+      SynController.localRemoteTableNameMap[_tableName],
+      'search_read',
+      [
+        [domain],
+        fields
+      ],
+      {'limit': limit},
+    );
+    return Future.forEach(json, (e) async {
+      CheckPlan checkPlan = await selectByOdooId(e['id']);
+      if (loadRelated) {
+        PlanItem planItem =
+            await PlanItemController.selectByOdooId(e['parent_id']);
+        assert(planItem != null,
+            "Model plan_item has to be loaded before $_tableName");
+        ComGroup comGroup =
+            await ComGroupController.selectByOdooId(e['main_com_group_id']);
+        assert(comGroup != null,
+            "Model com_group has to be loaded before $_tableName");
+        Map<String, dynamic> res = {
+          'id': checkPlan.id,
+          'parent_id': planItem.id,
+          'main_com_group_id': comGroup.id,
+        };
+        return DBProvider.db.update(_tableName, res);
+      } else {
+        Map<String, dynamic> res = {
+          ...e,
+          'id': checkPlan.id,
+        };
+        return DBProvider.db.update(_tableName, res);
+      }
+    });
+  }
+
+  static startSync() {
+    setLastSyncDateForDomain(_tableName);
   }
 
   /// Select a list of CheckPlan with provided parentId
