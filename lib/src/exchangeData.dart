@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:ek_asu_opb_mobile/src/odooClient.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
@@ -22,6 +24,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
     {List<String> dicts, bool all: true, bool isLastUpdate: true}) async {
   List<Map<String, dynamic>> result = new List<Map<String, dynamic>>();
   dynamic data;
+  dynamic promAreaData;
   List<dynamic> listDepIds;
 
   if (all)
@@ -51,10 +54,41 @@ Future<List<Map<String, dynamic>>> getDictionaries(
         case 'department':
           List<dynamic> domain = new List<dynamic>();
           if (lastUpdate != null) domain.add(lastUpdate);
+          // promAreaData =
+          //     await getDataWithAttemp('eco.prom_area', 'search_read', null, {
+          //   'domain': [
+          //     ['is_main', '=', true]
+          //   ],
+          //   'fields': [
+          //     'id',
+          //     'department_id',
+          //     'fact_sector_id',
+          //   ]
+          // });
+
           data =
               await getDataWithAttemp('eco.department', 'search_read', null, {
             'domain': domain,
-            'fields': ['id', 'name', 'short_name', 'rel_railway_id', 'active']
+            'fields': [
+              'id',
+              'name',
+              'short_name',
+              'rel_railway_id',
+              'active',
+              'inn',
+              'ogrn',
+              'okpo',
+              'addr',
+              'director_fio',
+              'director_email',
+              'director_phone',
+              'deputy_fio',
+              'deputy_email',
+              'deputy_phone',
+              'rel_sector_id',
+              'f_coord_n',
+              'f_coord_e'
+            ]
           });
 
           break;
