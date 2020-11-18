@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:ek_asu_opb_mobile/src/odooClient.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
@@ -21,6 +23,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
     {List<String> dicts, bool all: true, bool isLastUpdate: true}) async {
   List<Map<String, dynamic>> result = new List<Map<String, dynamic>>();
   dynamic data;
+  dynamic promAreaData;
   List<dynamic> listDepIds;
 
   if (all)
@@ -50,6 +53,18 @@ Future<List<Map<String, dynamic>>> getDictionaries(
         case 'department':
           List<dynamic> domain = new List<dynamic>();
           if (lastUpdate != null) domain.add(lastUpdate);
+          promAreaData =
+              await getDataWithAttemp('eco.prom_area', 'search_read', null, {
+            'domain': [
+              ['is_main', '=', true]
+            ],
+            'fields': [
+              'id',
+              'department_id',
+              'fact_sector_id',
+            ]
+          });
+
           data =
               await getDataWithAttemp('eco.department', 'search_read', null, {
             'domain': domain,
@@ -71,7 +86,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               'deputy_phone',
             ]
           });
-          print("Get data with attempt $data");
+
           break;
         case 'user':
           List<dynamic> domain = new List<dynamic>();
@@ -120,6 +135,28 @@ Future<List<Map<String, dynamic>>> getDictionaries(
                   dataList[j] as Map<String, dynamic>);
               break;
             case 'department':
+              for (var elem in promAreaData) {
+                if (dataList[j].containsKey("id")) {
+                  if (elem["department_id"][0] == dataList[j]["id"]) {
+                    if (elem["fact_sector_id"] is List) {
+                      if (elem["fact_sector_id"].length > 0) {
+                        dataList[j]["fact_sector_id"] =
+                            elem["fact_sector_id"][0];
+                        dataList[j]["fact_sector_name"] =
+                            elem["fact_sector_id"][1];
+                      }
+                    } else {
+                      dataList[j]["fact_sector_id"] = null;
+                      dataList[j]["fact_sector_name"] = "";
+                    }
+                  } else {
+                    dataList[j]["fact_sector_id"] = null;
+                    dataList[j]["fact_sector_name"] = "";
+                  }
+                }
+              }
+              print("Data list to db");
+              print(dataList[j]);
               await DepartmentController.insert(
                   dataList[j] as Map<String, dynamic>);
               break;
