@@ -259,10 +259,16 @@ class MyButton extends StatelessWidget {
   Function onPress;
   double width;
   double height;
+  bool disabled;
   final _sizeTextWhite = const TextStyle(fontSize: 20.0, color: Colors.white);
 
   MyButton(
-      {this.text, this.parentContext, this.onPress, this.width, this.height});
+      {this.text,
+      this.parentContext,
+      this.onPress,
+      this.width,
+      this.height,
+      this.disabled = false});
   @override
   Widget build(BuildContext) {
     return Container(
@@ -273,10 +279,12 @@ class MyButton extends StatelessWidget {
         margin: new EdgeInsets.all(5.0),
         decoration: new BoxDecoration(
           borderRadius: BorderRadius.all(Radius.circular(10)),
-          color: Theme.of(parentContext).buttonColor,
+          color: !disabled ? Theme.of(parentContext).buttonColor : Theme.of(parentContext).buttonColor.withOpacity(.5),
         ),
         child: new MaterialButton(
-          onPressed: onPress,
+          onPressed: () {
+            if (!disabled) return onPress();
+          },
           child: new Text(
             text,
             style: _sizeTextWhite,
