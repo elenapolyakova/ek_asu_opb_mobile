@@ -1,7 +1,10 @@
 import 'dart:math';
 
+import 'package:ek_asu_opb_mobile/controllers/checkList.dart';
 import 'package:ek_asu_opb_mobile/controllers/checkListTemplate.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
+import 'package:ek_asu_opb_mobile/models/checkList.dart';
+import 'package:ek_asu_opb_mobile/screens/screens.dart';
 import 'package:ek_asu_opb_mobile/src/odooClient.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
@@ -14,7 +17,7 @@ final limitRecord = config.getItem('limitRecord') ?? 80;
 final cbtRole = config.getItem('cbtRole') ?? 'cbt';
 final ncopRole = config.getItem('ncopRole') ?? 'ncop';
 final _storage = FlutterSecureStorage();
-final List<String> _dict = ['railway', 'department', 'user', 'cListTemplate'];
+final List<String> _dict = ['railway', 'department', 'user', 'check_list'];
 
 //загрузка справочников
 //Возвращает List[
@@ -117,7 +120,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
           });
 
           break;
-        case 'cListTemplate':
+        case 'check_list':
           data =
               await getDataWithAttemp('mob.check.list', 'search_read', null, {
             'domain': [
@@ -126,6 +129,8 @@ Future<List<Map<String, dynamic>>> getDictionaries(
             ],
             'fields': [
               'id',
+              'parent_id',
+              'is_active',
               'name',
               'type',
               'active',
@@ -141,21 +146,20 @@ Future<List<Map<String, dynamic>>> getDictionaries(
                 'domain': [
                   ['id', 'in', element["child_ids"]]
                 ],
-                'fields': ['id', 'question']
+                'fields': [
+                  'id',
+                  'parent_id',
+                  'name',
+                  'question',
+                  'result',
+                  'description',
+                  'active'
+                ]
               });
 
-              if (assignedQuestions.length > 0) {
-                for (var question in assignedQuestions) {
-                  if (element.containsKey("questions")) {
-                    element["questions"]
-                        .add({question["id"]: question["question"]});
-                  } else {
-                    element["questions"] = [
-                      {question["id"]: question["question"]}
-                    ];
-                  }
-                }
-              }
+              element["q_data"] = assignedQuestions;
+              element["odooId"] = element["id"];
+              print("Element $element");
             }
           }
           break;
@@ -175,8 +179,8 @@ Future<List<Map<String, dynamic>>> getDictionaries(
             case 'user':
               await UserController.insert(dataList[j] as Map<String, dynamic>);
               break;
-            case 'cListTemplate':
-              await CListTemplateController.insert(
+            case 'check_list':
+              await CheckListController.insert(
                   dataList[j] as Map<String, dynamic>);
               break;
           } //switch
