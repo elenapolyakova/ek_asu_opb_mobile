@@ -340,7 +340,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     Widget cell = Container(
       padding: EdgeInsets.all(10.0),
       child: Text(
-        text,
+        text ?? "",
         textAlign: textAlign,
       ),
     );

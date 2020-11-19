@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
-import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import 'package:ek_asu_opb_mobile/models/checkListItem.dart';
 
-enum STATUS { template, success, fault }
+/*enum STATUS { template, success, fault }
 List<Map<String, dynamic>> statusSelection = [
   {
     'id': 1,
@@ -40,32 +40,7 @@ getColorByStatus(STATUS status) {
   if (statusItem != null) return statusItem["color"];
   return Colors.grey.shade200;
 }
-
-class CheckListItem {
-  int id;
-  int odooId;
-  int parentId; //checkLIst.id
-  String name; //Наименование
-  String question; //Вопрос
-  String result; //Результат
-  String description; //Комментарий
-  //????
-  //STATUS status; //добавить в одоо
-  //List<Fault> faultItems;
-  int base_id; //базовая запись ?? зачем
-  bool active;
-  CheckListItem(
-      {this.id,
-      this.odooId,
-      this.parentId,
-      this.name,
-      this.question,
-      this.result,
-      this.description,
-      // this.status,
-      this.base_id,
-      this.active});
-}
+*/
 
 class CheckListItemScreen extends StatefulWidget {
   int checkListId;
@@ -87,7 +62,7 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
   String checkListName;
   var _tapPosition;
   double heightCheckList = 700;
-  double widthCheckList = 1200;
+  double widthCheckList = 700;
   final formCheckListItemKey = new GlobalKey<FormState>();
   List<CheckListItem> _items;
   CheckListItem _currentCheckLIstItem;
@@ -152,12 +127,12 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
     CheckListItem itemCopy = CheckListItem(
         id: checkListItem.id,
         odooId: checkListItem.odooId,
-        parentId: checkListItem.parentId,
+        parent_id: checkListItem.parent_id,
         name: checkListItem.name,
         question: checkListItem.question,
         result: checkListItem.result,
         description: checkListItem.description,
-        base_id: checkListItem.base_id,
+        // base_id: checkListItem.base_id,
         active: checkListItem.active);
 
     bool result = await showCheckListItemDialog(itemCopy, setState);
@@ -241,32 +216,32 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
       CheckListItem(
           id: 1,
           odooId: 1,
-          parentId: checkListId,
+          parent_id: checkListId,
           name: 'Пункт 1',
           question: 'Вопрос 1',
           result: 'Результат 1',
           description: 'Комментарий',
-          base_id: 1,
+          //base_id: 1,
           active: true),
       CheckListItem(
           id: 2,
           odooId: 2,
-          parentId: checkListId,
+          parent_id: checkListId,
           name: 'Пункт 2',
           question: 'Вопрос 2',
           result: 'Результат 2',
           description: 'Комментарий',
-          base_id: 2,
+          // base_id: 2,
           active: true),
       CheckListItem(
           id: 3,
           odooId: 3,
-          parentId: checkListId,
+          parent_id: checkListId,
           name: 'Пункт 3',
           question: 'Вопрос 3',
           result: 'Результат 3',
           description: 'Комментарий',
-          base_id: 3,
+          //   base_id: 3,
           active: true),
     ];
 
@@ -297,18 +272,57 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
                   Container(
                       width: widthCheckList,
                       padding: EdgeInsets.symmetric(
-                          horizontal: 30.0, vertical: 20.0),
+                          horizontal: 30.0, vertical: 40.0),
                       child: Scaffold(
                           backgroundColor: Colors.transparent,
                           body: Form(
                               key: formCheckListItemKey,
                               child: Container(
                                   child: Column(children: [
-                                //   Container(child: refresh ? Text('') : Text('')),
-
+                                FormTitle(
+                                    '${checkListItem.id == null ? 'Добавление' : 'Редактирование'} вопроса'),
                                 Expanded(
-                                    child:
-                                        Text('Здесь будет форма по вопросу')),
+                                    child: ListView(
+                                  shrinkWrap: true,
+                                  children: [
+                                    Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        EditTextField(
+                                          text: 'Вопрос',
+                                          value: checkListItem.question,
+                                          onSaved: (value) =>
+                                              {checkListItem.question = value},
+                                          context: context,
+                                          height: 100,
+                                          maxLines: 3,
+                                        ),
+                                        EditTextField(
+                                          text: 'Результат',
+                                          value: checkListItem.result,
+                                          onSaved: (value) =>
+                                              {checkListItem.result = value},
+                                          context: context,
+                                          height: 100,
+                                          maxLines: 3,
+                                        ),
+                                        EditTextField(
+                                          text: 'Комментарий',
+                                          value: checkListItem.description,
+                                          onSaved: (value) => {
+                                            checkListItem.description = value
+                                          },
+                                          context: context,
+                                          height: 100,
+                                          maxLines: 3,
+                                        ),
+                                      ],
+                                    )
+                                  ],
+                                )),
                                 Container(
                                     child: Row(
                                         mainAxisAlignment:
@@ -431,7 +445,7 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
     Widget cell = Container(
       padding: EdgeInsets.all(10.0),
       child: Text(
-        text,
+        text ?? '',
         textAlign: textAlign,
       ),
     );
@@ -465,9 +479,10 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
 
   Future<void> addCheckListItemClicked(StateSetter setState) async {
     CheckListItem checkListItem =
-        new CheckListItem(id: null, parentId: checkListId, active: true);
+        new CheckListItem(id: null, parent_id: checkListId, active: true);
     bool result = await showCheckListItemDialog(checkListItem, setState);
     if (result != null && result) {
+      setState(() {});
       //todo refresh all list?
     }
   }

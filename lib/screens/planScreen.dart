@@ -267,11 +267,11 @@ class _PlanScreen extends State<PlanScreen> {
                                 context, planItemHeader, planItems)
                           ])
                       ])),
-                Container(
+               /* Container(
                       child: MyButton(
                           text: 'test',
                           parentContext: context,
-                          onPress: testClicked))
+                          onPress: testClicked))*/
                 ])));
   }
 
@@ -336,7 +336,7 @@ class _PlanScreen extends State<PlanScreen> {
     Widget cell = Container(
       padding: EdgeInsets.all(10.0),
       child: Text(
-        text,
+        text ?? "",
         textAlign: textAlign,
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
+import 'package:ek_asu_opb_mobile/models/checkList.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
@@ -41,40 +42,6 @@ getColorByStatusCheckList(STATUS_CHECK_LIST status) {
 
 enum STATUS_CHECK_LIST { template, success, fault }*/
 
-class CheckList {
-  int id;
-  int odooId;
-  int parentId; //CheckPlanItem.id; //для рабочих чек-листов
-  bool is_base; //является ли шаблоном
-  int type; //вода/воздух/отходы
-  String name; //наименование
-  bool active;
-  bool is_active;
-  int base_id; //базовая запись - CheckList.id, id шаблона для рабочего чек-листа
-  // List<CheckListItem> items; //вопросы
-  // STATUS_CHECK_LIST
-  //     status; //вычислять на основе статуса пунктов + is_base //1: 'Не рассматривался',
-  //  2: 'Пройдено без замечаний',
-  //  3: 'Есть нарушения'
-
-  CheckList(
-      {this.parentId,
-      this.id,
-      this.odooId,
-      this.is_base,
-      this.type,
-      this.name,
-      this.active,
-      this.is_active,
-      // this.items,
-      // this.status,
-      this.base_id});
-
-  ///Варианты типов чек-листов
-  static Map<int, String> typeSelection = {1: 'Воздух', 2: 'Вода', 3: 'Отходы', 4:'Почва',
-   5:'Почва', 6:'Гос.органы', 7:'Эко-менеджмент', 8:'Эко-риски'};
-}
-
 class CheckListScreen extends StatefulWidget {
   int checkPlanItemId;
   Function(Map<String, String>, dynamic arg) push;
@@ -83,21 +50,34 @@ class CheckListScreen extends StatefulWidget {
   CheckListScreen(this.checkPlanItemId, this.push, this.pop);
 
   @override
-  State<CheckListScreen> createState() => _CheckListScreen();
+  State<CheckListScreen> createState() => _CheckListScreen(checkPlanItemId);
 }
 
 class _CheckListScreen extends State<CheckListScreen> {
+  int checkPlanItemId;
   UserInfo _userInfo;
   bool showLoading = true;
   // List<Map<String, Object>> typeCheckListList;
   List<Map<String, Object>> typeCheckListListAll;
   int _selectedType = 0;
-  CheckList _currentCheckList;
-  List<CheckList> _items;
-  List<CheckList> _allItems;
+  CheckListWork _currentCheckList;
+  List<CheckListWork> _items;
+  List<CheckListWork> _allItems;
   var _tapPosition;
   double heightCheckList = 700;
   double widthCheckList = 1000;
+  _CheckListScreen(this.checkPlanItemId);
+
+   static Map<int, String> typeSelection = {
+    1: 'Воздух',
+    2: 'Вода',
+    3: 'Отходы',
+    4: 'Почва',
+    5: 'Почва',
+    6: 'Гос.органы',
+    7: 'Эко-менеджмент',
+    8: 'Эко-риски'
+  };
 
   List<Map<String, dynamic>> choices = [
     {
@@ -107,33 +87,7 @@ class _CheckListScreen extends State<CheckListScreen> {
     },
   ];
 
-  List<CheckList> items = [
-    CheckList(
-        id: 1,
-        odooId: 1,
-        is_base: true,
-        name: 'Чек-лист 1',
-        type: 1,
-        active: true,
-        is_active: true),
-    CheckList(
-        id: 2,
-        odooId: 2,
-        is_base: true,
-        name: 'Чек-лист 2',
-        type: 2,
-        active: true,
-        is_active: true),
-    CheckList(
-        id: 3,
-        odooId: 3,
-        is_base: true,
-        name: 'Чек-лист 3',
-        type: 3,
-        active: true,
-        is_active: false)
-  ];
-
+  
   @override
   void initState() {
     super.initState();
@@ -154,7 +108,8 @@ class _CheckListScreen extends State<CheckListScreen> {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
       // typeCheckListList = makeListFromJson(CheckList.typeSelection);
-      typeCheckListListAll = makeListFromJson(CheckList.typeSelection);
+     // typeCheckListListAll = makeListFromJson(CheckListWork.typeSelection); //todo вернуть
+      typeCheckListListAll = makeListFromJson(typeSelection);
       typeCheckListListAll.insert(0, {'id': 0, 'value': 'Все'});
       await loadCheckList();
     } catch (e) {} finally {
@@ -174,6 +129,38 @@ class _CheckListScreen extends State<CheckListScreen> {
   }
 
   Future<void> loadCheckList() async {
+    List<CheckListWork> items = [
+    CheckListWork(
+        id: 1,
+        odooId: 1,
+        parent_id: checkPlanItemId,
+        is_base: true,
+        name: 'Чек-лист 1',
+        type: 1,
+        active: true,
+        is_active: true),
+    CheckListWork(
+        id: 2,
+        odooId: 2,
+        parent_id: checkPlanItemId,
+        is_base: true,
+        name: 'Чек-лист 2',
+        type: 2,
+        active: true,
+        is_active: true),
+    CheckListWork(
+        id: 3,
+        odooId: 3,
+        parent_id: checkPlanItemId,
+        is_base: true,
+        name: 'Чек-лист 3',
+        type: 3,
+        active: true,
+        is_active: false)
+  ];
+
+
+
     _allItems = items ?? [];
 
     _items = _allItems
@@ -185,7 +172,7 @@ class _CheckListScreen extends State<CheckListScreen> {
     _items = _items ?? [];
   }
 
-  Future<void> submitCheckListTemplate(List<CheckList> itemsCopy) async {
+  Future<void> submitCheckListTemplate(List<CheckListWork> itemsCopy) async {
     bool hasErorr = false;
     Map<String, dynamic> result;
     try {
@@ -230,7 +217,7 @@ class _CheckListScreen extends State<CheckListScreen> {
     return result;
   }
 
-  Widget generateTableData(BuildContext context, List<CheckList> rows) {
+  Widget generateTableData(BuildContext context, List<CheckListWork> rows) {
     List<TableRow> tableRows = [];
     int rowIndex = 0;
     rows.forEach((row) {
@@ -298,7 +285,8 @@ class _CheckListScreen extends State<CheckListScreen> {
   }
 
   void editCheckList(int checkListId) {
-    CheckList checkList = _items.firstWhere((item) => item.id == checkListId, orElse: ()=> null);
+    CheckListWork checkList =
+        _items.firstWhere((item) => item.id == checkListId, orElse: () => null);
     /* Map<String, dynamic> args = {
       'checkListId': checkListId,
       'checkPlanItemId': widget.checkPlanItemId
@@ -316,18 +304,18 @@ class _CheckListScreen extends State<CheckListScreen> {
   }
 
   Future<bool> editTemplateClicked(StateSetter setState) {
-    List<CheckList> _itemsCopy = [];
+    List<CheckListWork> _itemsCopy = [];
     if (_allItems != null)
       _allItems.forEach((item) {
-        _itemsCopy.add(CheckList(
-          parentId: item.parentId,
+        _itemsCopy.add(CheckListWork(
+          parent_id: item.parent_id,
           id: item.id,
           is_active: item.is_active,
           name: item.name,
           odooId: item.odooId,
           is_base: item.is_base,
           type: item.type,
-          base_id: item.base_id,
+          //base_id: item.base_id,
           active: item.active,
         ));
       });
@@ -355,13 +343,13 @@ class _CheckListScreen extends State<CheckListScreen> {
                   Container(
                       width: widthCheckList,
                       padding: EdgeInsets.symmetric(
-                          horizontal: 30.0, vertical: 20.0),
+                          horizontal: 30.0, vertical: 40.0),
                       child: Scaffold(
                           backgroundColor: Colors.transparent,
                           body: Form(
                               child: Container(
                                   child: Column(children: [
-                            FormTitle('Список шаблонов листов проверки'),
+                            FormTitle('Шаблоны листов проверок:'),
                             Expanded(
                                 child: ListView(
                                     children: List.generate(
@@ -455,11 +443,12 @@ class _CheckListScreen extends State<CheckListScreen> {
             child: Column(children: [
               Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
                 Expanded(
-                    child: ListTile(
-                        trailing: menu,
-                        contentPadding: EdgeInsets.all(0),
-                        title: FormTitle("Список листов проверок:"),
-                        onTap: () {}),),
+                  child: ListTile(
+                      trailing: menu,
+                      contentPadding: EdgeInsets.all(0),
+                      title: FormTitle("Список листов проверок:"),
+                      onTap: () {}),
+                ),
               ]),
               Expanded(
                   child: ListView(

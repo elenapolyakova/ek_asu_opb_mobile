@@ -69,6 +69,7 @@ class _HomeScreen extends State<HomeScreen> {
                 } //isConnect == true
               });
             }
+            else hideLoading();
           } catch (e) {
             hideLoading();
           } finally {}
