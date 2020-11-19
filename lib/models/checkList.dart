@@ -1,7 +1,7 @@
 import "package:ek_asu_opb_mobile/models/models.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
-class CheckList extends Models {
+class CheckListWork extends Models {
   int id;
   int odooId;
   // Plan id which uses this check list
@@ -14,7 +14,7 @@ class CheckList extends Models {
   // Status of check list, true in work, false not used now
   bool is_active = false;
 
-  CheckList({
+  CheckListWork({
     this.id,
     this.odooId,
     this.parent_id,
@@ -26,7 +26,8 @@ class CheckList extends Models {
     this.active,
   });
 
-  factory CheckList.fromJson(Map<String, dynamic> json) => new CheckList(
+  factory CheckListWork.fromJson(Map<String, dynamic> json) =>
+      new CheckListWork(
         id: json["id"],
         odooId: json["odooId"],
         parent_id: json["parent_id"],
