@@ -5,6 +5,11 @@ import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:flutter_treeview/tree_view.dart';
 
 class DepartmentDocumentScreen extends StatefulWidget {
+  int departmentId;
+
+  @override
+  DepartmentDocumentScreen(this.departmentId);
+  
   @override
   State<DepartmentDocumentScreen> createState() => _DepartmentDocumentScreen();
 }
@@ -75,7 +80,7 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
                     key: 'air_2',
                     icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
               ]),
-               Node(
+          Node(
               label: 'Вода',
               key: 'water',
               expanded: true,
@@ -90,7 +95,7 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
                     key: 'water_2',
                     icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
               ]),
-               Node(
+          Node(
               label: 'Отходы',
               key: 'waste',
               expanded: true,
@@ -100,19 +105,16 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
                     label: 'Лимит.docx',
                     key: 'waste_1',
                     icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
-                    
                 Node(
                     label: 'Разрешение.docx',
                     key: 'waste_2',
                     icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
               ]),
-         
         ],
       )
     ];
   }
 
- 
   _expandNodeHandler(String key, bool expanded) {
     String msg = '${expanded ? "Expanded" : "Collapsed"}: $key';
     debugPrint(msg);
@@ -157,21 +159,20 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
                     child: Column(children: [
                       Expanded(
                         child: TreeView(
-                          controller: _treeViewController,
-                          allowParentSelect: false,
-                          supportParentDoubleTap: false,
-                          onExpansionChanged: (key, expanded) =>
-                              _expandNodeHandler(key, expanded),
-                          onNodeTap: (key) {
-                            debugPrint('Selected: $key');
-                            setState(() {
-                              _selectedNode = key;
-                              _treeViewController = _treeViewController
-                                  .copyWith(selectedKey: key);
-                            });
-                          },
-                          theme: getTreeViewTheme(context)
-                        ),
+                            controller: _treeViewController,
+                            allowParentSelect: false,
+                            supportParentDoubleTap: false,
+                            onExpansionChanged: (key, expanded) =>
+                                _expandNodeHandler(key, expanded),
+                            onNodeTap: (key) {
+                              debugPrint('Selected: $key');
+                              setState(() {
+                                _selectedNode = key;
+                                _treeViewController = _treeViewController
+                                    .copyWith(selectedKey: key);
+                              });
+                            },
+                            theme: getTreeViewTheme(context)),
                       )
                     ]))));
   }

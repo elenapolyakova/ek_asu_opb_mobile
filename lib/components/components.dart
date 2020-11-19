@@ -279,7 +279,9 @@ class MyButton extends StatelessWidget {
         margin: new EdgeInsets.all(5.0),
         decoration: new BoxDecoration(
           borderRadius: BorderRadius.all(Radius.circular(10)),
-          color: !disabled ? Theme.of(parentContext).buttonColor : Theme.of(parentContext).buttonColor.withOpacity(.5),
+          color: !disabled
+              ? Theme.of(parentContext).buttonColor
+              : Theme.of(parentContext).buttonColor.withOpacity(.5),
         ),
         child: new MaterialButton(
           onPressed: () {
@@ -1218,6 +1220,35 @@ class MyRichText extends StatelessWidget {
                 TextSpan(text: value, style: textStyleValue)
               ]),
         ));
+  }
+}
+
+class MyCheckbox extends StatelessWidget {
+  Function(bool) onChanged;
+  bool value;
+  String text;
+  MyCheckbox(this.value, this.text, this.onChanged);
+
+  @override
+  Widget build(BuildContext context) {
+    Color color = Theme.of(context).primaryColor;
+    TextStyle textStyle =
+        TextStyle(fontSize: 16, color: Theme.of(context).primaryColorDark);
+    return GestureDetector(
+        child: Row(
+          children: [
+            Checkbox(
+              value: value,
+              onChanged: onChanged,
+              checkColor: color,
+            ),
+            Text(text, style: textStyle)
+          ],
+        ),
+        onTap: () {
+          value = !value;
+          return onChanged(value);
+        });
   }
 }
 

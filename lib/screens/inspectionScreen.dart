@@ -121,13 +121,13 @@ class _InspectionScreen extends State<InspectionScreen> {
             screens.InspectionPlanScreen(context, planItem, setCheckPlanId);
         break;
       case "map":
-        screenList[screenKey] = screens.MapScreen();
+        screenList[screenKey] = screens.MapScreen(checkPlanId: _checkPlanId);
         break;
       case "report":
         screenList[screenKey] = screens.ReportScreen();
         break;
       case "checkList":
-        screenList[screenKey] = screens.CheckListScreen();
+      //  screenList[screenKey] = screens.CheckListScreen(null);
         break;
       case "commission":
         screenList[screenKey] = screens.CommissionScreen(context, _checkPlanId);

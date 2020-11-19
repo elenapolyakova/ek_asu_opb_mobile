@@ -322,12 +322,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
       bool hasErorr = false;
       Map<String, dynamic> result;
       try {
-        print("dep copy");
-        print(departmentCopy);
         result = await DepartmentController.update(departmentCopy);
-
-        print("submitPlan() happened!");
-        print(result);
 
         hasErorr = result["code"] < 0; //TODO вернуть
 
@@ -426,9 +421,8 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
                                           ListTile(
                                               trailing: menu,
                                               contentPadding: EdgeInsets.all(0),
-                                              title: Text(
-                                                  'Сведения о предприятии',
-                                                  textAlign: TextAlign.center),
+                                              title: FormTitle(
+                                                  'Сведения о предприятии'),
                                               onTap: () {}),
                                           MyRichText(
                                             'Наименование структурного подразделения: ',
@@ -460,19 +454,6 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
                                               'Адрес: ', _department.addr)
                                         ]),
                                     flex: 3),
-                                Expanded(
-                                    child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
-                                        children: [
-                                          Text(
-                                            'Статус: ',
-                                            style: textStyle,
-                                          ),
-                                          Text('не проводилась'),
-                                          Icon(Icons.circle, color: Colors.red)
-                                        ]),
-                                    flex: 1)
                               ],
                             )
                           ]))

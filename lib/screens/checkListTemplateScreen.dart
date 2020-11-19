@@ -6,8 +6,10 @@ import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'package:ek_asu_opb_mobile/screens/checkListScreen.dart';
+import 'package:ek_asu_opb_mobile/screens/checkListItemScreen.dart';
+import 'package:ek_asu_opb_mobile/screens/faultScreen.dart';
 
-/*class CheckList {
+class MyCheckList {
   int id;
   int odooId;
   int parentIdcheck; //PlanItemId; //для рабочих чек-листов
@@ -15,8 +17,8 @@ import 'package:ek_asu_opb_mobile/screens/checkListScreen.dart';
   int type;
   String name;
   bool active;
-  List<CheckListItem> items;
-  CheckList(
+  List<MyCheckListItem> items;
+  MyCheckList(
       {this.id,
       this.odooId,
       this.is_base,
@@ -29,8 +31,8 @@ import 'package:ek_asu_opb_mobile/screens/checkListScreen.dart';
   static Map<int, String> typeSelection = {1: 'Воздух', 2: 'Вода', 3: 'Отходы'};
 }
 
-class CheckListItem {
-  int itemId;
+class MyCheckListItem {
+  int id;
   int odooId;
   int parentId;
   String name;
@@ -38,8 +40,8 @@ class CheckListItem {
   String result;
   String description;
   bool active;
-  CheckListItem(
-      {this.itemId,
+  MyCheckListItem(
+      {this.id,
       this.odooId,
       this.parentId,
       this.name,
@@ -47,7 +49,7 @@ class CheckListItem {
       this.result,
       this.description,
       this.active});
-}*/
+}
 
 class CheckListTemplateScreen extends StatefulWidget {
   @override
@@ -60,8 +62,8 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
   List<Map<String, Object>> typeCheckListList;
   List<Map<String, Object>> typeCheckListListAll;
   int _selectedType = 0;
-  List<CheckList> _items;
-  CheckList _currentCheckList;
+  List<MyCheckList> _items;
+  MyCheckList _currentCheckList;
   var _tapPosition;
   double heightCheckList = 700;
   double widthCheckList = 1000;
@@ -80,8 +82,8 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
     {'text': 'Вопрос', 'flex': 3.0},
   ];
 
-  List<CheckList> items = [
-    CheckList(
+  List<MyCheckList> items = [
+    MyCheckList(
         id: 1,
         odooId: 1,
         is_base: true,
@@ -89,20 +91,20 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
         type: 1,
         active: true,
         items: [
-          CheckListItem(
+          MyCheckListItem(
               id: 1,
               odooId: 1,
               parentId: 1,
               name: 'пункт 1',
               question: 'вопрос 1\nдлинный вопрос\nочень длинный'),
-          CheckListItem(
+          MyCheckListItem(
               id: 2,
               odooId: 2,
               parentId: 1,
               name: 'пункт 2',
               question: 'вопрос 2')
         ]),
-    CheckList(
+    MyCheckList(
         id: 2,
         odooId: 2,
         is_base: true,
@@ -131,8 +133,8 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
-      typeCheckListList = makeListFromJson(CheckList.typeSelection);
-      typeCheckListListAll = makeListFromJson(CheckList.typeSelection);
+      typeCheckListList = makeListFromJson(MyCheckList.typeSelection);
+      typeCheckListListAll = makeListFromJson(MyCheckList.typeSelection);
       typeCheckListListAll.insert(0, {'id': 0, 'value': 'Все'});
       reloadCheckList();
     } catch (e) {} finally {
@@ -149,7 +151,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
 
   Future<void> addCheckListClicked() async {
     setState(() {
-      _currentCheckList = new CheckList(
+      _currentCheckList = new MyCheckList(
           id: null,
           odooId: null,
           name: null,
@@ -165,11 +167,11 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
   }
 
   Future<void> editCheckList(int checkListId) async {
-    CheckList checkList =
+    MyCheckList checkList =
         _items.firstWhere((checkList) => checkList.id == checkListId);
 
     setState(() {
-      _currentCheckList = new CheckList(
+      _currentCheckList = new MyCheckList(
           odooId: checkList.odooId,
           id: checkList.id,
           name: checkList.name,
@@ -179,7 +181,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
 
       _currentCheckList.items = [];
       checkList.items.forEach((item) {
-        CheckListItem itemCopy = CheckListItem(
+        MyCheckListItem itemCopy = MyCheckListItem(
             id: item.id,
             odooId: item.odooId,
             parentId: item.parentId,
@@ -199,7 +201,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
     bool result = await showConfirmDialog(
         'Вы уверены, что хотите удалить чек-лист?', context);
     if (result != null && result) {
-      CheckList deletedCheckList = _items.firstWhere(
+      MyCheckList deletedCheckList = _items.firstWhere(
           (checkList) => checkList.id == checkListId,
           orElse: () => null);
 
@@ -243,7 +245,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
         switch (value) {
           case 'add':
             setState(() {
-              _currentCheckList.items.add(CheckListItem(
+              _currentCheckList.items.add(MyCheckListItem(
                   id: null, odooId: null, parentId: _currentCheckList.id));
               dialogSetter(() {});
               //refresh = true;
@@ -476,7 +478,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
   }
 
   Widget generateItemTable(BuildContext context,
-      List<Map<String, dynamic>> headers, List<CheckListItem> rows,
+      List<Map<String, dynamic>> headers, List<MyCheckListItem> rows,
       {/*StateSetter setState,*/ StateSetter dialogSetter}) {
     int i = 0;
     Map<int, TableColumnWidth> columnWidths = Map.fromIterable(headers,
@@ -539,7 +541,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
         children: tableRows);
   }
 
-  Widget generateTableData(BuildContext context, List<CheckList> rows) {
+  Widget generateTableData(BuildContext context, List<MyCheckList> rows) {
     List<TableRow> tableRows = [];
     int rowIndex = 0;
     rows.forEach((row) {
