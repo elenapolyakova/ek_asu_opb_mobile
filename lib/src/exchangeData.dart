@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:ek_asu_opb_mobile/controllers/checkList.dart';
+import 'package:ek_asu_opb_mobile/controllers/checkListItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/checkListTemplate.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:ek_asu_opb_mobile/models/checkList.dart';
@@ -157,9 +158,22 @@ Future<List<Map<String, dynamic>>> getDictionaries(
                 ]
               });
 
+              for (var q in assignedQuestions) {
+                //  As we perform first download from odoo, we set odooId as id of input
+                q["odooId"] = q["id"];
+                // If parent id exists like [3, someName]
+                if (q["parent_id"] is List) {
+                  var parent_id = q["parent_id"][0];
+                  q["parent_id"] = parent_id;
+                } else {
+                  q["parent_id"] = null;
+                }
+              }
+
               element["q_data"] = assignedQuestions;
+              // Set odooId as main ID for check list, as it's first download
               element["odooId"] = element["id"];
-              print("Element $element");
+              print("Check list from odoo $element");
             }
           }
           break;
@@ -182,6 +196,12 @@ Future<List<Map<String, dynamic>>> getDictionaries(
             case 'check_list':
               await CheckListController.insert(
                   dataList[j] as Map<String, dynamic>);
+              if (dataList[j]["q_data"].length > 0) {
+                for (var payload in dataList[j]["q_data"]) {
+                  await CheckListItemController.insert(
+                      payload as Map<String, dynamic>);
+                }
+              }
               break;
           } //switch
         } //for j
