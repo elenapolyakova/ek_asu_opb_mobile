@@ -367,8 +367,9 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
 
   String getGroupById(int groupId) {
     if (groupId == null || groupList.length == 0) return '';
-    Map<String, dynamic> group = groupList
-        .firstWhere((group) => group["id"] == groupId.toString(), orElse: () => null);
+    Map<String, dynamic> group = groupList.firstWhere(
+        (group) => group["id"] == groupId.toString(),
+        orElse: () => null);
     return group != null ? group['value'] : '';
   }
 
@@ -598,6 +599,14 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     setState(() {
       hasTimeBegin = inspectionItem.dtFrom != null;
       hasTimeEnd = inspectionItem.dtTo != null;
+
+      DateTime now = DateTime.now();
+      DateTime dtFrom = inspectionItem.date ?? now;
+      if (!hasTimeBegin)
+        inspectionItem.dtFrom = DateTime(dtFrom.year, dtFrom.month, dtFrom.day,
+            now.hour, now.minute, now.second);
+      if (!hasTimeEnd) inspectionItem.dtTo = now;
+
       eventId = inspectionItem.type ?? null;
       eventName = inspectionItem.name ?? "";
       department = tempDepartment;
@@ -770,8 +779,8 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                                                 (value) {
                                                                               setState(() {
                                                                                 hasTimeBegin = value;
-                                                                                if (value && inspectionItem.dtFrom == null) inspectionItem.dtFrom = DateTime.now();
-                                                                                if (!value) inspectionItem.dtFrom = null;
+                                                                                //if (value && inspectionItem.dtFrom == null) inspectionItem.dtFrom = DateTime.now();
+                                                                                // if (!value) inspectionItem.dtFrom = null;
                                                                               });
                                                                             },
                                                                             checkColor:
@@ -853,8 +862,8 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                                                 (value) {
                                                                               setState(() {
                                                                                 hasTimeEnd = value;
-                                                                                if (value && inspectionItem.dtTo == null) inspectionItem.dtTo = DateTime.now();
-                                                                                if (!value) inspectionItem.dtTo = null;
+                                                                                //if (value && inspectionItem.dtTo == null) inspectionItem.dtTo = DateTime.now();
+                                                                                //if (!value) inspectionItem.dtTo = null;
                                                                               });
                                                                             },
                                                                             checkColor:
@@ -892,11 +901,27 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                                 onChanged:
                                                                     ((DateTime
                                                                         date) {
-                                                                  // setState(() {
-                                                                  inspectionItem
-                                                                          .dtTo =
-                                                                      date;
-                                                                  // });
+                                                                  setState(() {
+                                                                    DateTime _dtTo = new DateTime(
+                                                                        date
+                                                                            .year,
+                                                                        date
+                                                                            .month,
+                                                                        date
+                                                                            .day,
+                                                                        inspectionItem
+                                                                            .dtTo
+                                                                            .hour,
+                                                                        inspectionItem
+                                                                            .dtTo
+                                                                            .minute,
+                                                                        inspectionItem
+                                                                            .dtTo
+                                                                            .second);
+                                                                    inspectionItem
+                                                                            .dtTo =
+                                                                        _dtTo;
+                                                                  });
                                                                 })),
                                                           ]))),
                                               Container(
@@ -1048,7 +1073,10 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                     text: 'принять',
                                     parentContext: context,
                                     onPress: () => submitInspectionItem(
-                                        inspectionItem, setState)))
+                                        inspectionItem,
+                                        setState,
+                                        hasTimeBegin,
+                                        hasTimeEnd)))
                           ])))))
             ]);
           });
@@ -1114,14 +1142,16 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     }
   }
 
-  Future<void> submitInspectionItem(
-      CheckPlanItem inspectionItem, setState) async {
+  Future<void> submitInspectionItem(CheckPlanItem inspectionItem, setState,
+      bool hasTimeBegin, bool hasTimeEnd) async {
     final form = formInspectionItemKey.currentState;
     hideKeyboard();
     if (form.validate()) {
       form.save();
       bool hasErorr = false;
       Map<String, dynamic> result;
+      if (!hasTimeBegin) inspectionItem.dtFrom = null;
+      if (!hasTimeEnd) inspectionItem.dtTo = null;
 
       try {
         if (inspectionItem.id == null) {

@@ -272,7 +272,7 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
                   Container(
                       width: widthCheckList,
                       padding: EdgeInsets.symmetric(
-                          horizontal: 30.0, vertical: 40.0),
+                          horizontal: 10.0, vertical: 40.0),
                       child: Scaffold(
                           backgroundColor: Colors.transparent,
                           body: Form(

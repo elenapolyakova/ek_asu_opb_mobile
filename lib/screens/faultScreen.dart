@@ -193,14 +193,21 @@ class _FaultScreen extends State<FaultScreen> {
   @override
   Widget build(BuildContext context) {
     return showLoading
-                ? Text("")
-                : Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    child: Column(children: [
-                      Expanded(
-                          child: ListView(
-                              padding: const EdgeInsets.all(16),
-                              children: [Text("Нарушения")]))
-                    ]));
+        ? Text("")
+        : Padding(
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 40),
+            child: Column(
+              children: [
+              Row(children: [Expanded(child: FormTitle("Нарушение:"))]),
+              Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 2, child: Text('КОАП')),
+                  Expanded(flex: 2, child: Text('Фото')),
+                  Expanded(flex: 1, child: Text('Описание')),
+                ],
+              ))
+            ]));
   }
 }

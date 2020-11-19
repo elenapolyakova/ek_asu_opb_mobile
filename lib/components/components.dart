@@ -645,7 +645,7 @@ class _DatePicker extends State<DatePicker> {
       Expanded(
           child:*/
         InkWell(
-            onTap: () => _selectDate(context),
+            onTap: () =>  widget.enable ?  _selectDate(context) : null,
             child: Container(
                 width: widget.width,
                 child: Column(children: [

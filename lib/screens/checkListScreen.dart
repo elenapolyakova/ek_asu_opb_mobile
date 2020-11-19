@@ -439,7 +439,7 @@ class _CheckListScreen extends State<CheckListScreen> {
     return showLoading
         ? Text("")
         : Padding(
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 100),
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 100),
             child: Column(children: [
               Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
                 Expanded(

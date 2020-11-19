@@ -21,6 +21,7 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
   int checkListId;
   int checkListItemId;
   dynamic _args;
+  String checkListName;
   Map<String, dynamic> _screenList = {};
   String _selectedPage = '';
   _CheckListManagerScreen(this.checkPlanItemId);
@@ -49,6 +50,7 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
         _args = args;
         checkListId = args['checkListId'] ?? checkListId;
         checkListItemId = args['checkListItemId'] ?? checkListItemId;
+        checkListName = args['checkListName'] ?? checkListName;
       }
     });
   }
@@ -75,8 +77,12 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
         //  push({"pathTo": 'checkList', "pathFrom": '', 'text': ''});
         break;
       case "checkListItem":
-        _screenList[_selectedPage] =
-            screens.CheckListItemScreen(checkListId, push, pop, checkListName: _args["checkListName"],);
+        _screenList[_selectedPage] = screens.CheckListItemScreen(
+          checkListId,
+          push,
+          pop,
+          checkListName: checkListName,
+        );
         // push({"pathTo": 'checkListItem', "pathFrom": 'checkList', 'text': 'Назад к листам проверок'});
         break;
       case "fault":
