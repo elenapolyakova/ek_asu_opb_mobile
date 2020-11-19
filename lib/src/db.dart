@@ -47,6 +47,13 @@ class DBProvider {
             "CREATE TABLE IF NOT EXISTS com_group(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, head_id INTEGER, group_num TEXT, is_main TEXT, active TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS rel_com_group_user(id INTEGER PRIMARY KEY, com_group_id INTEGER, user_id INTEGER, active TEXT)");
+        // await db.execute(
+        //     "CREATE TABLE IF NOT EXISTS clist_template(id INTEGER PRIMARY KEY, type INTEGER, active TEXT, name TEXT, is_base TEXT, questions TEXT)");
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS check_list(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, is_base TEXT, name TEXT, is_active TEXT, type INTEGER, child_ids TEXT, active TEXT)");
+
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS check_list_item(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, name TEXT, question TEXT, result TEXT, description TEXT, active TEXT)");
       },
       onUpgrade: (db, oldVersion, version) async {
         switch (oldVersion) {
@@ -150,6 +157,14 @@ class DBProvider {
             continue v12;
           v12:
           case 12:
+            await db.execute(
+                "CREATE TABLE IF NOT EXISTS check_list(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, is_base TEXT, name TEXT, is_active TEXT, type INTEGER, child_ids TEXT, active TEXT)");
+
+            await db.execute(
+                "CREATE TABLE IF NOT EXISTS check_list_item(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, name TEXT, question TEXT, result TEXT, description TEXT, active TEXT)");
+            continue v13;
+          v13:
+          case 13:
           default:
         }
       },
@@ -164,7 +179,7 @@ class DBProvider {
 
       // Set the version. This executes the onCreate function and provides a
       // path to perform database upgrades and downgrades.
-      version: 12,
+      version: 13,
     );
   }
 

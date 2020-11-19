@@ -1,6 +1,11 @@
 import 'dart:math';
 
+import 'package:ek_asu_opb_mobile/controllers/checkList.dart';
+import 'package:ek_asu_opb_mobile/controllers/checkListItem.dart';
+import 'package:ek_asu_opb_mobile/controllers/checkListTemplate.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
+import 'package:ek_asu_opb_mobile/models/checkList.dart';
+import 'package:ek_asu_opb_mobile/screens/screens.dart';
 import 'package:ek_asu_opb_mobile/src/odooClient.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
@@ -13,7 +18,7 @@ final limitRecord = config.getItem('limitRecord') ?? 80;
 final cbtRole = config.getItem('cbtRole') ?? 'cbt';
 final ncopRole = config.getItem('ncopRole') ?? 'ncop';
 final _storage = FlutterSecureStorage();
-final List<String> _dict = ['railway', 'department', 'user'];
+final List<String> _dict = ['railway', 'department', 'user', 'check_list'];
 
 //загрузка справочников
 //Возвращает List[
@@ -24,7 +29,6 @@ Future<List<Map<String, dynamic>>> getDictionaries(
     {List<String> dicts, bool all: true, bool isLastUpdate: true}) async {
   List<Map<String, dynamic>> result = new List<Map<String, dynamic>>();
   dynamic data;
-  dynamic promAreaData;
   List<dynamic> listDepIds;
 
   if (all)
@@ -54,18 +58,6 @@ Future<List<Map<String, dynamic>>> getDictionaries(
         case 'department':
           List<dynamic> domain = new List<dynamic>();
           if (lastUpdate != null) domain.add(lastUpdate);
-          // promAreaData =
-          //     await getDataWithAttemp('eco.prom_area', 'search_read', null, {
-          //   'domain': [
-          //     ['is_main', '=', true]
-          //   ],
-          //   'fields': [
-          //     'id',
-          //     'department_id',
-          //     'fact_sector_id',
-          //   ]
-          // });
-
           data =
               await getDataWithAttemp('eco.department', 'search_read', null, {
             'domain': domain,
@@ -129,6 +121,62 @@ Future<List<Map<String, dynamic>>> getDictionaries(
           });
 
           break;
+        case 'check_list':
+          data =
+              await getDataWithAttemp('mob.check.list', 'search_read', null, {
+            'domain': [
+              ['parent_id', '=', null],
+              ['is_base', '=', true]
+            ],
+            'fields': [
+              'id',
+              'parent_id',
+              'is_active',
+              'name',
+              'type',
+              'active',
+              'type',
+              'is_base',
+              'child_ids'
+            ]
+          });
+          if (data.length > 0) {
+            for (var element in data) {
+              var assignedQuestions = await getDataWithAttemp(
+                  'mob.check.list.item', 'search_read', null, {
+                'domain': [
+                  ['id', 'in', element["child_ids"]]
+                ],
+                'fields': [
+                  'id',
+                  'parent_id',
+                  'name',
+                  'question',
+                  'result',
+                  'description',
+                  'active'
+                ]
+              });
+
+              for (var q in assignedQuestions) {
+                //  As we perform first download from odoo, we set odooId as id of input
+                q["odooId"] = q["id"];
+                // If parent id exists like [3, someName]
+                if (q["parent_id"] is List) {
+                  var parent_id = q["parent_id"][0];
+                  q["parent_id"] = parent_id;
+                } else {
+                  q["parent_id"] = null;
+                }
+              }
+
+              element["q_data"] = assignedQuestions;
+              // Set odooId as main ID for check list, as it's first download
+              element["odooId"] = element["id"];
+              print("Check list from odoo $element");
+            }
+          }
+          break;
       } //switch
       if (data != null) {
         List<dynamic> dataList = data as List<dynamic>;
@@ -144,6 +192,16 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               break;
             case 'user':
               await UserController.insert(dataList[j] as Map<String, dynamic>);
+              break;
+            case 'check_list':
+              await CheckListController.insert(
+                  dataList[j] as Map<String, dynamic>);
+              if (dataList[j]["q_data"].length > 0) {
+                for (var payload in dataList[j]["q_data"]) {
+                  await CheckListItemController.insert(
+                      payload as Map<String, dynamic>);
+                }
+              }
               break;
           } //switch
         } //for j
