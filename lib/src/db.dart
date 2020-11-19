@@ -49,6 +49,8 @@ class DBProvider {
             "CREATE TABLE IF NOT EXISTS rel_com_group_user(id INTEGER PRIMARY KEY, com_group_id INTEGER, user_id INTEGER, active TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS clist_template(id INTEGER PRIMARY KEY, type INTEGER, active TEXT, name TEXT, is_base TEXT, questions TEXT)");
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS check_list(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, is_base TEXT, name TEXT, is_active TEXT, type INTEGER, child_ids TEXT, active TEXT)");
       },
       onUpgrade: (db, oldVersion, version) async {
         switch (oldVersion) {
