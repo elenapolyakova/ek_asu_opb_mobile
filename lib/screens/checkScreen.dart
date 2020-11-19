@@ -95,16 +95,16 @@ class _CheckScreen extends State<CheckScreen> {
             screens.InfoCheckScreen(context, _departmentId);
         break;
       case "map":
-        screenList[screenKey] = screens.MapScreen();
+        screenList[screenKey] = screens.MapScreen(departmentId: _departmentId);
         break;
       case "report":
         screenList[screenKey] = screens.ReportScreen();
         break;
       case "checkList":
-        screenList[screenKey] = screens.CheckListScreen();
+        screenList[screenKey] = screens.CheckListManagerScreen(_checkPlanItemId);
         break;
       case "documents":
-        screenList[screenKey] = screens.DepartmentDocumentScreen();
+        screenList[screenKey] = screens.DepartmentDocumentScreen(_departmentId);
         break;
       default:
         return Text("");

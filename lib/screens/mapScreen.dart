@@ -4,6 +4,12 @@ import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 
 class MapScreen extends StatefulWidget {
+  int departmentId;
+  int checkPlanId;
+
+  @override
+  MapScreen({this.departmentId, checkPlanId});
+
   @override
   State<MapScreen> createState() => _MapScreen();
 }
@@ -31,7 +37,6 @@ class _MapScreen extends State<MapScreen> {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
-
     } catch (e) {} finally {
       hideDialog(context);
       showLoading = false;
@@ -42,8 +47,7 @@ class _MapScreen extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-        child:
-      Container(
+        child: Container(
             decoration: BoxDecoration(
                 image: DecorationImage(
                     image: AssetImage("assets/images/frameScreen.png"),
@@ -57,7 +61,6 @@ class _MapScreen extends State<MapScreen> {
                           child: ListView(
                               padding: const EdgeInsets.all(16),
                               children: [Text("Карта")]))
-                    ])))
-    );
+                    ]))));
   }
 }
