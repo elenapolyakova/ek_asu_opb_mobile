@@ -50,4 +50,9 @@ class CheckListItem extends Models {
       'result': result,
     };
   }
+
+  @override
+  String toString() {
+    return 'CheckListItem{id: $id, odooId: $odooId, : $name, active: $active, question: $question, parent_id: $parent_id}';
+  }
 }
