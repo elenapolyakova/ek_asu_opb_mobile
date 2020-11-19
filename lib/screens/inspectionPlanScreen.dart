@@ -619,7 +619,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
         TextStyle(fontSize: 16.0, color: Color(0xAA6E6E6E));
     return showDialog<bool>(
         context: context,
-        barrierDismissible: true,
+        barrierDismissible: false,
         barrierColor: Color(0x88E6E6E6),
         builder: (BuildContext context) {
           return StatefulBuilder(builder: (context, StateSetter setState) {
@@ -1069,14 +1069,24 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                   ))
                                 ])))),
                             Container(
-                                child: MyButton(
-                                    text: 'принять',
-                                    parentContext: context,
-                                    onPress: () => submitInspectionItem(
-                                        inspectionItem,
-                                        setState,
-                                        hasTimeBegin,
-                                        hasTimeEnd)))
+                                child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                  MyButton(
+                                      text: 'принять',
+                                      parentContext: context,
+                                      onPress: () => submitInspectionItem(
+                                          inspectionItem,
+                                          setState,
+                                          hasTimeBegin,
+                                          hasTimeEnd)),
+                                  MyButton(
+                                      text: 'отменить',
+                                      parentContext: context,
+                                      onPress: () {
+                                        cancelInspectionItem();
+                                      }),
+                                ]))
                           ])))))
             ]);
           });
@@ -1140,6 +1150,10 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
         Scaffold.of(context).showSnackBar(errorSnackBar());
       }
     }
+  }
+
+  Future<void> cancelInspectionItem() async {
+    Navigator.pop<bool>(context, null);
   }
 
   Future<void> submitInspectionItem(CheckPlanItem inspectionItem, setState,

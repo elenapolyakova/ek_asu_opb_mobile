@@ -112,6 +112,8 @@ class _InspectionScreen extends State<InspectionScreen> {
     }
   }
 
+
+
   Widget getBodyContent() {
     String screenKey = _navigationMenu[_selectedIndex]["key"];
     if (screenList[screenKey] != null) return screenList[screenKey];

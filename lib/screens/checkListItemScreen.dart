@@ -51,8 +51,7 @@ class CheckListItemScreen extends StatefulWidget {
   CheckListItemScreen(this.checkListId, this.push, this.pop,
       {this.checkListName});
   @override
-  State<CheckListItemScreen> createState() =>
-      _CheckListItemScreen(checkListId, checkListName: checkListName);
+  State<CheckListItemScreen> createState() => _CheckListItemScreen();
 }
 
 class _CheckListItemScreen extends State<CheckListItemScreen> {
@@ -66,9 +65,6 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
   final formCheckListItemKey = new GlobalKey<FormState>();
   List<CheckListItem> _items;
   CheckListItem _currentCheckLIstItem;
-
-  @override
-  _CheckListItemScreen(this.checkListId, {this.checkListName});
 
   List<Map<String, dynamic>> choicesItem = [
     {'title': 'Удалить запись', 'icon': Icons.delete, 'key': 'deleteItem'},
@@ -176,12 +172,12 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
         .firstWhere((item) => item.id == checkListItemId, orElse: () => null);
 
     return widget.push({
-      "pathTo": 'fault',
+      "pathTo": 'faultList',
       "pathFrom": 'checkListItem',
       'text': 'Назад к вопросам'
     }, {
       'checkListItemId': checkListItemId,
-      'checkListItemName': checkListItem != null ? checkListItem.name : ''
+      'checkListItemName': checkListItem != null ? checkListItem.question : ''
     });
   }
 
@@ -193,6 +189,8 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
       if (isLogin) {
         auth.getUserInfo().then((userInfo) {
           _userInfo = userInfo;
+          checkListId = widget.checkListId;
+          checkListName = widget.checkListName;
           loadData();
         });
       } //isLogin == true
@@ -216,9 +214,10 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
       CheckListItem(
           id: 1,
           odooId: 1,
-          parent_id: checkListId,
-          name: 'Пункт 1',
-          question: 'Вопрос 1',
+          parent_id: 1,
+          name: '1.1',
+          question:
+              'Наличие согласованного проекта предельно допустимых выбросов.',
           result: 'Результат 1',
           description: 'Комментарий',
           //base_id: 1,
@@ -226,9 +225,9 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
       CheckListItem(
           id: 2,
           odooId: 2,
-          parent_id: checkListId,
-          name: 'Пункт 2',
-          question: 'Вопрос 2',
+          parent_id: 1,
+          name: '1.2',
+          question: 'Наличие разрешения на выброс загрязняющих веществ.',
           result: 'Результат 2',
           description: 'Комментарий',
           // base_id: 2,
@@ -236,16 +235,140 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
       CheckListItem(
           id: 3,
           odooId: 3,
-          parent_id: checkListId,
-          name: 'Пункт 3',
-          question: 'Вопрос 3',
+          parent_id: 1,
+          name: '1.3',
+          question:
+              'Учтены ли все фактические источники выбросов загрязняющих веществ в действующей проектной разрешительной документации?',
           result: 'Результат 3',
+          description: 'Комментарий',
+          //   base_id: 3,
+          active: true),
+      CheckListItem(
+          id: 4,
+          odooId: 4,
+          parent_id: 1,
+          name: '1.4',
+          question:
+              'Полнота и корректность ведения первичной отчетности (журналов) по охране атмосферного воздуха.',
+          result: 'Результат 4',
+          description: 'Комментарий',
+          // base_id: 2,
+          active: true),
+      CheckListItem(
+          id: 5,
+          odooId: 5,
+          parent_id: 1,
+          name: '1.5',
+          question:
+              'Наличие проверок соблюдения установленных нормативов допустимого воздействия (ПДВ).',
+          result: 'Результат 5',
+          description: 'Комментарий',
+          // base_id: 2,
+          active: true),
+      CheckListItem(
+          id: 6,
+          odooId: 6,
+          parent_id: 1,
+          name: '1.6',
+          question:
+              'В случае осуществления проверки только расчетным способом - корректность производимых расчетов.',
+          result: 'Результат 6',
+          description: 'Комментарий',
+          // base_id: 2,
+          active: true),
+      CheckListItem(
+          id: 21,
+          odooId: 21,
+          parent_id: 2,
+          name: '2.1',
+          question:
+              'Наличие решения о предоставлении водного объекта в пользование для сброса сточных и (или) дренажных вод',
+          result: 'Результат 1',
+          description: 'Комментарий',
+          //   base_id: 3,
+          active: true),
+      CheckListItem(
+          id: 22,
+          odooId: 22,
+          parent_id: 2,
+          name: '2.2',
+          question:
+              'Наличие согласованного проекта и утвержденных нормативов допустимых сбросов (НДС) веществ и микроорганизмов в водные объекты. Наличие согласованного проекта и утвержденных нормативов допустимых сбросов (НДС) веществ и микроорганизмов для абонентов организаций, осуществляющих водоотведение (при сбросе от 200 м3/сут.).',
+          result: 'Результат 2',
+          description: 'Комментарий',
+          //   base_id: 3,
+          active: true),
+      CheckListItem(
+          id: 23,
+          odooId: 23,
+          parent_id: 2,
+          name: '2.3',
+          question:
+              'Наличие санитарно-эпидемиологического заключения о соответствии водного объекта санитарным правилам (при необходимости)',
+          result: 'Результат 3',
+          description: 'Комментарий',
+          //   base_id: 3,
+          active: true),
+      CheckListItem(
+          id: 24,
+          odooId: 24,
+          parent_id: 2,
+          name: '2.4',
+          question:
+              'Наличие разрешения на сброс загрязняющих веществ в окружающую среду',
+          result: 'Результат 4',
+          description: 'Комментарий',
+          //   base_id: 3,
+          active: true),
+      CheckListItem(
+          id: 25,
+          odooId: 25,
+          parent_id: 2,
+          name: '2.5',
+          question:
+              'Наличие схемы систем водопотребления и водоотведения, согласованная с Территориальными органами Федерального агентства водных ресурсов',
+          result: 'Результат 5',
+          description: 'Комментарий',
+          //   base_id: 3,
+          active: true),
+         CheckListItem(
+          id: 31,
+          odooId: 31,
+          parent_id: 3,
+          name: '3.1',
+          question:
+              'Наличие Лицензии на пользование недрами (при необходимости)',
+           result: 'Результат 1',
+          description: 'Комментарий',
+          //   base_id: 3,
+          active: true),
+           CheckListItem(
+          id: 32,
+          odooId: 32,
+          parent_id: 3,
+          name: '3.2',
+          question:
+              'Соблюдение условий пользования недрами, содержащихся в лицензионных соглашениях',
+           result: 'Результат 2',
+          description: 'Комментарий',
+          //   base_id: 3,
+          active: true),
+           CheckListItem(
+          id: 33,
+          odooId: 33,
+          parent_id: 3,
+          name: '3.3',
+          question:
+              'Наличие и выполнение Программы производственного контроля качества подземных вод (в случае использования подземных вод для питьевого водоснабжения, в случае если необходимость программы предусмотрена условиями пользования недрами)',
+           result: 'Результат 3',
           description: 'Комментарий',
           //   base_id: 3,
           active: true),
     ];
 
-    _items = items ?? []; //загружать из базы
+    Iterable<CheckListItem> sort =
+        items.where((item) => item.parent_id == checkListId);
+    _items = sort != null ? sort.toList() : []; //загружать из базы
   }
 
   Future<bool> showCheckListItemDialog(
@@ -299,6 +422,9 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
                                           context: context,
                                           height: 100,
                                           maxLines: 3,
+                                          // readOnly: base_id != null
+                                         // backgroundColor: Theme.of(context)
+                                          //    .primaryColorLight, //todo вернуть как появится base_id
                                         ),
                                         EditTextField(
                                           text: 'Результат',
@@ -440,7 +566,7 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
         children: tableRows);
   }
 
-  Widget getRowCell(String text, int planItemId, int index,
+  Widget getRowCell(String text, int checkListItemId, int index,
       {TextAlign textAlign = TextAlign.left}) {
     Widget cell = Container(
       padding: EdgeInsets.all(10.0),
@@ -453,7 +579,7 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
     return GestureDetector(
         onTapDown: _storePosition,
         onLongPress: () {
-          _showCustomMenu(planItemId, index);
+          _showCustomMenu(checkListItemId, index);
         },
         child: cell);
   }

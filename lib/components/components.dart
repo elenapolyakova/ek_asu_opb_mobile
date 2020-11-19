@@ -92,6 +92,7 @@ class EditTextField extends StatefulWidget {
   Color backgroundColor;
   Function(TapDownDetails) onTapDown;
   Function() onLongPress;
+  bool readOnly;
 
   EditTextField(
       {this.text = "",
@@ -107,7 +108,8 @@ class EditTextField extends StatefulWidget {
       this.validator,
       this.backgroundColor,
       this.onTapDown,
-      this.onLongPress});
+      this.onLongPress,
+      this.readOnly = false});
   @override
   State<EditTextField> createState() => _EditTextField(value);
 }
@@ -139,7 +141,7 @@ class _EditTextField extends State<EditTextField> {
               onLongPress: widget.onLongPress,
               onTapDown: widget.onTapDown,
               onTap: () {
-                if (!widget.showEditDialog) return;
+                if (!widget.showEditDialog || widget.readOnly) return;
                 showEdit(
                   widget.value,
                   widget.text,
@@ -163,7 +165,7 @@ class _EditTextField extends State<EditTextField> {
                   ),
                   child: AbsorbPointer(
                     child: TextFormField(
-                      readOnly: widget.showEditDialog,
+                      readOnly: widget.showEditDialog && !widget.readOnly,
                       keyboardType: widget.textInputType,
                       validator: widget.validator ?? (val) => null,
                       controller: TextEditingController.fromValue(
