@@ -477,6 +477,22 @@ class _CheckListScreen extends State<CheckListScreen> {
   }
 
   Future<bool> editTemplateClicked(StateSetter setState) {
+    List<CheckListWork> _itemsCopy = [];
+    if (_allItems != null)
+      _allItems.forEach((item) {
+        _itemsCopy.add(CheckListWork(
+          parent_id: item.parent_id,
+          id: item.id,
+          is_active: item.is_active,
+          name: item.name,
+          odooId: item.odooId,
+          is_base: item.is_base,
+          type: item.type,
+          //base_id: item.base_id,
+          active: item.active,
+        ));
+      });
+
     reloadTemplateList();
     return showDialog<bool>(
         context: context,
@@ -535,6 +551,15 @@ class _CheckListScreen extends State<CheckListScreen> {
                                                 _itemsTemplate[i].is_active,
                                                 _itemsTemplate[i].name,
                                                 (value) {
+                                              CheckListWork item =
+                                                  _itemsCopy.firstWhere(
+                                                      (item) =>
+                                                          item.id ==
+                                                          _itemsTemplate[i].id,
+                                                      orElse: () => null);
+
+                                              if (item != null)
+                                                item.is_active = value;
                                               _itemsTemplate[i].is_active =
                                                   value;
                                               setState(() {});
@@ -547,7 +572,7 @@ class _CheckListScreen extends State<CheckListScreen> {
                                       text: 'принять',
                                       parentContext: context,
                                       onPress: () {
-                                        submitCheckListTemplate(_itemsTemplate);
+                                        submitCheckListTemplate(_itemsCopy);
                                       }),
                                   MyButton(
                                       text: 'отменить',
