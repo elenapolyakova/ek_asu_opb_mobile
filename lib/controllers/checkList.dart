@@ -70,12 +70,15 @@ class CheckListController extends Controllers {
         if (questions.length > 0) {
           for (var q in questions) {
             var qJson = q.toJson();
-            qJson.remove("id");
-            qJson["odooId"] = null;
-            qJson["base_id"] = qJson["id"];
-            qJson["parent_id"] = workCheckLstId;
 
-            var checkListItemId = await CheckListItemController.insert(qJson);
+            Map<String, dynamic> copy = Map.from(qJson);
+
+            copy.remove("id");
+            copy["odooId"] = null;
+            copy["base_id"] = qJson["id"];
+            copy["parent_id"] = workCheckLstId;
+
+            var checkListItemId = await CheckListItemController.insert(copy);
           }
         }
       }
