@@ -1,3 +1,4 @@
+import 'package:ek_asu_opb_mobile/controllers/checkListItem.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import "package:ek_asu_opb_mobile/models/checkList.dart";
 import 'package:ek_asu_opb_mobile/utils/network.dart';
@@ -6,7 +7,8 @@ class CheckListController extends Controllers {
   static String _tableName = "check_list";
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     CheckListWork checkList = CheckListWork.fromJson(json);
-    print("Data 1 check list $checkList");
+
+    print("CheckList Insert() to DB");
     print(checkList.toJson());
 
     return await DBProvider.db.insert(_tableName, checkList.toJson());
@@ -35,7 +37,6 @@ class CheckListController extends Controllers {
         // item[id] is used for searching assigned questions for reinserting them as not base
         var response = await CheckListController.selectById(item["id"]);
         var checkList = response.toJson();
-        print(response);
 
         checkList.remove("id");
 
@@ -44,12 +45,31 @@ class CheckListController extends Controllers {
         checkList["parent_id"] = parentId;
         checkList["base_id"] = item["id"];
         checkList["child_ids"] = "";
-        print("after processing $checkList");
 
+        // New id for work check list
         var workCheckLstId = await CheckListController.insert(checkList);
 
-        break;
+        var questions =
+            await CheckListItemController.getQuestionsByParentId(item["id"]);
+
+        if (questions.length > 0) {
+          for (var q in questions) {
+            var qJson = q.toJson();
+            qJson.remove("id");
+            qJson["odooId"] = null;
+            qJson["base_id"] = qJson["id"];
+            qJson["parent_id"] = workCheckLstId;
+
+            var checkListItemId = await CheckListItemController.insert(qJson);
+          }
+        }
       }
     }
+
+    var dataToFront = await DBProvider.db
+        .executeQuery("SELECT * from check_list WHERE parent_id=$parentId");
+
+    print("Data to front $dataToFront");
+    return dataToFront;
   }
 }
