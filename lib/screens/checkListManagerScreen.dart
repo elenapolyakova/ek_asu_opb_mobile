@@ -20,7 +20,10 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
   int checkPlanItemId;
   int checkListId;
   int checkListItemId;
+  int faultId;
   dynamic _args;
+  String checkListName;
+  String checkListItemName;
   Map<String, dynamic> _screenList = {};
   String _selectedPage = '';
   _CheckListManagerScreen(this.checkPlanItemId);
@@ -49,6 +52,9 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
         _args = args;
         checkListId = args['checkListId'] ?? checkListId;
         checkListItemId = args['checkListItemId'] ?? checkListItemId;
+        faultId = args['faultId'] ?? faultId;
+        checkListName = args['checkListName'] ?? checkListName;
+        checkListItemName = args['checkListItemName'] ?? checkListItemName;
       }
     });
   }
@@ -72,17 +78,26 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
       case 'checkList':
         _screenList[_selectedPage] =
             screens.CheckListScreen(checkPlanItemId, push, pop);
-        //  push({"pathTo": 'checkList', "pathFrom": '', 'text': ''});
+
         break;
       case "checkListItem":
-        _screenList[_selectedPage] =
-            screens.CheckListItemScreen(checkListId, push, pop, checkListName: _args["checkListName"],);
-        // push({"pathTo": 'checkListItem', "pathFrom": 'checkList', 'text': 'Назад к листам проверок'});
+        _screenList[_selectedPage] = screens.CheckListItemScreen(
+          checkListId,
+          push,
+          pop,
+          checkListName: checkListName,
+        );
+
         break;
+      case "faultList":
+        _screenList[_selectedPage] = screens.FaultListScreen(
+            checkListItemId, push, pop,
+            checkListItemName: checkListItemName);
+        break;
+
       case "fault":
-        _screenList[_selectedPage] =
-            screens.FaultScreen(checkListItemId, push, pop);
-        // push({"path": 'faultTo', , "pathFrom": 'checkListItem', 'text': 'Назад к вопросам'});
+        _screenList[_selectedPage] = screens.FaultScreen(faultId, push, pop);
+
         break;
 
       default:

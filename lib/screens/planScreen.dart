@@ -267,7 +267,7 @@ class _PlanScreen extends State<PlanScreen> {
                                 context, planItemHeader, planItems)
                           ])
                       ])),
-               /* Container(
+                  /* Container(
                       child: MyButton(
                           text: 'test',
                           parentContext: context,
@@ -545,7 +545,9 @@ class _PlanScreen extends State<PlanScreen> {
     Map<String, dynamic> args = {
       'planItemId': planItemId,
       'filial': planItem.name.toString() != null ? planItem.name : '',
-      'typeName': planItem.checkTypeDisplay.toString() != 'null'?  planItem.checkTypeDisplay : '',
+      'typeName': planItem.checkTypeDisplay.toString() != 'null'
+          ? planItem.checkTypeDisplay
+          : '',
       'railwayId': _railway_id,
       'typePlan': _type,
       'year': _year
@@ -733,7 +735,7 @@ class _PlanScreen extends State<PlanScreen> {
   Future<bool> showPlanItemDialog(PlanItem planItem) {
     return showDialog<bool>(
         context: context,
-        barrierDismissible: true,
+        barrierDismissible: false,
         barrierColor: Color(0x88E6E6E6),
         builder: (BuildContext context) {
           return /*AlertDialog(
@@ -886,10 +888,20 @@ class _PlanScreen extends State<PlanScreen> {
                                         ]))
                               ])))),
                           Container(
-                              child: MyButton(
-                                  text: 'принять',
-                                  parentContext: context,
-                                  onPress: () => submitPlanItem(planItem)))
+                              child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                MyButton(
+                                    text: 'принять',
+                                    parentContext: context,
+                                    onPress: () => submitPlanItem(planItem)),
+                                MyButton(
+                                    text: 'отменить',
+                                    parentContext: context,
+                                    onPress: () {
+                                      cancelPlanItem();
+                                    }),
+                              ]))
                         ])))))
           ]);
         });
@@ -947,6 +959,10 @@ class _PlanScreen extends State<PlanScreen> {
     }
   }
 
+  Future<void> cancelPlanItem() async {
+    Navigator.pop<bool>(context, null);
+  }
+
   void submitPlanItem(PlanItem planItem) async {
     final form = formPlanItemKey.currentState;
     hideKeyboard();
@@ -998,11 +1014,11 @@ class _PlanScreen extends State<PlanScreen> {
   Future<void> testClicked() async {
     print('test');
 
-   //  List result = await DBProvider.db.selectAll('plan');
-       List result = await DBProvider.db.select('plan', where: "active = '1'");
+    //  List result = await DBProvider.db.selectAll('plan');
+    List result = await DBProvider.db.select('plan', where: "active = '1'");
 
     //await DBProvider.db.deleteAll('plan_item');
     //await DBProvider.db.deleteAll('plan');
-     print(result.length);
+    print(result.length);
   }
 }

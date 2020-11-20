@@ -290,12 +290,22 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
                                 ])))),
                             Container(
                                 child: Column(children: [
-                              MyButton(
-                                  text: 'принять',
-                                  parentContext: context,
-                                  onPress: () {
-                                    submitPlan(departmentCopy, setState);
-                                  }),
+                              Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    MyButton(
+                                        text: 'принять',
+                                        parentContext: context,
+                                        onPress: () {
+                                          submitPlan(departmentCopy, setState);
+                                        }),
+                                    MyButton(
+                                        text: 'отменить',
+                                        parentContext: context,
+                                        onPress: () {
+                                          cancelDepartment();
+                                        }),
+                                  ]),
                               Container(
                                   width: double.infinity,
                                   height: 20,
@@ -311,6 +321,10 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
             ]);
           });
         });
+  }
+
+  Future<void> cancelDepartment() async {
+    Navigator.pop<bool>(context, null);
   }
 
   void submitPlan(Department departmentCopy, setState) async {

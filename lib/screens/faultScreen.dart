@@ -2,36 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
-
-class Fault {
-  int id;
-  int odooId;
-  int parentId; //checkListItem.id
-  String name; //Наименование
-  String desc; //Описание
-  DateTime date; //Дата фиксации
-  String fine_desc; //Штраф. Описание
-  int fine; //Штраф. Сумма
-  int koap_id;
-  Fault(
-      {this.id,
-      this.odooId,
-      this.parentId,
-      this.name,
-      this.desc,
-      this.date,
-      this.fine,
-      this.fine_desc,
-      this.koap_id}); //Статья КОАП
-}
+import 'package:ek_asu_opb_mobile/screens/faultListScreen.dart';
 
 class FaultScreen extends StatefulWidget {
-  int checkListItemId;
+  int faultId;
   Function(Map<String, String>, dynamic arg) push;
   Map<String, String> Function() pop;
 
   @override
-  FaultScreen(this.checkListItemId, this.push, this.pop);
+  FaultScreen(this.faultId, this.push, this.pop);
   @override
   State<FaultScreen> createState() => _FaultScreen();
 }
@@ -40,6 +19,7 @@ class _FaultScreen extends State<FaultScreen> {
   UserInfo _userInfo;
   bool showLoading = true;
   var _tapPosition;
+  int faultId;
   double heightCheckList = 700;
   double widthCheckList = 1200;
   final formFaultKey = new GlobalKey<FormState>();
@@ -52,7 +32,7 @@ class _FaultScreen extends State<FaultScreen> {
       if (isLogin) {
         auth.getUserInfo().then((userInfo) {
           _userInfo = userInfo;
-
+          faultId = widget.faultId;
           loadData();
         });
       } //isLogin == true
@@ -193,14 +173,20 @@ class _FaultScreen extends State<FaultScreen> {
   @override
   Widget build(BuildContext context) {
     return showLoading
-                ? Text("")
-                : Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    child: Column(children: [
-                      Expanded(
-                          child: ListView(
-                              padding: const EdgeInsets.all(16),
-                              children: [Text("Нарушения")]))
-                    ]));
+        ? Text("")
+        : Padding(
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 40),
+            child: Column(children: [
+              Row(children: [Expanded(child: FormTitle("Нарушение:"))]),
+              Expanded(
+                  child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 2, child: Text('КОАП')),
+                  Expanded(flex: 2, child: Text('Фото')),
+                  Expanded(flex: 1, child: Text('Описание')),
+                ],
+              ))
+            ]));
   }
 }

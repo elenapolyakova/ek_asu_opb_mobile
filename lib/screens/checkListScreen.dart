@@ -60,15 +60,17 @@ class _CheckListScreen extends State<CheckListScreen> {
   // List<Map<String, Object>> typeCheckListList;
   List<Map<String, Object>> typeCheckListListAll;
   int _selectedType = 0;
+  int _selectedTypeTemplate = 0;
   CheckListWork _currentCheckList;
   List<CheckListWork> _items;
   List<CheckListWork> _allItems;
+  List<CheckListWork> _itemsTemplate;
   var _tapPosition;
   double heightCheckList = 700;
   double widthCheckList = 1000;
   _CheckListScreen(this.checkPlanItemId);
 
-   static Map<int, String> typeSelection = {
+  static Map<int, String> typeSelection = {
     1: 'Воздух',
     2: 'Вода',
     3: 'Отходы',
@@ -79,6 +81,11 @@ class _CheckListScreen extends State<CheckListScreen> {
     8: 'Эко-риски'
   };
 
+  List<Map<String, dynamic>> checkListHeader = [
+    {'text': 'Наименование', 'flex': 3.0},
+    {'text': 'Тип', 'flex': 1.0}
+  ];
+
   List<Map<String, dynamic>> choices = [
     {
       'title': "Перейти к чек-листу",
@@ -87,7 +94,6 @@ class _CheckListScreen extends State<CheckListScreen> {
     },
   ];
 
-  
   @override
   void initState() {
     super.initState();
@@ -108,7 +114,7 @@ class _CheckListScreen extends State<CheckListScreen> {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
       // typeCheckListList = makeListFromJson(CheckList.typeSelection);
-     // typeCheckListListAll = makeListFromJson(CheckListWork.typeSelection); //todo вернуть
+      // typeCheckListListAll = makeListFromJson(CheckListWork.typeSelection); //todo вернуть
       typeCheckListListAll = makeListFromJson(typeSelection);
       typeCheckListListAll.insert(0, {'id': 0, 'value': 'Все'});
       await loadCheckList();
@@ -128,38 +134,182 @@ class _CheckListScreen extends State<CheckListScreen> {
     _items = _items ?? [];
   }
 
+  void reloadTemplateList() {
+    _itemsTemplate = [];
+    if (_allItems != null)
+      _allItems.forEach((item) {
+        if (item.type == _selectedTypeTemplate || _selectedTypeTemplate == 0)
+          _itemsTemplate.add(CheckListWork(
+            parent_id: item.parent_id,
+            id: item.id,
+            is_active: item.is_active,
+            name: item.name,
+            odooId: item.odooId,
+            is_base: item.is_base,
+            type: item.type,
+            //base_id: item.base_id,
+            active: item.active,
+          ));
+      });
+  }
+
   Future<void> loadCheckList() async {
     List<CheckListWork> items = [
-    CheckListWork(
-        id: 1,
-        odooId: 1,
-        parent_id: checkPlanItemId,
-        is_base: true,
-        name: 'Чек-лист 1',
-        type: 1,
-        active: true,
-        is_active: true),
-    CheckListWork(
-        id: 2,
-        odooId: 2,
-        parent_id: checkPlanItemId,
-        is_base: true,
-        name: 'Чек-лист 2',
-        type: 2,
-        active: true,
-        is_active: true),
-    CheckListWork(
-        id: 3,
-        odooId: 3,
-        parent_id: checkPlanItemId,
-        is_base: true,
-        name: 'Чек-лист 3',
-        type: 3,
-        active: true,
-        is_active: false)
-  ];
-
-
+      CheckListWork(
+          id: 1,
+          odooId: 1,
+          parent_id: checkPlanItemId,
+          is_base: true,
+          name: 'Выбросы загрязняющих веществ в атмосферный воздух',
+          type: 1,
+          active: true,
+          is_active: true),
+      CheckListWork(
+          id: 2,
+          odooId: 2,
+          parent_id: checkPlanItemId,
+          is_base: true,
+          name: 'Охрана водных ресурсов',
+          type: 2,
+          active: true,
+          is_active: true),
+      CheckListWork(
+          id: 3,
+          odooId: 3,
+          parent_id: checkPlanItemId,
+          is_base: true,
+          name: 'Недропользование и рациональное использование земель',
+          type: 4,
+          active: true,
+          is_active: true),
+      CheckListWork(
+          id: 4,
+          odooId: 4,
+          parent_id: checkPlanItemId,
+          is_base: true,
+          name: 'Обращение с отходами производства и потребления',
+          type: 3,
+          active: true,
+          is_active: false),
+      CheckListWork(
+          id: 5,
+          odooId: 5,
+          parent_id: checkPlanItemId,
+          is_base: true,
+          name: 'Физическое воздействие: шум',
+          type: 5,
+          active: true,
+          is_active: false),
+      CheckListWork(
+          id: 6,
+          odooId: 6,
+          parent_id: checkPlanItemId,
+          is_base: true,
+          name:
+              'Взаимодействие с государственными органами и другими заинтересованными сторонами',
+          type: 6,
+          active: true,
+          is_active: false),
+      CheckListWork(
+          id: 7,
+          odooId: 7,
+          parent_id: checkPlanItemId,
+          is_base: true,
+          name: 'Экологическая политика',
+          type: 7,
+          active: true,
+          is_active: false),
+      CheckListWork(
+          id: 8,
+          odooId: 8,
+          parent_id: checkPlanItemId,
+          is_base: true,
+          name: 'Роли, ответственность и полномочия',
+          type: 7,
+          active: true,
+          is_active: false),
+      CheckListWork(
+          id: 9,
+          odooId: 9,
+          parent_id: checkPlanItemId,
+          is_base: true,
+          name: 'Планирование',
+          type: 7,
+          active: true,
+          is_active: false),
+      CheckListWork(
+          id: 10,
+          odooId: 10,
+          parent_id: checkPlanItemId,
+          is_base: true,
+          name: 'Компетентность и осведомленность',
+          type: 7,
+          active: true,
+          is_active: false),
+      CheckListWork(
+          id: 11,
+          odooId: 11,
+          parent_id: checkPlanItemId,
+          is_base: true,
+          name: 'Обмен информацией',
+          type: 7,
+          active: true,
+          is_active: false),
+      CheckListWork(
+          id: 12,
+          odooId: 12,
+          parent_id: checkPlanItemId,
+          is_base: true,
+          name: 'Управление документацией',
+          type: 7,
+          active: true,
+          is_active: false),
+      CheckListWork(
+          id: 13,
+          odooId: 13,
+          parent_id: checkPlanItemId,
+          is_base: true,
+          name: 'Планирование и управление операциями',
+          type: 7,
+          active: true,
+          is_active: false),
+      CheckListWork(
+          id: 14,
+          odooId: 14,
+          parent_id: checkPlanItemId,
+          is_base: true,
+          name: 'Готовность к нештатным, аварийным и чрезвычайным ситуациям',
+          type: 7,
+          active: true,
+          is_active: false),
+      CheckListWork(
+          id: 15,
+          odooId: 15,
+          parent_id: checkPlanItemId,
+          is_base: true,
+          name: 'Проверки СЭМ',
+          type: 7,
+          active: true,
+          is_active: false),
+      CheckListWork(
+          id: 16,
+          odooId: 16,
+          parent_id: checkPlanItemId,
+          is_base: true,
+          name: 'Улучшение, несоответствия, корректирующие действия',
+          type: 7,
+          active: true,
+          is_active: false),
+      CheckListWork(
+          id: 17,
+          odooId: 17,
+          parent_id: checkPlanItemId,
+          is_base: true,
+          name: 'Экологические риски ОАО "РЖД"',
+          type: 8,
+          active: true,
+          is_active: false),
+    ];
 
     _allItems = items ?? [];
 
@@ -217,8 +367,29 @@ class _CheckListScreen extends State<CheckListScreen> {
     return result;
   }
 
-  Widget generateTableData(BuildContext context, List<CheckListWork> rows) {
-    List<TableRow> tableRows = [];
+  Widget generateTableData(BuildContext context,
+      List<Map<String, dynamic>> headers, List<CheckListWork> rows) {
+    int i = 0;
+    Map<int, TableColumnWidth> columnWidths = Map.fromIterable(headers,
+        key: (item) => i++,
+        value: (item) =>
+            FlexColumnWidth(double.parse(item['flex'].toString())));
+
+    TableRow headerTableRow = TableRow(
+        decoration: BoxDecoration(color: Theme.of(context).primaryColor),
+        children: List.generate(
+            headers.length,
+            (index) => Column(
+                  children: [
+                    Padding(
+                        padding: EdgeInsets.all(10.0),
+                        child: Text(
+                          headers[index]["text"],
+                          textAlign: TextAlign.center,
+                        )),
+                  ],
+                )));
+    List<TableRow> tableRows = [headerTableRow];
     int rowIndex = 0;
     rows.forEach((row) {
       rowIndex++;
@@ -230,6 +401,7 @@ class _CheckListScreen extends State<CheckListScreen> {
                   : Colors.white)),
           children: [
             getRowCell(row.name, row.id, 0),
+            getRowCell(typeSelection[row.type], row.id, 1),
           ]);
       tableRows.add(tableRow);
     });
@@ -237,6 +409,7 @@ class _CheckListScreen extends State<CheckListScreen> {
     return Table(
       border: TableBorder.all(),
       children: tableRows,
+      columnWidths: columnWidths,
       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
     );
   }
@@ -319,6 +492,8 @@ class _CheckListScreen extends State<CheckListScreen> {
           active: item.active,
         ));
       });
+
+    reloadTemplateList();
     return showDialog<bool>(
         context: context,
         barrierDismissible: false,
@@ -349,15 +524,44 @@ class _CheckListScreen extends State<CheckListScreen> {
                           body: Form(
                               child: Container(
                                   child: Column(children: [
-                            FormTitle('Шаблоны листов проверок:'),
+                            Row(children: [
+                              Expanded(
+                                  child: FormTitle('Шаблоны листов проверок:'),
+                                  flex: 3),
+                              Expanded(
+                                  // width: 200,
+                                  child: MyDropdown(
+                                text: 'Тип',
+                                dropdownValue: _selectedTypeTemplate.toString(),
+                                items: typeCheckListListAll,
+                                onChange: (value) {
+                                  setState(() {
+                                    _selectedTypeTemplate = int.parse(value);
+                                    reloadTemplateList();
+                                  });
+                                },
+                                parentContext: context,
+                              ))
+                            ]),
                             Expanded(
                                 child: ListView(
                                     children: List.generate(
-                                        _itemsCopy.length,
+                                        _itemsTemplate.length,
                                         (i) => MyCheckbox(
-                                                _itemsCopy[i].is_active,
-                                                _itemsCopy[i].name, (value) {
-                                              _itemsCopy[i].is_active = value;
+                                                _itemsTemplate[i].is_active,
+                                                _itemsTemplate[i].name,
+                                                (value) {
+                                              CheckListWork item =
+                                                  _itemsCopy.firstWhere(
+                                                      (item) =>
+                                                          item.id ==
+                                                          _itemsTemplate[i].id,
+                                                      orElse: () => null);
+
+                                              if (item != null)
+                                                item.is_active = value;
+                                              _itemsTemplate[i].is_active =
+                                                  value;
                                               setState(() {});
                                             })))),
                             Container(
@@ -439,7 +643,7 @@ class _CheckListScreen extends State<CheckListScreen> {
     return showLoading
         ? Text("")
         : Padding(
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 100),
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 100),
             child: Column(children: [
               Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
                 Expanded(
@@ -456,7 +660,9 @@ class _CheckListScreen extends State<CheckListScreen> {
                         top: 16,
                       ),
                       children: [
-                    Column(children: [generateTableData(context, _items)])
+                    Column(children: [
+                      generateTableData(context, checkListHeader, _items)
+                    ])
                   ]))
             ]));
   }

@@ -3,7 +3,6 @@ import 'dart:io';
 
 import "package:ek_asu_opb_mobile/models/models.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
-import 'package:http/http.dart';
 
 class CheckListWork extends Models {
   int id;
