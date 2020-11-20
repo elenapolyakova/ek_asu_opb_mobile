@@ -293,4 +293,9 @@ class DBProvider {
     final Database db = await database;
     return db.batch();
   }
+
+  Future<List<Map<String, dynamic>>> executeQuery(String query) async {
+    final Database db = await database;
+    return db.rawQuery(query);
+  }
 }
