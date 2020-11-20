@@ -24,8 +24,21 @@ class CheckListController extends Controllers {
     return CheckListWork.fromJson(json);
   }
 
-  static Future<List<Map<String, dynamic>>> selectByParentId(
-      int parentId) async {
+  /// Select all CheckLists with matching parentId
+  /// Returns found records or null.
+  static Future<List<CheckListWork>> select(int parentId) async {
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
+      _tableName,
+      where: "parent_id = ? and active = 'true'",
+      whereArgs: [parentId],
+    );
+    if (queryRes == null || queryRes.length == 0) return [];
+    List<CheckListWork> checkLists =
+        queryRes.map((e) => CheckListWork.fromJson(e)).toList();
+    return checkLists;
+  }
+
+  static Future<List<CheckListWork>> selectByParentId(int parentId) async {
     if (parentId == null) return null;
 
     // [{id: 1}, {}...]
@@ -50,7 +63,8 @@ class CheckListController extends Controllers {
         var workCheckLstId = await CheckListController.insert(checkList);
 
         var questions =
-            await CheckListItemController.getQuestionsByParentId(item["id"]);
+            await CheckListItemController.getCheckListItemsByParentId(
+                item["id"]);
 
         if (questions.length > 0) {
           for (var q in questions) {
@@ -66,10 +80,8 @@ class CheckListController extends Controllers {
       }
     }
 
-    var dataToFront = await DBProvider.db
-        .executeQuery("SELECT * from check_list WHERE parent_id=$parentId");
+    var dataToFront = await CheckListController.select(parentId);
 
-    print("Data to front $dataToFront");
     return dataToFront;
   }
 }
