@@ -16,11 +16,13 @@ class CheckListWork extends Models {
   bool active = true;
   // Status of check list, true in work, false not used now
   bool is_active;
+  int base_id;
 
   CheckListWork({
     this.id,
     this.odooId,
     this.parent_id,
+    this.base_id,
     this.is_base,
     this.name,
     this.is_active,
@@ -29,17 +31,28 @@ class CheckListWork extends Models {
     this.active,
   });
 
+  static Map<int, String> typeSelection = {
+    1: 'Воздух',
+    2: 'Вода',
+    3: 'Отходы',
+    4: 'Почва',
+    5: 'Шум',
+    6: 'Гос.органы',
+    7: 'Эко-менеджмент',
+    8: 'Эко-риски'
+  };
+
   factory CheckListWork.fromJson(Map<String, dynamic> json) =>
       new CheckListWork(
         id: json["id"],
         odooId: json["odooId"],
-        parent_id:
-            json["parent_id"] is Int32 ? getObj(json["parent_id"]) : null,
-        is_base: getObj(json["is_base"]),
+        parent_id: json["parent_id"] is List ? null : getObj(json["parent_id"]),
+        is_base: (json["is_base"].toString() == 'true'),
         name: getStr(json["name"]),
-        is_active: getObj(json["is_active"]),
+        is_active: (json["is_active"].toString() == 'true'),
         type: getObj(json["type"]),
         child_ids: getStr(json["child_ids"]),
+        base_id: getObj(json["base_id"]),
         // set false by default
         active: (json["active"].toString() == 'true'),
       );
@@ -49,6 +62,7 @@ class CheckListWork extends Models {
       'id': id,
       'odooId': odooId,
       'parent_id': parent_id,
+      'base_id': base_id,
       'name': name,
       'type': type,
       'active': (active == null || !active) ? 'false' : 'true',

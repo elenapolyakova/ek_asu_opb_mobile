@@ -132,6 +132,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               'id',
               'parent_id',
               'is_active',
+              'base_id',
               'name',
               'type',
               'active',
@@ -154,7 +155,8 @@ Future<List<Map<String, dynamic>>> getDictionaries(
                   'question',
                   'result',
                   'description',
-                  'active'
+                  'active',
+                  'base_id',
                 ]
               });
 

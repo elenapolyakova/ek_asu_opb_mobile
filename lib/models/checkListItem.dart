@@ -5,6 +5,7 @@ import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class CheckListItem extends Models {
   int id;
+  int base_id;
   int odooId;
   // Id of check list
   int parent_id;
@@ -20,6 +21,7 @@ class CheckListItem extends Models {
     this.id,
     this.odooId,
     this.parent_id,
+    this.base_id,
     this.name,
     this.question,
     this.result,
@@ -32,6 +34,7 @@ class CheckListItem extends Models {
           id: json["id"],
           odooId: json["odooId"],
           parent_id: json["parent_id"],
+          base_id: getObj(json["base_id"]),
           name: getStr(json["name"]),
           question: getStr(json["question"]),
           active: (json["active"].toString() == 'true'),
@@ -43,6 +46,7 @@ class CheckListItem extends Models {
       'id': id,
       'odooId': odooId,
       'parent_id': parent_id,
+      'base_id': base_id,
       'name': name,
       'question': question,
       'active': (active == null || !active) ? 'false' : 'true',
