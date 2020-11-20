@@ -71,16 +71,7 @@ class _CheckListScreen extends State<CheckListScreen> {
   double widthCheckList = 1000;
   _CheckListScreen(this.checkPlanItemId);
 
-  static Map<int, String> typeSelection = {
-    1: 'Воздух',
-    2: 'Вода',
-    3: 'Отходы',
-    4: 'Почва',
-    5: 'Почва',
-    6: 'Гос.органы',
-    7: 'Эко-менеджмент',
-    8: 'Эко-риски'
-  };
+
 
   List<Map<String, dynamic>> checkListHeader = [
     {'text': 'Наименование', 'flex': 3.0},
@@ -114,9 +105,7 @@ class _CheckListScreen extends State<CheckListScreen> {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
-      // typeCheckListList = makeListFromJson(CheckList.typeSelection);
-      // typeCheckListListAll = makeListFromJson(CheckListWork.typeSelection); //todo вернуть
-      typeCheckListListAll = makeListFromJson(typeSelection);
+      typeCheckListListAll = makeListFromJson(CheckListWork.typeSelection);
       typeCheckListListAll.insert(0, {'id': 0, 'value': 'Все'});
       await loadCheckList();
     } catch (e) {} finally {
@@ -148,17 +137,17 @@ class _CheckListScreen extends State<CheckListScreen> {
             odooId: item.odooId,
             is_base: item.is_base,
             type: item.type,
-            //base_id: item.base_id,
+            base_id: item.base_id,
             active: item.active,
           ));
       });
   }
 
   Future<void> loadCheckList() async {
-    dynamic mapItems =
+    List<CheckListWork> items =
         await CheckListController.selectByParentId(checkPlanItemId);
-        
-     List<CheckListWork> items = [
+
+     /*List<CheckListWork> items = [
       CheckListWork(
           id: 1,
           odooId: 1,
@@ -313,7 +302,7 @@ class _CheckListScreen extends State<CheckListScreen> {
           type: 8,
           active: true,
           is_active: false),
-    ];
+    ];*/
 
     _allItems = items ?? [];
 
@@ -405,7 +394,7 @@ class _CheckListScreen extends State<CheckListScreen> {
                   : Colors.white)),
           children: [
             getRowCell(row.name, row.id, 0),
-            getRowCell(typeSelection[row.type], row.id, 1),
+            getRowCell(CheckListWork.typeSelection[row.type], row.id, 1),
           ]);
       tableRows.add(tableRow);
     });
@@ -492,7 +481,7 @@ class _CheckListScreen extends State<CheckListScreen> {
           odooId: item.odooId,
           is_base: item.is_base,
           type: item.type,
-          //base_id: item.base_id,
+          base_id: item.base_id,
           active: item.active,
         ));
       });
