@@ -39,7 +39,7 @@ class CheckListItem extends Models {
           question: getStr(json["question"]),
           active: (json["active"].toString() == 'true'),
           result: getStr(json["result"]),
-          description: getStr(json["questions"]));
+          description: getStr(json["description"]));
 
   Map<String, dynamic> toJson() {
     return {
