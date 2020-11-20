@@ -26,4 +26,20 @@ class CheckListItemController extends Controllers {
     print("getQuestionsByParentId() response $response");
     return response;
   }
+
+  /// Select all CheckListItems with matching parentId (Parent id stays for check_list)
+  /// Returns found records or null.
+  static Future<List<CheckListItem>> select(int parentId) async {
+    if (parentId == null) return [];
+
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
+      _tableName,
+      where: "parent_id = ? and active = 'true'",
+      whereArgs: [parentId],
+    );
+    if (queryRes == null || queryRes.length == 0) return [];
+    List<CheckListItem> checkListItems =
+        queryRes.map((e) => CheckListItem.fromJson(e)).toList();
+    return checkListItems;
+  }
 }
