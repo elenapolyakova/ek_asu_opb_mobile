@@ -11,8 +11,10 @@ class CheckListItemController extends Controllers {
     return await DBProvider.db.insert(_tableName, checkListItem.toJson());
   }
 
-  static Future<List<CheckListItem>> getQuestionsByParentId(
+  static Future<List<CheckListItem>> getCheckListItemsByParentId(
       int parent_id) async {
+    if (parent_id == null) return [];
+
     var result = await DBProvider.db.executeQuery(
         "SELECT * from check_list_item WHERE parent_id=$parent_id");
     List<CheckListItem> response = [];
