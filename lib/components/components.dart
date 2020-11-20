@@ -94,6 +94,7 @@ class EditTextField extends StatefulWidget {
   Function(TapDownDetails) onTapDown;
   Function() onLongPress;
   bool readOnly;
+  List<TextInputFormatter> inputFormatters;
 
   EditTextField(
       {this.text = "",
@@ -111,7 +112,8 @@ class EditTextField extends StatefulWidget {
       this.borderColor,
       this.onTapDown,
       this.onLongPress,
-      this.readOnly = false});
+      this.readOnly = false,
+      this.inputFormatters});
   @override
   State<EditTextField> createState() => _EditTextField(value);
 }
@@ -149,6 +151,7 @@ class _EditTextField extends State<EditTextField> {
                   widget.text,
                   widget.context,
                   textInputType: widget.textInputType,
+                  inputFormatters: widget.inputFormatters,
                   validator: widget.validator ?? (val) => null,
                 ).then((newValue) => setState(() {
                       widget.value = newValue ?? "";
@@ -160,8 +163,7 @@ class _EditTextField extends State<EditTextField> {
                   height: widget.height,
                   decoration: BoxDecoration(
                     border: Border.all(
-                        color: widget.borderColor ?? Colors.white,
-                        width: 1.5),
+                        color: widget.borderColor ?? Colors.white, width: 1.5),
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                     color: widget.backgroundColor ?? Colors.white,
                   ),
@@ -169,6 +171,7 @@ class _EditTextField extends State<EditTextField> {
                     child: TextFormField(
                       readOnly: widget.showEditDialog && !widget.readOnly,
                       keyboardType: widget.textInputType,
+                      inputFormatters: widget.inputFormatters,
                       validator: widget.validator ?? (val) => null,
                       controller: TextEditingController.fromValue(
                           TextEditingValue(
@@ -343,6 +346,7 @@ class EditPopUp extends StatefulWidget {
   String text;
   BuildContext parentContext;
   TextInputType textInputType;
+  List<TextInputFormatter> inputFormatters;
   Function(String) validator;
 
   EditPopUp(
@@ -350,7 +354,8 @@ class EditPopUp extends StatefulWidget {
       this.text,
       this.sourceValue,
       this.textInputType,
-      this.validator});
+      this.validator,
+      this.inputFormatters});
 
   @override
   State<EditPopUp> createState() => _EditPopUp();
@@ -404,6 +409,7 @@ class _EditPopUp extends State<EditPopUp> {
                             onSaved: (value) => newValue = value,
                             maxLines: 7,
                             keyboardType: widget.textInputType,
+                            inputFormatters: widget.inputFormatters,
                             validator: widget.validator
                             // maxLength: 256,
                             ),
@@ -448,7 +454,9 @@ void hideKeyboard() {
 
 Future<String> showEdit(
     String sourceValue, String text, BuildContext parentContext,
-    {TextInputType textInputType, Function(String) validator}) {
+    {TextInputType textInputType,
+    Function(String) validator,
+    List<TextInputFormatter> inputFormatters}) {
   return showDialog<String>(
       context: parentContext,
       barrierDismissible: false,
@@ -459,6 +467,7 @@ Future<String> showEdit(
             text: text,
             parentContext: parentContext,
             textInputType: textInputType,
+            inputFormatters: inputFormatters,
             validator: validator);
       });
 }

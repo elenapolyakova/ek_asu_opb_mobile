@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
@@ -89,7 +90,7 @@ class _FaultScreen extends State<FaultScreen> {
         desc: 'Описание нарушения',
         date: DateTime.now(),
         fine_desc: 'Описание штрафа',
-        fine: 1000,
+        // fine: 1000,
         koap_id: 1);
     _fault = fault;
     //await FaultController.select(faultId)
@@ -260,7 +261,7 @@ class _FaultScreen extends State<FaultScreen> {
   }
 */
   showToolTip() {
-    if (_koapId = null) return;
+    // if (_koapId = null) return;
     return showDialog<bool>(
         context: context,
         barrierDismissible: true,
@@ -300,31 +301,111 @@ class _FaultScreen extends State<FaultScreen> {
     return showLoading
         ? Text("")
         : Padding(
-            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 40),
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 50),
             child: Column(children: [
-              Row(children: [Expanded(child: FormTitle("Нарушение"))]),
               Expanded(
                   child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                       flex: 2,
-                      child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            EditTextField(
-                              text: 'Наименование',
-                              value: _fault.name,
-                              onSaved: (value) => {_fault.name = value},
-                              context: context,
-                              borderColor: Theme.of(context).primaryColorDark,
-                             
-                            ),
-                            GestureDetector(
-                              child: Icon(Icons.help_outline),
-                              onTap: () => showToolTip(),
-                            )
-                          ])),
+                      child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Row(children: [
+                                  FormTitle("Нарушение"),
+                                  Container(
+                                    padding: EdgeInsets.only(left: 20),
+                                    child: GestureDetector(
+                                      child: Icon(Icons.help_outline,
+                                          size: 35,
+                                          color:
+                                              Theme.of(context).primaryColor),
+                                      onTap: () => showToolTip(),
+                                    ),
+                                  )
+                                ]),
+                                Container(
+                                  margin: EdgeInsets.only(bottom: 10),
+                                  height: 45,
+                                  decoration: new BoxDecoration(
+                                    border: Border.all(
+                                        color:
+                                            Theme.of(context).primaryColorDark,
+                                        width: 1.5),
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(12)),
+                                    color: Colors.white,
+                                  ),
+                                  padding: EdgeInsets.all(0),
+                                  child: TextFormField(
+                                    decoration: new InputDecoration(
+                                      suffixIcon: Icon(Icons.description,
+                                          color:
+                                              Theme.of(context).primaryColor),
+                                      border: OutlineInputBorder(
+                                          borderSide: BorderSide.none),
+                                    ),
+                                    keyboardType: TextInputType.emailAddress,
+                                    maxLines: 1,
+                                    cursorColor: Theme.of(context).cursorColor,
+                                    onSaved: (val) => null, //_email = val,
+                                    onTap: () => null,
+                                  ),
+                                ),
+                                Container(
+                                  margin: EdgeInsets.symmetric(vertical: 20),
+                                  child: EditTextField(
+                                    text: 'Наименование',
+                                    value: _fault.name,
+                                    onSaved: (value) => {_fault.name = value},
+                                    context: context,
+                                    borderColor:
+                                        Theme.of(context).primaryColorDark,
+                                    height: 40,
+                                    margin: 0,
+                                  ),
+                                ),
+                                Container(
+                                  margin: EdgeInsets.symmetric(vertical: 20),
+                                  child: EditTextField(
+                                    text: 'Описание штрафа',
+                                    value: _fault.fine_desc,
+                                    onSaved: (value) =>
+                                        {_fault.fine_desc = value},
+                                    context: context,
+                                    borderColor:
+                                        Theme.of(context).primaryColorDark,
+                                    height: 140,
+                                    maxLines: 7,
+                                    margin: 0,
+                                  ),
+                                ),
+                                Container(
+                                  margin: EdgeInsets.symmetric(vertical: 20),
+                                  child: EditTextField(
+                                    text: 'Сумма итогового штрафа',
+                                    value: _fault.fine != null
+                                        ? _fault.fine.toString()
+                                        : '',
+                                    onSaved: (value) =>
+                                        {_fault.fine = int.tryParse(value)},
+                                    context: context,
+                                    borderColor:
+                                        Theme.of(context).primaryColorDark,
+                                    height: 40,
+                                    inputFormatters: <TextInputFormatter>[
+                                      FilteringTextInputFormatter.digitsOnly
+                                    ], // Only numbers can be entered
+                                    textInputType:
+                                        TextInputType.numberWithOptions(
+                                            decimal: true),
+                                    margin: 0,
+                                  ),
+                                ),
+                              ]))),
                   Expanded(flex: 2, child: Text('Фото')),
                   Expanded(flex: 1, child: Text('Описание')),
                 ],

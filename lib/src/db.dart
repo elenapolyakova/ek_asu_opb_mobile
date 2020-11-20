@@ -57,112 +57,9 @@ class DBProvider {
         switch (oldVersion) {
           case 0:
           case 1:
-          case 2:
-          case 3:
-            await db.execute('ALTER TABLE user ADD COLUMN user_role TEXT');
-            continue v4;
-          v4:
-          case 4:
-            await db.execute(
-                "CREATE TABLE IF NOT EXISTS plan_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, department_txt TEXT, check_type INTEGER, period INTEGER, responsible TEXT, check_result TEXT, active TEXT)");
-            await db.execute('ALTER TABLE syn ADD COLUMN error TEXT');
-            continue v5;
-          v5:
-          case 5:
-          case 6:
-            //  await db.execute("DROP TABLE IF EXISTS plan");
-            //  await db.execute("DROP TABLE IF EXISTS plan_item");
-            await db.execute(
-                "CREATE TABLE IF NOT EXISTS plan(id INTEGER PRIMARY KEY, odoo_id INTEGER, type TEXT, name TEXT, rw_id INTEGER, year INTEGER, date_set TEXT, state TEXT, signer_name TEXT, signer_post TEXT, num_set TEXT, active TEXT)");
-            await db.execute(
-                "CREATE TABLE IF NOT EXISTS plan_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, department_txt TEXT, check_type INTEGER, period INTEGER, responsible TEXT, check_result TEXT, active TEXT)");
-            await db.execute(
-                "CREATE TABLE IF NOT EXISTS plan_item_check(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, rw_id INTEGER, date_from TEXT, date_to TEXT, date_set TEXT, state TEXT, signer_name TEXT, signer_post TEXT, app_name TEXT, app_post TEXT, num_set TEXT, active TEXT, main_com_group_id INTEGER)");
-            await db.execute(
-                "CREATE TABLE IF NOT EXISTS plan_item_check_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, type INTEGER, department_id INTEGER, date TEXT, dt_from TEXT, dt_to TEXT, active TEXT, com_group_id INTEGER)");
-            await db.execute(
-                "CREATE TABLE IF NOT EXISTS com_group(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, head_id INTEGER, group_num INTEGER, is_main TEXT, active TEXT)");
-            await db.execute(
-                "CREATE TABLE IF NOT EXISTS rel_com_group_user(id INTEGER PRIMARY KEY, com_group_id INTEGER, user_id INTEGER)");
-            continue v7;
-          v7:
-          case 7:
-            await db.execute(
-                'ALTER TABLE rel_com_group_user ADD COLUMN active TEXT');
-            continue v8;
-          v8:
-          case 8:
-            await db.transaction((txn) async {
-              await txn.execute(
-                  'CREATE TABLE new_com_group(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, head_id INTEGER, group_num TEXT, is_main TEXT, active TEXT)');
-              await txn
-                  .execute('INSERT INTO new_com_group SELECT * FROM com_group');
-              await txn.execute('DROP TABLE com_group');
-              await txn
-                  .execute('ALTER TABLE new_com_group RENAME TO com_group');
-            });
-            continue v9;
-          v9:
-          case 9:
-            await db.transaction((txn) async {
-              await txn.execute(
-                  "CREATE TABLE new_plan(id INTEGER PRIMARY KEY, odoo_id INTEGER, type TEXT, name TEXT, rw_id INTEGER, year INTEGER, date_set TEXT, state TEXT, signer_name TEXT, signer_post TEXT, num_set TEXT, active TEXT)");
-              await txn.execute(
-                  'INSERT INTO new_plan(id, odoo_id, type, name, rw_id, year, state, signer_name, signer_post, num_set, active) SELECT id, odoo_id, type, name, rw_id, year, state, signer_name, signer_post, num_set, active FROM plan');
-              await txn.execute('DROP TABLE plan');
-              await txn.execute('ALTER TABLE new_plan RENAME TO plan');
-
-              await txn.execute(
-                  "CREATE TABLE new_plan_item_check(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, rw_id INTEGER, date_from TEXT, date_to TEXT, date_set TEXT, state TEXT, signer_name TEXT, signer_post TEXT, app_name TEXT, app_post TEXT, num_set TEXT, active TEXT, main_com_group_id INTEGER)");
-              await txn.execute(
-                  'INSERT INTO new_plan_item_check(id, odoo_id, parent_id, name, rw_id, state, signer_name, signer_post, app_name, app_post, num_set, active, main_com_group_id) SELECT id, odoo_id, parent_id, name, rw_id, state, signer_name, signer_post, app_name, app_post, num_set, active, main_com_group_id FROM plan_item_check');
-              await txn.execute('DROP TABLE plan_item_check');
-              await txn.execute(
-                  'ALTER TABLE new_plan_item_check RENAME TO plan_item_check');
-
-              await txn.execute(
-                  "CREATE TABLE new_plan_item_check_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, type INTEGER, department_id INTEGER, date TEXT, dt_from TEXT, dt_to TEXT, active TEXT, com_group_id INTEGER)");
-              await txn.execute(
-                  'INSERT INTO new_plan_item_check_item(id, odoo_id, parent_id, name, type, department_id, active, com_group_id) SELECT id, odoo_id, parent_id, name, type, department_id, active, com_group_id FROM plan_item_check_item');
-              await txn.execute('DROP TABLE plan_item_check_item');
-              await txn.execute(
-                  'ALTER TABLE new_plan_item_check_item RENAME TO plan_item_check_item');
-            });
-            continue v10;
-          v10:
-          case 10:
-            await db.transaction((txn) async {
-              await txn.execute(
-                  "CREATE TABLE new_department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER, active TEXT, search_field TEXT, inn TEXT, ogrn TEXT, okpo TEXT, addr TEXT, director_fio TEXT, director_email TEXT, director_phone TEXT, deputy_fio TEXT, deputy_email TEXT, deputy_phone TEXT)");
-              await txn.execute(
-                  "INSERT INTO new_department(id, name, short_name, railway_id, parent_id, active, search_field, inn, ogrn, okpo, addr, director_fio, director_email, director_phone, deputy_fio, deputy_email, deputy_fio) SELECT id, name, short_name, railway_id, parent_id, active, search_field, inn, ogrn, okpo, addr, director_fio, director_email, director_phone, deputy_fio, deputy_email, deputy_fio FROM department");
-              await txn.execute("DROP TABLE department");
-              await txn
-                  .execute("ALTER TABLE new_department RENAME TO department");
-            });
-            continue v11;
-          v11:
-          case 11:
-            await db.transaction((txn) async {
-              await txn.execute(
-                  "CREATE TABLE new_department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER, active TEXT, search_field TEXT, inn TEXT, ogrn TEXT, okpo TEXT, addr TEXT, director_fio TEXT, director_email TEXT, director_phone TEXT, deputy_fio TEXT, deputy_email TEXT, deputy_phone TEXT, rel_sector_id INTEGER, rel_sector_name TEXT, f_coord_n REAL, f_coord_e REAL)");
-              await txn.execute(
-                  "INSERT INTO new_department(id, name, short_name, railway_id, parent_id, active, search_field, inn, ogrn, okpo, addr, director_fio, director_email, director_phone, deputy_fio, deputy_email, deputy_fio, rel_sector_id, rel_sector_name, f_coord_n, f_coord_e) SELECT id, name, short_name, railway_id, parent_id, active, search_field, inn, ogrn, okpo, addr, director_fio, director_email, director_phone, deputy_fio, deputy_email, deputy_fio FROM department");
-              await txn.execute("DROP TABLE department");
-              await txn
-                  .execute("ALTER TABLE new_department RENAME TO department");
-            });
-            continue v12;
-          v12:
-          case 12:
-            await db.execute(
-                "CREATE TABLE IF NOT EXISTS check_list(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, base_id INTEGER, is_base TEXT, name TEXT, is_active TEXT, type INTEGER, active TEXT)");
-
-            await db.execute(
-                "CREATE TABLE IF NOT EXISTS check_list_item(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, base_id INTEGER, name TEXT, question TEXT, result TEXT, description TEXT, active TEXT)");
-            continue v13;
-          v13:
-          case 13:
+          //continue v2;
+          //v2:
+          //case 2:
           default:
         }
       },
@@ -177,7 +74,7 @@ class DBProvider {
 
       // Set the version. This executes the onCreate function and provides a
       // path to perform database upgrades and downgrades.
-      version: 13,
+      version: 1,
     );
   }
 
