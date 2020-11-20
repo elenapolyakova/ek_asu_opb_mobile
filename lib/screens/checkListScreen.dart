@@ -1,3 +1,4 @@
+import 'package:ek_asu_opb_mobile/controllers/checkList.dart';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
@@ -154,7 +155,10 @@ class _CheckListScreen extends State<CheckListScreen> {
   }
 
   Future<void> loadCheckList() async {
-    List<CheckListWork> items = [
+    dynamic mapItems =
+        await CheckListController.selectByParentId(checkPlanItemId);
+        
+     List<CheckListWork> items = [
       CheckListWork(
           id: 1,
           odooId: 1,

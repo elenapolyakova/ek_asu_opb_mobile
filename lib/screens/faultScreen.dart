@@ -4,6 +4,31 @@ import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/screens/faultListScreen.dart';
 
+class Koap {
+  int id;
+  String article; //Статья
+  String paragraph; // Пункт // Параграф
+  String text; //Описание
+  int man_fine_from; //Штраф на должностное лицо. От
+  int man_fine_to; //Штраф на должностное лицо. До
+  int firm_fine_from; //Штраф на юридическое  лицо. От
+  int firm_fine_to; //Штраф на юридическое  лицо. До
+  int firm_stop; //Срок приостановки деятельности, дней
+  int desc; //Дополнительное описание
+
+  Koap(
+      {this.id,
+      this.article,
+      this.paragraph,
+      this.text,
+      this.man_fine_from,
+      this.man_fine_to,
+      this.firm_fine_from,
+      this.firm_fine_to,
+      this.firm_stop,
+      this.desc});
+}
+
 class FaultScreen extends StatefulWidget {
   int faultId;
   Function(Map<String, String>, dynamic arg) push;
@@ -21,7 +46,11 @@ class _FaultScreen extends State<FaultScreen> {
   var _tapPosition;
   int faultId;
   double heightCheckList = 700;
-  double widthCheckList = 1200;
+  double widthCheckList = 1000;
+  double widthHelp = 700;
+  Fault _fault;
+  List<Koap> _koapItems;
+  int _koapId;
   final formFaultKey = new GlobalKey<FormState>();
 
   @override
@@ -43,11 +72,72 @@ class _FaultScreen extends State<FaultScreen> {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
+      await loadFault();
+      await loadKoap();
     } catch (e) {} finally {
       hideDialog(context);
       showLoading = false;
       setState(() => {});
     }
+  }
+
+  Future<void> loadFault() async {
+    Fault fault = Fault(
+        id: 1,
+        odooId: 1,
+        name: 'Разлив',
+        desc: 'Описание нарушения',
+        date: DateTime.now(),
+        fine_desc: 'Описание штрафа',
+        fine: 1000,
+        koap_id: 1);
+    _fault = fault;
+    //await FaultController.select(faultId)
+
+    _fault = _fault ?? [];
+  }
+
+  Future<void> loadKoap() async {
+    List<Koap> koapItems = [
+      Koap(
+          id: 1,
+          article: '6.3.',
+          paragraph: '1',
+          text:
+              'Нарушение законодательства в области обеспечения санитарно-эпидемиологического благополучия населения, выразившееся в нарушении действующих санитарных правил и гигиенических нормативов, невыполнении санитарно-гигиенических и противоэпидемических мероприятий',
+          man_fine_from: 500,
+          man_fine_to: 1000,
+          firm_fine_from: 10000,
+          firm_fine_to: 20000,
+          desc: 90),
+      Koap(
+          id: 2,
+          article: '6.3.',
+          paragraph: '2',
+          text:
+              'Те же действия (бездействие), совершенные в период режима чрезвычайной ситуации или при возникновении угрозы распространения заболевания, представляющего опасность для окружающих, либо в период осуществления на соответствующей территории ограничительных мероприятий (карантина), либо невыполнение в установленный срок выданного в указанные периоды законного предписания (постановления) или требования органа (должностного лица), осуществляющего федеральный государственный санитарно-эпидемиологический надзор, о проведении санитарно-противоэпидемических (профилактических) мероприятий',
+          man_fine_from: 50000,
+          man_fine_to: 50000,
+          firm_fine_from: 200000,
+          firm_fine_to: 500000,
+          desc: 90),
+      Koap(
+          id: 3,
+          article: '6.3.',
+          paragraph: '3',
+          text:
+              'Действия (бездействие), предусмотренные частью 2 настоящей статьи, повлекшие причинение вреда здоровью человека или смерть человека, если эти действия (бездействие) не содержат уголовно наказуемого деяния',
+          man_fine_from: 300000,
+          man_fine_to: 500000,
+          firm_fine_from: 500000,
+          firm_fine_to: 1000000,
+          desc: 90),
+    ];
+
+    _koapItems = koapItems;
+    //await KoapController.selectAll()
+
+    _fault = _fault ?? [];
   }
 
   /*Future<bool> showFaultDialog(StateSetter setState) {
@@ -169,6 +259,41 @@ class _FaultScreen extends State<FaultScreen> {
     Scaffold.of(context).showSnackBar(successSnackBar);
   }
 */
+  showToolTip() {
+    if (_koapId = null) return;
+    return showDialog<bool>(
+        context: context,
+        barrierDismissible: true,
+        barrierColor: Color(0x88E6E6E6),
+        builder: (BuildContext context) {
+          return StatefulBuilder(builder: (context, StateSetter setState) {
+            return Stack(alignment: Alignment.center, key: Key('FaultList'),
+
+                //     'checkList${_currentCheckList.items != null ? _currentCheckList.items.length : '0'}'),
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      "assets/images/app.jpg",
+                      fit: BoxFit.fill,
+                      height: 500,
+                      width: widthHelp,
+                    ),
+                  ),
+                  Container(
+                      height: 500,
+                      width: widthHelp,
+                      child: Scaffold(
+                          backgroundColor: Colors.transparent,
+                          body: Form(
+                              child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 30.0, vertical: 20.0),
+                                  child: Text('Ясно, понятно')))))
+                ]);
+          });
+        });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -177,12 +302,29 @@ class _FaultScreen extends State<FaultScreen> {
         : Padding(
             padding: EdgeInsets.symmetric(vertical: 10, horizontal: 40),
             child: Column(children: [
-              Row(children: [Expanded(child: FormTitle("Нарушение:"))]),
+              Row(children: [Expanded(child: FormTitle("Нарушение"))]),
               Expanded(
                   child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(flex: 2, child: Text('КОАП')),
+                  Expanded(
+                      flex: 2,
+                      child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            EditTextField(
+                              text: 'Наименование',
+                              value: _fault.name,
+                              onSaved: (value) => {_fault.name = value},
+                              context: context,
+                              borderColor: Theme.of(context).primaryColorDark,
+                             
+                            ),
+                            GestureDetector(
+                              child: Icon(Icons.help_outline),
+                              onTap: () => showToolTip(),
+                            )
+                          ])),
                   Expanded(flex: 2, child: Text('Фото')),
                   Expanded(flex: 1, child: Text('Описание')),
                 ],

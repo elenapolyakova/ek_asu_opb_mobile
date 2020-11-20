@@ -90,6 +90,7 @@ class EditTextField extends StatefulWidget {
   TextInputType textInputType;
   Function(String) validator;
   Color backgroundColor;
+  Color borderColor;
   Function(TapDownDetails) onTapDown;
   Function() onLongPress;
   bool readOnly;
@@ -107,6 +108,7 @@ class EditTextField extends StatefulWidget {
       this.textInputType = TextInputType.text,
       this.validator,
       this.backgroundColor,
+      this.borderColor,
       this.onTapDown,
       this.onLongPress,
       this.readOnly = false});
@@ -158,7 +160,7 @@ class _EditTextField extends State<EditTextField> {
                   height: widget.height,
                   decoration: BoxDecoration(
                     border: Border.all(
-                        color: widget.backgroundColor ?? Colors.white,
+                        color: widget.borderColor ?? Colors.white,
                         width: 1.5),
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                     color: widget.backgroundColor ?? Colors.white,
@@ -647,7 +649,7 @@ class _DatePicker extends State<DatePicker> {
       Expanded(
           child:*/
         InkWell(
-            onTap: () =>  widget.enable ?  _selectDate(context) : null,
+            onTap: () => widget.enable ? _selectDate(context) : null,
             child: Container(
                 width: widget.width,
                 child: Column(children: [
