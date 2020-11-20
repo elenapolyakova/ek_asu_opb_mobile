@@ -11,12 +11,13 @@ class CheckListItemController extends Controllers {
     return await DBProvider.db.insert(_tableName, checkListItem.toJson());
   }
 
+  // Used for creation work copy of CheckList templates and its assigned Questions
   static Future<List<CheckListItem>> getCheckListItemsByParentId(
       int parent_id) async {
     if (parent_id == null) return [];
 
     var result = await DBProvider.db.executeQuery(
-        "SELECT * from check_list_item WHERE parent_id=$parent_id");
+        "SELECT * from check_list_item WHERE parent_id=$parent_id and active='true'");
     List<CheckListItem> response = [];
 
     for (var item in result) {
