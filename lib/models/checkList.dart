@@ -40,6 +40,13 @@ class CheckListWork extends Models {
     8: 'Эко-риски'
   };
 
+  String get getTypeName {
+    if (type != null && typeSelection.containsKey(type)) {
+      return typeSelection[type];
+    }
+    return type.toString();
+  }
+
   factory CheckListWork.fromJson(Map<String, dynamic> json) =>
       new CheckListWork(
         id: json["id"],
