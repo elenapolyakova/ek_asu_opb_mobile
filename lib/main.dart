@@ -186,6 +186,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
                   exchange
                       .getDictionaries(all: true, isLastUpdate: true)
                       .then((result) {
+                    SynController.loadFromOdoo();
                     //?
                   }); //getDictionary
                 } //isSessionExist = true

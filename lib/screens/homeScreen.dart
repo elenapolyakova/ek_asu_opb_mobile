@@ -59,9 +59,9 @@ class _HomeScreen extends State<HomeScreen> {
                   auth.checkSession(context).then((isSessionExist) {
                     if (isSessionExist) {
                       exchange.getDictionaries(all: true).then((result) {
-                        // SynController.loadFromOdoo().then((value) {
-                        hideLoading();
-                        // });
+                        SynController.loadFromOdoo().then((value) {
+                          hideLoading();
+                        });
                       }).catchError((err) {
                         hideLoading();
                       });
