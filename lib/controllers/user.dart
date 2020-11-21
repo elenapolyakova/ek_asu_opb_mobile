@@ -38,7 +38,7 @@ class UserController extends Controllers {
     return json.map((e) => User.fromJson(e)).toList();
   }
 
-  static loadFromOdoo([limit]) async {
+  static loadFromOdoo([int limit]) async {
     List<dynamic> json = await getDataWithAttemp('res.users', 'search_read', [
       [],
       [

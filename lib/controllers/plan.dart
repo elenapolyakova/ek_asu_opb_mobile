@@ -29,7 +29,8 @@ class PlanController extends Controllers {
     if (odooId == null) return null;
     var json = await DBProvider.db
         .select(_tableName, where: "odoo_id = ?", whereArgs: [odooId]);
-    return Plan.fromJson(json.single);
+    if (json == null || json.isEmpty) return null;
+    return Plan.fromJson(json[0]);
   }
 
   static Future<int> selectOdooId(int id) async {
@@ -74,7 +75,14 @@ class PlanController extends Controllers {
     List<String> domain = await getLastSyncDateDomain(_tableName);
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-      [domain],
+      [
+        domain,
+        [
+          'active',
+          'in',
+          [true, false]
+        ]
+      ],
       [
         'type',
         'name',
@@ -85,16 +93,25 @@ class PlanController extends Controllers {
         'signer_post',
         'num_set',
         'state',
+        'active',
       ]
     ], {
       'limit': limit
     });
     return Future.forEach(json, (e) async {
       Plan plan = await selectByOdooId(e['id']);
-      Map<String, dynamic> res = {
+      if (plan == null) {
+        Map<String, dynamic> res = Plan.fromJson({
+          ...e,
+          'active': e['active'] ? 'true' : 'false',
+        }).toJson();
+        return DBProvider.db.insert(_tableName, res);
+      }
+      Map<String, dynamic> res = Plan.fromJson({
         ...e,
         'id': plan.id,
-      };
+        'active': e['active'] ? 'true' : 'false',
+      }).toJson();
       return DBProvider.db.update(_tableName, res);
     }).then((value) => setLastSyncDateForDomain(_tableName));
   }
@@ -168,10 +185,11 @@ class PlanController extends Controllers {
     await DBProvider.db.insert(_tableName, json).then((resId) {
       res['code'] = 1;
       res['id'] = resId;
-      return SynController.create(_tableName, resId).catchError((err) {
-        res['code'] = -2;
-        res['message'] = 'Error updating syn';
-      });
+      if (!saveOdooId)
+        return SynController.create(_tableName, resId).catchError((err) {
+          res['code'] = -2;
+          res['message'] = 'Error updating syn';
+        });
     }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error inserting into $_tableName';

@@ -14,7 +14,7 @@ abstract class Controllers {
   static selectById() {}
   static update() {}
   static delete() {}
-  static loadFromOdoo([limit]) async {}
+  static loadFromOdoo([int limit]) async {}
   static Map<String, dynamic> getNullSafeWhere(Map<String, dynamic> args) {
     List where = [];
     List whereArgs = [];

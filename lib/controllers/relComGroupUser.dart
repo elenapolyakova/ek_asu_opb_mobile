@@ -4,7 +4,6 @@ import 'package:ek_asu_opb_mobile/models/comGroup.dart';
 import "package:ek_asu_opb_mobile/controllers/syn.dart";
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
-import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class RelComGroupUserController extends Controllers {
   static String _tableName = "rel_com_group_user";

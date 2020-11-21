@@ -63,12 +63,8 @@ class ComGroup extends Models {
     ComGroup res = new ComGroup(
       id: json["id"],
       odooId: json["odoo_id"],
-      parentId: (json["parent_id"] is List)
-          ? unpackListId(json["parent_id"])['id']
-          : json["parent_id"],
-      headId: (json["head_id"] is List)
-          ? unpackListId(json["head_id"])['id']
-          : json["head_id"],
+      parentId: unpackListId(json["parent_id"])['id'],
+      headId: unpackListId(json["head_id"])['id'],
       groupNum: getObj(json["group_num"]),
       isMain: json["is_main"] == 'true',
       active: json["active"] == 'true',

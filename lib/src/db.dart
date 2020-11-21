@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ek_asu_opb_mobile/controllers/syn.dart';
 import 'package:flutter/widgets.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -91,6 +92,7 @@ class DBProvider {
         "CREATE TABLE department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER, active TEXT, search_field TEXT)");
     await db.execute(
         "CREATE TABLE user(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT, search_field TEXT, user_role TEXT)");
+    await SynController.loadFromOdoo();
   }
 
   Future<int> insert(String tableName, Map<String, dynamic> values,

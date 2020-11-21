@@ -1,3 +1,4 @@
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
@@ -48,7 +49,7 @@ class _CheckScreen extends State<CheckScreen> {
       'label': 'Чек-листы',
       'icon': Icon(Icons.fact_check)
     });
-     result.add({
+    result.add({
       'key': 'documents',
       'label': 'Документы',
       'icon': Icon(Icons.folder_special)
@@ -61,7 +62,6 @@ class _CheckScreen extends State<CheckScreen> {
       'label': 'Отчеты',
       'icon': Icon(Icons.insert_drive_file)
     });
-    
 
     return result;
   }
@@ -91,8 +91,7 @@ class _CheckScreen extends State<CheckScreen> {
     if (screenList[screenKey] != null) return screenList[screenKey];
     switch (screenKey) {
       case 'info':
-        screenList[screenKey] =
-            screens.InfoCheckScreen(context, _departmentId);
+        screenList[screenKey] = screens.InfoCheckScreen(context, _departmentId);
         break;
       case "map":
         screenList[screenKey] = screens.MapScreen(departmentId: _departmentId);
@@ -101,7 +100,8 @@ class _CheckScreen extends State<CheckScreen> {
         screenList[screenKey] = screens.ReportScreen();
         break;
       case "checkList":
-        screenList[screenKey] = screens.CheckListManagerScreen(_checkPlanItemId);
+        screenList[screenKey] =
+            screens.CheckListManagerScreen(_checkPlanItemId);
         break;
       case "documents":
         screenList[screenKey] = screens.DepartmentDocumentScreen(_departmentId);
@@ -119,7 +119,7 @@ class _CheckScreen extends State<CheckScreen> {
       _checkPlanItemId = checkPlanItem["id"];
       _departmentId = checkPlanItem["department_id"];
     });
-   
+
     return showLoading
         ? new ConstrainedBox(
             child:
@@ -130,15 +130,18 @@ class _CheckScreen extends State<CheckScreen> {
         : new Scaffold(
             appBar: new AppBar(
                 //leading: null,
-                title:Container (
-                  child: Row (children: [
-                    Container(child: TextIcon(
-                    icon: Icons.account_circle_rounded,
-                    text: '${_userInfo != null ? _userInfo.display_name : ""}',
-                    onTap: null,
-                    color: Theme.of(context).primaryColorLight),),
+                title: Container(
+                    child: Row(children: [
+                  Container(
+                    child: TextIcon(
+                        icon: Icons.account_circle_rounded,
+                        text:
+                            '${_userInfo != null ? _userInfo.display_name : ""}',
+                        onTap: null,
+                        color: Theme.of(context).primaryColorLight),
+                  ),
                   Expanded(child: Center(child: HomeIcon()))
-                  ])),
+                ])),
                 backgroundColor: Theme.of(context).primaryColorDark,
                 actions: <Widget>[
                   TextIcon(

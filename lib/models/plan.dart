@@ -97,9 +97,7 @@ class Plan extends Models {
       odooId: json["odoo_id"],
       type: getObj(json["type"]),
       name: getObj(json["name"]),
-      railwayId: (json["rw_id"] is List)
-          ? unpackListId(json["rw_id"])['id']
-          : json["rw_id"],
+      railwayId: unpackListId(json["rw_id"])['id'],
       year: json["year"],
       dateSet:
           json["date_set"] == null ? null : DateTime.parse(json["date_set"]),

@@ -89,9 +89,7 @@ class PlanItem extends Models {
     PlanItem res = new PlanItem(
       id: json["id"],
       odooId: json["odoo_id"],
-      parentId: (json["parent_id"] is List)
-          ? unpackListId(json["parent_id"])['id']
-          : json["parent_id"],
+      parentId: unpackListId(json["parent_id"])['id'],
       name: getObj(json["name"]),
       departmentTxt: getObj(json["department_txt"]),
       checkType: json["check_type"],

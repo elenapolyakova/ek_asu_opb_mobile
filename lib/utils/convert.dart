@@ -50,12 +50,24 @@ String slice(String subject, [int start = 0, int end]) {
   return subject.substring(_realStart, _realEnd);
 }
 
+/// Unpack from either:
+/// listId = [id, name],
+/// listId = false,
+/// listId = id,
+/// listId = "id",
+/// ------------
+/// Returns ```{'id': id, 'name': name}```
 Map<String, dynamic> unpackListId(listId) {
   Map<String, dynamic> res = {
     'id': null,
     'name': null,
   };
-  if (!(listId is bool) && listId != null && listId.length > 0) {
+  if (listId is int) {
+    res['id'] = listId;
+  } else if (listId is String) {
+    res['id'] = int.tryParse(listId);
+    if (res['id'] == null) res['name'] = listId;
+  } else if (listId is List && listId.length > 0) {
     res['id'] = listId[0];
     res['name'] = listId[1];
   }

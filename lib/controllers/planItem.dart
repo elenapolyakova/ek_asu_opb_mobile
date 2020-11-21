@@ -30,7 +30,8 @@ class PlanItemController extends Controllers {
     if (odooId == null) return null;
     var json = await DBProvider.db
         .select(_tableName, where: "odoo_id = ?", whereArgs: [odooId]);
-    return PlanItem.fromJson(json.single);
+    if (json == null || json.isEmpty) return null;
+    return PlanItem.fromJson(json[0]);
   }
 
   static Future<int> selectOdooId(int id) async {
@@ -43,9 +44,15 @@ class PlanItemController extends Controllers {
 
   static firstLoadFromOdoo([bool loadRelated = false, int limit]) async {
     List<String> fields;
-    if (loadRelated)
+    List<List> domain = [];
+    if (loadRelated) {
       fields = ['parent_id'];
-    else
+      List<Map<String, dynamic>> queryRes =
+          await DBProvider.db.select(_tableName, columns: ['odoo_id']);
+      domain = [
+        ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
+      ];
+    } else
       fields = [
         'name',
         'department_txt',
@@ -57,12 +64,13 @@ class PlanItemController extends Controllers {
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName],
         'search_read',
-        [[], fields],
+        [domain, fields],
         {'limit': limit});
     if (!loadRelated) DBProvider.db.deleteAll(_tableName);
     return Future.forEach(json, (e) async {
       if (loadRelated) {
-        Plan plan = await PlanController.selectByOdooId(e['parent_id']);
+        Plan plan = await PlanController.selectByOdooId(
+            unpackListId(e['parent_id'])['id']);
         assert(plan != null, "Model plan has to be loaded before $_tableName");
         PlanItem planItem = await selectByOdooId(e['id']);
         Map<String, dynamic> res = {
@@ -94,11 +102,19 @@ class PlanItemController extends Controllers {
         'period',
         'responsible',
         'check_result',
+        'active',
       ];
     List<String> domain = await getLastSyncDateDomain(_tableName);
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-      [domain],
+      [
+        domain,
+        [
+          'active',
+          'in',
+          [true, false]
+        ]
+      ],
       fields
     ], {
       'limit': limit
@@ -106,7 +122,8 @@ class PlanItemController extends Controllers {
     return Future.forEach(json, (e) async {
       PlanItem planItem = await selectByOdooId(e['id']);
       if (loadRelated) {
-        Plan plan = await PlanController.selectByOdooId(e['parent_id']);
+        Plan plan = await PlanController.selectByOdooId(
+            unpackListId(e['parent_id'])['id']);
         assert(plan != null, "Model plan has to be loaded before $_tableName");
         Map<String, dynamic> res = {
           'id': planItem.id,
@@ -114,10 +131,18 @@ class PlanItemController extends Controllers {
         };
         return DBProvider.db.update(_tableName, res);
       } else {
-        Map<String, dynamic> res = {
+        if (planItem == null) {
+          Map<String, dynamic> res = Plan.fromJson({
+            ...e,
+            'active': e['active'] ? 'true' : 'false',
+          }).toJson();
+          return DBProvider.db.insert(_tableName, res);
+        }
+        Map<String, dynamic> res = PlanItem.fromJson({
           ...e,
           'id': planItem.id,
-        };
+          'active': e['active'] ? 'true' : 'false',
+        }).toJson();
         return DBProvider.db.update(_tableName, res);
       }
     });
@@ -165,10 +190,11 @@ class PlanItemController extends Controllers {
     await DBProvider.db.insert(_tableName, json).then((resId) {
       res['code'] = 1;
       res['id'] = resId;
-      return SynController.create(_tableName, resId).catchError((err) {
-        res['code'] = -2;
-        res['message'] = 'Error updating syn';
-      });
+      if (!saveOdooId)
+        return SynController.create(_tableName, resId).catchError((err) {
+          res['code'] = -2;
+          res['message'] = 'Error updating syn';
+        });
     }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error inserting into $_tableName';

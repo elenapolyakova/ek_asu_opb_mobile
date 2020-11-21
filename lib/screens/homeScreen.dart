@@ -1,3 +1,4 @@
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
@@ -58,7 +59,9 @@ class _HomeScreen extends State<HomeScreen> {
                   auth.checkSession(context).then((isSessionExist) {
                     if (isSessionExist) {
                       exchange.getDictionaries(all: true).then((result) {
+                        // SynController.loadFromOdoo().then((value) {
                         hideLoading();
+                        // });
                       }).catchError((err) {
                         hideLoading();
                       });
@@ -68,8 +71,8 @@ class _HomeScreen extends State<HomeScreen> {
 
                 } //isConnect == true
               });
-            }
-            else hideLoading();
+            } else
+              hideLoading();
           } catch (e) {
             hideLoading();
           } finally {}
@@ -110,7 +113,11 @@ class _HomeScreen extends State<HomeScreen> {
     auth.LogOut(context);
   }
 
-  void toISPScreen() {
+  void toISPScreen() async {
+    // SynController.selectAll().then((a) => print(a));
+    // PlanController.selectAll().then((a) => print(a));
+    await SynController.loadFromOdoo();
+    print(await PlanController.selectAll());
     Navigator.pushNamed(
       context,
       '/ISP',

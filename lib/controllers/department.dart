@@ -49,7 +49,7 @@ class DepartmentController extends Controllers {
     return result;
   }
 
-  static loadFromOdoo([limit]) async {
+  static loadFromOdoo([int limit]) async {
     List<dynamic> json =
         await getDataWithAttemp('eco.department', 'search_read', [
       [],

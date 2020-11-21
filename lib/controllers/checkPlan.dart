@@ -32,7 +32,8 @@ class CheckPlanController extends Controllers {
     if (odooId == null) return null;
     var json = await DBProvider.db
         .select(_tableName, where: "odoo_id = ?", whereArgs: [odooId]);
-    return CheckPlan.fromJson(json.single);
+    if (json == null || json.isEmpty) return null;
+    return CheckPlan.fromJson(json[0]);
   }
 
   static Future<int> selectOdooId(int id) async {
@@ -45,9 +46,16 @@ class CheckPlanController extends Controllers {
 
   static firstLoadFromOdoo([bool loadRelated = false, int limit]) async {
     List<String> fields;
-    if (loadRelated)
+    List<List> domain = [];
+    if (loadRelated) {
       fields = ['parent_id', 'main_com_group_id'];
-    else
+
+      List<Map<String, dynamic>> queryRes =
+          await DBProvider.db.select(_tableName, columns: ['odoo_id']);
+      domain = [
+        ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
+      ];
+    } else
       fields = [
         'name',
         'rw_id',
@@ -64,22 +72,22 @@ class CheckPlanController extends Controllers {
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName],
         'search_read',
-        [[], fields],
+        [domain, fields],
         {'limit': limit});
     if (!loadRelated) DBProvider.db.deleteAll(_tableName);
     return Future.forEach(json, (e) async {
       if (loadRelated) {
-        PlanItem planItem =
-            await PlanItemController.selectByOdooId(e['parent_id']);
+        PlanItem planItem = await PlanItemController.selectByOdooId(
+            unpackListId(e['parent_id'])['id']);
         assert(planItem != null,
             "Model plan_item has to be loaded before $_tableName");
-        ComGroup comGroup =
-            await ComGroupController.selectByOdooId(e['main_com_group_id']);
+        ComGroup comGroup = await ComGroupController.selectByOdooId(
+            unpackListId(e['main_com_group_id'])['id']);
         assert(comGroup != null,
             "Model com_group has to be loaded before $_tableName");
         CheckPlan checkPlan = await selectByOdooId(e['id']);
         Map<String, dynamic> res = {
-          'id': checkPlan,
+          'id': checkPlan.id,
           'parent_id': planItem.id,
           'main_com_group_id': comGroup.id,
         };
@@ -113,13 +121,21 @@ class CheckPlanController extends Controllers {
         'app_name',
         'app_post',
         'num_set',
+        'active',
       ];
     List<String> domain = await getLastSyncDateDomain(_tableName);
     List<dynamic> json = await getDataWithAttemp(
       SynController.localRemoteTableNameMap[_tableName],
       'search_read',
       [
-        [domain],
+        [
+          domain,
+          [
+            'active',
+            'in',
+            [true, false]
+          ]
+        ],
         fields
       ],
       {'limit': limit},
@@ -127,12 +143,12 @@ class CheckPlanController extends Controllers {
     return Future.forEach(json, (e) async {
       CheckPlan checkPlan = await selectByOdooId(e['id']);
       if (loadRelated) {
-        PlanItem planItem =
-            await PlanItemController.selectByOdooId(e['parent_id']);
+        PlanItem planItem = await PlanItemController.selectByOdooId(
+            unpackListId(e['parent_id'])['id']);
         assert(planItem != null,
             "Model plan_item has to be loaded before $_tableName");
-        ComGroup comGroup =
-            await ComGroupController.selectByOdooId(e['main_com_group_id']);
+        ComGroup comGroup = await ComGroupController.selectByOdooId(
+            unpackListId(e['main_com_group_id'])['id']);
         assert(comGroup != null,
             "Model com_group has to be loaded before $_tableName");
         Map<String, dynamic> res = {
@@ -142,10 +158,18 @@ class CheckPlanController extends Controllers {
         };
         return DBProvider.db.update(_tableName, res);
       } else {
-        Map<String, dynamic> res = {
+        if (checkPlan == null) {
+          Map<String, dynamic> res = Plan.fromJson({
+            ...e,
+            'active': e['active'] ? 'true' : 'false',
+          }).toJson();
+          return DBProvider.db.insert(_tableName, res);
+        }
+        Map<String, dynamic> res = CheckPlan.fromJson({
           ...e,
           'id': checkPlan.id,
-        };
+          'active': e['active'] ? 'true' : 'false',
+        }).toJson();
         return DBProvider.db.update(_tableName, res);
       }
     });
@@ -193,10 +217,11 @@ class CheckPlanController extends Controllers {
     await DBProvider.db.insert(_tableName, json).then((resId) {
       res['code'] = 1;
       res['id'] = resId;
-      return SynController.create(_tableName, resId).catchError((err) {
-        res['code'] = -2;
-        res['message'] = 'Error updating syn';
-      });
+      if (!saveOdooId)
+        return SynController.create(_tableName, resId).catchError((err) {
+          res['code'] = -2;
+          res['message'] = 'Error updating syn';
+        });
     }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error inserting into $_tableName';
