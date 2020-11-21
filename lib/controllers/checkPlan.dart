@@ -70,10 +70,13 @@ class CheckPlanController extends Controllers {
         'num_set',
       ];
     List<dynamic> json = await getDataWithAttemp(
-        SynController.localRemoteTableNameMap[_tableName],
-        'search_read',
-        [domain, fields],
-        {'limit': limit});
+        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
+      domain,
+      fields
+    ], {
+      'limit': limit,
+      'context': {'create_or_update': true}
+    });
     if (!loadRelated) DBProvider.db.deleteAll(_tableName);
     return Future.forEach(json, (e) async {
       if (loadRelated) {
@@ -127,18 +130,11 @@ class CheckPlanController extends Controllers {
     List<dynamic> json = await getDataWithAttemp(
       SynController.localRemoteTableNameMap[_tableName],
       'search_read',
-      [
-        [
-          domain,
-          [
-            'active',
-            'in',
-            [true, false]
-          ]
-        ],
-        fields
-      ],
-      {'limit': limit},
+      [domain, fields],
+      {
+        'limit': limit,
+        'context': {'create_or_update': true}
+      },
     );
     return Future.forEach(json, (e) async {
       CheckPlan checkPlan = await selectByOdooId(e['id']);

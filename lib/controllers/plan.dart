@@ -57,7 +57,8 @@ class PlanController extends Controllers {
         'state',
       ]
     ], {
-      'limit': limit
+      'limit': limit,
+      'context': {'create_or_update': true}
     });
     DBProvider.db.deleteAll(_tableName);
     return Future.forEach(json, (e) async {
@@ -96,7 +97,8 @@ class PlanController extends Controllers {
         'active',
       ]
     ], {
-      'limit': limit
+      'limit': limit,
+      'context': {'create_or_update': true}
     });
     return Future.forEach(json, (e) async {
       Plan plan = await selectByOdooId(e['id']);

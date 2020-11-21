@@ -290,12 +290,33 @@ Future<void> setLastUpdate(modelName) async {
   await _storage.write(key: 'lastDateUpdate', value: json.encode(lastUpdate));
 }
 
-Future<List<String>> getLastSyncDateDomain(modelName) async {
+Future<List> getLastSyncDateDomain(modelName) async {
   String sLastUpdate = await _storage.read(key: 'lastDateUpdate');
-  if (sLastUpdate == null) return [];
+  if (sLastUpdate == null)
+    return [
+      [
+        'active',
+        'in',
+        [true, false]
+      ]
+    ];
   Map<String, dynamic> lastUpdate = json.decode(sLastUpdate);
-  if (lastUpdate[modelName] == null) return [];
-  return ['write_date', '>', lastUpdate[modelName]];
+  if (lastUpdate[modelName] == null)
+    return [
+      [
+        'active',
+        'in',
+        [true, false]
+      ]
+    ];
+  return [
+    ['write_date', '>', lastUpdate[modelName]],
+    [
+      'active',
+      'in',
+      [true, false]
+    ]
+  ];
 }
 
 Future<void> setLastSyncDateForDomain(modelName) async {
