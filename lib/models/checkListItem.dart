@@ -55,6 +55,19 @@ class CheckListItem extends Models {
     };
   }
 
+  // Make json suitable for update() in local DB;
+  // Set only params that can be updated
+  // Params can be extended!
+  Map<String, dynamic> prepareForUpdate() {
+    return {
+      'id': id,
+      'name': name,
+      'question': question,
+      'description': description,
+      'result': result,
+    };
+  }
+
   @override
   String toString() {
     return 'CheckListItem{id: $id, odooId: $odooId, : $name, active: $active, question: $question, parent_id: $parent_id}';
