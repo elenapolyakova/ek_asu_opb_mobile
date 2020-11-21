@@ -1,8 +1,7 @@
 import 'package:ek_asu_opb_mobile/controllers/checkListItem.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import "package:ek_asu_opb_mobile/models/checkList.dart";
-import 'package:ek_asu_opb_mobile/models/models.dart';
-import 'package:ek_asu_opb_mobile/utils/network.dart';
+import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class CheckListController extends Controllers {
   static String _tableName = "check_list";
@@ -78,7 +77,7 @@ class CheckListController extends Controllers {
             copy["base_id"] = qJson["id"];
             copy["parent_id"] = workCheckLstId;
 
-            var checkListItemId = await CheckListItemController.insert(copy);
+            await CheckListItemController.insert(copy);
           }
         }
       }
@@ -89,6 +88,8 @@ class CheckListController extends Controllers {
     return dataToFront;
   }
 
+  // Set for records of checkLists which comes in ids active = True; ids - [1, 3, 5]
+  // By parent id (id of plan) we find all checklists, for id in ids we set active = True, for others active = False;
   static Future<Map<String, dynamic>> setIsActiveTrue(
       List ids, int parentId) async {
     Map<String, dynamic> res = {
@@ -118,7 +119,6 @@ class CheckListController extends Controllers {
     try {
       var skipIdList = [];
       for (var id in ids) {
-        print("Id $id");
         for (var cList in allCheckLists) {
           var json = cList.toJson();
           var recordId = json["id"];
@@ -149,7 +149,64 @@ class CheckListController extends Controllers {
       res["message"] = "Error updating table $_tableName, err: $e";
       res["id"] = null;
 
+      DBProvider.db
+          .insert('log', {'date': nowStr(), 'message': res.toString()});
+
       return res;
     }
+  }
+
+  static Future<Map<String, dynamic>> delete(int checkListId) async {
+    Map<String, dynamic> res = {
+      'code': null,
+      'message': null,
+      'id': null,
+    };
+
+    print("Delete() CheckList");
+    await DBProvider.db.update(
+        _tableName, {'id': checkListId, 'active': 'false'}).then((value) async {
+      res['code'] = 1;
+      res['id'] = value;
+    }).catchError((err) {
+      res['code'] = -3;
+      res['message'] = 'Error deleting from $_tableName';
+    });
+
+    var assignedItems = await CheckListItemController.select(checkListId);
+    if (assignedItems.length == 0) {
+      res = {
+        'code': -1,
+        'message': 'Не найдены связанные вопросы к чек листу id: $checkListId',
+        'id': null,
+      };
+
+      return res;
+    }
+    try {
+      print("Try to delete assigned checkListsItems");
+      for (var q in assignedItems) {
+        var json = q.toJson();
+        var itemId = json["id"];
+        await DBProvider.db
+            .update('check_list_item', {'id': itemId, 'active': 'false'});
+      }
+    } catch (e) {
+      print("Delete of assignedItems to CheckList ID: $checkListId. Error: $e");
+      res = {
+        'code': -3,
+        'message': 'Error deleting from checkListItems',
+        'id': null,
+      };
+      return res;
+    }
+
+    res = {
+      'code': 1,
+      'message': 'Успешно удалено',
+      'id': 0,
+    };
+
+    return res;
   }
 }
