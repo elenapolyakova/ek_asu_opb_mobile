@@ -142,13 +142,9 @@ class CheckPlan extends Models {
     CheckPlan res = new CheckPlan(
       id: json["id"],
       odooId: json["odoo_id"],
-      parentId: (json["parent_id"] is List)
-          ? unpackListId(json["parent_id"])['id']
-          : json["parent_id"],
+      parentId: unpackListId(json["parent_id"])['id'],
       name: getObj(json["name"]),
-      railwayId: (json["rw_id"] is List)
-          ? unpackListId(json["rw_id"])['id']
-          : json["rw_id"],
+      railwayId: unpackListId(json["rw_id"])['id'],
       dateFrom: stringToDateTime(json["date_from"]),
       dateTo: stringToDateTime(json["date_to"]),
       dateSet: stringToDateTime(json["date_set"]),

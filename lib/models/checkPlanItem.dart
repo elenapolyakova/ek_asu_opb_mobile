@@ -94,14 +94,10 @@ class CheckPlanItem extends Models {
     CheckPlanItem res = new CheckPlanItem(
       id: json["id"],
       odooId: json["odoo_id"],
-      parentId: (json["parent_id"] is List)
-          ? unpackListId(json["parent_id"])['id']
-          : json["parent_id"],
+      parentId: unpackListId(json["parent_id"])['id'],
       name: getObj(json["name"]),
       type: json["type"],
-      departmentId: (json["department_id"] is List)
-          ? unpackListId(json["department_id"])['id']
-          : json["department_id"],
+      departmentId: unpackListId(json["department_id"])['id'],
       date: stringToDateTime(json["date"]),
       dtFrom: stringToDateTime(json["dt_from"]),
       dtTo: stringToDateTime(json["dt_to"]),

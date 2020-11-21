@@ -1,3 +1,5 @@
+import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
+import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import "package:ek_asu_opb_mobile/models/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
@@ -36,6 +38,25 @@ class SynController extends Controllers {
     'com_group': {
       'parent_id': 'plan_item_check',
     },
+  };
+  static Map<String, List<Map<String, dynamic>>> tableMany2ManyFieldsMap = {
+    'com_group': [
+      {
+        // поле, в котором хранится отношение many2many на сервере
+        'field': 'com_user_ids',
+        // у модели 'to' есть поле odoo_id
+        // пользователь может создавать записи 'to' модели
+        'to_has_odoo_id': false,
+        // целевая модель для отношения many2many
+        'to': 'user',
+        // промежуточная модель
+        'through': 'rel_com_group_user',
+        // поле промежуточной модели с id модели, указанной в ключе (com_group)
+        'my_field': 'com_group_id',
+        // поле промежуточной модели с id модели 'to'
+        'other_field': 'user_id',
+      }
+    ],
   };
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     Syn syn = Syn.fromJson(json); //нужно, чтобы преобразовать одоо rel в id
@@ -107,6 +128,42 @@ class SynController extends Controllers {
     // });
   }
 
+  static Future loadFromOdoo() async {
+    List lastDateDomain = await getLastSyncDateDomain(_tableName);
+    if (lastDateDomain.isEmpty) {
+      setLastSyncDateForDomain(_tableName);
+      await PlanController.firstLoadFromOdoo();
+      PlanItemController.startSync();
+      await PlanItemController.firstLoadFromOdoo();
+      await PlanItemController.firstLoadFromOdoo(true);
+      CheckPlanController.startSync();
+      await CheckPlanController.firstLoadFromOdoo();
+      CheckPlanItemController.startSync();
+      await CheckPlanItemController.firstLoadFromOdoo();
+      ComGroupController.startSync();
+      await ComGroupController.firstLoadFromOdoo();
+      print(await ComGroupController.selectAll());
+      await CheckPlanController.firstLoadFromOdoo(true);
+      await CheckPlanItemController.firstLoadFromOdoo(true);
+      await ComGroupController.firstLoadFromOdoo(true);
+    } else {
+      setLastSyncDateForDomain(_tableName);
+      await PlanController.loadChangesFromOdoo();
+      PlanItemController.startSync();
+      await PlanItemController.loadChangesFromOdoo();
+      await PlanItemController.loadChangesFromOdoo(true);
+      CheckPlanController.startSync();
+      await CheckPlanController.loadChangesFromOdoo();
+      await CheckPlanController.loadChangesFromOdoo(true);
+      CheckPlanItemController.startSync();
+      await CheckPlanItemController.loadChangesFromOdoo();
+      ComGroupController.startSync();
+      await ComGroupController.loadChangesFromOdoo();
+      await CheckPlanItemController.loadChangesFromOdoo(true);
+      await ComGroupController.loadChangesFromOdoo(true);
+    }
+  }
+
   /// Perform a synchronization of a syn record with backend.
   /// Remove the record from syn table if successful.
   /// Return true if successful
@@ -135,13 +192,16 @@ class SynController extends Controllers {
         tableMany2oneFieldsMap[syn.localTableName];
     // If a record contains any many2one fields
     if (many2oneFields != null && many2oneFields.length > 0) {
+      print("Model ${syn.localTableName} has many2one fields");
       // For each many2one field in a record
-      Future.forEach(many2oneFields.entries, (el) async {
+      await Future.forEach(many2oneFields.entries, (el) async {
         final int many2oneFieldId = record[el.key];
         // If the record has a many2one
         if (many2oneFieldId != null) {
           final String localTable = el.value;
           // Replace many2one with odoo_id of its related record
+          print(
+              "Querying for ${syn.localTableName}.${el.key}=$many2oneFieldId");
           return DBProvider.db
               .select(
             localTable,
@@ -161,7 +221,7 @@ class SynController extends Controllers {
               });
               return false;
             } else if (many2oneRecord[0]['odoo_id'] == null) {
-              // If a record was found, but is has no odoo_id
+              // If a record was found, but it has no odoo_id
               List<Map<String, dynamic>> synList = await DBProvider.db.select(
                 _tableName,
                 limit: 1,
@@ -180,20 +240,69 @@ class SynController extends Controllers {
               // Try to synchronize the original record again
               return doSync(syn);
             }
+            print(
+                "${el.key} of ${syn.localTableName} to upload = ${many2oneRecord[0]['odoo_id']}");
             record[el.key] = many2oneRecord[0]['odoo_id'];
           });
         }
       });
     }
 
+    // Add many2many records to upload
+    final List<Map<String, dynamic>> many2manyFields =
+        tableMany2ManyFieldsMap[syn.localTableName];
+    // If a record contains any many2many fields
+    if (many2manyFields != null && many2manyFields.length > 0) {
+      print("Model ${syn.localTableName} has many2many fields");
+      // For each many2many field in a record
+      await Future.forEach(many2manyFields, (el) async {
+        // 'field': 'com_user_ids',
+        // 'to_has_odoo_id': false,
+        // 'to': 'user',
+        // 'through': 'rel_com_group_user',
+        // 'my_field': 'com_group_id',
+        // 'other_field': 'user_id',
+        print("Querying for ${syn.localTableName}.${el['field']}.");
+        List<int> ids;
+        List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
+          el['through'],
+          columns: [el['other_field']],
+          where: "${el['my_field']} = ?",
+          whereArgs: [syn.recordId],
+        );
+        // Get ids to upload
+        ids = queryRes
+            .map((throughRecord) => throughRecord[el['other_field']] as int)
+            .toList();
+        print("Found ids of table ${el['to']}: ${ids.toString()}.");
+        if (el['to_has_odoo_id']) {
+          List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
+            el['to'],
+            columns: ['odoo_id'],
+            where: ids.map((e) => "id = ?").join(' or '),
+            whereArgs: [ids],
+          );
+          ids = queryRes.map((toRecord) => toRecord['odoo_id'] as int).toList();
+          print(
+              "${el['to']} has odoo_id field. New ids to upload: ${ids.toString()}.");
+        }
+        record[el['field']] = [
+          [6, null, ids]
+        ];
+      });
+    }
+
     // If there is no odoo_id in model,
     // then we are operating with a model we can't create records for
+    // and method must be write
     if (!record.containsKey('odoo_id')) {
-      if (syn.method == 'write') args = [record['id'], record];
+      if (syn.method == 'write')
+        args = [record['id'], record];
+      else
+        return false;
     }
     // If odoo_id exists, then method must be write.
     // Unlinking was removed in favor of setting active to false.
-    // If odoo_id does not exist, then method must be create
     else if (record['odoo_id'] != null) {
       int odooId = record['odoo_id'];
       if (syn.method == 'write')
@@ -201,14 +310,17 @@ class SynController extends Controllers {
       // else if (syn.method == 'unlink')
       //   args = [odooId];
       else
-        return Future.value(false);
+        return false;
     } else {
+      // If odoo_id does not exist, then method must be create
       if (syn.method == 'create')
         args = [record];
       else
-        return Future.value(false);
+        return false;
     }
+
     // Upload to backend
+    print("Uploading $record");
     return await getDataWithAttemp(
             localRemoteTableNameMap[syn.localTableName], syn.method, args, {})
         .then((value) async {
@@ -232,10 +344,10 @@ class SynController extends Controllers {
       DBProvider.db.update(_tableName, syn.toJson());
       return false;
     });
-    // }
   }
 
   static Future<bool> syncTask() async {
+    await SynController.loadFromOdoo();
     while (true) {
       // Load a syn record
       List<Map<String, dynamic>> toSyn = await DBProvider.db

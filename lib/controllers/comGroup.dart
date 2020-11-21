@@ -31,7 +31,8 @@ class ComGroupController extends Controllers {
     if (odooId == null) return null;
     var json = await DBProvider.db
         .select(_tableName, where: "odoo_id = ?", whereArgs: [odooId]);
-    return ComGroup.fromJson(json.single);
+    if (json == null || json.isEmpty) return null;
+    return ComGroup.fromJson(json[0]);
   }
 
   static Future<List<ComGroup>> selectByIds(List<int> ids) async {
@@ -54,9 +55,16 @@ class ComGroupController extends Controllers {
 
   static firstLoadFromOdoo([bool loadRelated = false, int limit]) async {
     List<String> fields;
-    if (loadRelated)
+    List<List> domain = [];
+    if (loadRelated) {
       fields = ['parent_id', 'com_user_ids'];
-    else
+
+      List<Map<String, dynamic>> queryRes =
+          await DBProvider.db.select(_tableName, columns: ['odoo_id']);
+      domain = [
+        ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
+      ];
+    } else
       fields = [
         'head_id',
         'group_num',
@@ -65,13 +73,13 @@ class ComGroupController extends Controllers {
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName],
         'search_read',
-        [[], fields],
+        [domain, fields],
         {'limit': limit});
     if (!loadRelated) DBProvider.db.deleteAll(_tableName);
     return Future.forEach(json, (e) async {
       if (loadRelated) {
-        CheckPlan checkPlan =
-            await CheckPlanController.selectByOdooId(e['parent_id']);
+        CheckPlan checkPlan = await CheckPlanController.selectByOdooId(
+            unpackListId(e['parent_id'])['id']);
         assert(checkPlan != null,
             "Model plan_item_check has to be loaded before $_tableName");
         ComGroup comGroup = await selectByOdooId(e['id']);
@@ -80,8 +88,8 @@ class ComGroupController extends Controllers {
           'parent_id': checkPlan.id,
         };
         await DBProvider.db.update(_tableName, res);
-        return RelComGroupUserController.updateComGroupUsers(
-            comGroup.id, e['com_user_ids'].map((userId) => userId as int));
+        return RelComGroupUserController.updateComGroupUsers(comGroup.id,
+            List<int>.from(e['com_user_ids'].map((userId) => userId as int)));
       } else {
         Map<String, dynamic> res = {
           ...e,
@@ -104,11 +112,19 @@ class ComGroupController extends Controllers {
         'head_id',
         'group_num',
         'is_main',
+        'active',
       ];
     List<String> domain = await getLastSyncDateDomain(_tableName);
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-      [domain],
+      [
+        domain,
+        [
+          'active',
+          'in',
+          [true, false]
+        ]
+      ],
       fields
     ], {
       'limit': limit
@@ -116,8 +132,8 @@ class ComGroupController extends Controllers {
     return Future.forEach(json, (e) async {
       ComGroup comGroup = await selectByOdooId(e['id']);
       if (loadRelated) {
-        CheckPlan checkPlan =
-            await CheckPlanController.selectByOdooId(e['parent_id']);
+        CheckPlan checkPlan = await CheckPlanController.selectByOdooId(
+            unpackListId(e['parent_id'])['id']);
         assert(checkPlan != null,
             "Model plan_item_check has to be loaded before $_tableName");
         Map<String, dynamic> res = {
@@ -128,10 +144,20 @@ class ComGroupController extends Controllers {
         return RelComGroupUserController.updateComGroupUsers(
             comGroup.id, e['com_user_ids'].map((userId) => userId as int));
       } else {
-        Map<String, dynamic> res = {
+        if (comGroup == null) {
+          Map<String, dynamic> res = Plan.fromJson({
+            ...e,
+            'is_main': e['is_main'] ? 'true' : 'false',
+            'active': e['active'] ? 'true' : 'false',
+          }).toJson();
+          return DBProvider.db.insert(_tableName, res);
+        }
+        Map<String, dynamic> res = ComGroup.fromJson({
           ...e,
           'id': comGroup.id,
-        };
+          'is_main': e['is_main'] ? 'true' : 'false',
+          'active': e['active'] ? 'true' : 'false',
+        }).toJson();
         return DBProvider.db.update(_tableName, res);
       }
     });
@@ -223,10 +249,11 @@ class ComGroupController extends Controllers {
           .then((value) {
         res['code'] = 1;
         res['id'] = resId;
-        return SynController.create(_tableName, resId).catchError((err) {
-          res['code'] = -2;
-          res['message'] = 'Error updating syn';
-        });
+        if (!saveOdooId)
+          return SynController.create(_tableName, resId).catchError((err) {
+            res['code'] = -2;
+            res['message'] = 'Error updating syn';
+          });
       }).catchError((err) {
         res['code'] = -3;
         res['message'] = 'Error inserting into rel_com_group_user';

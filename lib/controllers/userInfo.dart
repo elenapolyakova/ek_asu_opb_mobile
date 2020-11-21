@@ -24,7 +24,7 @@ class UserInfoController extends Controllers {
     return await DBProvider.db.selectAll(_tableName);
   }
 
-  static loadFromOdoo([limit]) async {
+  static loadFromOdoo([int limit]) async {
     List<dynamic> json = await getDataWithAttemp('res.users', 'search_read', [
       [],
       [

@@ -20,7 +20,7 @@ class RailwayController extends Controllers {
     return Railway.fromJson(json);
   }
 
-  static loadFromOdoo([limit]) async {
+  static loadFromOdoo([int limit]) async {
     List<dynamic> json = await getDataWithAttemp('eco.railway', 'search_read', [
       [],
       [
