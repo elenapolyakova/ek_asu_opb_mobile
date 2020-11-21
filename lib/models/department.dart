@@ -35,6 +35,8 @@ class Department extends Models {
   double f_coord_n;
   double f_coord_e;
 
+ 
+
   Department(
       {this.id,
       this.name,

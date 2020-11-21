@@ -65,13 +65,12 @@ class _CheckListScreen extends State<CheckListScreen> {
   CheckListWork _currentCheckList;
   List<CheckListWork> _items;
   List<CheckListWork> _allItems;
+  List<CheckListWork> _itemsCopy;
   List<CheckListWork> _itemsTemplate;
   var _tapPosition;
   double heightCheckList = 700;
   double widthCheckList = 1000;
   _CheckListScreen(this.checkPlanItemId);
-
-
 
   List<Map<String, dynamic>> checkListHeader = [
     {'text': 'Наименование', 'flex': 3.0},
@@ -124,185 +123,19 @@ class _CheckListScreen extends State<CheckListScreen> {
     _items = _items ?? [];
   }
 
-  void reloadTemplateList() {
+  void reloadTemplateCopyList() {
     _itemsTemplate = [];
-    if (_allItems != null)
-      _allItems.forEach((item) {
+    if (_itemsCopy != null)
+      _itemsCopy.forEach((item) {
         if (item.type == _selectedTypeTemplate || _selectedTypeTemplate == 0)
-          _itemsTemplate.add(CheckListWork(
-            parent_id: item.parent_id,
-            id: item.id,
-            is_active: item.is_active,
-            name: item.name,
-            odooId: item.odooId,
-            is_base: item.is_base,
-            type: item.type,
-            base_id: item.base_id,
-            active: item.active,
-          ));
+          _itemsTemplate.add(CheckListWork.fromJson(item.toJson()));
       });
   }
 
   Future<void> loadCheckList() async {
+    _itemsCopy = [];
     List<CheckListWork> items =
         await CheckListController.selectByParentId(checkPlanItemId);
-
-     /*List<CheckListWork> items = [
-      CheckListWork(
-          id: 1,
-          odooId: 1,
-          parent_id: checkPlanItemId,
-          is_base: true,
-          name: 'Выбросы загрязняющих веществ в атмосферный воздух',
-          type: 1,
-          active: true,
-          is_active: true),
-      CheckListWork(
-          id: 2,
-          odooId: 2,
-          parent_id: checkPlanItemId,
-          is_base: true,
-          name: 'Охрана водных ресурсов',
-          type: 2,
-          active: true,
-          is_active: true),
-      CheckListWork(
-          id: 3,
-          odooId: 3,
-          parent_id: checkPlanItemId,
-          is_base: true,
-          name: 'Недропользование и рациональное использование земель',
-          type: 4,
-          active: true,
-          is_active: true),
-      CheckListWork(
-          id: 4,
-          odooId: 4,
-          parent_id: checkPlanItemId,
-          is_base: true,
-          name: 'Обращение с отходами производства и потребления',
-          type: 3,
-          active: true,
-          is_active: false),
-      CheckListWork(
-          id: 5,
-          odooId: 5,
-          parent_id: checkPlanItemId,
-          is_base: true,
-          name: 'Физическое воздействие: шум',
-          type: 5,
-          active: true,
-          is_active: false),
-      CheckListWork(
-          id: 6,
-          odooId: 6,
-          parent_id: checkPlanItemId,
-          is_base: true,
-          name:
-              'Взаимодействие с государственными органами и другими заинтересованными сторонами',
-          type: 6,
-          active: true,
-          is_active: false),
-      CheckListWork(
-          id: 7,
-          odooId: 7,
-          parent_id: checkPlanItemId,
-          is_base: true,
-          name: 'Экологическая политика',
-          type: 7,
-          active: true,
-          is_active: false),
-      CheckListWork(
-          id: 8,
-          odooId: 8,
-          parent_id: checkPlanItemId,
-          is_base: true,
-          name: 'Роли, ответственность и полномочия',
-          type: 7,
-          active: true,
-          is_active: false),
-      CheckListWork(
-          id: 9,
-          odooId: 9,
-          parent_id: checkPlanItemId,
-          is_base: true,
-          name: 'Планирование',
-          type: 7,
-          active: true,
-          is_active: false),
-      CheckListWork(
-          id: 10,
-          odooId: 10,
-          parent_id: checkPlanItemId,
-          is_base: true,
-          name: 'Компетентность и осведомленность',
-          type: 7,
-          active: true,
-          is_active: false),
-      CheckListWork(
-          id: 11,
-          odooId: 11,
-          parent_id: checkPlanItemId,
-          is_base: true,
-          name: 'Обмен информацией',
-          type: 7,
-          active: true,
-          is_active: false),
-      CheckListWork(
-          id: 12,
-          odooId: 12,
-          parent_id: checkPlanItemId,
-          is_base: true,
-          name: 'Управление документацией',
-          type: 7,
-          active: true,
-          is_active: false),
-      CheckListWork(
-          id: 13,
-          odooId: 13,
-          parent_id: checkPlanItemId,
-          is_base: true,
-          name: 'Планирование и управление операциями',
-          type: 7,
-          active: true,
-          is_active: false),
-      CheckListWork(
-          id: 14,
-          odooId: 14,
-          parent_id: checkPlanItemId,
-          is_base: true,
-          name: 'Готовность к нештатным, аварийным и чрезвычайным ситуациям',
-          type: 7,
-          active: true,
-          is_active: false),
-      CheckListWork(
-          id: 15,
-          odooId: 15,
-          parent_id: checkPlanItemId,
-          is_base: true,
-          name: 'Проверки СЭМ',
-          type: 7,
-          active: true,
-          is_active: false),
-      CheckListWork(
-          id: 16,
-          odooId: 16,
-          parent_id: checkPlanItemId,
-          is_base: true,
-          name: 'Улучшение, несоответствия, корректирующие действия',
-          type: 7,
-          active: true,
-          is_active: false),
-      CheckListWork(
-          id: 17,
-          odooId: 17,
-          parent_id: checkPlanItemId,
-          is_base: true,
-          name: 'Экологические риски ОАО "РЖД"',
-          type: 8,
-          active: true,
-          is_active: false),
-    ];*/
 
     _allItems = items ?? [];
 
@@ -318,14 +151,19 @@ class _CheckListScreen extends State<CheckListScreen> {
   Future<void> submitCheckListTemplate(List<CheckListWork> itemsCopy) async {
     bool hasErorr = false;
     Map<String, dynamic> result;
-    try {
-      // result = await ComGroupController.update(data['comGroup'], data['ids']);
+    List<CheckListWork> activeTemplates =
+        itemsCopy.where((item) => item.is_active == true).toList() ?? [];
+    List<int> ids =
+        List.generate(activeTemplates.length, (i) => activeTemplates[i].id);
 
-      // hasErorr =  result["code"] < 0;
+    try {
+       result = await CheckListController.setIsActiveTrue(ids, checkPlanItemId);
+
+       hasErorr =  result["code"] < 0;
 
       if (hasErorr) {
         Navigator.pop<bool>(context, false);
-        Scaffold.of(context).showSnackBar(errorSnackBar());
+        Scaffold.of(context).showSnackBar(errorSnackBar(text: result["message"]));
       } else {
         setState(() {
           _allItems = itemsCopy;
@@ -469,24 +307,22 @@ class _CheckListScreen extends State<CheckListScreen> {
     });
   }
 
-  Future<bool> editTemplateClicked(StateSetter setState) {
-    List<CheckListWork> _itemsCopy = [];
+  Future<void> editTemplateClicked() async {
+    _itemsCopy = [];
     if (_allItems != null)
       _allItems.forEach((item) {
-        _itemsCopy.add(CheckListWork(
-          parent_id: item.parent_id,
-          id: item.id,
-          is_active: item.is_active,
-          name: item.name,
-          odooId: item.odooId,
-          is_base: item.is_base,
-          type: item.type,
-          base_id: item.base_id,
-          active: item.active,
-        ));
+        _itemsCopy.add(CheckListWork.fromJson(item.toJson()));
       });
 
-    reloadTemplateList();
+    reloadTemplateCopyList();
+
+    bool result = await showTemplateClicked(setState);
+    if (result != null && result) {
+      setState(() {});
+    }
+  }
+
+  Future<bool> showTemplateClicked(StateSetter setState) {
     return showDialog<bool>(
         context: context,
         barrierDismissible: false,
@@ -530,7 +366,7 @@ class _CheckListScreen extends State<CheckListScreen> {
                                 onChange: (value) {
                                   setState(() {
                                     _selectedTypeTemplate = int.parse(value);
-                                    reloadTemplateList();
+                                    reloadTemplateCopyList();
                                   });
                                 },
                                 parentContext: context,
@@ -619,7 +455,7 @@ class _CheckListScreen extends State<CheckListScreen> {
       onSelected: (value) {
         switch (value) {
           case 'editTemplate':
-            editTemplateClicked(setState);
+            editTemplateClicked();
             break;
         }
       },

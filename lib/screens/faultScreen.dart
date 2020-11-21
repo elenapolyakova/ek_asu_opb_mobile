@@ -4,6 +4,9 @@ import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/screens/faultListScreen.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class Koap {
   int id;
@@ -49,10 +52,17 @@ class _FaultScreen extends State<FaultScreen> {
   double heightCheckList = 700;
   double widthCheckList = 1000;
   double widthHelp = 700;
+  double heightHelp = 550;
   Fault _fault;
   List<Koap> _koapItems;
   int _koapId;
   final formFaultKey = new GlobalKey<FormState>();
+  int _selectedKoapId;
+  String _fineName;
+  File _image;
+  int _imageIndex;
+  List<File> _imageList = [];
+  final _picker = ImagePicker();
 
   @override
   void initState() {
@@ -73,8 +83,10 @@ class _FaultScreen extends State<FaultScreen> {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
-      await loadFault();
+      _fineName = '';
       await loadKoap();
+      await loadFault();
+      await loadImages();
     } catch (e) {} finally {
       hideDialog(context);
       showLoading = false;
@@ -87,15 +99,21 @@ class _FaultScreen extends State<FaultScreen> {
         id: 1,
         odooId: 1,
         name: 'Разлив',
-        desc: 'Описание нарушения',
+        desc: '',
         date: DateTime.now(),
         fine_desc: 'Описание штрафа',
-        // fine: 1000,
+        fine: 1000,
         koap_id: 1);
-    _fault = fault;
+
+    if (![null, -1].contains(faultId)) _fault = fault;
     //await FaultController.select(faultId)
 
-    _fault = _fault ?? [];
+    if (_fault != null)
+      _fineName = getFineName(_fault.koap_id) ?? '';
+    else {
+      _fault = _fault ?? new Fault();
+      _fineName = '';
+    }
   }
 
   Future<void> loadKoap() async {
@@ -110,7 +128,7 @@ class _FaultScreen extends State<FaultScreen> {
           man_fine_to: 1000,
           firm_fine_from: 10000,
           firm_fine_to: 20000,
-          desc: 90),
+          firm_stop: 90),
       Koap(
           id: 2,
           article: '6.3.',
@@ -121,7 +139,7 @@ class _FaultScreen extends State<FaultScreen> {
           man_fine_to: 50000,
           firm_fine_from: 200000,
           firm_fine_to: 500000,
-          desc: 90),
+          firm_stop: 90),
       Koap(
           id: 3,
           article: '6.3.',
@@ -132,54 +150,146 @@ class _FaultScreen extends State<FaultScreen> {
           man_fine_to: 500000,
           firm_fine_from: 500000,
           firm_fine_to: 1000000,
-          desc: 90),
+          firm_stop: 90),
     ];
 
     _koapItems = koapItems;
     //await KoapController.selectAll()
 
-    _fault = _fault ?? [];
+    _koapItems = _koapItems ?? [];
   }
 
-  /*Future<bool> showFaultDialog(StateSetter setState) {
-    StateSetter dialogSetter;
-    final menu = PopupMenuButton(
-      itemBuilder: (_) => getMenuItem(context),
-      padding: EdgeInsets.all(0.0),
-      onSelected: (value) {
-        switch (value) {
-          case 'add':
-            setState(() {
-              if (_currentCheckListItem.faultItems == null)
-                _currentCheckListItem.faultItems = [];
-              _currentCheckListItem.faultItems.add(Fault(
-                  id: null, odooId: null, parentId: _currentCheckListItem.id));
-              dialogSetter(() {});
-              //refresh = true;
-            });
-            break;
+  Future<void> loadImages() async {
+    _imageList = _imageList ?? [];
+    if (faultId == 1) {
+      _imageList.insert(0, await loadFileFromAssets("assets/test/1.jpg"));
+      _imageList.insert(0, await loadFileFromAssets("assets/test/2.jpg"));
+      _imageList.insert(0, await loadFileFromAssets("assets/test/3.jpg"));
+      _imageList.insert(0, await loadFileFromAssets("assets/test/4.jpg"));
+      _imageList.insert(0, await loadFileFromAssets("assets/test/5.jpg"));
+    }
+    if (_imageList.length > 0) {
+      _image = _imageList[0];
+      _imageIndex = 0;
+    }
+    ;
+  }
+
+  String getFineDesc(int koapId) {
+    if (koapId == null) return null;
+    Koap koapItem =
+        _koapItems.firstWhere((koap) => koap.id == koapId, orElse: () => null);
+    if (koapItem != null) {
+      String fineMan = (koapItem.man_fine_from != null
+              ? 'от ${koapItem.man_fine_from.toString()}'
+              : '') +
+          (koapItem.man_fine_to != null
+              ? ' до ${koapItem.man_fine_to.toString()}'
+              : '');
+
+      String fineFirm = (koapItem.firm_fine_from != null
+              ? 'от ${koapItem.firm_fine_from.toString()}'
+              : '') +
+          (koapItem.firm_fine_to != null
+              ? ' до ${koapItem.firm_fine_to.toString()}'
+              : '');
+
+      String stopFirm = (koapItem.firm_stop != null
+          ? '. Срок приостановки деятельности ${koapItem.firm_stop.toString()} дней'
+          : '');
+
+      return (koapItem.article != null ? 'ст. ${koapItem.article}' : '') +
+          (koapItem.paragraph != null ? ' п. ${koapItem.paragraph}' : '') +
+          (koapItem.text != null ? ' ${koapItem.text}' : '') +
+          (fineMan != '' ? '. Штраф на должностное лицо $fineMan рублей' : '') +
+          (fineFirm != ''
+              ? '. Штраф на юридическое лицо $fineFirm рублей'
+              : '') +
+          stopFirm;
+    }
+    ;
+    return null;
+  }
+
+  String getFineName(int koapId) {
+    if (koapId == null) return null;
+    Koap koapItem =
+        _koapItems.firstWhere((koap) => koap.id == koapId, orElse: () => null);
+    if (koapItem != null)
+      return (koapItem.article != null ? 'ст. ${koapItem.article}' : '') +
+          (koapItem.paragraph != null ? ' п. ${koapItem.paragraph}' : '');
+    return null;
+  }
+
+  Future<List<dynamic>> onSearch(String template) async {
+    List<Koap> list = _koapItems
+        .where((item) =>
+            ((item.article ?? '') + (item.paragraph ?? "") + (item.text ?? ""))
+                .contains(template))
+        .toList();
+    // await DepartmentController.select(template, railwayId);
+    if (list == null) return null;
+    List<dynamic> result = List.generate(list.length, (index) {
+      String fineName = getFineName(list[index].id);
+      return {
+        'id': list[index].id,
+        'value':
+            '${list[index].text} ' + (fineName != null ? ' ($fineName)' : '')
+      };
+    });
+    return result;
+  }
+
+  Future getImage() async {
+    final pickedFile = await _picker.getImage(source: ImageSource.camera);
+
+    setState(() {
+      if (pickedFile != null) {
+        _image = File(pickedFile.path);
+        _imageList.insert(0, _image);
+        _imageIndex = 0;
+      } else {
+        print('No image selected.');
+      }
+    });
+  }
+
+  /*  void _onImageButtonPressed(ImageSource source, {BuildContext context}) async {
+    
+      await _displayPickImageDialog(context,
+          (double maxWidth, double maxHeight, int quality) async {
+        try {
+          final pickedFile = await _picker.getImage(
+            source: source,
+            maxWidth: maxWidth,
+            maxHeight: maxHeight,
+            imageQuality: quality,
+          );
+          setState(() {
+            _imageFile = pickedFile;
+          });
+        } catch (e) {
+          setState(() {
+            _pickImageError = e;
+          });
         }
-      },
-      icon: Icon(
-        Icons.more_vert,
-        color: Theme.of(context).primaryColorDark,
-        size: 30,
-      ),
-      color: Theme.of(context).primaryColor,
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12.0))),
-    );
+      });
+    
+  }*/
 
-    return showDialog<bool>(
+  Future<Koap> showSearchKoap() async {
+    //  Koap sourceKoap = _koapItems.firstWhere((koap) => koap.id == _fault.koap_id,
+    //    orElse: () => null);
+
+    return showDialog<Koap>(
         context: context,
-        barrierDismissible: false,
+        barrierDismissible: true,
         barrierColor: Color(0x88E6E6E6),
-        builder: (BuildContext context) {
+        builder: (context) {
           return StatefulBuilder(builder: (context, StateSetter setState) {
-            dialogSetter = setState;
-            return Stack(alignment: Alignment.center, key: Key('FaultList'),
-
-                //     'checkList${_currentCheckList.items != null ? _currentCheckList.items.length : '0'}'),
+            return Stack(
+                alignment: Alignment.center,
+                key: Key('KoaptList'),
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
@@ -191,77 +301,69 @@ class _FaultScreen extends State<FaultScreen> {
                     ),
                   ),
                   Container(
+                      height: heightCheckList,
                       width: widthCheckList,
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 30.0, vertical: 20.0),
                       child: Scaffold(
                           backgroundColor: Colors.transparent,
                           body: Form(
-                              key: formFaultKey,
-                              child: Container(
-                                  child: Column(children: [
-                                ListTile(
-                                    trailing: menu,
-                                    contentPadding: EdgeInsets.all(0),
-                                    title: Center(
-                                        child: FormTitle(
-                                            'Перечень нарушений к ${_currentCheckListItem.name} ${_currentCheckListItem.question}')),
-                                    onTap: () {}),
-                                //   Container(child: refresh ? Text('') : Text('')),
+                              child: SingleChildScrollView(
+                                  child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                SearchBox(
+                                  (newValue) => setState(
+                                      () => _selectedKoapId = newValue),
+                                  (template) {
+                                    return onSearch(template);
+                                  },
+                                  context,
+                                  text: 'Выбрать статью КОАП',
+                                  width: widthCheckList - 50,
+                                  height: heightCheckList - 100,
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    MyButton(
+                                        text: 'принять',
+                                        parentContext: context,
+                                        onPress: () async {
+                                          Koap selecteKoap =
+                                              _koapItems.firstWhere(
+                                                  (koap) =>
+                                                      koap.id ==
+                                                      _selectedKoapId,
+                                                  orElse: () => null);
 
-                                Expanded(
-                                    child: ListView(
-                                        key: Key(_currentCheckList.items.length
-                                            .toString()),
-                                        children: [
-                                      Column(children: [
-                                        generateFualtTable(
-                                            context,
-                                            /*itemHeader,*/
-                                            _currentCheckListItem.faultItems,
-                                            dialogSetter: dialogSetter
-                                            // setState: setState
-                                            )
-                                      ])
-                                    ])),
-                                Container(
-                                    child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                      MyButton(
-                                          text: 'принять',
-                                          parentContext: context,
-                                          onPress: () {
-                                            submitFaultList();
-                                          }),
-                                      MyButton(
-                                          text: 'отменить',
-                                          parentContext: context,
-                                          onPress: () {
-                                            cancelCheckList();
-                                          }),
-                                    ])),
-                              ])))))
+                                          Navigator.pop<Koap>(
+                                              context, selecteKoap);
+                                        }),
+                                    MyButton(
+                                        text: 'отменить',
+                                        parentContext: context,
+                                        onPress: () {
+                                          Navigator.pop<Koap>(context, null);
+                                        }),
+                                  ],
+                                )
+                              ])
+                                  //Navigator.pop<bool>(context, result);
+                                  ))))
                 ]);
           });
         });
   }
 
-  Widget generateFualtTable(
-      BuildContext context,
-      /*List<Map<String, dynamic>> headers,*/ List<Fault> rows,
-      {/*StateSetter setState,*/ StateSetter dialogSetter}) {
-    return Text('Тут будет список нарушений');
-  }
-
-  Future<void> submitFaultList() async {
-    Navigator.pop<bool>(context, true);
-    Scaffold.of(context).showSnackBar(successSnackBar);
-  }
-*/
   showToolTip() {
-    // if (_koapId = null) return;
+    //   if (_fault.koap_id == null) return;
+    Koap sourceKoap = _koapItems.firstWhere((koap) => koap.id == _fault.koap_id,
+        orElse: () => null);
+    if (_fault.koap_id == null || sourceKoap == null) return;
+    TextStyle style = TextStyle(
+        color: Theme.of(context).buttonColor,
+        fontSize: 16,
+        fontWeight: FontWeight.w600);
     return showDialog<bool>(
         context: context,
         barrierDismissible: true,
@@ -277,23 +379,221 @@ class _FaultScreen extends State<FaultScreen> {
                     child: Image.asset(
                       "assets/images/app.jpg",
                       fit: BoxFit.fill,
-                      height: 500,
+                      height: heightHelp,
                       width: widthHelp,
                     ),
                   ),
                   Container(
-                      height: 500,
+                      height: heightHelp,
                       width: widthHelp,
                       child: Scaffold(
                           backgroundColor: Colors.transparent,
                           body: Form(
                               child: Container(
                                   padding: EdgeInsets.symmetric(
-                                      horizontal: 30.0, vertical: 20.0),
-                                  child: Text('Ясно, понятно')))))
+                                      horizontal: 40.0, vertical: 30.0),
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                              child: FormTitle(
+                                                  getFineName(_fault.koap_id)))
+                                        ],
+                                      ),
+                                      Container(
+                                        margin:
+                                            EdgeInsets.symmetric(vertical: 10),
+                                        child: EditTextField(
+                                          text: 'Описание статьи',
+                                          value: sourceKoap.text,
+                                          context: context,
+                                          borderColor: Theme.of(context)
+                                              .primaryColorLight,
+                                          readOnly: true,
+                                          backgroundColor: Theme.of(context)
+                                              .primaryColorLight,
+                                          height: 140,
+                                          maxLines: 7,
+                                          margin: 0,
+                                        ),
+                                      ),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            margin: EdgeInsets.only(top: 10),
+                                            child: Text(
+                                              'Штраф на должностное лицо, руб',
+                                              style: style,
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Container(
+                                              margin:
+                                                  EdgeInsets.only(right: 10),
+                                              child: EditTextField(
+                                                text: 'От',
+                                                value: sourceKoap.man_fine_from,
+                                                context: context,
+                                                borderColor: Theme.of(context)
+                                                    .primaryColorLight,
+                                                readOnly: true,
+                                                backgroundColor:
+                                                    Theme.of(context)
+                                                        .primaryColorLight,
+                                                margin: 0,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: Container(
+                                              margin: EdgeInsets.only(left: 10),
+                                              child: EditTextField(
+                                                text: 'До',
+                                                value: sourceKoap.man_fine_to,
+                                                context: context,
+                                                borderColor: Theme.of(context)
+                                                    .primaryColorLight,
+                                                readOnly: true,
+                                                backgroundColor:
+                                                    Theme.of(context)
+                                                        .primaryColorLight,
+                                                margin: 0,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            margin: EdgeInsets.only(top: 20),
+                                            child: Text(
+                                              'Штраф на юридическое лицо, руб',
+                                              style: style,
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Container(
+                                              margin:
+                                                  EdgeInsets.only(right: 10),
+                                              child: EditTextField(
+                                                text: 'От',
+                                                value:
+                                                    sourceKoap.firm_fine_from,
+                                                context: context,
+                                                borderColor: Theme.of(context)
+                                                    .primaryColorLight,
+                                                readOnly: true,
+                                                backgroundColor:
+                                                    Theme.of(context)
+                                                        .primaryColorLight,
+                                                margin: 0,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: Container(
+                                              margin: EdgeInsets.only(left: 10),
+                                              child: EditTextField(
+                                                text: 'До',
+                                                value: sourceKoap.firm_fine_to,
+                                                context: context,
+                                                borderColor: Theme.of(context)
+                                                    .primaryColorLight,
+                                                readOnly: true,
+                                                backgroundColor:
+                                                    Theme.of(context)
+                                                        .primaryColorLight,
+                                                margin: 0,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Expanded(
+                                            child: Container(
+                                              margin: EdgeInsets.only(
+                                                  right: 10, top: 20),
+                                              child: EditTextField(
+                                                text:
+                                                    'Срок приостановки деятельности, дней',
+                                                value: sourceKoap.firm_stop,
+                                                context: context,
+                                                borderColor: Theme.of(context)
+                                                    .primaryColorLight,
+                                                readOnly: true,
+                                                backgroundColor:
+                                                    Theme.of(context)
+                                                        .primaryColorLight,
+                                                margin: 0,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                              child: Container(
+                                            margin: EdgeInsets.only(left: 140),
+                                            child: MyButton(
+                                                text: 'Закрыть',
+                                                parentContext: context,
+                                                onPress: () {
+                                                  Navigator.pop(context, true);
+                                                }),
+                                          )),
+                                        ],
+                                      ),
+                                    ],
+                                  )))))
                 ]);
           });
         });
+  }
+
+  submitFault() {
+    widget.pop();
+  }
+
+  Future<void> deleteImage(int i) async {
+    bool result = await showConfirmDialog(
+        'Вы уверены, что хотите удалить фото?', context);
+    if (result != null && result) {
+      bool hasErorr = false;
+      Map<String, dynamic> result;
+      print(i);
+      try {
+        //  result = await ComGroupController.delete(groupId);
+        //  hasErorr = result["code"] < 0;
+
+        //  if (hasErorr) {
+        //    Scaffold.of(context).showSnackBar(
+        //        errorSnackBar(text: 'Произошла ошибка при удалении'));
+        //   return;
+        //   }
+        _imageList.removeAt(i);
+        if (i > 0)
+          _imageIndex = i--;
+        else
+          _imageIndex = 0;
+
+        _image = (_imageList.length > 0) ? _imageList[_imageIndex] : null;
+        setState(() {});
+      } catch (e) {
+        Scaffold.of(context)
+            .showSnackBar(errorSnackBar(text: 'Произошла ошибка при удалении'));
+      }
+    }
   }
 
   @override
@@ -309,105 +609,251 @@ class _FaultScreen extends State<FaultScreen> {
                 children: [
                   Expanded(
                       flex: 2,
-                      child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20),
-                          child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Row(children: [
-                                  FormTitle("Нарушение"),
-                                  Container(
-                                    padding: EdgeInsets.only(left: 20),
-                                    child: GestureDetector(
-                                      child: Icon(Icons.help_outline,
-                                          size: 35,
-                                          color:
-                                              Theme.of(context).primaryColor),
-                                      onTap: () => showToolTip(),
+                      child: SingleChildScrollView(
+                          child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20),
+                              child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Row(children: [
+                                      FormTitle("Нарушение"),
+                                      Container(
+                                        padding: EdgeInsets.only(left: 20),
+                                        child: GestureDetector(
+                                          child: Icon(Icons.help_outline,
+                                              size: 35,
+                                              color: Theme.of(context)
+                                                  .primaryColor),
+                                          onTap: () => showToolTip(),
+                                        ),
+                                      )
+                                    ]),
+                                    Container(
+                                      margin: EdgeInsets.only(bottom: 20),
+                                      height: 45,
+                                      decoration: new BoxDecoration(
+                                        border: Border.all(
+                                            color: Theme.of(context)
+                                                .primaryColorDark,
+                                            width: 1.5),
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(12)),
+                                        color: Colors.white,
+                                      ),
+                                      padding: EdgeInsets.all(0),
+                                      child: TextFormField(
+                                        readOnly: true,
+                                        controller:
+                                            TextEditingController.fromValue(
+                                                TextEditingValue(
+                                                    text: _fineName ?? "")),
+                                        // initialValue: _fineName ?? "",
+                                        decoration: new InputDecoration(
+                                          suffixIcon: Icon(Icons.description,
+                                              color: Theme.of(context)
+                                                  .primaryColor),
+                                          border: OutlineInputBorder(
+                                              borderSide: BorderSide.none),
+                                        ),
+                                        maxLines: 1,
+                                        cursorColor:
+                                            Theme.of(context).cursorColor,
+                                        onTap: () =>
+                                            showSearchKoap().then((Koap koap) {
+                                          if (koap == null) return;
+                                          _fault.koap_id = koap.id ?? null;
+                                          _fineName = getFineName(koap.id);
+                                          _fault.fine_desc =
+                                              getFineDesc(koap.id);
+                                          setState(() {});
+                                        }),
+                                      ),
                                     ),
-                                  )
-                                ]),
-                                Container(
-                                  margin: EdgeInsets.only(bottom: 10),
-                                  height: 45,
-                                  decoration: new BoxDecoration(
-                                    border: Border.all(
-                                        color:
+                                    Container(
+                                      margin:
+                                          EdgeInsets.symmetric(vertical: 20),
+                                      child: EditTextField(
+                                        text: 'Наименование',
+                                        value: _fault.name,
+                                        onSaved: (value) =>
+                                            {_fault.name = value},
+                                        context: context,
+                                        borderColor:
                                             Theme.of(context).primaryColorDark,
-                                        width: 1.5),
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(12)),
-                                    color: Colors.white,
-                                  ),
-                                  padding: EdgeInsets.all(0),
-                                  child: TextFormField(
-                                    decoration: new InputDecoration(
-                                      suffixIcon: Icon(Icons.description,
-                                          color:
-                                              Theme.of(context).primaryColor),
-                                      border: OutlineInputBorder(
-                                          borderSide: BorderSide.none),
+                                        height: 40,
+                                        margin: 0,
+                                      ),
                                     ),
-                                    keyboardType: TextInputType.emailAddress,
-                                    maxLines: 1,
-                                    cursorColor: Theme.of(context).cursorColor,
-                                    onSaved: (val) => null, //_email = val,
-                                    onTap: () => null,
-                                  ),
-                                ),
-                                Container(
-                                  margin: EdgeInsets.symmetric(vertical: 20),
-                                  child: EditTextField(
-                                    text: 'Наименование',
-                                    value: _fault.name,
-                                    onSaved: (value) => {_fault.name = value},
-                                    context: context,
-                                    borderColor:
-                                        Theme.of(context).primaryColorDark,
-                                    height: 40,
-                                    margin: 0,
-                                  ),
-                                ),
-                                Container(
-                                  margin: EdgeInsets.symmetric(vertical: 20),
-                                  child: EditTextField(
-                                    text: 'Описание штрафа',
-                                    value: _fault.fine_desc,
-                                    onSaved: (value) =>
-                                        {_fault.fine_desc = value},
-                                    context: context,
-                                    borderColor:
-                                        Theme.of(context).primaryColorDark,
-                                    height: 140,
-                                    maxLines: 7,
-                                    margin: 0,
-                                  ),
-                                ),
-                                Container(
-                                  margin: EdgeInsets.symmetric(vertical: 20),
-                                  child: EditTextField(
-                                    text: 'Сумма итогового штрафа',
-                                    value: _fault.fine != null
-                                        ? _fault.fine.toString()
-                                        : '',
-                                    onSaved: (value) =>
-                                        {_fault.fine = int.tryParse(value)},
-                                    context: context,
-                                    borderColor:
-                                        Theme.of(context).primaryColorDark,
-                                    height: 40,
-                                    inputFormatters: <TextInputFormatter>[
-                                      FilteringTextInputFormatter.digitsOnly
-                                    ], // Only numbers can be entered
-                                    textInputType:
-                                        TextInputType.numberWithOptions(
-                                            decimal: true),
-                                    margin: 0,
-                                  ),
-                                ),
-                              ]))),
-                  Expanded(flex: 2, child: Text('Фото')),
-                  Expanded(flex: 1, child: Text('Описание')),
+                                    Container(
+                                      margin:
+                                          EdgeInsets.symmetric(vertical: 20),
+                                      child: EditTextField(
+                                        text: 'Описание штрафа',
+                                        value: _fault.fine_desc,
+                                        onSaved: (value) =>
+                                            {_fault.fine_desc = value},
+                                        context: context,
+                                        borderColor:
+                                            Theme.of(context).primaryColorDark,
+                                        height: 180,
+                                        maxLines: 9,
+                                        margin: 0,
+                                      ),
+                                    ),
+                                    Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Expanded(
+                                              flex: 2,
+                                              child: Container(
+                                                margin: EdgeInsets.only(
+                                                    top: 10, right: 20),
+                                                child: EditTextField(
+                                                  text:
+                                                      'Сумма итогового штрафа, руб',
+                                                  value: _fault.fine != null
+                                                      ? _fault.fine.toString()
+                                                      : '',
+                                                  onSaved: (value) => {
+                                                    _fault.fine =
+                                                        int.tryParse(value)
+                                                  },
+                                                  context: context,
+                                                  borderColor: Theme.of(context)
+                                                      .primaryColorDark,
+                                                  height: 40,
+                                                  inputFormatters: <
+                                                      TextInputFormatter>[
+                                                    FilteringTextInputFormatter
+                                                        .digitsOnly
+                                                  ], // Only numbers can be entered
+                                                  textInputType: TextInputType
+                                                      .numberWithOptions(
+                                                          decimal: true),
+                                                  margin: 0,
+                                                ),
+                                              )),
+                                          Expanded(
+                                              flex: 1,
+                                              child: Container(
+                                                margin:
+                                                    EdgeInsets.only(top: 10),
+                                                child: MyButton(
+                                                    text: 'принять',
+                                                    parentContext: context,
+                                                    onPress: () {
+                                                      submitFault();
+                                                    }),
+                                              ))
+                                        ]),
+                                  ])))),
+                  Expanded(
+                      flex: 2,
+                      child: Container(
+                        padding: EdgeInsets.only(bottom: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Expanded(
+                                flex: 5,
+                                child: Container(
+                                    padding: EdgeInsets.only(bottom: 10),
+                                    child: _image == null
+                                        ? Center(
+                                            child: GestureDetector(
+                                            child: Icon(
+                                              Icons.add_a_photo,
+                                              color: Theme.of(context)
+                                                  .primaryColor,
+                                              size: 150,
+                                            ),
+                                            onTap: getImage,
+                                          ))
+                                        : Image.file(
+                                            _image,
+                                            fit: BoxFit.fill,
+                                          ),
+                                    constraints: BoxConstraints.expand())),
+                            _imageList.length > 0
+                                ? Expanded(
+                                    flex: 1,
+                                    child: Container(
+                                      child: SingleChildScrollView(
+                                          scrollDirection: Axis.horizontal,
+                                          child: Row(
+                                              children: List.generate(
+                                            _imageList.length,
+                                            (i) => GestureDetector(
+                                              onLongPress: () => deleteImage(i),
+                                              onTap: () => setState(() {
+                                                _image = _imageList[i];
+                                                _imageIndex = i;
+                                              }),
+                                              child: Container(
+                                                  constraints:
+                                                      BoxConstraints.tight(
+                                                          Size(95, 80)),
+                                                  padding: i == 0
+                                                      ? EdgeInsets.only(
+                                                          right: 5)
+                                                      : i ==
+                                                              _imageList
+                                                                      .length -
+                                                                  1
+                                                          ? EdgeInsets.only(
+                                                              left: 5)
+                                                          : EdgeInsets
+                                                              .symmetric(
+                                                                  horizontal:
+                                                                      5),
+                                                  child: Image.file(
+                                                    _imageList[i],
+                                                    fit: BoxFit.cover,
+                                                  )),
+                                            ),
+                                          ))),
+                                      constraints: BoxConstraints.expand(),
+                                    ))
+                                : Text(''),
+                          ],
+                        ),
+                      )),
+                  Expanded(
+                      flex: 1,
+                      child: Column(
+                        children: [
+                          Container(
+                            height: 20,
+                            child: TextIcon(
+                              icon: Icons.add_a_photo,
+                              color: Theme.of(context).primaryColor,
+                              text: 'Сделать фото',
+                              onTap: getImage,
+                              margin: 0,
+                            ),
+                          ),
+                          Expanded(
+                              child: SingleChildScrollView(
+                                  child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 20),
+                            child: Container(
+                              margin: EdgeInsets.symmetric(vertical: 10),
+                              child: EditTextField(
+                                text: 'Описание нарушения',
+                                value: _fault.desc,
+                                onSaved: (value) => {_fault.desc = value},
+                                context: context,
+                                borderColor: Theme.of(context).primaryColorDark,
+                                height: 470,
+                                maxLines: 23,
+                                margin: 0,
+                              ),
+                            ),
+                          )))
+                        ],
+                      )),
                 ],
               ))
             ]));
