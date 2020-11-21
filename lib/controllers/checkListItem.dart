@@ -1,5 +1,6 @@
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import "package:ek_asu_opb_mobile/models/checkListItem.dart";
+import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class CheckListItemController extends Controllers {
   static String _tableName = "check_list_item";
@@ -42,5 +43,30 @@ class CheckListItemController extends Controllers {
     List<CheckListItem> checkListItems =
         queryRes.map((e) => CheckListItem.fromJson(e)).toList();
     return checkListItems;
+  }
+
+  // Update the whole object in db
+  static Future<Map<String, dynamic>> update(
+      CheckListItem checkListItem) async {
+    Map<String, dynamic> res = {
+      'code': null,
+      'message': null,
+      'id': null,
+    };
+
+    print("Update() CheckListItem");
+    await DBProvider.db
+        .update(_tableName, checkListItem.prepareForUpdate())
+        .then((resId) async {
+      print("RES ID $resId");
+      res['code'] = 1;
+      res['id'] = resId;
+    }).catchError((err) {
+      res["code"] = -3;
+      res["message"] = "Error updating $_tableName";
+    });
+
+    DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
+    return res;
   }
 }
