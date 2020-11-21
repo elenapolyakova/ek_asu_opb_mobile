@@ -69,4 +69,23 @@ class CheckListItemController extends Controllers {
     DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
     return res;
   }
+
+  static Future<Map<String, dynamic>> delete(int id) async {
+    Map<String, dynamic> res = {
+      'code': null,
+      'message': null,
+      'id': null,
+    };
+    print("Delete() CheckListItem");
+    await DBProvider.db
+        .update(_tableName, {'id': id, 'active': 'false'}).then((value) async {
+      res['code'] = 1;
+      res["id"] = value;
+      print("Delete value $value");
+    }).catchError((err) {
+      res['code'] = -3;
+      res['message'] = 'Error deleting from $_tableName';
+    });
+    return res;
+  }
 }
