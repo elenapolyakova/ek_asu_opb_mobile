@@ -112,6 +112,9 @@ class CheckListItemController extends Controllers {
       res['code'] = -3;
       res['message'] = 'Error deleting from $_tableName';
     });
+
+    DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
+
     return res;
   }
 }
