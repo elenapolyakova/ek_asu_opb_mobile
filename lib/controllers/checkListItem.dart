@@ -26,6 +26,11 @@ class CheckListItemController extends Controllers {
     Map<String, dynamic> json = checkListItem.toJson();
     // Set null by default, as it's new question and it doesn't have base question id, which comes from
     json["base_id"] = null;
+    json.remove("id");
+
+    // Warning only for local db!!!
+    // When enable loading from odoo, delete this code
+    json["odooId"] = null;
 
     await DBProvider.db.insert(_tableName, json).then((resId) {
       res['code'] = 1;
