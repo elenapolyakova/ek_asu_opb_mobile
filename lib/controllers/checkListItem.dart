@@ -4,12 +4,38 @@ import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class CheckListItemController extends Controllers {
   static String _tableName = "check_list_item";
+  // Used for insert primary data from odoo!
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     CheckListItem checkListItem = CheckListItem.fromJson(json);
     print("CheckListItem Insert() to db");
     print(checkListItem.toJson());
 
     return await DBProvider.db.insert(_tableName, checkListItem.toJson());
+  }
+
+  // Used for creation of new checkListItem
+  static Future<Map<String, dynamic>> create(
+      CheckListItem checkListItem) async {
+    Map<String, dynamic> res = {
+      'code': null,
+      'message': null,
+      'id': null,
+    };
+
+    print("Create() CheckListItem");
+    Map<String, dynamic> json = checkListItem.toJson();
+    // Set null by default, as it's new question and it doesn't have base question id, which comes from
+    json["base_id"] = null;
+
+    await DBProvider.db.insert(_tableName, json).then((resId) {
+      res['code'] = 1;
+      res['id'] = resId;
+    }).catchError((err) {
+      res['code'] = -3;
+      res['message'] = 'Error create checkListItem into $_tableName';
+    });
+    DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
+    return res;
   }
 
   // Used for creation work copy of CheckList templates and its assigned Questions
