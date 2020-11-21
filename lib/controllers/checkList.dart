@@ -91,7 +91,7 @@ class CheckListController extends Controllers {
   // Set for records of checkLists which comes in ids active = True; ids - [1, 3, 5]
   // By parent id (id of plan) we find all checklists, for id in ids we set active = True, for others active = False;
   static Future<Map<String, dynamic>> setIsActiveTrue(
-      List ids, int parentId) async {
+      List<int> ids, int parentId) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
