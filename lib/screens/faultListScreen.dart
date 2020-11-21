@@ -440,7 +440,7 @@ class _FaultListScreen extends State<FaultListScreen> {
     return showLoading
         ? Text("")
         : Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+            padding: EdgeInsets.symmetric(horizontal: 40, vertical: 5),
             child: Column(children: [
               Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
                 Expanded(

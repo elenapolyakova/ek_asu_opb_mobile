@@ -122,7 +122,8 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
     CheckListItem checkListItem =
         _items.firstWhere((item) => item.id == checkListItemId);
 
-    CheckListItem itemCopy = CheckListItem(
+    CheckListItem itemCopy = CheckListItem.fromJson(checkListItem.toJson());
+    /*CheckListItem(
         id: checkListItem.id,
         odooId: checkListItem.odooId,
         parent_id: checkListItem.parent_id,
@@ -131,7 +132,7 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
         result: checkListItem.result,
         description: checkListItem.description,
         base_id: checkListItem.base_id,
-        active: checkListItem.active);
+        active: checkListItem.active);*/
 
     bool result = await showCheckListItemDialog(itemCopy, setState);
     if (result != null && result) {
@@ -269,9 +270,20 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
                                           context: context,
                                           height: 100,
                                           maxLines: 3,
-                                          // readOnly: base_id != null
-                                          // backgroundColor: Theme.of(context)
-                                          //    .primaryColorLight, //todo вернуть как появится base_id
+                                          readOnly:
+                                              checkListItem.base_id != null,
+                                          showEditDialog:
+                                              checkListItem.base_id == null,
+                                          backgroundColor:
+                                              checkListItem.base_id != null
+                                                  ? Theme.of(context)
+                                                      .primaryColorLight
+                                                  : null,
+                                          borderColor:
+                                              checkListItem.base_id != null
+                                                  ? Theme.of(context)
+                                                      .primaryColorLight
+                                                  : null,
                                         ),
                                         EditTextField(
                                           text: 'Результат',
@@ -485,7 +497,7 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
     return showLoading
         ? Text("")
         : Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+            padding: EdgeInsets.symmetric(horizontal: 40, vertical: 5),
             child: Column(children: [
               Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
                 Expanded(

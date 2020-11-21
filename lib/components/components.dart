@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import 'dart:ui';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:flutter/material.dart';
@@ -968,6 +969,8 @@ class _DepartmentSelect extends State<DepartmentSelect> {
     setState(() {
       if (sourceRailwayId != null) selectedRailwayId = sourceRailwayId;
     });
+    double height = 700;
+    double width = 800;
 
     return showDialog<dep.Department>(
         context: parentContext,
@@ -975,78 +978,108 @@ class _DepartmentSelect extends State<DepartmentSelect> {
         barrierColor: Color(0x88E6E6E6),
         builder: (context) {
           return StatefulBuilder(builder: (context, StateSetter setState) {
-            return AlertDialog(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12.0))),
-                backgroundColor: Theme.of(context).primaryColor,
-                content: SingleChildScrollView(
-                    child: ConstrainedBox(
-                        constraints:
-                            BoxConstraints(maxHeight: 700, minWidth: 700),
-                        child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (_railwayId == null)
-                                Container(
-                                    width: 500,
-                                    child: MyDropdown(
-                                      text: 'Дорога',
-                                      dropdownValue: selectedRailwayId != null
-                                          ? selectedRailwayId.toString()
-                                          : null,
-                                      items: railwayList,
-                                      onChange: (value) {
-                                        setState(() {
-                                          selectedRailwayId =
-                                              int.tryParse(value);
-                                        });
-                                        return onRailwaySelected(
-                                            selectedRailwayId);
-                                      },
-                                      parentContext: context,
-                                    )),
-                              if (selectedRailwayId != null)
-                                SearchBox(
-                                  (newValue) =>
-                                      setState(() => selectedId = newValue),
-                                  (template) {
-                                    return onSearch(
-                                        template, selectedRailwayId);
-                                  },
-                                  context,
-                                  text: 'Структурное подразделение',
-                                  width: 750,
-                                ),
-                              if (selectedRailwayId == null)
-                                Expanded(
-                                    child: Center(
-                                        child: Text(
-                                            'Для поиска структурных подразделений выберите дорогу'))),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  MyButton(
-                                      text: 'принять',
-                                      parentContext: parentContext,
-                                      onPress: () async {
-                                        selecteDepartment =
-                                            await DepartmentController
-                                                .selectById(selectedId);
-                                        Navigator.pop<dep.Department>(
-                                            context, selecteDepartment);
-                                      }),
-                                  MyButton(
-                                      text: 'отменить',
-                                      parentContext: parentContext,
-                                      onPress: () {
-                                        Navigator.pop<dep.Department>(
-                                            context, sourceDepartment);
-                                      }),
-                                ],
-                              )
-                            ])
-                        //Navigator.pop<bool>(context, result);
-                        )));
+            return Stack(
+                alignment: Alignment.center,
+                key: Key('KoaptList'),
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      "assets/images/app.jpg",
+                      fit: BoxFit.fill,
+                      height: height,
+                      width: width,
+                    ),
+                  ),
+                  Container(
+                      height: height,
+                      width: width,
+                      child: Scaffold(
+                          backgroundColor: Colors.transparent,
+                          body: Form(
+                              child: Container(
+                                  margin: EdgeInsets.symmetric(vertical: 35),
+                                  child: Column(
+                                      //mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        if (_railwayId == null)
+                                          Row(
+                                            children: [
+                                              Container(
+                                                  padding:
+                                                      EdgeInsets.only(left: 50),
+                                                  alignment:
+                                                      Alignment.centerLeft,
+                                                  width: width - 150,
+                                                  child: MyDropdown(
+                                                    text: 'Дорога',
+                                                    dropdownValue:
+                                                        selectedRailwayId !=
+                                                                null
+                                                            ? selectedRailwayId
+                                                                .toString()
+                                                            : null,
+                                                    items: railwayList,
+                                                    onChange: (value) {
+                                                      setState(() {
+                                                        selectedRailwayId =
+                                                            int.tryParse(value);
+                                                      });
+                                                      return onRailwaySelected(
+                                                          selectedRailwayId);
+                                                    },
+                                                    parentContext: context,
+                                                  ))
+                                            ],
+                                          ),
+                                        if (selectedRailwayId != null)
+                                          Expanded(
+                                              child: SearchBox(
+                                            (newValue) => setState(
+                                                () => selectedId = newValue),
+                                            (template) {
+                                              return onSearch(
+                                                  template, selectedRailwayId);
+                                            },
+                                            context,
+                                            text: 'Структурное подразделение',
+                                            width: width - 50,
+                                          )),
+                                        if (selectedRailwayId == null)
+                                          Expanded(
+                                              child: Center(
+                                                  child: Text(
+                                                      'Для поиска структурных подразделений выберите дорогу'))),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            MyButton(
+                                                text: 'принять',
+                                                parentContext: parentContext,
+                                                onPress: () async {
+                                                  selecteDepartment =
+                                                      await DepartmentController
+                                                          .selectById(
+                                                              selectedId);
+                                                  Navigator.pop<dep.Department>(
+                                                      context,
+                                                      selecteDepartment);
+                                                }),
+                                            MyButton(
+                                                text: 'отменить',
+                                                parentContext: parentContext,
+                                                onPress: () {
+                                                  Navigator.pop<dep.Department>(
+                                                      context,
+                                                      sourceDepartment);
+                                                }),
+                                          ],
+                                        )
+                                      ])
+                                  //Navigator.pop<bool>(context, result);
+                                  ))))
+                ]);
           });
         });
   }
@@ -1130,11 +1163,18 @@ class _SearchBox extends State<SearchBox> {
                               });
                             }))),
                 Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: Theme.of(widget.parentContext).buttonColor,
+                        width: 1.5),
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    color: Theme.of(widget.parentContext).buttonColor,
+                  ),
                   child: IconButton(
                       padding: EdgeInsets.all(0),
                       icon: Icon(widget.icon),
                       iconSize: 40,
-                      color: Theme.of(widget.parentContext).primaryColorDark,
+                      color: Theme.of(widget.parentContext).primaryColorLight,
                       onPressed: () => _onSearch()),
                 )
               ],
