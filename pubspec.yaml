@@ -47,7 +47,7 @@ dependencies:
     git:
       url: https://github.com/igaurab/user_location_plugin.git
   image_picker: ^0.6.7
-  multi_image_picker: ^4.7.14
+ # multi_image_picker: ^4.7.14
   #flutter_rounded_date_picker: ^1.0.5
 
 dev_dependencies:

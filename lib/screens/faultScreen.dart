@@ -7,7 +7,7 @@ import 'package:ek_asu_opb_mobile/screens/faultListScreen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
-import 'package:multi_image_picker/multi_image_picker.dart';
+//import 'package:multi_image_picker/multi_image_picker.dart';
 
 class Koap {
   int id;
