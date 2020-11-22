@@ -138,8 +138,8 @@ class ComGroupController extends Controllers {
           'parent_id': checkPlan.id,
         };
         await DBProvider.db.update(_tableName, res);
-        return RelComGroupUserController.updateComGroupUsers(
-            comGroup.id, e['com_user_ids'].map((userId) => userId as int));
+        return RelComGroupUserController.updateComGroupUsers(comGroup.id,
+            List<int>.from(e['com_user_ids'].map((userId) => userId as int)));
       } else {
         if (comGroup == null) {
           Map<String, dynamic> res = ComGroup.fromJson({
