@@ -7,6 +7,7 @@ import 'package:ek_asu_opb_mobile/screens/faultListScreen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import 'package:multi_image_picker/multi_image_picker.dart';
 
 class Koap {
   int id;
@@ -59,10 +60,14 @@ class _FaultScreen extends State<FaultScreen> {
   final formFaultKey = new GlobalKey<FormState>();
   int _selectedKoapId;
   String _fineName;
+
   File _image;
   int _imageIndex;
   List<File> _imageList = [];
   final _picker = ImagePicker();
+  double width;
+  double height;
+  int quality;
 
   @override
   void initState() {
@@ -159,6 +164,39 @@ class _FaultScreen extends State<FaultScreen> {
     _koapItems = _koapItems ?? [];
   }
 
+  List<Map<String, dynamic>> choices = [
+    {'title': "Сделать фото", 'icon': Icons.camera_alt, 'key': 'camera'},
+    {
+      'title': 'Выбрать из галереи',
+      'icon': Icons.photo_library,
+      'key': 'gallery'
+    },
+  ];
+
+  void _showPhotoMenu() {
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject();
+    showMenu(
+        context: context,
+        position: RelativeRect.fromRect(
+            _tapPosition & const Size(1, 1), Offset.zero & overlay.size),
+        items: <PopupMenuEntry<Map<String, dynamic>>>[
+          CustomPopMenu(
+            context: context,
+            choices: choices,
+          )
+        ]).then<void>((Map<String, dynamic> choice) {
+      if (choice == null) return;
+      switch (choice["key"]) {
+        case 'camera':
+          _onImageButtonPressed(ImageSource.camera);
+          break;
+        case 'gallery':
+          _onImageButtonPressed(ImageSource.gallery);
+          break;
+      }
+    });
+  }
+
   Future<void> loadImages() async {
     _imageList = _imageList ?? [];
     if (faultId == 1) {
@@ -240,7 +278,7 @@ class _FaultScreen extends State<FaultScreen> {
     return result;
   }
 
-  Future getImage() async {
+  /* Future getImage() async {
     final pickedFile = await _picker.getImage(source: ImageSource.camera);
 
     setState(() {
@@ -252,30 +290,28 @@ class _FaultScreen extends State<FaultScreen> {
         print('No image selected.');
       }
     });
-  }
+  }*/
 
-  /*  void _onImageButtonPressed(ImageSource source, {BuildContext context}) async {
-    
-      await _displayPickImageDialog(context,
-          (double maxWidth, double maxHeight, int quality) async {
-        try {
-          final pickedFile = await _picker.getImage(
-            source: source,
-            maxWidth: maxWidth,
-            maxHeight: maxHeight,
-            imageQuality: quality,
-          );
-          setState(() {
-            _imageFile = pickedFile;
-          });
-        } catch (e) {
-          setState(() {
-            _pickImageError = e;
-          });
+  Future _onImageButtonPressed(ImageSource source,
+      {BuildContext context}) async {
+    try {
+      final pickedFile = await _picker.getImage(
+        source: source,
+        maxWidth: width,
+        maxHeight: height,
+        imageQuality: quality,
+      );
+      setState(() {
+        if (pickedFile != null) {
+          _image = File(pickedFile.path);
+          _imageList.insert(0, _image);
+          _imageIndex = 0;
+        } else {
+          print('No image selected.');
         }
       });
-    
-  }*/
+    } catch (e) {}
+  }
 
   Future<Koap> showSearchKoap() async {
     //  Koap sourceKoap = _koapItems.firstWhere((koap) => koap.id == _fault.koap_id,
@@ -565,13 +601,12 @@ class _FaultScreen extends State<FaultScreen> {
     widget.pop();
   }
 
-  Future<void> deleteImage(int i) async {
+  Future<void> deleteImage(int index) async {
     bool result = await showConfirmDialog(
         'Вы уверены, что хотите удалить фото?', context);
     if (result != null && result) {
       bool hasErorr = false;
       Map<String, dynamic> result;
-      print(i);
       try {
         //  result = await ComGroupController.delete(groupId);
         //  hasErorr = result["code"] < 0;
@@ -581,19 +616,24 @@ class _FaultScreen extends State<FaultScreen> {
         //        errorSnackBar(text: 'Произошла ошибка при удалении'));
         //   return;
         //   }
-        _imageList.removeAt(i);
-        if (i > 0)
-          _imageIndex = i--;
-        else
-          _imageIndex = 0;
+        _imageList.removeAt(index);
+        if (index <= _imageIndex && _imageIndex != 0) _imageIndex--;
 
-        _image = (_imageList.length > 0) ? _imageList[_imageIndex] : null;
+        if (_imageList.length > 0)
+          _image = _imageList[_imageIndex];
+        else
+          _image = null;
+
         setState(() {});
       } catch (e) {
         Scaffold.of(context)
             .showSnackBar(errorSnackBar(text: 'Произошла ошибка при удалении'));
       }
     }
+  }
+
+  void _storePosition(TapDownDetails details) {
+    _tapPosition = details.globalPosition;
   }
 
   @override
@@ -708,7 +748,9 @@ class _FaultScreen extends State<FaultScreen> {
                                               flex: 2,
                                               child: Container(
                                                 margin: EdgeInsets.only(
-                                                    top: 10, right: 20),
+                                                    top: 10,
+                                                    right: 20,
+                                                    bottom: 5),
                                                 child: EditTextField(
                                                   text:
                                                       'Сумма итогового штрафа, руб',
@@ -737,8 +779,11 @@ class _FaultScreen extends State<FaultScreen> {
                                           Expanded(
                                               flex: 1,
                                               child: Container(
+                                                alignment:
+                                                    Alignment.bottomCenter,
                                                 margin:
-                                                    EdgeInsets.only(top: 10),
+                                                    EdgeInsets.only(bottom: 0),
+                                                // EdgeInsets.only(top: 20),
                                                 child: MyButton(
                                                     text: 'принять',
                                                     parentContext: context,
@@ -761,20 +806,36 @@ class _FaultScreen extends State<FaultScreen> {
                                 child: Container(
                                     padding: EdgeInsets.only(bottom: 10),
                                     child: _image == null
-                                        ? Center(
-                                            child: GestureDetector(
-                                            child: Icon(
-                                              Icons.add_a_photo,
-                                              color: Theme.of(context)
-                                                  .primaryColor,
-                                              size: 150,
-                                            ),
-                                            onTap: getImage,
-                                          ))
-                                        : Image.file(
-                                            _image,
-                                            fit: BoxFit.fill,
-                                          ),
+                                        ? GestureDetector(
+                                            child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    Icons.add_a_photo,
+                                                    color: Theme.of(context)
+                                                        .primaryColor,
+                                                    size: 150,
+                                                  ),
+                                                  Text('Добавить фото',
+                                                      style: TextStyle(
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .primaryColor,
+                                                          fontSize: 20))
+                                                ]),
+                                            onTapDown: (details) {
+                                              _storePosition(details);
+                                              _showPhotoMenu();
+                                            },
+                                          )
+                                        : GestureDetector(
+                                            onLongPress: () =>
+                                                deleteImage(_imageIndex),
+                                            child: Image.file(
+                                              _image,
+                                              fit: BoxFit.fill,
+                                            )),
                                     constraints: BoxConstraints.expand())),
                             _imageList.length > 0
                                 ? Expanded(
@@ -786,7 +847,7 @@ class _FaultScreen extends State<FaultScreen> {
                                               children: List.generate(
                                             _imageList.length,
                                             (i) => GestureDetector(
-                                              onLongPress: () => deleteImage(i),
+                                              // onLongPress: () => deleteImage(i),
                                               onTap: () => setState(() {
                                                 _image = _imageList[i];
                                                 _imageIndex = i;
@@ -824,15 +885,28 @@ class _FaultScreen extends State<FaultScreen> {
                       flex: 1,
                       child: Column(
                         children: [
-                          Container(
-                            height: 20,
-                            child: TextIcon(
-                              icon: Icons.add_a_photo,
-                              color: Theme.of(context).primaryColor,
-                              text: 'Сделать фото',
-                              onTap: getImage,
-                              margin: 0,
+                          GestureDetector(
+                            child: Container(
+                              padding: EdgeInsets.only(left: 20),
+                              height: 25,
+                              child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.add_a_photo,
+                                        size: 30,
+                                        color: Theme.of(context).primaryColor),
+                                    Padding(
+                                        padding: EdgeInsets.only(left: 10),
+                                        child: Text('Добавить фото',
+                                            style: TextStyle(
+                                                color: Theme.of(context)
+                                                    .primaryColor))),
+                                  ]),
                             ),
+                            onTapDown: (details) {
+                              _storePosition(details);
+                              _showPhotoMenu();
+                            },
                           ),
                           Expanded(
                               child: SingleChildScrollView(
