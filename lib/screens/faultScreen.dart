@@ -4,10 +4,12 @@ import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/screens/faultListScreen.dart';
-import 'package:image_picker/image_picker.dart';
+//import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
+import 'dart:typed_data';
+import 'package:ek_asu_opb_mobile/utils/convert.dart';
 //import 'package:permission_handler/permission_handler.dart';
 
 class Koap {
@@ -61,14 +63,15 @@ class _FaultScreen extends State<FaultScreen> {
   final formFaultKey = new GlobalKey<FormState>();
   int _selectedKoapId;
   String _fineName;
+  bool showLoadingImage = false;
 
   File _image;
   int _imageIndex;
   List<File> _imageList = [];
-  final _picker = ImagePicker();
-  double width;
-  double height;
-  int quality;
+  // final _picker = ImagePicker();
+  // double width;
+  // double height;
+  // int quality;
 
   List<Asset> _assetList = List<Asset>();
 
@@ -176,7 +179,7 @@ class _FaultScreen extends State<FaultScreen> {
     },
   ];
 
-  void _showPhotoMenu() {
+  /*void _showPhotoMenu() {
     final RenderBox overlay = Overlay.of(context).context.findRenderObject();
     showMenu(
         context: context,
@@ -199,7 +202,7 @@ class _FaultScreen extends State<FaultScreen> {
           break;
       }
     });
-  }
+  }*/
 
   Future<void> loadImages() async {
     _imageList = _imageList ?? [];
@@ -285,37 +288,57 @@ class _FaultScreen extends State<FaultScreen> {
   Future<void> _onGalleryButtonPressed({imageCount = 5}) async {
     _assetList = List<Asset>();
 
-  //  var status = await Permission.camera.status;
+    try {
+      _assetList = await MultiImagePicker.pickImages(
+        maxImages: imageCount,
+        enableCamera: true,
+        //selectedAssets: images,
+        cupertinoOptions: CupertinoOptions(takePhotoIcon: "chat"),
+        materialOptions: MaterialOptions(
+          actionBarColor: "#465C0B",
+          actionBarTitleColor: "#EFF0D7",
+          selectCircleStrokeColor: "#ADB439",
+          actionBarTitle: "Выберите фото",
+          allViewTitle: "Все изображения",
+          textOnNothingSelected: 'Не выбрано ни одного изображения',
+          startInAllView: true,
+          useDetailsView: false,
 
-   // if (status.isUndetermined) {
-      // We didn't ask for permission yet.
-    //  if (await Permission.camera.request().isGranted) {
-        try {
-          _assetList = await MultiImagePicker.pickImages(
-            maxImages: imageCount,
-            enableCamera: true,
-              cupertinoOptions: CupertinoOptions(
-            takePhotoIcon: "chat",
-          ),
-            materialOptions: MaterialOptions(
-              actionBarColor: "#465C0B",
-              statusBarColor: "#FADB439",
-              actionBarTitle: "Выберите фото",
-              allViewTitle: "Все изображения",
-               useDetailsView: false,
-              okButtonDrawable: 'Принять',
-              selectCircleStrokeColor: "#FADB439",
-            ),
-          );
-        } on Exception catch (e) {
-          print(e.toString());
+          // okButtonDrawable: "Принять"
+        ),
+      );
+
+      if (_assetList != null && _assetList.length > 0) {
+        setState(() {
+          showLoadingImage = true;
+        });
+        for (var i = 0; i < _assetList.length; i++) {
+          ByteData bytes = await _assetList[i].getByteData();
+          File file = await loadFileFromBytes(bytes);
+          _imageList.insert(i, file);
         }
-        if (!mounted) return;
+        _image = _imageList[0];
+        _imageIndex = 0;
+        setState(() {
+          showLoadingImage = false;
+        });
       }
- //   }
- // }
+      /* _assetList = await MultiImagePicker.pickImages(
+        maxImages: 300,
+      );*/
+    } on Exception catch (e) {
+      setState(() {
+        showLoadingImage = false;
+      });
+      print(e.toString());
+    }
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) return;
+  }
 
-  Future _onImageButtonPressed(ImageSource source,
+  /*Future _onImageButtonPressed(ImageSource source,
       {BuildContext context}) async {
     try {
       final pickedFile = await _picker.getImage(
@@ -334,7 +357,7 @@ class _FaultScreen extends State<FaultScreen> {
         }
       });
     } catch (e) {}
-  }
+  }*/
 
   Future<Koap> showSearchKoap() async {
     //  Koap sourceKoap = _koapItems.firstWhere((koap) => koap.id == _fault.koap_id,
@@ -828,38 +851,52 @@ class _FaultScreen extends State<FaultScreen> {
                                 flex: 5,
                                 child: Container(
                                     padding: EdgeInsets.only(bottom: 10),
-                                    child: _image == null
-                                        ? GestureDetector(
-                                            child: Column(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Icon(
-                                                    Icons.add_a_photo,
-                                                    color: Theme.of(context)
-                                                        .primaryColor,
-                                                    size: 150,
-                                                  ),
-                                                  Text('Добавить фото',
-                                                      style: TextStyle(
-                                                          color:
-                                                              Theme.of(context)
+                                    child: showLoadingImage
+                                        ? Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                                CircularProgressIndicator(
+                                                  valueColor:
+                                                      AlwaysStoppedAnimation<
+                                                          Color>(Theme.of(
+                                                              context)
+                                                          .primaryColorLight),
+                                                ),
+                                              ])
+                                        : _image == null
+                                            ? GestureDetector(
+                                                child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Icon(
+                                                        Icons.add_a_photo,
+                                                        color: Theme.of(context)
+                                                            .primaryColor,
+                                                        size: 150,
+                                                      ),
+                                                      Text('Добавить фото',
+                                                          style: TextStyle(
+                                                              color: Theme.of(
+                                                                      context)
                                                                   .primaryColor,
-                                                          fontSize: 20))
-                                                ]),
-                                            onTapDown: (details) {
+                                                              fontSize: 20))
+                                                    ]),
+                                                /* onTapDown: (details) {
                                               _storePosition(details);
                                               _showPhotoMenu();
-                                            },
-                                          //  onTap: _onGalleryButtonPressed,
-                                          )
-                                        : GestureDetector(
-                                            onLongPress: () =>
-                                                deleteImage(_imageIndex),
-                                            child: Image.file(
-                                              _image,
-                                              fit: BoxFit.fill,
-                                            )),
+                                            },*/
+                                                onTap: _onGalleryButtonPressed,
+                                              )
+                                            : GestureDetector(
+                                                onLongPress: () =>
+                                                    deleteImage(_imageIndex),
+                                                child: Image.file(
+                                                  _image,
+                                                  fit: BoxFit.fill,
+                                                )),
                                     constraints: BoxConstraints.expand())),
                             _imageList.length > 0
                                 ? Expanded(
@@ -927,11 +964,11 @@ class _FaultScreen extends State<FaultScreen> {
                                                     .primaryColor))),
                                   ]),
                             ),
-                             onTapDown: (details) {
+                            /*  onTapDown: (details) {
                               _storePosition(details);
                               _showPhotoMenu();
-                            },
-                           // onTap: _onGalleryButtonPressed,
+                            },*/
+                            onTap: _onGalleryButtonPressed,
                           ),
                           Expanded(
                               child: SingleChildScrollView(

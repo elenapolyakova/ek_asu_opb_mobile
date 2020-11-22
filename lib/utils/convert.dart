@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 
@@ -111,9 +112,20 @@ String emailValidator(String value) {
 
 Future<File> loadFileFromAssets(String key) async {
   var bytes = await rootBundle.load(key);
+  return loadFileFromBytes(bytes);
+ /* String tempPath = (await getTemporaryDirectory()).path;
+  File file = File('$tempPath/file_${DateTime.now().millisecondsSinceEpoch}');
+  await file.writeAsBytes(
+      bytes.buffer.asInt8List(bytes.offsetInBytes, bytes.lengthInBytes));
+  return file;*/
+}
+
+Future<File> loadFileFromBytes (ByteData bytes) async {
+
   String tempPath = (await getTemporaryDirectory()).path;
   File file = File('$tempPath/file_${DateTime.now().millisecondsSinceEpoch}');
   await file.writeAsBytes(
       bytes.buffer.asInt8List(bytes.offsetInBytes, bytes.lengthInBytes));
   return file;
 }
+
