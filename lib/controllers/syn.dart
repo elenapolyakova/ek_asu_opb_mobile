@@ -4,8 +4,10 @@ import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import "package:ek_asu_opb_mobile/models/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import 'package:ek_asu_opb_mobile/utils/network.dart';
 
 class SynController extends Controllers {
+  static bool ongoingSync = false;
   static String _tableName = "syn";
   static Map<String, String> localRemoteTableNameMap = {
     'plan': 'mob.main.plan',
@@ -342,30 +344,42 @@ class SynController extends Controllers {
   }
 
   static Future<bool> syncTask() async {
-    await SynController.loadFromOdoo();
-    while (true) {
-      // Load a syn record
-      List<Map<String, dynamic>> toSyn = await DBProvider.db
-          .select(_tableName, limit: 1, orderBy: 'id', where: "error IS NULL");
-      if (toSyn.length == 0) {
-        //Синхронизация завершена
-        //TODO: вывести уведомление
-        print('Finished synchronization');
-        DBProvider.db.insert(
-            'log', {'date': nowStr(), 'message': "Finished synchronization"});
-        return true;
+    if (ongoingSync) return true;
+    ongoingSync = true;
+    try {
+      while (!await ping()) {
+        await Future.delayed(Duration(seconds: 12));
       }
+      await SynController.loadFromOdoo();
+      while (true) {
+        // Load a syn record
+        List<Map<String, dynamic>> toSyn = await DBProvider.db.select(
+            _tableName,
+            limit: 1,
+            orderBy: 'id',
+            where: "error IS NULL");
+        if (toSyn.length == 0) {
+          //Синхронизация завершена
+          //TODO: вывести уведомление
+          print('Finished synchronization');
+          DBProvider.db.insert(
+              'log', {'date': nowStr(), 'message': "Finished synchronization"});
+          return true;
+        }
 
-      // For each syn record:
-      Syn syn = Syn.fromJson(toSyn[0]);
-      print('Synchronizing $syn');
-      bool result = await SynController.doSync(syn);
-      if (!result) {
-        //Синхронизация не прошла
-        //TODO: вывести уведомление
-        DBProvider.db.insert(
-            'log', {'date': nowStr(), 'message': "Error synchronizing $syn"});
+        // For each syn record:
+        Syn syn = Syn.fromJson(toSyn[0]);
+        print('Synchronizing $syn');
+        bool result = await SynController.doSync(syn);
+        if (!result) {
+          //Синхронизация не прошла
+          //TODO: вывести уведомление
+          DBProvider.db.insert(
+              'log', {'date': nowStr(), 'message': "Error synchronizing $syn"});
+        }
       }
+    } finally {
+      ongoingSync = false;
     }
   }
 }

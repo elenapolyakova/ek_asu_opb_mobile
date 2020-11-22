@@ -18,7 +18,7 @@ Future<bool> ping() async {
   try {
     String address = config.getItem('addressForPing');
     final result = await InternetAddress.lookup(address);
-    if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) return true;
+    return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
   } on SocketException catch (_) {
     return false;
   }
