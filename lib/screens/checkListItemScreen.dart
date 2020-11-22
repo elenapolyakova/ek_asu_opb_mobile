@@ -153,8 +153,8 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
       bool hasErorr = false;
       Map<String, dynamic> result;
       try {
-        //  result = await ComGroupController.delete(groupId);
-        //  hasErorr = result["code"] < 0;
+          result = await CheckListItemController.delete(checkListItemId);
+          hasErorr = result["code"] < 0;
 
         if (hasErorr) {
           Scaffold.of(context).showSnackBar(
@@ -346,18 +346,18 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
       Map<String, dynamic> result;
       try {
         if (checkListItem.id == null) {
-          // result = await controllers.PlanController.insert(planCopy);
+           result = await CheckListItemController.create(checkListItem);
         } else {
-          //result = await controllers.PlanController.update(planCopy);
+          result = await CheckListItemController.update(checkListItem);
         }
-        // hasErorr = result["code"] < 0;
+         hasErorr = result["code"] < 0;
 
         if (hasErorr) {
           Navigator.pop<bool>(context, false);
           Scaffold.of(context).showSnackBar(errorSnackBar());
         } else {
           if (checkListItem.id == null) {
-            checkListItem.id = 1000; //result["id"];
+            checkListItem.id = result["id"];
 
             setState(() {
               _items.add(checkListItem);

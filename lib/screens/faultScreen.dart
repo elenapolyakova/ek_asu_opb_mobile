@@ -7,7 +7,8 @@ import 'package:ek_asu_opb_mobile/screens/faultListScreen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
-//import 'package:multi_image_picker/multi_image_picker.dart';
+import 'package:multi_image_picker/multi_image_picker.dart';
+//import 'package:permission_handler/permission_handler.dart';
 
 class Koap {
   int id;
@@ -68,6 +69,8 @@ class _FaultScreen extends State<FaultScreen> {
   double width;
   double height;
   int quality;
+
+  List<Asset> _assetList = List<Asset>();
 
   @override
   void initState() {
@@ -191,7 +194,8 @@ class _FaultScreen extends State<FaultScreen> {
           _onImageButtonPressed(ImageSource.camera);
           break;
         case 'gallery':
-          _onImageButtonPressed(ImageSource.gallery);
+          _onGalleryButtonPressed();
+          //_onImageButtonPressed(ImageSource.gallery);
           break;
       }
     });
@@ -278,19 +282,38 @@ class _FaultScreen extends State<FaultScreen> {
     return result;
   }
 
-  /* Future getImage() async {
-    final pickedFile = await _picker.getImage(source: ImageSource.camera);
+  Future<void> _onGalleryButtonPressed({imageCount = 5}) async {
+    _assetList = List<Asset>();
 
-    setState(() {
-      if (pickedFile != null) {
-        _image = File(pickedFile.path);
-        _imageList.insert(0, _image);
-        _imageIndex = 0;
-      } else {
-        print('No image selected.');
+  //  var status = await Permission.camera.status;
+
+   // if (status.isUndetermined) {
+      // We didn't ask for permission yet.
+    //  if (await Permission.camera.request().isGranted) {
+        try {
+          _assetList = await MultiImagePicker.pickImages(
+            maxImages: imageCount,
+            enableCamera: true,
+              cupertinoOptions: CupertinoOptions(
+            takePhotoIcon: "chat",
+          ),
+            materialOptions: MaterialOptions(
+              actionBarColor: "#465C0B",
+              statusBarColor: "#FADB439",
+              actionBarTitle: "Выберите фото",
+              allViewTitle: "Все изображения",
+               useDetailsView: false,
+              okButtonDrawable: 'Принять',
+              selectCircleStrokeColor: "#FADB439",
+            ),
+          );
+        } on Exception catch (e) {
+          print(e.toString());
+        }
+        if (!mounted) return;
       }
-    });
-  }*/
+ //   }
+ // }
 
   Future _onImageButtonPressed(ImageSource source,
       {BuildContext context}) async {
@@ -828,6 +851,7 @@ class _FaultScreen extends State<FaultScreen> {
                                               _storePosition(details);
                                               _showPhotoMenu();
                                             },
+                                          //  onTap: _onGalleryButtonPressed,
                                           )
                                         : GestureDetector(
                                             onLongPress: () =>
@@ -903,10 +927,11 @@ class _FaultScreen extends State<FaultScreen> {
                                                     .primaryColor))),
                                   ]),
                             ),
-                            onTapDown: (details) {
+                             onTapDown: (details) {
                               _storePosition(details);
                               _showPhotoMenu();
                             },
+                           // onTap: _onGalleryButtonPressed,
                           ),
                           Expanded(
                               child: SingleChildScrollView(

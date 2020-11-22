@@ -80,7 +80,9 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               'rel_sector_id',
               'f_coord_n',
               'f_coord_e'
-            ]
+            ],
+               
+           'limit': 10,
           });
 
           break;
@@ -118,6 +120,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               'function',
               'user_role'
             ]
+          
           });
 
           break;

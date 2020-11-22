@@ -64,8 +64,8 @@ class _HomeScreen extends State<HomeScreen> {
                         }).catchError((err) {
                           hideLoading();
                         });
-                   //   }).catchError((err) {
-                   //     hideLoading();
+                      }).catchError((err) {
+                   hideLoading();
                       });
                       //getDictionary
                     } //isSessionExist = true

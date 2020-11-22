@@ -191,7 +191,6 @@ class _PlanScreen extends State<PlanScreen> {
 
     planItems = planItems ?? [];
 
-
     setState(() => {/*_tableName = tableName*/});
     if (!showLoading) if (_plan.id == null && canEdit()) editPlanClicked();
   }
@@ -1005,11 +1004,10 @@ class _PlanScreen extends State<PlanScreen> {
     print('test');
 
     //  List result = await DBProvider.db.selectAll('plan');
-    await DBProvider.db.deleteAll('check_list');
-    await DBProvider.db.deleteAll('check_list_item');
+    List result =  await DBProvider.db.selectAll('department');
 
     //await DBProvider.db.deleteAll('plan_item');
     //await DBProvider.db.deleteAll('plan');
-    // print(result.length);
+     print(result.length);
   }
 }
