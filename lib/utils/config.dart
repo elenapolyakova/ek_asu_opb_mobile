@@ -10,7 +10,7 @@ Map<String, Object> _config = {
 
   "cbtRole": "ЦБТ",
   "ncopRole": "НЦОП",
-  "attemptCount": 50,
+  "attemptCount": 5,
   "limitRecord": 80,
   "sessionExpire": 10*60, //через какое время запрашиваем ПИН-код, секунд
 };
