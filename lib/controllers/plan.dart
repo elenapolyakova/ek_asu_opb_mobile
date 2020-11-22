@@ -73,17 +73,10 @@ class PlanController extends Controllers {
   }
 
   static Future loadChangesFromOdoo([int limit]) async {
-    List<String> domain = await getLastSyncDateDomain(_tableName);
+    List domain = await getLastSyncDateDomain(_tableName);
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-      [
-        domain,
-        [
-          'active',
-          'in',
-          [true, false]
-        ]
-      ],
+      domain,
       [
         'type',
         'name',

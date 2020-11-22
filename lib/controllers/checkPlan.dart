@@ -126,7 +126,7 @@ class CheckPlanController extends Controllers {
         'num_set',
         'active',
       ];
-    List<String> domain = await getLastSyncDateDomain(_tableName);
+    List domain = await getLastSyncDateDomain(_tableName);
     List<dynamic> json = await getDataWithAttemp(
       SynController.localRemoteTableNameMap[_tableName],
       'search_read',
