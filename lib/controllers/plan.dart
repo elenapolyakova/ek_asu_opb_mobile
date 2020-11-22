@@ -69,7 +69,7 @@ class PlanController extends Controllers {
         'active': 'true',
       };
       return insert(Plan.fromJson(res), true);
-    }).then((value) => setLastSyncDateForDomain(_tableName));
+    });
   }
 
   static Future loadChangesFromOdoo([int limit]) async {
@@ -99,16 +99,18 @@ class PlanController extends Controllers {
         Map<String, dynamic> res = Plan.fromJson({
           ...e,
           'active': e['active'] ? 'true' : 'false',
-        }).toJson();
+        }).toJson(true);
+        res['odoo_id'] = e['id'];
         return DBProvider.db.insert(_tableName, res);
       }
       Map<String, dynamic> res = Plan.fromJson({
         ...e,
         'id': plan.id,
+        'odoo_id': plan.odooId,
         'active': e['active'] ? 'true' : 'false',
       }).toJson();
       return DBProvider.db.update(_tableName, res);
-    }).then((value) => setLastSyncDateForDomain(_tableName));
+    });
   }
 
   /// Select the first record matching passed year, type and railwayId.

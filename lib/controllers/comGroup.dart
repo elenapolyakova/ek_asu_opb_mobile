@@ -142,16 +142,18 @@ class ComGroupController extends Controllers {
             comGroup.id, e['com_user_ids'].map((userId) => userId as int));
       } else {
         if (comGroup == null) {
-          Map<String, dynamic> res = Plan.fromJson({
+          Map<String, dynamic> res = ComGroup.fromJson({
             ...e,
             'is_main': e['is_main'] ? 'true' : 'false',
             'active': e['active'] ? 'true' : 'false',
-          }).toJson();
+          }).toJson(true);
+          res['odoo_id'] = e['id'];
           return DBProvider.db.insert(_tableName, res);
         }
         Map<String, dynamic> res = ComGroup.fromJson({
           ...e,
           'id': comGroup.id,
+          'odoo_id': comGroup.odooId,
           'is_main': e['is_main'] ? 'true' : 'false',
           'active': e['active'] ? 'true' : 'false',
         }).toJson();
@@ -160,8 +162,8 @@ class ComGroupController extends Controllers {
     });
   }
 
-  static startSync() {
-    setLastSyncDateForDomain(_tableName);
+  static finishSync(dateTime) {
+    setLastSyncDateForDomain(_tableName, dateTime);
   }
 
   /// Select all records with matching parentId

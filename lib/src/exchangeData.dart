@@ -319,14 +319,14 @@ Future<List> getLastSyncDateDomain(modelName) async {
   ];
 }
 
-Future<void> setLastSyncDateForDomain(modelName) async {
+Future<void> setLastSyncDateForDomain(modelName, DateTime dateTime) async {
   String sLastUpdate = await _storage.read(key: 'lastDateUpdate');
   Map<String, dynamic> lastUpdate;
   if (sLastUpdate == null)
-    lastUpdate = {modelName: dateTimeToString(DateTime.now(), true)};
+    lastUpdate = {modelName: dateTimeToString(dateTime, true)};
   else {
     lastUpdate = json.decode(sLastUpdate);
-    lastUpdate[modelName] = dateTimeToString(DateTime.now(), true);
+    lastUpdate[modelName] = dateTimeToString(dateTime, true);
   }
 
   await _storage.write(key: 'lastDateUpdate', value: json.encode(lastUpdate));

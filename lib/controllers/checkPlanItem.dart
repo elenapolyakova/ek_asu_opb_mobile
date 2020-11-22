@@ -146,15 +146,17 @@ class CheckPlanItemController extends Controllers {
         return DBProvider.db.update(_tableName, res);
       } else {
         if (checkPlanItem == null) {
-          Map<String, dynamic> res = Plan.fromJson({
+          Map<String, dynamic> res = CheckPlanItem.fromJson({
             ...e,
             'active': e['active'] ? 'true' : 'false',
-          }).toJson();
+          }).toJson(true);
+          res['odoo_id'] = e['id'];
           return DBProvider.db.insert(_tableName, res);
         }
-        Map<String, dynamic> res = CheckPlan.fromJson({
+        Map<String, dynamic> res = CheckPlanItem.fromJson({
           ...e,
           'id': checkPlanItem.id,
+          'odoo_id': checkPlanItem.odooId,
           'active': e['active'] ? 'true' : 'false',
         }).toJson();
         return DBProvider.db.update(_tableName, res);
@@ -162,8 +164,8 @@ class CheckPlanItemController extends Controllers {
     });
   }
 
-  static startSync() {
-    setLastSyncDateForDomain(_tableName);
+  static finishSync(dateTime) {
+    setLastSyncDateForDomain(_tableName, dateTime);
   }
 
   /// Select all records with provided parentId
