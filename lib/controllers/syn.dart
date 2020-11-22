@@ -130,38 +130,33 @@ class SynController extends Controllers {
 
   static Future loadFromOdoo() async {
     List lastDateDomain = await getLastSyncDateDomain(_tableName);
-    if (lastDateDomain.isEmpty) {
-      setLastSyncDateForDomain(_tableName);
+    DateTime dateTime = DateTime.now();
+    if (lastDateDomain.length == 1) {
       await PlanController.firstLoadFromOdoo();
-      PlanItemController.startSync();
       await PlanItemController.firstLoadFromOdoo();
       await PlanItemController.firstLoadFromOdoo(true);
-      CheckPlanController.startSync();
       await CheckPlanController.firstLoadFromOdoo();
-      CheckPlanItemController.startSync();
       await CheckPlanItemController.firstLoadFromOdoo();
-      ComGroupController.startSync();
       await ComGroupController.firstLoadFromOdoo();
-      print(await ComGroupController.selectAll());
       await CheckPlanController.firstLoadFromOdoo(true);
       await CheckPlanItemController.firstLoadFromOdoo(true);
       await ComGroupController.firstLoadFromOdoo(true);
     } else {
-      setLastSyncDateForDomain(_tableName);
       await PlanController.loadChangesFromOdoo();
-      PlanItemController.startSync();
       await PlanItemController.loadChangesFromOdoo();
       await PlanItemController.loadChangesFromOdoo(true);
-      CheckPlanController.startSync();
       await CheckPlanController.loadChangesFromOdoo();
       await CheckPlanController.loadChangesFromOdoo(true);
-      CheckPlanItemController.startSync();
       await CheckPlanItemController.loadChangesFromOdoo();
-      ComGroupController.startSync();
       await ComGroupController.loadChangesFromOdoo();
       await CheckPlanItemController.loadChangesFromOdoo(true);
       await ComGroupController.loadChangesFromOdoo(true);
     }
+    PlanItemController.finishSync(dateTime);
+    CheckPlanController.finishSync(dateTime);
+    CheckPlanItemController.finishSync(dateTime);
+    ComGroupController.finishSync(dateTime);
+    setLastSyncDateForDomain(_tableName, dateTime);
   }
 
   /// Perform a synchronization of a syn record with backend.
