@@ -1,5 +1,6 @@
 import "package:ek_asu_opb_mobile/models/models.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import 'package:http/http.dart';
 
 class Fault extends Models {
   int id;
@@ -19,9 +20,12 @@ class Fault extends Models {
   // GEO
   double lat;
   double lon;
-
   //
   DateTime plan_fix_date;
+  // create list of paths
+  List<String> create;
+  // List of ids to delete
+  List<int> delete;
 
   Fault({
     this.id,
@@ -39,6 +43,8 @@ class Fault extends Models {
     this.lat,
     this.lon,
     this.plan_fix_date,
+    this.create,
+    this.delete,
   });
 
   factory Fault.fromJson(Map<String, dynamic> json) => new Fault(
@@ -61,6 +67,8 @@ class Fault extends Models {
         plan_fix_date: json["plan_fix_date"] == null
             ? null
             : DateTime.parse(json["plan_fix_date"]),
+        create: getObj(json["create"]),
+        delete: getObj(json["delete"]),
       );
 
   Map<String, dynamic> toJson() {
@@ -79,6 +87,29 @@ class Fault extends Models {
       'active': (active == null || !active) ? 'false' : 'true',
       'lat': lat,
       'lon': lon,
+      'plan_fix_date': dateTimeToString(plan_fix_date),
+    };
+  }
+
+  // String name; //Наименование
+  // String desc; //Описание
+  // DateTime date; //Дата фиксации
+  // String fine_desc; //Штраф. Описание
+  // int fine; //Штраф. Сумма
+  // int koap_id; //cтатья КОАП
+
+  // Make json suitable for update() in local DB;
+  // Set only params that can be updated
+  // Params can be extended!
+  Map<String, dynamic> prepareForUpdate() {
+    return {
+      'id': id,
+      'name': name,
+      'desc': desc,
+      'date': dateTimeToString(date),
+      'fine_desc': fine_desc,
+      'fine': fine,
+      'koap_id': koap_id,
       'plan_fix_date': dateTimeToString(plan_fix_date),
     };
   }
