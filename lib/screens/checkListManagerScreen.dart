@@ -96,7 +96,7 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
         break;
 
       case "fault":
-        _screenList[_selectedPage] = screens.FaultScreen(faultId, push, pop);
+        _screenList[_selectedPage] = screens.FaultScreen(faultId, checkListItemId, push, pop);
 
         break;
 

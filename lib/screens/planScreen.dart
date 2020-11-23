@@ -1004,7 +1004,7 @@ class _PlanScreen extends State<PlanScreen> {
     print('test');
 
     //  List result = await DBProvider.db.selectAll('plan');
-    List result =  await DBProvider.db.selectAll('koap');
+    List result =  await DBProvider.db.selectAll('fault');
 
     //await DBProvider.db.deleteAll('plan_item');
     //await DBProvider.db.deleteAll('plan');

@@ -1,4 +1,6 @@
+import 'package:ek_asu_opb_mobile/controllers/fault.dart';
 import 'package:ek_asu_opb_mobile/controllers/koap.dart';
+import 'package:ek_asu_opb_mobile/models/fault.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
@@ -40,11 +42,12 @@ import 'package:ek_asu_opb_mobile/models/koap.dart';
 
 class FaultScreen extends StatefulWidget {
   int faultId;
+  int checkListItemId;
   Function(Map<String, String>, dynamic arg) push;
   Map<String, String> Function() pop;
 
   @override
-  FaultScreen(this.faultId, this.push, this.pop);
+  FaultScreen(this.faultId, this.checkListItemId, this.push, this.pop);
   @override
   State<FaultScreen> createState() => _FaultScreen();
 }
@@ -54,6 +57,7 @@ class _FaultScreen extends State<FaultScreen> {
   bool showLoading = true;
   var _tapPosition;
   int faultId;
+  int checkListItemId;
   double heightCheckList = 700;
   double widthCheckList = 1000;
   double widthHelp = 700;
@@ -84,6 +88,7 @@ class _FaultScreen extends State<FaultScreen> {
         auth.getUserInfo().then((userInfo) {
           _userInfo = userInfo;
           faultId = widget.faultId;
+          checkListItemId = widget.checkListItemId;
           loadData();
         });
       } //isLogin == true
@@ -105,18 +110,11 @@ class _FaultScreen extends State<FaultScreen> {
   }
 
   Future<void> loadFault() async {
-    Fault fault = Fault(
-        id: 1,
-        odooId: 1,
-        name: 'Разлив',
-        desc: '',
-        date: DateTime.now(),
-        fine_desc: 'Описание штрафа',
-        fine: 1000,
-        koap_id: 139);
-
-    if (![null, -1].contains(faultId)) _fault = fault;
-    //await FaultController.select(faultId)
+    if (![null, -1].contains(faultId))
+      _fault = await FaultController.selectById(faultId);
+    if (_fault == null) {
+      _fault = new Fault(id: null, parent_id: checkListItemId, active: true);
+    }
 
     if (_fault != null) {
       _fineName = await getFineName(_fault.koap_id);
@@ -208,7 +206,6 @@ class _FaultScreen extends State<FaultScreen> {
               : '') +
           stopFirm;
     }
-    ;
     return null;
   }
 
@@ -233,14 +230,15 @@ class _FaultScreen extends State<FaultScreen> {
         .toList();*/
     // await DepartmentController.select(template, railwayId);
     if (list == null) return null;
-    List<dynamic> result = List.generate(list.length, (index) async {
-      String fineName = await getFineName(list[index].id);
-      return {
-        'id': list[index].id,
-        'value':
-            '${list[index].text} ' + (fineName != null ? ' ($fineName)' : '')
-      };
-    });
+    List<dynamic> result = [];
+    for (var i = 0; i < list.length; i++) {
+      // = List.generate(list.length, (index) async {
+      String fineName = await getFineName(list[i].id);
+      result.add({
+        'id': list[i].id,
+        'value': '${list[i].text} ' + (fineName != null ? ' ($fineName)' : '')
+      });
+    }
     return result;
   }
 
@@ -440,11 +438,9 @@ class _FaultScreen extends State<FaultScreen> {
                                     children: [
                                       Row(
                                         children: [
-                                          Expanded(
-                                              child: FormTitle(
-                                                  //getFineName(_fault.koap_id))
-                                                  _fineName ?? "")
-                                                  )
+                                          Expanded(child: FormTitle(
+                                              //getFineName(_fault.koap_id))
+                                              _fineName ?? ""))
                                         ],
                                       ),
                                       Container(
@@ -607,8 +603,35 @@ class _FaultScreen extends State<FaultScreen> {
         });
   }
 
-  submitFault() {
-    widget.pop();
+  submitFault() async {
+    bool hasErorr = false;
+    Map<String, dynamic> result;
+    _fault.date = DateTime.now();
+    try {
+      if ([-1, null].contains(_fault.id)) {
+        result = await FaultController.create(_fault);
+      } else {
+        result = await FaultController.update(_fault);
+      }
+      hasErorr = result["code"] < 0;
+
+      if (hasErorr) {
+        // Navigator.pop<bool>(context, false);
+        Scaffold.of(context).showSnackBar(errorSnackBar());
+      } else {
+        if ([-1, null].contains(_fault.id)) {
+          _fault.id = result["id"];
+        }
+        setState(() {});
+
+        // Navigator.pop<bool>(context, true);
+        Scaffold.of(context).showSnackBar(successSnackBar);
+      }
+    } catch (e) {
+      //Navigator.pop<bool>(context, false);
+      Scaffold.of(context).showSnackBar(errorSnackBar());
+    }
+    // widget.pop();
   }
 
   Future<void> deleteImage(int index) async {
@@ -798,8 +821,8 @@ class _FaultScreen extends State<FaultScreen> {
                                                 child: MyButton(
                                                     text: 'принять',
                                                     parentContext: context,
-                                                    onPress: () {
-                                                      submitFault();
+                                                    onPress: () async {
+                                                      await submitFault();
                                                     }),
                                               ))
                                         ]),

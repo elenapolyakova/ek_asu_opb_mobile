@@ -1,10 +1,16 @@
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
+import 'package:ek_asu_opb_mobile/controllers/fault.dart';
+import 'package:ek_asu_opb_mobile/models/fault.dart';
+import 'package:ek_asu_opb_mobile/models/koap.dart';
+import 'package:ek_asu_opb_mobile/screens/faultScreen.dart';
+import 'package:ek_asu_opb_mobile/screens/screens.dart';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
-class Fault {
+/*class Fault {
   int id;
   int odooId;
   int parent_id; //checkListItem.id
@@ -30,6 +36,12 @@ class Fault {
       this.date_done,
       this.desc_done,
       this.active}); //Статья КОАП
+}*/
+
+class MyFault {
+  Fault fault;
+  String fineName;
+  MyFault(this.fault, this.fineName);
 }
 
 class FaultListScreen extends StatefulWidget {
@@ -51,7 +63,7 @@ class _FaultListScreen extends State<FaultListScreen> {
   var _tapPosition;
   int checkListItemId;
   String checkListItemName;
-  List<Fault> _items;
+  List<MyFault> _items;
   final formFaultKey = new GlobalKey<FormState>();
 
   List<Map<String, dynamic>> faultListHeader = [
@@ -66,6 +78,12 @@ class _FaultListScreen extends State<FaultListScreen> {
     {'title': 'Удалить нарушение', 'icon': Icons.delete, 'key': 'delete'},
     {'title': 'Редактировать нарушение', 'icon': Icons.edit, 'key': 'edit'}
   ];
+
+  Future<String> getFineName(int koapId) async {
+    if (koapId == null) return null;
+    Koap koap = await KoapController.selectById(koapId);
+    return koap != null ? await koap.fineName : '';
+  }
 
   @override
   void initState() {
@@ -87,7 +105,7 @@ class _FaultListScreen extends State<FaultListScreen> {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
-      loadFaultItems();
+      await loadFaultItems();
     } catch (e) {} finally {
       hideDialog(context);
       showLoading = false;
@@ -96,167 +114,19 @@ class _FaultListScreen extends State<FaultListScreen> {
   }
 
   Future<void> loadFaultItems() async {
-    List<Fault> items = [
-      Fault(
-          id: 1,
-          odooId: 1,
-          parent_id: checkListItemId,
-          name: 'Нарушение 1',
-          desc: 'Описание нарушения 1',
-          date: DateTime.now(),
-          fine: 1000,
-          fine_desc: 'Описание штрафа',
-          koap_id: 1,
-          active: true),
-      Fault(
-          id: 2,
-          odooId: 2,
-          parent_id: checkListItemId,
-          name: 'Нарушение 2',
-          desc: 'Описание нарушения 2',
-          date: DateTime.now(),
-          fine: 2000,
-          fine_desc: 'Описание штрафа 222',
-          koap_id: 2,
-          active: true),
-      Fault(
-          id: 3,
-          odooId: 3,
-          parent_id: checkListItemId,
-          name: 'Нарушение 3',
-          desc: 'Описание нарушения 3',
-          date: DateTime.now(),
-          fine: 1000,
-          fine_desc: 'Описание штрафа 333',
-          koap_id: 3,
-          active: true),
-    ];
-
-    _items = items ?? []; //загружать из базы
+    _items = [];
+    List<Fault> items = await FaultController.select(checkListItemId);
+    if (items != null)
+      for (int i = 0; i < items.length; i++) {
+        String fineName = await getFineName(items[i].koap_id);
+        _items.add(MyFault(items[i], fineName));
+      }  
   }
 
-  /*Future<bool> showFaultDialog(StateSetter setState) {
-    StateSetter dialogSetter;
-    final menu = PopupMenuButton(
-      itemBuilder: (_) => getMenuItem(context),
-      padding: EdgeInsets.all(0.0),
-      onSelected: (value) {
-        switch (value) {
-          case 'add':
-            setState(() {
-              if (_currentCheckListItem.faultItems == null)
-                _currentCheckListItem.faultItems = [];
-              _currentCheckListItem.faultItems.add(Fault(
-                  id: null, odooId: null, parentId: _currentCheckListItem.id));
-              dialogSetter(() {});
-              //refresh = true;
-            });
-            break;
-        }
-      },
-      icon: Icon(
-        Icons.more_vert,
-        color: Theme.of(context).primaryColorDark,
-        size: 30,
-      ),
-      color: Theme.of(context).primaryColor,
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12.0))),
-    );
 
-    return showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        barrierColor: Color(0x88E6E6E6),
-        builder: (BuildContext context) {
-          return StatefulBuilder(builder: (context, StateSetter setState) {
-            dialogSetter = setState;
-            return Stack(alignment: Alignment.center, key: Key('FaultList'),
-
-                //     'checkList${_currentCheckList.items != null ? _currentCheckList.items.length : '0'}'),
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      "assets/images/app.jpg",
-                      fit: BoxFit.fill,
-                      height: heightCheckList,
-                      width: widthCheckList,
-                    ),
-                  ),
-                  Container(
-                      width: widthCheckList,
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 30.0, vertical: 20.0),
-                      child: Scaffold(
-                          backgroundColor: Colors.transparent,
-                          body: Form(
-                              key: formFaultKey,
-                              child: Container(
-                                  child: Column(children: [
-                                ListTile(
-                                    trailing: menu,
-                                    contentPadding: EdgeInsets.all(0),
-                                    title: Center(
-                                        child: FormTitle(
-                                            'Перечень нарушений к ${_currentCheckListItem.name} ${_currentCheckListItem.question}')),
-                                    onTap: () {}),
-                                //   Container(child: refresh ? Text('') : Text('')),
-
-                                Expanded(
-                                    child: ListView(
-                                        key: Key(_currentCheckList.items.length
-                                            .toString()),
-                                        children: [
-                                      Column(children: [
-                                        generateFualtTable(
-                                            context,
-                                            /*itemHeader,*/
-                                            _currentCheckListItem.faultItems,
-                                            dialogSetter: dialogSetter
-                                            // setState: setState
-                                            )
-                                      ])
-                                    ])),
-                                Container(
-                                    child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                      MyButton(
-                                          text: 'принять',
-                                          parentContext: context,
-                                          onPress: () {
-                                            submitFaultList();
-                                          }),
-                                      MyButton(
-                                          text: 'отменить',
-                                          parentContext: context,
-                                          onPress: () {
-                                            cancelCheckList();
-                                          }),
-                                    ])),
-                              ])))))
-                ]);
-          });
-        });
-  }
-
-  Widget generateFualtTable(
-      BuildContext context,
-      /*List<Map<String, dynamic>> headers,*/ List<Fault> rows,
-      {/*StateSetter setState,*/ StateSetter dialogSetter}) {
-    return Text('Тут будет список нарушений');
-  }
-
-  Future<void> submitFaultList() async {
-    Navigator.pop<bool>(context, true);
-    Scaffold.of(context).showSnackBar(successSnackBar);
-  }
-*/
 
   Widget generateFaultTable(BuildContext context,
-      List<Map<String, dynamic>> headers, List<Fault> rows) {
+      List<Map<String, dynamic>> headers, List<MyFault> rows) {
     int i = 0;
     Map<int, TableColumnWidth> columnWidths = Map.fromIterable(headers,
         key: (item) => i++,
@@ -279,7 +149,8 @@ class _FaultListScreen extends State<FaultListScreen> {
                 )));
     List<TableRow> tableRows = [headerTableRow];
     int rowIndex = 0;
-    rows.forEach((row) {
+    rows.forEach((fault) {
+      Fault row = fault.fault;
       rowIndex++;
       TableRow tableRow = TableRow(
           decoration: BoxDecoration(
@@ -291,7 +162,7 @@ class _FaultListScreen extends State<FaultListScreen> {
             getRowCell(dateDMY(row.date), row.id, 1),
             getRowCell(row.fine.toString(), row.id, 2),
             getRowCell(row.fine_desc, row.id, 3),
-            getRowCell(row.koap_id.toString(), row.id, 3),
+            getRowCell(fault.fineName, row.id, 4),
           ]);
       tableRows.add(tableRow);
     });
@@ -370,16 +241,16 @@ class _FaultListScreen extends State<FaultListScreen> {
     bool result = await showConfirmDialog(
         'Вы уверены, что хотите удалить нарушение?', context);
     if (result != null && result) {
-      Fault deletedFault =
-          _items.firstWhere((fault) => fault.id == faultId, orElse: () => null);
+      MyFault deletedFault = _items
+          .firstWhere((fault) => fault.fault.id == faultId, orElse: () => null);
 
       if (deletedFault == null) return;
 
       bool hasErorr = false;
       Map<String, dynamic> result;
       try {
-        //  result = await ComGroupController.delete(groupId);
-        //  hasErorr = result["code"] < 0;
+        result = await FaultController.delete(faultId);
+        hasErorr = result["code"] < 0;
 
         if (hasErorr) {
           Scaffold.of(context).showSnackBar(

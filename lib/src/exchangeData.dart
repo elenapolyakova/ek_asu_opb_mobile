@@ -87,7 +87,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               'f_coord_e'
             ],
 
-            //  'limit': 100,
+              'limit': 100,
           });
 
           break;
