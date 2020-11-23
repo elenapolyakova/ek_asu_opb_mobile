@@ -37,7 +37,8 @@ void main() async {
     // When no frequency is provided the default 15 minutes is set.
     // Minimum frequency is 15 min. Android will automatically change your frequency to 15 min if you have configured a lower frequency.
     frequency: Duration(minutes: 15),
-    constraints: WM.Constraints(networkType: WM.NetworkType.connected),
+    constraints: WM.Constraints(
+        networkType: WM.NetworkType.connected, requiresDeviceIdle: true),
   );
   await SystemChrome.setPreferredOrientations(
       [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
