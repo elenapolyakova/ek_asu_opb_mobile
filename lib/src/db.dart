@@ -53,7 +53,7 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS check_list_item(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, base_id INTEGER, name TEXT, question TEXT, result TEXT, description TEXT, active TEXT, faults_count INTEGER)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS fault(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, name TEXT, desc TEXT, fine_desc TEXT, fine INTEGER, koap_id INTEGER, date TEXT, date_done TEXT, desc_done TEXT, active TEXT, lat REAL, lon REAL)");
+            "CREATE TABLE IF NOT EXISTS fault(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, name TEXT, desc TEXT, fine_desc TEXT, fine INTEGER, koap_id INTEGER, date TEXT, date_done TEXT, desc_done TEXT, active TEXT, lat REAL, lon REAL, plan_fix_date TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS fault_item(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, image TEXT, active TEXT)");
       },
