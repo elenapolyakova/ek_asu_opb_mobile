@@ -98,7 +98,7 @@ class Plan extends Models {
       type: getObj(json["type"]),
       name: getObj(json["name"]),
       railwayId: unpackListId(json["rw_id"])['id'],
-      year: json["year"],
+      year: getObj(json["year"]),
       dateSet:
           json["date_set"] == null ? null : DateTime.parse(json["date_set"]),
       signerName: getObj(json["signer_name"]),
