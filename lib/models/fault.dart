@@ -20,6 +20,9 @@ class Fault extends Models {
   double lat;
   double lon;
 
+  //
+  DateTime plan_fix_date;
+
   Fault({
     this.id,
     this.odooId,
@@ -35,6 +38,7 @@ class Fault extends Models {
     this.active,
     this.lat,
     this.lon,
+    this.plan_fix_date,
   });
 
   factory Fault.fromJson(Map<String, dynamic> json) => new Fault(
@@ -54,6 +58,9 @@ class Fault extends Models {
         active: (json["active"].toString() == 'true'),
         lat: getObj(json["lat"]),
         lon: getObj(json["lon"]),
+        plan_fix_date: json["plan_fix_date"] == null
+            ? null
+            : DateTime.parse(json["plan_fix_date"]),
       );
 
   Map<String, dynamic> toJson() {
@@ -66,12 +73,13 @@ class Fault extends Models {
       'fine': fine,
       'fine_desc': fine_desc,
       'koap_id': koap_id,
-      'date': date,
-      'date_done': date_done,
+      'date': dateTimeToString(date),
+      'date_done': dateTimeToString(date_done),
       'desc_done': desc_done,
       'active': (active == null || !active) ? 'false' : 'true',
       'lat': lat,
       'lon': lon,
+      'plan_fix_date': dateTimeToString(plan_fix_date),
     };
   }
 
