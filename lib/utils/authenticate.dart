@@ -43,6 +43,8 @@ Future<bool> checkLoginStatus(BuildContext context) async {
   String session = await _storage.read(key: 'session');
   String pin = await _storage.read(key: "pin");
 
+  //var subscription = client.sessionStream.listen(sessionChanged);
+
   if (_currentUser == null) _currentUser = await getUserInfo();
 
   if (session == null || pin == null || _currentUser == null) {
@@ -124,10 +126,18 @@ Future<String> getUserRoleTxt() async {
   return '';
 }
 
+sessionChanged(OdooSession session) async {
+  if (session != null) {
+    String sessionString = json.encode(session.toJson());
+    await _storage.write(key: "session", value: sessionString);
+  }
+}
+
 Future<bool> authorize(String login, String password) async {
   UserInfo oldUserInfo = await getUserInfo();
   _isSameUser = false;
 
+  OdooProxy.odooClient.sessionListen(sessionChanged);
   OdooSession session = await OdooProxy.odooClient.authorize(login, password);
   int uid;
   if (session != null) {

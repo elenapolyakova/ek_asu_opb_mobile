@@ -85,9 +85,9 @@ class _PlanScreen extends State<PlanScreen> {
         parentId: 1,
         id: 1,
         name:
-            'Комплексная проверка Центральная дирекция по ремонту тягового подвижного состава (ЦТР)',
+            '',
         departmentTxt: 'Все ТР, ЦТР',
-        checkType: 1,
+        checkType: 1,Комплексная проверка Центральная дирекция по ремонту тягового подвижного состава (ЦТР)
         period: 1,
         responsible: 'ЦБТ - ЦТР, НЦОП - ТР',
         checkResult: 'Корректирующие меры',
@@ -256,11 +256,11 @@ class _PlanScreen extends State<PlanScreen> {
                                 context, planItemHeader, planItems)
                           ])
                       ])),
-                  Container(
+                 /*Container(
                       child: MyButton(
                           text: 'test',
                           parentContext: context,
-                          onPress: testClicked))
+                          onPress: testClicked))*/
                 ])));
   }
 

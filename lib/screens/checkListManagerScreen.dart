@@ -123,7 +123,7 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
                     Container(
                         child: route != null
                             ? TextIcon(
-                                icon: Icons.arrow_back,
+                                icon: Icons.arrow_back_ios,
                                 text: route["text"],
                                 onTap: () {
                                   return pop();

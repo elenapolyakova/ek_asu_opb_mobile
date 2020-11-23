@@ -418,7 +418,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
             child: showLoading
                 ? Text("")
                 : Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 10),
                     child: Column(children: [
                       Expanded(
                           child: ListView(
@@ -438,34 +438,55 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
                                               title: FormTitle(
                                                   'Сведения о предприятии'),
                                               onTap: () {}),
-                                          MyRichText(
-                                            'Наименование структурного подразделения: ',
-                                            _department.name,
+                                          Container(
+                                            margin: EdgeInsets.symmetric(
+                                                vertical: 10),
+                                            child: MyRichText(
+                                              'Наименование структурного подразделения: ',
+                                              _department.name,
+                                            ),
                                           ),
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                  child: MyRichText(
-                                                'ОГРН: ',
-                                                _department.ogrn,
-                                              )),
-                                              Expanded(
-                                                  child: MyRichText(
-                                                'ИНН: ',
-                                                _department.inn,
-                                              )),
-                                              Expanded(
-                                                  child: MyRichText(
-                                                'ОКПО: ',
-                                                _department.okpo,
-                                              )),
-                                            ],
+                                          Container(
+                                            margin: EdgeInsets.symmetric(
+                                                vertical: 10),
+                                            child: Row(
+                                              children: [
+                                                Expanded(
+                                                    child: MyRichText(
+                                                  'ОГРН: ',
+                                                  _department.ogrn,
+                                                )),
+                                                Expanded(
+                                                    child: MyRichText(
+                                                  'ИНН: ',
+                                                  _department.inn,
+                                                )),
+                                                Expanded(
+                                                    child: MyRichText(
+                                                  'ОКПО: ',
+                                                  _department.okpo,
+                                                )),
+                                              ],
+                                            ),
                                           ),
-                                          MyRichText('Директор: ', director),
-                                          MyRichText(
-                                              'Ответственное лицо: ', deputy),
-                                          MyRichText(
-                                              'Адрес: ', _department.addr)
+                                          Container(
+                                            margin: EdgeInsets.symmetric(
+                                                vertical: 10),
+                                            child: MyRichText(
+                                                'Директор: ', director),
+                                          ),
+                                          Container(
+                                            margin: EdgeInsets.symmetric(
+                                                vertical: 10),
+                                            child: MyRichText(
+                                                'Ответственное лицо: ', deputy),
+                                          ),
+                                          Container(
+                                            margin: EdgeInsets.symmetric(
+                                                vertical: 10),
+                                            child: MyRichText(
+                                                'Адрес: ', _department.addr),
+                                          ),
                                         ]),
                                     flex: 3),
                               ],
