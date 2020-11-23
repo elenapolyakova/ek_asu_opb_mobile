@@ -1,8 +1,5 @@
-import 'dart:ffi';
-
 import "package:ek_asu_opb_mobile/models/models.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
-import 'package:http/http.dart';
 
 class Fault extends Models {
   int id;
@@ -20,8 +17,8 @@ class Fault extends Models {
   // used or not
   bool active;
   // GEO
-  Double lat;
-  Double lon;
+  double lat;
+  double lon;
 
   Fault({
     this.id,
@@ -40,7 +37,7 @@ class Fault extends Models {
     this.lon,
   });
 
-  factory Fault.fromJson(Map<String, dynamic> json) => (new Fault(
+  factory Fault.fromJson(Map<String, dynamic> json) => new Fault(
         id: json["id"],
         odooId: json["odooId"],
         parent_id: json["parent_id"],
@@ -57,7 +54,7 @@ class Fault extends Models {
         active: (json["active"].toString() == 'true'),
         lat: getObj(json["lat"]),
         lon: getObj(json["lon"]),
-      ));
+      );
 
   Map<String, dynamic> toJson() {
     return {
