@@ -295,8 +295,15 @@ class SynController extends Controllers {
     if (!record.containsKey('odoo_id')) {
       if (syn.method == 'write')
         args = [record['id'], record];
-      else
+      else {
+        String error = "Odoo_id is absent but method was create.";
+        print(error);
+        await DBProvider.db.update(_tableName, {
+          'id': syn.id,
+          'error': error,
+        });
         return false;
+      }
     }
     // If odoo_id exists, then method must be write.
     // Unlinking was removed in favor of setting active to false.
@@ -306,14 +313,29 @@ class SynController extends Controllers {
         args = [odooId, record];
       // else if (syn.method == 'unlink')
       //   args = [odooId];
-      else
+      else {
+        String error =
+            "Odoo_id=${record['odoo_id']} was found but method was create.";
+        print(error);
+        await DBProvider.db.update(_tableName, {
+          'id': syn.id,
+          'error': error,
+        });
         return false;
+      }
     } else {
       // If odoo_id does not exist, then method must be create
       if (syn.method == 'create')
         args = [record];
-      else
+      else {
+        String error = "Odoo_id is null but method was write.";
+        print(error);
+        await DBProvider.db.update(_tableName, {
+          'id': syn.id,
+          'error': error,
+        });
         return false;
+      }
     }
 
     // Upload to backend
