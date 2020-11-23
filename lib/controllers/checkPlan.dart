@@ -80,21 +80,26 @@ class CheckPlanController extends Controllers {
     if (!loadRelated) DBProvider.db.deleteAll(_tableName);
     return Future.forEach(json, (e) async {
       if (loadRelated) {
-        PlanItem planItem = await PlanItemController.selectByOdooId(
-            unpackListId(e['parent_id'])['id']);
-        assert(planItem != null,
-            "Model plan_item has to be loaded before $_tableName");
-        ComGroup comGroup = await ComGroupController.selectByOdooId(
-            unpackListId(e['main_com_group_id'])['id']);
-        assert(comGroup != null,
-            "Model com_group has to be loaded before $_tableName");
+        Map<String, dynamic> res = {};
         CheckPlan checkPlan = await selectByOdooId(e['id']);
-        Map<String, dynamic> res = {
-          'id': checkPlan.id,
-          'parent_id': planItem.id,
-          'main_com_group_id': comGroup.id,
-        };
-        return DBProvider.db.update(_tableName, res);
+        if (e['parent_id'] is List) {
+          PlanItem planItem = await PlanItemController.selectByOdooId(
+              unpackListId(e['parent_id'])['id']);
+          assert(planItem != null,
+              "Model plan_item has to be loaded before $_tableName");
+          res['id'] = checkPlan.id;
+          res['parent_id'] = planItem.id;
+        }
+        if (e['main_com_group_id'] is List) {
+          ComGroup comGroup = await ComGroupController.selectByOdooId(
+              unpackListId(e['main_com_group_id'])['id']);
+          assert(comGroup != null,
+              "Model com_group has to be loaded before $_tableName");
+          res['id'] = checkPlan.id;
+          res['main_com_group_id'] = comGroup.id;
+        }
+        if (res['id'] != null) return DBProvider.db.update(_tableName, res);
+        return null;
       } else {
         Map<String, dynamic> res = {
           ...e,
@@ -139,20 +144,26 @@ class CheckPlanController extends Controllers {
     return Future.forEach(json, (e) async {
       CheckPlan checkPlan = await selectByOdooId(e['id']);
       if (loadRelated) {
-        PlanItem planItem = await PlanItemController.selectByOdooId(
-            unpackListId(e['parent_id'])['id']);
-        assert(planItem != null,
-            "Model plan_item has to be loaded before $_tableName");
-        ComGroup comGroup = await ComGroupController.selectByOdooId(
-            unpackListId(e['main_com_group_id'])['id']);
-        assert(comGroup != null,
-            "Model com_group has to be loaded before $_tableName");
-        Map<String, dynamic> res = {
-          'id': checkPlan.id,
-          'parent_id': planItem.id,
-          'main_com_group_id': comGroup.id,
-        };
-        return DBProvider.db.update(_tableName, res);
+        Map<String, dynamic> res = {};
+        CheckPlan checkPlan = await selectByOdooId(e['id']);
+        if (e['parent_id'] is List) {
+          PlanItem planItem = await PlanItemController.selectByOdooId(
+              unpackListId(e['parent_id'])['id']);
+          assert(planItem != null,
+              "Model plan_item has to be loaded before $_tableName");
+          res['id'] = checkPlan.id;
+          res['parent_id'] = planItem.id;
+        }
+        if (e['main_com_group_id'] is List) {
+          ComGroup comGroup = await ComGroupController.selectByOdooId(
+              unpackListId(e['main_com_group_id'])['id']);
+          assert(comGroup != null,
+              "Model com_group has to be loaded before $_tableName");
+          res['id'] = checkPlan.id;
+          res['main_com_group_id'] = comGroup.id;
+        }
+        if (res['id'] != null) return DBProvider.db.update(_tableName, res);
+        return null;
       } else {
         if (checkPlan == null) {
           Map<String, dynamic> res = CheckPlan.fromJson({

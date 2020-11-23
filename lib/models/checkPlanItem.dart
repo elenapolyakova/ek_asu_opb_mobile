@@ -96,13 +96,13 @@ class CheckPlanItem extends Models {
       odooId: json["odoo_id"],
       parentId: unpackListId(json["parent_id"])['id'],
       name: getObj(json["name"]),
-      type: json["type"],
+      type: getObj(json["type"]),
       departmentId: unpackListId(json["department_id"])['id'],
       date: stringToDateTime(json["date"]),
       dtFrom: stringToDateTime(json["dt_from"]),
       dtTo: stringToDateTime(json["dt_to"]),
       active: json["active"] == 'true',
-      comGroupId: json["com_group_id"],
+      comGroupId: unpackListId(json["com_group_id"])['id'],
     );
     return res;
   }

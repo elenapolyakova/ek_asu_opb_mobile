@@ -1253,15 +1253,15 @@ class MyRichText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     TextStyle textStyleTitle = TextStyle(
-        fontStyle: FontStyle.italic,
-        fontSize: 17,
+        fontStyle: FontStyle.normal,
+        fontSize: 20,
         color: Theme.of(context).buttonColor);
 
     TextStyle textStyleValue = TextStyle(
-        fontWeight: FontWeight.normal,
-        fontStyle: FontStyle.normal,
+        fontWeight: FontWeight.w800,
+       // fontStyle: FontStyle.normal,
         fontSize: 20,
-        color: Theme.of(context).primaryColorDark);
+        color: Theme.of(context).primaryColor);
 
     return Container(
         padding: EdgeInsets.all(5),
@@ -1337,7 +1337,7 @@ TreeViewTheme getTreeViewTheme(BuildContext context) {
       type: ExpanderType.caret,
       modifier: ExpanderModifier.none,
       position: ExpanderPosition.start,
-      color: Theme.of(context).primaryColorDark,
+      color: Theme.of(context).primaryColor,
       size: 22,
     ),
     labelStyle: TextStyle(
@@ -1355,15 +1355,15 @@ TreeViewTheme getTreeViewTheme(BuildContext context) {
       color: Colors.grey.shade800,
     ),
     colorScheme: ColorScheme(
-        primary: Theme.of(context).primaryColorLight,
-        onPrimary: Theme.of(context).primaryColorDark,
+        primary: Theme.of(context).primaryColorLight, //selected row
+        onPrimary: Theme.of(context).primaryColor, //onSelected file name
         primaryVariant: Theme.of(context).primaryColor,
-        secondary: Theme.of(context).primaryColorDark,
-        secondaryVariant: Theme.of(context).primaryColorDark,
-        onSecondary: Theme.of(context).primaryColorDark,
+        secondary: Theme.of(context).primaryColor,
+        secondaryVariant: Theme.of(context).primaryColorLight,
+        onSecondary: Theme.of(context).primaryColor,
         onSurface: Theme.of(context).primaryColor,
         surface: Theme.of(context).primaryColor,
-        onBackground: Theme.of(context).primaryColorDark,
+        onBackground: Theme.of(context).primaryColor, //file name
         error: Color(0xFF252A0E),
         onError: Color(0xFF252A0E),
         background: Colors.transparent,

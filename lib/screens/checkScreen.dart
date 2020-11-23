@@ -129,7 +129,10 @@ class _CheckScreen extends State<CheckScreen> {
           )
         : new Scaffold(
             appBar: new AppBar(
-                //leading: null,
+                leading: IconButton(
+                    icon: Icon(Icons.arrow_back_ios),
+                    onPressed: () => Navigator.pop(context),
+                    color: Theme.of(context).primaryColorLight),
                 title: Container(
                     child: Row(children: [
                   Container(
@@ -137,7 +140,7 @@ class _CheckScreen extends State<CheckScreen> {
                         icon: Icons.account_circle_rounded,
                         text:
                             '${_userInfo != null ? _userInfo.display_name : ""}',
-                        onTap: null,
+                        onTap: () => {},
                         color: Theme.of(context).primaryColorLight),
                   ),
                   Expanded(child: Center(child: HomeIcon()))

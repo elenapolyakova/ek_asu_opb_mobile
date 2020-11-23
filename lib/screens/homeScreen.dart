@@ -65,7 +65,7 @@ class _HomeScreen extends State<HomeScreen> {
                           hideLoading();
                         });
                       }).catchError((err) {
-                   hideLoading();
+                        hideLoading();
                       });
                       //getDictionary
                     } //isSessionExist = true
@@ -118,8 +118,8 @@ class _HomeScreen extends State<HomeScreen> {
   void toISPScreen() async {
     // SynController.selectAll().then((a) => print(a));
     // PlanController.selectAll().then((a) => print(a));
-    await SynController.loadFromOdoo();
-    print(await PlanController.selectAll());
+    // await SynController.loadFromOdoo();
+    print(await PlanItemController.selectAll());
     Navigator.pushNamed(
       context,
       '/ISP',
@@ -177,14 +177,16 @@ class _HomeScreen extends State<HomeScreen> {
           )
         : new Scaffold(
             appBar: new AppBar(
-                leading: null,
+                leading:    arguments != null && !arguments['first'] ? 
+                IconButton(icon: Icon(Icons.arrow_back_ios),
+                    onPressed: ()=>Navigator.pop(context),
+                    color: Theme.of(context).primaryColorLight) : null,
                 title: TextIcon(
                     icon: Icons.account_circle_rounded,
                     text: '${_userInfo != null ? _userInfo.display_name : ""}',
-                    onTap: null,
+                    onTap: ()=>{},
                     color: Theme.of(context).primaryColorLight),
-                automaticallyImplyLeading:
-                    arguments != null && !arguments['first'],
+                automaticallyImplyLeading: false,
                 backgroundColor: Theme.of(context).primaryColorDark,
                 actions: <Widget>[
                   TextIcon(

@@ -12,6 +12,7 @@ class OdooProxy {
   static final OdooProxy odooClient = OdooProxy._();
   static OdooClient _client;
   OdooSession _session;
+  var subscription;
 
   final _baseURL =
       '${config.getItem('ServiceRootUrl')}:${config.getItem('port')}';
@@ -49,6 +50,12 @@ class OdooProxy {
   Future<dynamic> checkSession() async {
     final OdooClient odooClient = await client;
     return odooClient.checkSession();
+  }
+
+  Future<StreamSubscription<OdooSession>> sessionListen(
+      Function(OdooSession) sessionChanged) async{
+      final OdooClient odooClient = await client;
+     subscription = odooClient.sessionStream.listen(sessionChanged);
   }
 
   Future<OdooSession> authorize(String login, String password,
@@ -92,16 +99,16 @@ class OdooProxy {
       'args': args ?? [],
       'kwargs': kwargs ?? {}
     };
-   
-    DBProvider.db.insert('log',
-          {'date': nowStr(), 'message': 'callKw(${json.encode(param)})'});
+
+    DBProvider.db.insert(
+        'log', {'date': nowStr(), 'message': 'callKw(${json.encode(param)})'});
 
     final OdooClient odooClient = await client;
     try {
       return await odooClient.callKw(param);
     } on OdooException catch (e) {
       print(e);
-        DBProvider.db
+      DBProvider.db
           .insert('log', {'date': nowStr(), 'message': 'error: ${e.message}'});
 
       return null;
@@ -147,7 +154,6 @@ class OdooProxy {
       if (result != null) {
         Map<String, dynamic> resultJson = result[0] as Map<String, dynamic>;
         user.UserInfo userInfo = user.UserInfo.fromJson(resultJson);
-
 
         DBProvider.db.insert('log', {'date': nowStr(), 'message': 'success'});
         DBProvider.db.insert('log', {
