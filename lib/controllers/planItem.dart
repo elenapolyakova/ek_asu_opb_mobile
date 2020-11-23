@@ -149,8 +149,8 @@ class PlanItemController extends Controllers {
     });
   }
 
-  static finishSync(dateTime) {
-    setLastSyncDateForDomain(_tableName, dateTime);
+  static Future finishSync(dateTime) {
+    return setLastSyncDateForDomain(_tableName, dateTime);
   }
 
   /// Select all records with matching parentId

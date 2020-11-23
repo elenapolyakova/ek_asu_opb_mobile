@@ -154,11 +154,11 @@ class SynController extends Controllers {
       await CheckPlanItemController.loadChangesFromOdoo(true);
       await ComGroupController.loadChangesFromOdoo(true);
     }
-    PlanItemController.finishSync(dateTime);
-    CheckPlanController.finishSync(dateTime);
-    CheckPlanItemController.finishSync(dateTime);
-    ComGroupController.finishSync(dateTime);
-    setLastSyncDateForDomain(_tableName, dateTime);
+    await PlanItemController.finishSync(dateTime);
+    await CheckPlanController.finishSync(dateTime);
+    await CheckPlanItemController.finishSync(dateTime);
+    await ComGroupController.finishSync(dateTime);
+    await setLastSyncDateForDomain(_tableName, dateTime);
   }
 
   /// Perform a synchronization of a syn record with backend.
