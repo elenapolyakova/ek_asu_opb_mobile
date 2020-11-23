@@ -184,8 +184,8 @@ class CheckPlanController extends Controllers {
     });
   }
 
-  static finishSync(dateTime) {
-    setLastSyncDateForDomain(_tableName, dateTime);
+  static Future finishSync(dateTime) {
+    return setLastSyncDateForDomain(_tableName, dateTime);
   }
 
   /// Select a list of CheckPlan with provided parentId

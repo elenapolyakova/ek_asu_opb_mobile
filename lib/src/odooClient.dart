@@ -38,7 +38,9 @@ class OdooProxy {
 
   Future<void> destroySession() async {
     final OdooClient odooClient = await client;
+     subscription = null;
     return odooClient.destroySession();
+    
   }
 
   void close() async {
@@ -53,9 +55,11 @@ class OdooProxy {
   }
 
   Future<StreamSubscription<OdooSession>> sessionListen(
-      Function(OdooSession) sessionChanged) async{
+      Function(OdooSession) sessionChanged) async {
+    if (subscription == null) {
       final OdooClient odooClient = await client;
-     subscription = odooClient.sessionStream.listen(sessionChanged);
+      subscription = odooClient.sessionStream.listen(sessionChanged);
+    }
   }
 
   Future<OdooSession> authorize(String login, String password,
