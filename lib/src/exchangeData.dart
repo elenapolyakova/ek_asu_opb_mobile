@@ -81,8 +81,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               'f_coord_n',
               'f_coord_e'
             ],
-               
-           'limit': 10,
+            'limit': 10,
           });
 
           break;
@@ -120,17 +119,18 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               'function',
               'user_role'
             ]
-          
           });
 
           break;
         case 'check_list':
+          List<dynamic> domain = new List<dynamic>();
+          if (lastUpdate != null) domain.add(lastUpdate);
+
+          domain.add(['parent_id', '=', null]);
+          domain.add(['is_base', '=', true]);
           data =
               await getDataWithAttemp('mob.check.list', 'search_read', null, {
-            'domain': [
-              ['parent_id', '=', null],
-              ['is_base', '=', true]
-            ],
+            'domain': domain,
             'fields': [
               'id',
               'parent_id',
