@@ -65,7 +65,7 @@ class _HomeScreen extends State<HomeScreen> {
                           hideLoading();
                         });
                       }).catchError((err) {
-                   hideLoading();
+                        hideLoading();
                       });
                       //getDictionary
                     } //isSessionExist = true
@@ -118,8 +118,8 @@ class _HomeScreen extends State<HomeScreen> {
   void toISPScreen() async {
     // SynController.selectAll().then((a) => print(a));
     // PlanController.selectAll().then((a) => print(a));
-    await SynController.loadFromOdoo();
-    print(await PlanController.selectAll());
+    // await SynController.loadFromOdoo();
+    print(await PlanItemController.selectAll());
     Navigator.pushNamed(
       context,
       '/ISP',

@@ -72,6 +72,7 @@ class PlanItemController extends Controllers {
     if (!loadRelated) DBProvider.db.deleteAll(_tableName);
     return Future.forEach(json, (e) async {
       if (loadRelated) {
+        if (e['parent_id'] is bool && !e['parent_id']) return null;
         Plan plan = await PlanController.selectByOdooId(
             unpackListId(e['parent_id'])['id']);
         assert(plan != null, "Model plan has to be loaded before $_tableName");
@@ -119,6 +120,7 @@ class PlanItemController extends Controllers {
     return Future.forEach(json, (e) async {
       PlanItem planItem = await selectByOdooId(e['id']);
       if (loadRelated) {
+        if (e['parent_id'] is bool && !e['parent_id']) return null;
         Plan plan = await PlanController.selectByOdooId(
             unpackListId(e['parent_id'])['id']);
         assert(plan != null, "Model plan has to be loaded before $_tableName");

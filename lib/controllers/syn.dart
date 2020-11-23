@@ -148,9 +148,9 @@ class SynController extends Controllers {
       await PlanItemController.loadChangesFromOdoo();
       await PlanItemController.loadChangesFromOdoo(true);
       await CheckPlanController.loadChangesFromOdoo();
-      await CheckPlanController.loadChangesFromOdoo(true);
       await CheckPlanItemController.loadChangesFromOdoo();
       await ComGroupController.loadChangesFromOdoo();
+      await CheckPlanController.loadChangesFromOdoo(true);
       await CheckPlanItemController.loadChangesFromOdoo(true);
       await ComGroupController.loadChangesFromOdoo(true);
     }
