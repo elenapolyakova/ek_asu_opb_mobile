@@ -1,5 +1,8 @@
+import 'dart:ffi';
+
 import "package:ek_asu_opb_mobile/models/models.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import 'package:http/http.dart';
 
 class Fault extends Models {
   int id;
@@ -16,6 +19,9 @@ class Fault extends Models {
   String desc_done;
   // used or not
   bool active;
+  // GEO
+  Double lat;
+  Double lon;
 
   Fault({
     this.id,
@@ -30,6 +36,8 @@ class Fault extends Models {
     this.date_done,
     this.desc_done,
     this.active,
+    this.lat,
+    this.lon,
   });
 
   factory Fault.fromJson(Map<String, dynamic> json) => (new Fault(
@@ -47,6 +55,8 @@ class Fault extends Models {
             : DateTime.parse(json["date_done"]),
         desc_done: getStr(json["desc_done"]),
         active: (json["active"].toString() == 'true'),
+        lat: getObj(json["lat"]),
+        lon: getObj(json["lon"]),
       ));
 
   Map<String, dynamic> toJson() {
@@ -63,6 +73,8 @@ class Fault extends Models {
       'date_done': date_done,
       'desc_done': desc_done,
       'active': (active == null || !active) ? 'false' : 'true',
+      'lat': lat,
+      'lon': lon,
     };
   }
 
