@@ -33,6 +33,29 @@ class FaultController extends Controllers {
     return faults;
   }
 
+  // Update the whole object in db
+  static Future<Map<String, dynamic>> update(Fault fault) async {
+    Map<String, dynamic> res = {
+      'code': null,
+      'message': null,
+      'id': null,
+    };
+
+    print("Update() Fault");
+    await DBProvider.db
+        .update(_tableName, fault.prepareForUpdate())
+        .then((resId) async {
+      res['code'] = 1;
+      res['id'] = resId;
+    }).catchError((err) {
+      res["code"] = -3;
+      res["message"] = "Error updating $_tableName";
+    });
+
+    DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
+    return res;
+  }
+
   // Important! Set active false now only to fault, not assigned photos and etc.
   // Rework after making controllers for faultItem
   static Future<Map<String, dynamic>> delete(int faultId) async {
