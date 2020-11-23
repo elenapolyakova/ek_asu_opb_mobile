@@ -15,7 +15,7 @@ class CheckListItem extends Models {
   String description;
   bool active = true;
   // Count of faults(нарушений) для 1 вопроса
-  int faultsCount;
+  int faults_count;
 
   CheckListItem({
     this.id,
@@ -27,7 +27,7 @@ class CheckListItem extends Models {
     this.result,
     this.description,
     this.active,
-    this.faultsCount,
+    this.faults_count,
   });
 
   factory CheckListItem.fromJson(Map<String, dynamic> json) =>
@@ -40,7 +40,7 @@ class CheckListItem extends Models {
           question: getStr(json["question"]),
           active: (json["active"].toString() == 'true'),
           result: getStr(json["result"]),
-          faultsCount: getObj(json["faultsCount"]),
+          faults_count: getObj(json["faultsCount"]),
           description: getStr(json["description"]));
 
   Map<String, dynamic> toJson() {
@@ -54,7 +54,7 @@ class CheckListItem extends Models {
       'active': (active == null || !active) ? 'false' : 'true',
       'description': description,
       'result': result,
-      'faultsCount': faultsCount,
+      'faults_count': faults_count,
     };
   }
 
@@ -68,7 +68,7 @@ class CheckListItem extends Models {
       'question': question,
       'description': description,
       'result': result,
-      'faultsCount': faultsCount,
+      'faults_count': faults_count,
     };
   }
 
