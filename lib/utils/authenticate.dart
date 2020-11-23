@@ -42,8 +42,9 @@ Future<bool> checkLoginStatus(BuildContext context) async {
   // String uid = await _storage.read(key: 'uid');
   String session = await _storage.read(key: 'session');
   String pin = await _storage.read(key: "pin");
+  
 
-  //var subscription = client.sessionStream.listen(sessionChanged);
+ 
 
   if (_currentUser == null) _currentUser = await getUserInfo();
 
@@ -51,7 +52,7 @@ Future<bool> checkLoginStatus(BuildContext context) async {
     LogOut(context);
     return false;
   }
-
+   OdooProxy.odooClient.sessionListen(sessionChanged);
   return true;
 }
 
