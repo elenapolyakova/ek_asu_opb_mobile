@@ -1,3 +1,4 @@
+import 'package:ek_asu_opb_mobile/controllers/koap.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
@@ -9,10 +10,10 @@ import 'dart:io';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'dart:typed_data';
-import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import 'package:ek_asu_opb_mobile/models/koap.dart';
 //import 'package:permission_handler/permission_handler.dart';
 
-class Koap {
+/*class Koap {
   int id;
   String article; //Статья
   String paragraph; // Пункт // Параграф
@@ -35,7 +36,7 @@ class Koap {
       this.firm_fine_to,
       this.firm_stop,
       this.desc});
-}
+}*/
 
 class FaultScreen extends StatefulWidget {
   int faultId;
@@ -58,7 +59,6 @@ class _FaultScreen extends State<FaultScreen> {
   double widthHelp = 700;
   double heightHelp = 550;
   Fault _fault;
-  List<Koap> _koapItems;
   int _koapId;
   final formFaultKey = new GlobalKey<FormState>();
   int _selectedKoapId;
@@ -95,7 +95,6 @@ class _FaultScreen extends State<FaultScreen> {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
       _fineName = '';
-      await loadKoap();
       await loadFault();
       await loadImages();
     } catch (e) {} finally {
@@ -114,60 +113,17 @@ class _FaultScreen extends State<FaultScreen> {
         date: DateTime.now(),
         fine_desc: 'Описание штрафа',
         fine: 1000,
-        koap_id: 1);
+        koap_id: 139);
 
     if (![null, -1].contains(faultId)) _fault = fault;
     //await FaultController.select(faultId)
 
-    if (_fault != null)
-      _fineName = getFineName(_fault.koap_id) ?? '';
-    else {
+    if (_fault != null) {
+      _fineName = await getFineName(_fault.koap_id);
+    } else {
       _fault = _fault ?? new Fault();
       _fineName = '';
     }
-  }
-
-  Future<void> loadKoap() async {
-    List<Koap> koapItems = [
-      Koap(
-          id: 1,
-          article: '6.3.',
-          paragraph: '1',
-          text:
-              'Нарушение законодательства в области обеспечения санитарно-эпидемиологического благополучия населения, выразившееся в нарушении действующих санитарных правил и гигиенических нормативов, невыполнении санитарно-гигиенических и противоэпидемических мероприятий',
-          man_fine_from: 500,
-          man_fine_to: 1000,
-          firm_fine_from: 10000,
-          firm_fine_to: 20000,
-          firm_stop: 90),
-      Koap(
-          id: 2,
-          article: '6.3.',
-          paragraph: '2',
-          text:
-              'Те же действия (бездействие), совершенные в период режима чрезвычайной ситуации или при возникновении угрозы распространения заболевания, представляющего опасность для окружающих, либо в период осуществления на соответствующей территории ограничительных мероприятий (карантина), либо невыполнение в установленный срок выданного в указанные периоды законного предписания (постановления) или требования органа (должностного лица), осуществляющего федеральный государственный санитарно-эпидемиологический надзор, о проведении санитарно-противоэпидемических (профилактических) мероприятий',
-          man_fine_from: 50000,
-          man_fine_to: 50000,
-          firm_fine_from: 200000,
-          firm_fine_to: 500000,
-          firm_stop: 90),
-      Koap(
-          id: 3,
-          article: '6.3.',
-          paragraph: '3',
-          text:
-              'Действия (бездействие), предусмотренные частью 2 настоящей статьи, повлекшие причинение вреда здоровью человека или смерть человека, если эти действия (бездействие) не содержат уголовно наказуемого деяния',
-          man_fine_from: 300000,
-          man_fine_to: 500000,
-          firm_fine_from: 500000,
-          firm_fine_to: 1000000,
-          firm_stop: 90),
-    ];
-
-    _koapItems = koapItems;
-    //await KoapController.selectAll()
-
-    _koapItems = _koapItems ?? [];
   }
 
   List<Map<String, dynamic>> choices = [
@@ -220,10 +176,10 @@ class _FaultScreen extends State<FaultScreen> {
     ;
   }
 
-  String getFineDesc(int koapId) {
+  Future<String> getFineDesc(int koapId) async {
     if (koapId == null) return null;
-    Koap koapItem =
-        _koapItems.firstWhere((koap) => koap.id == koapId, orElse: () => null);
+    Koap koapItem = await KoapController.selectById(koapId);
+    //   _koapItems.firstWhere((koap) => koap.id == koapId, orElse: () => null);
     if (koapItem != null) {
       String fineMan = (koapItem.man_fine_from != null
               ? 'от ${koapItem.man_fine_from.toString()}'
@@ -256,26 +212,29 @@ class _FaultScreen extends State<FaultScreen> {
     return null;
   }
 
-  String getFineName(int koapId) {
+  Future<String> getFineName(int koapId) async {
     if (koapId == null) return null;
-    Koap koapItem =
-        _koapItems.firstWhere((koap) => koap.id == koapId, orElse: () => null);
+    Koap koap = await KoapController.selectById(koapId);
+    return koap != null ? await koap.fineName : '';
+
+    /*_koapItems.firstWhere((koap) => koap.id == koapId, orElse: () => null);
     if (koapItem != null)
       return (koapItem.article != null ? 'ст. ${koapItem.article}' : '') +
           (koapItem.paragraph != null ? ' п. ${koapItem.paragraph}' : '');
-    return null;
+    return null;*/
   }
 
   Future<List<dynamic>> onSearch(String template) async {
-    List<Koap> list = _koapItems
+    List<Koap> list = await KoapController.select(template);
+    /*_koapItems
         .where((item) =>
             ((item.article ?? '') + (item.paragraph ?? "") + (item.text ?? ""))
                 .contains(template))
-        .toList();
+        .toList();*/
     // await DepartmentController.select(template, railwayId);
     if (list == null) return null;
-    List<dynamic> result = List.generate(list.length, (index) {
-      String fineName = getFineName(list[index].id);
+    List<dynamic> result = List.generate(list.length, (index) async {
+      String fineName = await getFineName(list[index].id);
       return {
         'id': list[index].id,
         'value':
@@ -411,15 +370,17 @@ class _FaultScreen extends State<FaultScreen> {
                                         text: 'принять',
                                         parentContext: context,
                                         onPress: () async {
-                                          Koap selecteKoap =
-                                              _koapItems.firstWhere(
+                                          Koap selectedKoap =
+                                              await KoapController.selectById(
+                                                  _selectedKoapId);
+                                          /* _koapItems.firstWhere(
                                                   (koap) =>
                                                       koap.id ==
                                                       _selectedKoapId,
-                                                  orElse: () => null);
+                                                  orElse: () => null);*/
 
                                           Navigator.pop<Koap>(
-                                              context, selecteKoap);
+                                              context, selectedKoap);
                                         }),
                                     MyButton(
                                         text: 'отменить',
@@ -437,10 +398,11 @@ class _FaultScreen extends State<FaultScreen> {
         });
   }
 
-  showToolTip() {
+  showToolTip() async {
     //   if (_fault.koap_id == null) return;
-    Koap sourceKoap = _koapItems.firstWhere((koap) => koap.id == _fault.koap_id,
-        orElse: () => null);
+    Koap sourceKoap = await KoapController.selectById(_fault
+        .koap_id); //_koapItems.firstWhere((koap) => koap.id == _fault.koap_id,
+    //   orElse: () => null);
     if (_fault.koap_id == null || sourceKoap == null) return;
     TextStyle style = TextStyle(
         color: Theme.of(context).buttonColor,
@@ -480,7 +442,9 @@ class _FaultScreen extends State<FaultScreen> {
                                         children: [
                                           Expanded(
                                               child: FormTitle(
-                                                  getFineName(_fault.koap_id)))
+                                                  //getFineName(_fault.koap_id))
+                                                  _fineName ?? "")
+                                                  )
                                         ],
                                       ),
                                       Container(
@@ -744,13 +708,14 @@ class _FaultScreen extends State<FaultScreen> {
                                         maxLines: 1,
                                         cursorColor:
                                             Theme.of(context).cursorColor,
-                                        onTap: () =>
-                                            showSearchKoap().then((Koap koap) {
+                                        onTap: () => showSearchKoap()
+                                            .then((Koap koap) async {
                                           if (koap == null) return;
                                           _fault.koap_id = koap.id ?? null;
-                                          _fineName = getFineName(koap.id);
+                                          _fineName =
+                                              await getFineName(koap.id);
                                           _fault.fine_desc =
-                                              getFineDesc(koap.id);
+                                              await getFineDesc(koap.id);
                                           setState(() {});
                                         }),
                                       ),

@@ -2,10 +2,7 @@ import 'dart:math';
 
 import 'package:ek_asu_opb_mobile/controllers/checkList.dart';
 import 'package:ek_asu_opb_mobile/controllers/checkListItem.dart';
-import 'package:ek_asu_opb_mobile/controllers/checkListTemplate.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
-import 'package:ek_asu_opb_mobile/models/checkList.dart';
-import 'package:ek_asu_opb_mobile/screens/screens.dart';
 import 'package:ek_asu_opb_mobile/src/odooClient.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
@@ -18,7 +15,7 @@ final limitRecord = config.getItem('limitRecord') ?? 80;
 final cbtRole = config.getItem('cbtRole') ?? 'cbt';
 final ncopRole = config.getItem('ncopRole') ?? 'ncop';
 final _storage = FlutterSecureStorage();
-final List<String> _dict = ['railway', 'department', 'user', 'check_list'];
+final List<String> _dict = ['railway', 'department', 'user', 'check_list', 'koap'];
 
 //загрузка справочников
 //Возвращает List[
@@ -52,6 +49,16 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               await getDataWithAttemp('eco.ref.railway', 'search_read', null, {
             'domain': domain,
             'fields': ['id', 'name', 'short_name']
+          });
+
+          break;
+        case 'koap':
+          List<dynamic> domain = new List<dynamic>();
+          if (lastUpdate != null) domain.add(lastUpdate);
+          data =
+              await getDataWithAttemp('mob.ref.koap', 'search_read', null, {
+            'domain': domain,
+            'fields': ['id', 'article', 'paragraph', 'text', 'man_fine_from', 'man_fine_to', 'firm_fine_from', 'firm_fine_to', 'firm_stop', 'desc',]
           });
 
           break;
@@ -189,6 +196,10 @@ Future<List<Map<String, dynamic>>> getDictionaries(
           switch (dicts[i]) {
             case 'railway':
               await RailwayController.insert(
+                  dataList[j] as Map<String, dynamic>);
+              break;
+             case 'koap':
+              await KoapController.insert(
                   dataList[j] as Map<String, dynamic>);
               break;
             case 'department':

@@ -53,14 +53,19 @@ class DBProvider {
 
         await db.execute(
             "CREATE TABLE IF NOT EXISTS check_list_item(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, base_id INTEGER, name TEXT, question TEXT, result TEXT, description TEXT, active TEXT)");
+
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS koap(id INTEGER PRIMARY KEY, article TEXT, paragraph TEXT, text TEXT, man_fine_from INTEGER, man_fine_to INTEGER, firm_fine_from INTEGER, firm_fine_to INTEGER, firm_stop INTEGER, desc TEXT, search_field TEXT)");
       },
       onUpgrade: (db, oldVersion, version) async {
         switch (oldVersion) {
           case 0:
           case 1:
-          //continue v2;
-          //v2:
-          //case 2:
+            await db.execute(
+                "CREATE TABLE IF NOT EXISTS koap(id INTEGER PRIMARY KEY, article TEXT, paragraph TEXT, text TEXT, man_fine_from INTEGER, man_fine_to INTEGER, firm_fine_from INTEGER, firm_fine_to INTEGER, firm_stop INTEGER, desc TEXT, search_field TEXT)");
+            continue v2;
+          v2:
+          case 2:
           default:
         }
       },
@@ -75,7 +80,7 @@ class DBProvider {
 
       // Set the version. This executes the onCreate function and provides a
       // path to perform database upgrades and downgrades.
-      version: 1,
+      version: 2,
     );
   }
 
@@ -84,6 +89,7 @@ class DBProvider {
     await db.execute("DROP TABLE IF EXISTS railway");
     await db.execute("DROP TABLE IF EXISTS department");
     await db.execute("DROP TABLE IF EXISTS user");
+    await db.execute("DROP TABLE IF EXISTS koap");
 
     // await db.execute("DROP TABLE IF EXISTS log");
     await db.execute(
@@ -92,6 +98,9 @@ class DBProvider {
         "CREATE TABLE department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER, active TEXT, search_field TEXT)");
     await db.execute(
         "CREATE TABLE user(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT, search_field TEXT, user_role TEXT)");
+    await db.execute(
+        "CREATE TABLE IF NOT EXISTS koap(id INTEGER PRIMARY KEY, article TEXT, paragraph TEXT, text TEXT, man_fine_from INTEGER, man_fine_to INTEGER, firm_fine_from INTEGER, firm_fine_to INTEGER, firm_stop INTEGER, desc TEXT, search_field TEXT)");
+
     // await SynController.loadFromOdoo();
   }
 

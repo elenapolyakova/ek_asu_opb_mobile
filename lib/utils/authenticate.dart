@@ -44,8 +44,6 @@ Future<bool> checkLoginStatus(BuildContext context) async {
   String pin = await _storage.read(key: "pin");
   
 
- 
-
   if (_currentUser == null) _currentUser = await getUserInfo();
 
   if (session == null || pin == null || _currentUser == null) {

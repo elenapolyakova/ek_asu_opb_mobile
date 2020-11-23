@@ -6,6 +6,7 @@ export 'package:ek_asu_opb_mobile/controllers/log.dart';
 export 'package:ek_asu_opb_mobile/controllers/plan.dart';
 export 'package:ek_asu_opb_mobile/controllers/planItem.dart';
 export 'package:ek_asu_opb_mobile/controllers/checkPlan.dart';
+export 'package:ek_asu_opb_mobile/controllers/koap.dart';
 export 'package:ek_asu_opb_mobile/src/db.dart';
 
 abstract class Controllers {
