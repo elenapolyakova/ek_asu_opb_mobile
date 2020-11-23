@@ -50,9 +50,12 @@ class DBProvider {
             "CREATE TABLE IF NOT EXISTS rel_com_group_user(id INTEGER PRIMARY KEY, com_group_id INTEGER, user_id INTEGER, active TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS check_list(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, base_id INTEGER, is_base TEXT, name TEXT, is_active TEXT, type INTEGER, active TEXT)");
-
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS check_list_item(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, base_id INTEGER, name TEXT, question TEXT, result TEXT, description TEXT, active TEXT)");
+            "CREATE TABLE IF NOT EXISTS check_list_item(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, base_id INTEGER, name TEXT, question TEXT, result TEXT, description TEXT, active TEXT, faults_count INTEGER)");
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS fault(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, name TEXT, desc TEXT, fine_desc TEXT, fine INTEGER, koap_id INTEGER, date TEXT, date_done TEXT, desc_done TEXT, active TEXT, lat REAL, lon REAL)");
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS fault_item(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, image TEXT, active TEXT)");
       },
       onUpgrade: (db, oldVersion, version) async {
         switch (oldVersion) {
