@@ -14,6 +14,34 @@ class FaultController extends Controllers {
     return await DBProvider.db.insert(_tableName, fault.toJson());
   }
 
+  static Future<Map<String, dynamic>> create(Fault fault) async {
+    Map<String, dynamic> res = {
+      'code': null,
+      'message': null,
+      'id': null,
+    };
+
+    print("Create() Fault");
+    Map<String, dynamic> json = fault.toJson();
+
+    // json["base_id"] = null;
+    json.remove("id");
+
+    // Warning only for local db!!!
+    // When enable loading from odoo, delete this code
+    json["odooId"] = null;
+
+    await DBProvider.db.insert(_tableName, json).then((resId) {
+      res['code'] = 1;
+      res['id'] = resId;
+    }).catchError((err) {
+      res['code'] = -3;
+      res['message'] = 'Error create checkListItem into $_tableName';
+    });
+    DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
+    return res;
+  }
+
   static Future<Fault> selectById(int id) async {
     if (id == null) return null;
     var json = await DBProvider.db.selectById(_tableName, id);
