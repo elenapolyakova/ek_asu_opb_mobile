@@ -160,7 +160,7 @@ class _FaultListScreen extends State<FaultListScreen> {
           children: [
             getRowCell(row.desc, row.id, 0),
             getRowCell(dateDMY(row.date), row.id, 1),
-            getRowCell(row.fine.toString(), row.id, 2),
+            getRowCell(row.fine != null? row.fine.toString() : '', row.id, 2),
             getRowCell(row.fine_desc, row.id, 3),
             getRowCell(fault.fineName, row.id, 4),
           ]);

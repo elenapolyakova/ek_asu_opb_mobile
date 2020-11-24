@@ -582,8 +582,6 @@ class _FaultScreen extends State<FaultScreen> {
     bool hasErorr = false;
     Map<String, dynamic> result;
     _fault.date = DateTime.now();
-    _createdPath;
-    _deletedIds;
     try {
       if ([-1, null].contains(_fault.id)) {
         result = await FaultController.create(_fault, _createdPath);
@@ -851,7 +849,7 @@ class _FaultScreen extends State<FaultScreen> {
                                                         Icons.add_a_photo,
                                                         color: Theme.of(context)
                                                             .primaryColor,
-                                                        size: 150,
+                                                        size: 120,
                                                       ),
                                                       Text('Добавить фото',
                                                           style: TextStyle(
