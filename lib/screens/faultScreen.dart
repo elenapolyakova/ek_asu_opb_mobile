@@ -1,4 +1,5 @@
 import 'package:ek_asu_opb_mobile/controllers/fault.dart';
+import 'package:ek_asu_opb_mobile/controllers/faultItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/koap.dart';
 import 'package:ek_asu_opb_mobile/models/fault.dart';
 import 'package:ek_asu_opb_mobile/models/faultItem.dart';
@@ -142,8 +143,8 @@ class _FaultScreen extends State<FaultScreen> {
 
   Future<void> loadImages() async {
     _imageList = [];
-    // _imageList =
-    //_fault.id != null ? await FaultItemController.select(_fault.id) : [];
+    _imageList =
+        _fault.id != null ? await FaultItemController.select(_fault.id) : [];
 
     if (_imageList.length > 0) {
       _image = File(_imageList[0].image);
@@ -582,8 +583,6 @@ class _FaultScreen extends State<FaultScreen> {
     bool hasErorr = false;
     Map<String, dynamic> result;
     _fault.date = DateTime.now();
-    _createdPath;
-    _deletedIds;
     try {
       if ([-1, null].contains(_fault.id)) {
         result = await FaultController.create(_fault, _createdPath);
@@ -600,6 +599,9 @@ class _FaultScreen extends State<FaultScreen> {
         if ([-1, null].contains(_fault.id)) {
           _fault.id = result["id"];
         }
+
+        _createdPath = [];
+        _deletedIds = [];
         setState(() {});
 
         // Navigator.pop<bool>(context, true);
@@ -851,7 +853,7 @@ class _FaultScreen extends State<FaultScreen> {
                                                         Icons.add_a_photo,
                                                         color: Theme.of(context)
                                                             .primaryColor,
-                                                        size: 150,
+                                                        size: 120,
                                                       ),
                                                       Text('Добавить фото',
                                                           style: TextStyle(
