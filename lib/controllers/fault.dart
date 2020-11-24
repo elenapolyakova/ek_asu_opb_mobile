@@ -14,7 +14,9 @@ class FaultController extends Controllers {
     return await DBProvider.db.insert(_tableName, fault.toJson());
   }
 
-  static Future<Map<String, dynamic>> create(Fault fault) async {
+// path to files means path to photos of Faults storing in internal memory
+  static Future<Map<String, dynamic>> create(
+      Fault fault, List<String> pathsToFiles) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
@@ -74,8 +76,11 @@ class FaultController extends Controllers {
     return faults;
   }
 
-  // Update the whole object in db
-  static Future<Map<String, dynamic>> update(Fault fault) async {
+  // Update fault also allows to add or delete photos for 1 Fault
+  // create - list with paths to photos in internal memory
+  // delete - list ids of photos(faultItems) to delete
+  static Future<Map<String, dynamic>> update(
+      Fault fault, List<String> create, List<int> delete) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
