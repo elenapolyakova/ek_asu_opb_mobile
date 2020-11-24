@@ -21,10 +21,6 @@ class Fault extends Models {
   double lon;
   //
   DateTime plan_fix_date;
-  // create list of paths
-  List<String> create;
-  // List of ids to delete
-  List<int> delete;
 
   Fault({
     this.id,
@@ -42,24 +38,22 @@ class Fault extends Models {
     this.lat,
     this.lon,
     this.plan_fix_date,
-    this.create,
-    this.delete,
   });
 
   factory Fault.fromJson(Map<String, dynamic> json) => new Fault(
         id: json["id"],
         odooId: json["odooId"],
         parent_id: json["parent_id"],
-        name: getStr(json["name"]),
-        desc: getStr(json["desc"]),
+        name: getObj(json["name"]),
+        desc: getObj(json["desc"]),
         fine: getObj(json["fine"]),
-        fine_desc: getStr(json["fine_desc"]),
+        fine_desc: getObj(json["fine_desc"]),
         koap_id: getObj(json["koap_id"]),
         date: json["date"] == null ? null : DateTime.parse(json["date"]),
         date_done: json["date_done"] == null
             ? null
             : DateTime.parse(json["date_done"]),
-        desc_done: getStr(json["desc_done"]),
+        desc_done: getObj(json["desc_done"]),
         active: (json["active"].toString() == 'true'),
         lat: getObj(json["lat"]),
         lon: getObj(json["lon"]),
@@ -85,8 +79,6 @@ class Fault extends Models {
       'lat': lat,
       'lon': lon,
       'plan_fix_date': dateTimeToString(plan_fix_date),
-      'create': create,
-      'delete': delete,
     };
   }
 
@@ -108,6 +100,6 @@ class Fault extends Models {
 
   @override
   String toString() {
-    return 'Fault {id: $id, odooId: $odooId, parent_id: $parent_id, name: $name, desc: $desc, fine: $fine, fine_desc: $fine_desc, koap_id: $koap_id, create: $create, delete: $delete}';
+    return 'Fault {id: $id, odooId: $odooId, parent_id: $parent_id, name: $name, desc: $desc, fine: $fine, fine_desc: $fine_desc, koap_id: $koap_id}';
   }
 }
