@@ -1386,8 +1386,14 @@ class MyAppBar extends StatefulWidget {
   UserInfo userInfo;
   Function syncTask;
   bool showIsp;
+  bool showMessenger;
 
-  MyAppBar({this.showBack = true, this.userInfo, this.syncTask, this.showIsp = true});
+  MyAppBar(
+      {this.showBack = true,
+      this.userInfo,
+      this.syncTask,
+      this.showIsp = true,
+      this.showMessenger = true});
 
   @override
   State<MyAppBar> createState() => _MyAppBar();
@@ -1401,12 +1407,14 @@ class _MyAppBar extends State<MyAppBar> {
         leadingWidth: 100,
         centerTitle: false,
         leading: Column(children: [
+          widget.showMessenger ? 
           TextIcon(
               icon: Icons.message,
               text: 'Чат',
               onTap: () => Navigator.pushNamed(context, '/messenger'),
               margin: 0,
-              color: Theme.of(context).primaryColorLight),
+              color: Theme.of(context).primaryColorLight) :
+               Container(child:Text(''), height:  43,),
           widget.showBack
               ? TextIcon(
                   icon: Icons.arrow_back_ios,
@@ -1414,7 +1422,7 @@ class _MyAppBar extends State<MyAppBar> {
                   onTap: () => Navigator.pop(context),
                   margin: 0,
                   color: Theme.of(context).primaryColorLight)
-              : Text('')
+              : Container(child:Text(''), height:  30,),
         ]),
         title: Row(mainAxisAlignment: MainAxisAlignment.start, children: [
           Expanded(child: Center(child: HomeIcon())),
@@ -1453,12 +1461,15 @@ class _MyAppBar extends State<MyAppBar> {
                       )),
                       Container(
                           child: Center(
-                        child: widget.showIsp ? TextIcon(
-                            icon: Icons.plagiarism,
-                            text: 'ИСП',
-                            margin: 15,
-                            onTap: () => Navigator.pushNamed(context, '/ISP'),
-                            color: Theme.of(context).primaryColorLight): Text(''),
+                        child: widget.showIsp
+                            ? TextIcon(
+                                icon: Icons.plagiarism,
+                                text: 'ИСП',
+                                margin: 15,
+                                onTap: () =>
+                                    Navigator.pushNamed(context, '/ISP'),
+                                color: Theme.of(context).primaryColorLight)
+                            : Text(''),
                       )),
                       TextIcon(
                           icon: Icons.exit_to_app,
