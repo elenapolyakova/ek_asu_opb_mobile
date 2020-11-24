@@ -1,11 +1,17 @@
-import 'package:ek_asu_opb_mobile/controllers/checkList.dart';
 import 'package:ek_asu_opb_mobile/controllers/checkListItem.dart';
-import 'package:ek_asu_opb_mobile/screens/checkListScreen.dart';
+import 'package:ek_asu_opb_mobile/controllers/fault.dart';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/models/checkListItem.dart';
+
+class MyCheckListItem {
+  CheckListItem item;
+  int faultCount;
+
+  MyCheckListItem(this.item, this.faultCount);
+}
 
 class CheckListItemScreen extends StatefulWidget {
   int checkListId;
@@ -28,7 +34,7 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
   double heightCheckList = 700;
   double widthCheckList = 700;
   final formCheckListItemKey = new GlobalKey<FormState>();
-  List<CheckListItem> _items;
+  List<MyCheckListItem> _items;
   CheckListItem _currentCheckLIstItem;
 
   List<Map<String, dynamic>> choicesItem = [
@@ -83,10 +89,12 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
   }
 
   Future<void> editCheckListItem(int checkListItemId) async {
-    CheckListItem checkListItem =
-        _items.firstWhere((item) => item.id == checkListItemId);
+    MyCheckListItem checkListItem =
+        _items.firstWhere((item) => item.item.id == checkListItemId);
 
-    CheckListItem itemCopy = CheckListItem.fromJson(checkListItem.toJson());
+    MyCheckListItem itemCopy = MyCheckListItem(
+        CheckListItem.fromJson(checkListItem.item.toJson()),
+        checkListItem.faultCount);
 
     bool result = await showCheckListItemDialog(itemCopy, setState);
     if (result != null && result) {
@@ -98,8 +106,8 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
     bool result = await showConfirmDialog(
         'Вы уверены, что хотите удалить вопрос чек-лист?', context);
     if (result != null && result) {
-      CheckListItem deletedCheckListItem = _items.firstWhere(
-          (checkListItem) => checkListItem.id == checkListItemId,
+      MyCheckListItem deletedCheckListItem = _items.firstWhere(
+          (checkListItem) => checkListItem.item.id == checkListItemId,
           orElse: () => null);
 
       if (deletedCheckListItem == null) return;
@@ -125,8 +133,8 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
   }
 
   void forwardFault(int checkListItemId) {
-    CheckListItem checkListItem = _items
-        .firstWhere((item) => item.id == checkListItemId, orElse: () => null);
+    MyCheckListItem checkListItem = _items
+        .firstWhere((item) => item.item.id == checkListItemId, orElse: () => null);
 
     return widget.push({
       "pathTo": 'faultList',
@@ -134,7 +142,7 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
       'text': 'Назад к вопросам'
     }, {
       'checkListItemId': checkListItemId,
-      'checkListItemName': checkListItem != null ? checkListItem.question : ''
+      'checkListItemName': checkListItem != null ? checkListItem.item.question : ''
     });
   }
 
@@ -167,14 +175,19 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
   }
 
   Future<void> loadItems() async {
+    _items = [];
     List<CheckListItem> items =
         await CheckListItemController.select(checkListId);
+    for (int i = 0; i < items.length; i++) {
+      int faultCount = await items[i].getFaultsCounts;
+      _items.add(MyCheckListItem(items[i], faultCount));
+    }
 
-    _items = items ?? []; //загружать из базы
+    _items = _items ?? []; //загружать из базы
   }
 
   Future<bool> showCheckListItemDialog(
-      CheckListItem checkListItem, StateSetter setState) {
+      MyCheckListItem checkListItem, StateSetter setState) {
     return showDialog<bool>(
         context: context,
         barrierDismissible: false,
@@ -205,7 +218,7 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
                               child: Container(
                                   child: Column(children: [
                                 FormTitle(
-                                    '${checkListItem.id == null ? 'Добавление' : 'Редактирование'} вопроса'),
+                                    '${checkListItem.item.id == null ? 'Добавление' : 'Редактирование'} вопроса'),
                                 Expanded(
                                     child: ListView(
                                   shrinkWrap: true,
@@ -218,41 +231,46 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
                                       children: [
                                         EditTextField(
                                           text: 'Вопрос',
-                                          value: checkListItem.question,
-                                          onSaved: (value) =>
-                                              {checkListItem.question = value},
+                                          value: checkListItem.item.question,
+                                          onSaved: (value) => {
+                                            checkListItem.item.question = value
+                                          },
                                           context: context,
                                           height: 100,
                                           maxLines: 3,
                                           readOnly:
-                                              checkListItem.base_id != null,
+                                              checkListItem.item.base_id !=
+                                                  null,
                                           showEditDialog:
-                                              checkListItem.base_id == null,
+                                              checkListItem.item.base_id ==
+                                                  null,
                                           backgroundColor:
-                                              checkListItem.base_id != null
+                                              checkListItem.item.base_id != null
                                                   ? Theme.of(context)
                                                       .primaryColorLight
                                                   : null,
                                           borderColor:
-                                              checkListItem.base_id != null
+                                              checkListItem.item.base_id != null
                                                   ? Theme.of(context)
                                                       .primaryColorLight
                                                   : null,
                                         ),
                                         EditTextField(
                                           text: 'Результат',
-                                          value: checkListItem.result,
-                                          onSaved: (value) =>
-                                              {checkListItem.result = value},
+                                          value: checkListItem.item.result,
+                                          onSaved: (value) => {
+                                            checkListItem.item.result = value
+                                          },
                                           context: context,
                                           height: 100,
                                           maxLines: 3,
                                         ),
                                         EditTextField(
                                           text: 'Комментарий',
-                                          value: checkListItem.description,
+                                          value: checkListItem.item.description,
                                           onSaved: (value) => {
-                                            checkListItem.description = value
+                                            checkListItem.item.description =
+                                                value
                                           },
                                           context: context,
                                           height: 100,
@@ -291,7 +309,7 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
     Navigator.pop<bool>(context, null);
   }
 
-  void submitCheckListItem(CheckListItem checkListItem, setState) async {
+  void submitCheckListItem(MyCheckListItem checkListItem, setState) async {
     final form = formCheckListItemKey.currentState;
     hideKeyboard();
     if (form.validate()) {
@@ -299,10 +317,10 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
       bool hasErorr = false;
       Map<String, dynamic> result;
       try {
-        if (checkListItem.id == null) {
-          result = await CheckListItemController.create(checkListItem);
+        if (checkListItem.item.id == null) {
+          result = await CheckListItemController.create(checkListItem.item);
         } else {
-          result = await CheckListItemController.update(checkListItem);
+          result = await CheckListItemController.update(checkListItem.item);
         }
         hasErorr = result["code"] < 0;
 
@@ -310,16 +328,16 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
           Navigator.pop<bool>(context, false);
           Scaffold.of(context).showSnackBar(errorSnackBar());
         } else {
-          if (checkListItem.id == null) {
-            checkListItem.id = result["id"];
+          if (checkListItem.item.id == null) {
+            checkListItem.item.id = result["id"];
 
             setState(() {
               _items.add(checkListItem);
             });
           } else {
             setState(() {
-              int index = _items.indexOf(_items
-                  .firstWhere((element) => element.id == checkListItem.id));
+              int index = _items.indexOf(_items.firstWhere(
+                  (element) => element.item.id == checkListItem.item.id));
               _items[index] = checkListItem;
             });
           }
@@ -335,7 +353,7 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
   }
 
   Widget generateItemTable(BuildContext context,
-      List<Map<String, dynamic>> headers, List<CheckListItem> rows) {
+      List<Map<String, dynamic>> headers, List<MyCheckListItem> rows) {
     int i = 0;
     Map<int, TableColumnWidth> columnWidths = Map.fromIterable(headers,
         key: (item) => i++,
@@ -358,10 +376,12 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
                 )));
     List<TableRow> tableRows = [headerTableRow];
     int rowIndex = 0;
-    rows.forEach((row) {
+    rows.forEach((item) {
+      CheckListItem row = item.item;
       rowIndex++;
-      Color color =
-          (row.faults_count != null && row.faults_count > 0) ? Color(0x44E57373) : Color(0x44ADB439);
+      Color color = (item.faultCount != null && item.faultCount > 0)
+          ? Color(0x44E57373)
+          : Color(0x44ADF489);
       TableRow tableRow = TableRow(
           decoration: BoxDecoration(
               color:
@@ -373,7 +393,7 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
             getRowCell(row.question, row.id, 0),
             getRowCell(row.result, row.id, 1),
             getRowCell(row.description, row.id, 2),
-            getRowCell(row.faults_count!= null ? row.faults_count.toString() : '', row.id, 3),
+            getRowCell(item.faultCount!= null ? item.faultCount.toString() : '', row.id, 3),
           ]);
       tableRows.add(tableRow);
     });
@@ -422,8 +442,8 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
   }
 
   Future<void> addCheckListItemClicked(StateSetter setState) async {
-    CheckListItem checkListItem =
-        new CheckListItem(id: null, parent_id: checkListId, active: true);
+    MyCheckListItem checkListItem =
+        new MyCheckListItem(CheckListItem(id: null, parent_id: checkListId, active: true), 0);
     bool result = await showCheckListItemDialog(checkListItem, setState);
     if (result != null && result) {
       setState(() {});

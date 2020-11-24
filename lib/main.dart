@@ -101,6 +101,8 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
               child: InspectionScreen(context: context)),
           '/checkItem': (context) => RouteAwareWidget('/checkItem',
               child: CheckScreen(context: context)),
+           '/messenger': (context) => RouteAwareWidget('/messenger',
+              child: MessengerScreen(/*context: context*/)),
 
           /* '/planCbt': (context) =>
               RouteAwareWidget('planCbt', child: PlanCbtScreen()),

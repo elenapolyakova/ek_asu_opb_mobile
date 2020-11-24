@@ -1,6 +1,7 @@
 import 'package:ek_asu_opb_mobile/controllers/fault.dart';
 import 'package:ek_asu_opb_mobile/controllers/koap.dart';
 import 'package:ek_asu_opb_mobile/models/fault.dart';
+import 'package:ek_asu_opb_mobile/models/faultItem.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
@@ -26,13 +27,6 @@ class FaultScreen extends StatefulWidget {
   State<FaultScreen> createState() => _FaultScreen();
 }
 
-class FaultFile {
-  int id;
-  File file;
-  String path;
-  FaultFile(this.id, this.file, this.path);
-}
-
 class _FaultScreen extends State<FaultScreen> {
   UserInfo _userInfo;
   bool showLoading = true;
@@ -49,10 +43,12 @@ class _FaultScreen extends State<FaultScreen> {
   int _selectedKoapId;
   String _fineName;
   bool showLoadingImage = false;
+  List<int> _deletedIds;
+  List<String> _createdPath;
 
   File _image;
   int _imageIndex;
-  List<FaultFile> _imageList = [];
+  List<FaultItem> _imageList = [];
 
   //List<File> _imageList = [];
 
@@ -62,7 +58,6 @@ class _FaultScreen extends State<FaultScreen> {
   // int quality;
 
   List<Asset> _assetList = List<Asset>();
-
 
   @override
   void initState() {
@@ -85,6 +80,8 @@ class _FaultScreen extends State<FaultScreen> {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
       _fineName = '';
+      _deletedIds = [];
+      _createdPath = [];
       await loadFault();
       await loadImages();
     } catch (e) {} finally {
@@ -144,39 +141,14 @@ class _FaultScreen extends State<FaultScreen> {
   }*/
 
   Future<void> loadImages() async {
-    _imageList = _imageList ?? [];
-    if (![null, -1].contains(faultId)) {
-      String _path = await getPath();
-      _imageList.insert(
-          0,
-          FaultFile(
-              1, await loadFileFromAssets("assets/test/1.jpg", _path), _path));
-      _path = await getPath();
-      _imageList.insert(
-          0,
-          FaultFile(
-              2, await loadFileFromAssets("assets/test/2.jpg", _path), _path));
-      _path = await getPath();
-      _imageList.insert(
-          0,
-          FaultFile(
-              3, await loadFileFromAssets("assets/test/3.jpg", _path), _path));
-      _path = await getPath();
-      _imageList.insert(
-          0,
-          FaultFile(
-              4, await loadFileFromAssets("assets/test/4.jpg", _path), _path));
-      _path = await getPath();
-      _imageList.insert(
-          0,
-          FaultFile(
-              5, await loadFileFromAssets("assets/test/5.jpg", _path), _path));
-    }
+    _imageList = [];
+    // _imageList =
+    //_fault.id != null ? await FaultItemController.select(_fault.id) : [];
+
     if (_imageList.length > 0) {
-      _image = _imageList[0].file;
+      _image = File(_imageList[0].image);
       _imageIndex = 0;
     }
-    ;
   }
 
   Future<String> getFineDesc(int koapId) async {
@@ -270,11 +242,14 @@ class _FaultScreen extends State<FaultScreen> {
         });
         for (var i = 0; i < _assetList.length; i++) {
           ByteData bytes = await _assetList[i].getByteData();
-          String _path = await getPath();
-          File file = await loadFileFromBytes(bytes, _path);
-          _imageList.insert(i, FaultFile(null, file, _path));
+          String path = await getPath();
+          await loadFileFromBytes(bytes, path);
+          _createdPath.add(path);
+          FaultItem faultItems = FaultItem(
+              id: null, parent_id: _fault.id, image: path, active: true);
+          _imageList.insert(i, faultItems);
         }
-        _image = _imageList[0].file;
+        _image = File(_imageList[0].image);
         _imageIndex = 0;
         setState(() {
           showLoadingImage = false;
@@ -607,11 +582,14 @@ class _FaultScreen extends State<FaultScreen> {
     bool hasErorr = false;
     Map<String, dynamic> result;
     _fault.date = DateTime.now();
+    _createdPath;
+    _deletedIds;
     try {
       if ([-1, null].contains(_fault.id)) {
-        result = await FaultController.create(_fault);
+        result = await FaultController.create(_fault, _createdPath);
       } else {
-        result = await FaultController.update(_fault);
+        result =
+            await FaultController.update(_fault, _createdPath, _deletedIds);
       }
       hasErorr = result["code"] < 0;
 
@@ -640,7 +618,7 @@ class _FaultScreen extends State<FaultScreen> {
     if (result != null && result) {
       bool hasErorr = false;
       Map<String, dynamic> result;
-      FaultFile deletedFile = _imageList[index];
+      FaultItem deletedFile = _imageList[index];
 
       try {
         //  result = await ComGroupController.delete(groupId);
@@ -652,13 +630,18 @@ class _FaultScreen extends State<FaultScreen> {
         //   return;
         //   }
 
-        //todo delete from device by  deletedFile.path
-        deletedFile.file.delete();
+        if (deletedFile.id != null)
+          _deletedIds.add(deletedFile.id);
+        else {
+          _createdPath.remove(deletedFile.image);
+          await File(deletedFile.image).delete();
+        } //если файл добавили, в бд не сохранили и тут же удалили - просто стираем с устройства
+
         _imageList.removeAt(index);
         if (index <= _imageIndex && _imageIndex != 0) _imageIndex--;
 
         if (_imageList.length > 0)
-          _image = _imageList[_imageIndex].file;
+          _image = File(_imageList[_imageIndex].image);
         else
           _image = null;
 
@@ -707,7 +690,7 @@ class _FaultScreen extends State<FaultScreen> {
                                       )
                                     ]),
                                     Container(
-                                      margin: EdgeInsets.only(bottom: 20),
+                                      margin: EdgeInsets.only(bottom: 15),
                                       height: 45,
                                       decoration: new BoxDecoration(
                                         border: Border.all(
@@ -750,7 +733,7 @@ class _FaultScreen extends State<FaultScreen> {
                                     ),
                                     Container(
                                       margin:
-                                          EdgeInsets.symmetric(vertical: 20),
+                                          EdgeInsets.symmetric(vertical: 15),
                                       child: EditTextField(
                                         text: 'Наименование',
                                         value: _fault.name,
@@ -765,7 +748,7 @@ class _FaultScreen extends State<FaultScreen> {
                                     ),
                                     Container(
                                       margin:
-                                          EdgeInsets.symmetric(vertical: 20),
+                                          EdgeInsets.symmetric(vertical: 15),
                                       child: EditTextField(
                                         text: 'Описание штрафа',
                                         value: _fault.fine_desc,
@@ -835,7 +818,7 @@ class _FaultScreen extends State<FaultScreen> {
                   Expanded(
                       flex: 2,
                       child: Container(
-                        padding: EdgeInsets.only(bottom: 20),
+                        padding: EdgeInsets.only(bottom: 10),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.start,
@@ -903,7 +886,8 @@ class _FaultScreen extends State<FaultScreen> {
                                             (i) => GestureDetector(
                                               // onLongPress: () => deleteImage(i),
                                               onTap: () => setState(() {
-                                                _image = _imageList[i].file;
+                                                _image =
+                                                    File(_imageList[i].image);
                                                 _imageIndex = i;
                                               }),
                                               child: Container(
@@ -924,7 +908,7 @@ class _FaultScreen extends State<FaultScreen> {
                                                                   horizontal:
                                                                       5),
                                                   child: Image.file(
-                                                    _imageList[i].file,
+                                                    File(_imageList[i].image),
                                                     fit: BoxFit.cover,
                                                   )),
                                             ),
@@ -975,7 +959,7 @@ class _FaultScreen extends State<FaultScreen> {
                                 onSaved: (value) => {_fault.desc = value},
                                 context: context,
                                 borderColor: Theme.of(context).primaryColorDark,
-                                height: 470,
+                                height: 440,
                                 maxLines: 23,
                                 margin: 0,
                               ),

@@ -1,4 +1,4 @@
-import 'dart:ui';
+/*import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
@@ -9,7 +9,7 @@ import 'package:ek_asu_opb_mobile/screens/checkListScreen.dart';
 import 'package:ek_asu_opb_mobile/screens/checkListItemScreen.dart';
 import 'package:ek_asu_opb_mobile/screens/faultScreen.dart';
 
-class MyCheckList {
+class MyCheckListTemplate {
   int id;
   int odooId;
   int parentIdcheck; //PlanItemId; //для рабочих чек-листов
@@ -18,7 +18,7 @@ class MyCheckList {
   String name;
   bool active;
   List<MyCheckListItem> items;
-  MyCheckList(
+  MyCheckListTemplate(
       {this.id,
       this.odooId,
       this.is_base,
@@ -62,8 +62,8 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
   List<Map<String, Object>> typeCheckListList;
   List<Map<String, Object>> typeCheckListListAll;
   int _selectedType = 0;
-  List<MyCheckList> _items;
-  MyCheckList _currentCheckList;
+  List<MyCheckListTemplate> _items;
+  MyCheckListTemplate _currentCheckList;
   var _tapPosition;
   double heightCheckList = 700;
   double widthCheckList = 1000;
@@ -82,8 +82,8 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
     {'text': 'Вопрос', 'flex': 3.0},
   ];
 
-  List<MyCheckList> items = [
-    MyCheckList(
+  List<MyCheckListTemplate> items = [
+    MyCheckListTemplate(
         id: 1,
         odooId: 1,
         is_base: true,
@@ -104,7 +104,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
               name: 'пункт 2',
               question: 'вопрос 2')
         ]),
-    MyCheckList(
+    MyCheckListTemplate(
         id: 2,
         odooId: 2,
         is_base: true,
@@ -133,8 +133,8 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
-      typeCheckListList = makeListFromJson(MyCheckList.typeSelection);
-      typeCheckListListAll = makeListFromJson(MyCheckList.typeSelection);
+      typeCheckListList = makeListFromJson(MyCheckListTemplate.typeSelection);
+      typeCheckListListAll = makeListFromJson(MyCheckListTemplate.typeSelection);
       typeCheckListListAll.insert(0, {'id': 0, 'value': 'Все'});
       reloadCheckList();
     } catch (e) {} finally {
@@ -151,7 +151,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
 
   Future<void> addCheckListClicked() async {
     setState(() {
-      _currentCheckList = new MyCheckList(
+      _currentCheckList = new MyCheckListTemplate(
           id: null,
           odooId: null,
           name: null,
@@ -167,11 +167,11 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
   }
 
   Future<void> editCheckList(int checkListId) async {
-    MyCheckList checkList =
+    MyCheckListTemplate checkList =
         _items.firstWhere((checkList) => checkList.id == checkListId);
 
     setState(() {
-      _currentCheckList = new MyCheckList(
+      _currentCheckList = new MyCheckListTemplate(
           odooId: checkList.odooId,
           id: checkList.id,
           name: checkList.name,
@@ -201,7 +201,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
     bool result = await showConfirmDialog(
         'Вы уверены, что хотите удалить чек-лист?', context);
     if (result != null && result) {
-      MyCheckList deletedCheckList = _items.firstWhere(
+      MyCheckListTemplate deletedCheckList = _items.firstWhere(
           (checkList) => checkList.id == checkListId,
           orElse: () => null);
 
@@ -541,7 +541,7 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
         children: tableRows);
   }
 
-  Widget generateTableData(BuildContext context, List<MyCheckList> rows) {
+  Widget generateTableData(BuildContext context, List<MyCheckListTemplate> rows) {
     List<TableRow> tableRows = [];
     int rowIndex = 0;
     rows.forEach((row) {
@@ -692,4 +692,4 @@ class _CheckListTemplateScreen extends State<CheckListTemplateScreen> {
                           onPress: testClicked))*/
                 ])));
   }
-}
+}*/

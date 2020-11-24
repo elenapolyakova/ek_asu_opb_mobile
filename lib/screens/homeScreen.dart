@@ -154,7 +154,7 @@ class _HomeScreen extends State<HomeScreen> {
         screenList[screenKey] = screens.ReportScreen();
         break;
       case "checkListTemplate":
-        screenList[screenKey] = screens.CheckListTemplateScreen();
+       // screenList[screenKey] = screens.CheckListTemplateScreen();
         break;
       default:
         return Text("");

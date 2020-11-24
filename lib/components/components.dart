@@ -1404,7 +1404,7 @@ class _MyAppBar extends State<MyAppBar> {
           TextIcon(
               icon: Icons.message,
               text: 'Чат',
-              onTap: () => null,
+              onTap: () => Navigator.pushNamed(context, '/messenger'),
               margin: 0,
               color: Theme.of(context).primaryColorLight),
           widget.showBack

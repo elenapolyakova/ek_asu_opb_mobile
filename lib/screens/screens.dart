@@ -14,4 +14,5 @@ export "package:ek_asu_opb_mobile/screens/departmentDocument.dart";
 export 'package:ek_asu_opb_mobile/screens/checkListItemScreen.dart';
 export "package:ek_asu_opb_mobile/screens/faultListScreen.dart";
 export "package:ek_asu_opb_mobile/screens/faultScreen.dart";
+export 'package:ek_asu_opb_mobile/screens/messengerScreen.dart';
 
