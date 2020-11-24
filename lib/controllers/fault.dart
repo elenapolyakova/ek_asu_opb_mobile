@@ -1,5 +1,4 @@
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
-import "package:ek_asu_opb_mobile/models/checkList.dart";
 import 'package:ek_asu_opb_mobile/models/fault.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
@@ -22,6 +21,8 @@ class FaultController extends Controllers {
     };
 
     print("Create() Fault");
+    print("Fault data $fault");
+    print(fault.toJson());
     Map<String, dynamic> json = fault.toJson();
 
     // json["base_id"] = null;
@@ -36,7 +37,7 @@ class FaultController extends Controllers {
       res['id'] = resId;
     }).catchError((err) {
       res['code'] = -3;
-      res['message'] = 'Error create checkListItem into $_tableName';
+      res['message'] = 'Error create Fault into $_tableName';
     });
     DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
     return res;
@@ -56,8 +57,11 @@ class FaultController extends Controllers {
       where: "parent_id = ? and active = 'true'",
       whereArgs: [parentId],
     );
+
     if (queryRes == null || queryRes.length == 0) return [];
     List<Fault> faults = queryRes.map((e) => Fault.fromJson(e)).toList();
+    print("Fault Select()");
+    print(faults);
     return faults;
   }
 
@@ -70,6 +74,7 @@ class FaultController extends Controllers {
     };
 
     print("Update() Fault");
+    print(fault.prepareForUpdate());
     await DBProvider.db
         .update(_tableName, fault.prepareForUpdate())
         .then((resId) async {
