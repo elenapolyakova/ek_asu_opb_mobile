@@ -6,7 +6,7 @@ class FaultItem extends Models {
   int odooId;
   // id of Fault
   int parent_id;
-  // Will store in base64
+  // Will paths to file in internal device memory
   String image;
   bool active;
 
