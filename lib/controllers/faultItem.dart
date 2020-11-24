@@ -12,28 +12,25 @@ class FaultItemController extends Controllers {
       'id': null,
     };
 
-    if (faultItem.id == null) {
-      print("Create() FaultItem");
-      print("Fault data $faultItem");
+    print("Create() FaultItem");
+    print("Fault data $faultItem");
 
-      Map<String, dynamic> json = faultItem.toJson();
+    Map<String, dynamic> json = faultItem.toJson();
 
-      json.remove("id");
-      // Warning only for local db!!!
-      // When enable loading from odoo, delete this code
-      json["odooId"] = null;
+    json.remove("id");
+    // Warning only for local db!!!
+    // When enable loading from odoo, delete this code
+    json["odooId"] = null;
 
-      await DBProvider.db.insert(_tableName, json).then((resId) {
-        res['code'] = 1;
-        res['id'] = resId;
-      }).catchError((err) {
-        res['code'] = -3;
-        res['message'] = 'Error create FaultItem into $_tableName';
-      });
-      DBProvider.db
-          .insert('log', {'date': nowStr(), 'message': res.toString()});
-      return res;
-    }
+    await DBProvider.db.insert(_tableName, json).then((resId) {
+      res['code'] = 1;
+      res['id'] = resId;
+    }).catchError((err) {
+      res['code'] = -3;
+      res['message'] = 'Error create FaultItem into $_tableName';
+    });
+    DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
+    return res;
   }
 
   // Select all fault items by parent_id(by fault Id)
