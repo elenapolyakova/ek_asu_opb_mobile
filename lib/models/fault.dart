@@ -1,6 +1,5 @@
 import "package:ek_asu_opb_mobile/models/models.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
-import 'package:http/http.dart';
 
 class Fault extends Models {
   int id;
@@ -67,8 +66,6 @@ class Fault extends Models {
         plan_fix_date: json["plan_fix_date"] == null
             ? null
             : DateTime.parse(json["plan_fix_date"]),
-        create: getObj(json["create"]),
-        delete: getObj(json["delete"]),
       );
 
   Map<String, dynamic> toJson() {
@@ -88,15 +85,10 @@ class Fault extends Models {
       'lat': lat,
       'lon': lon,
       'plan_fix_date': dateTimeToString(plan_fix_date),
+      'create': create,
+      'delete': delete,
     };
   }
-
-  // String name; //Наименование
-  // String desc; //Описание
-  // DateTime date; //Дата фиксации
-  // String fine_desc; //Штраф. Описание
-  // int fine; //Штраф. Сумма
-  // int koap_id; //cтатья КОАП
 
   // Make json suitable for update() in local DB;
   // Set only params that can be updated
@@ -116,6 +108,6 @@ class Fault extends Models {
 
   @override
   String toString() {
-    return 'Fault {id: $id, odooId: $odooId, parent_id: $parent_id, name: $name, desc: $desc, fine: $fine, koap_id: $koap_id}';
+    return 'Fault {id: $id, odooId: $odooId, parent_id: $parent_id, name: $name, desc: $desc, fine: $fine, fine_desc: $fine_desc, koap_id: $koap_id, create: $create, delete: $delete}';
   }
 }
