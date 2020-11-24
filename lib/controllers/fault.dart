@@ -1,7 +1,9 @@
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import "package:ek_asu_opb_mobile/controllers/faultItem.dart";
 import 'package:ek_asu_opb_mobile/models/fault.dart';
+import 'package:ek_asu_opb_mobile/models/faultItem.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import 'dart:io';
 
 class FaultController extends Controllers {
   static String _tableName = "fault";
@@ -22,19 +24,11 @@ class FaultController extends Controllers {
       'message': null,
       'id': null,
     };
-
     print("Create() Fault");
-    print("Fault data $fault");
-    print(fault.toJson());
+    print("Fault $fault; pathToFiles $pathsToFiles");
+
     Map<String, dynamic> json = fault.toJson();
-
     json.remove("id");
-
-    // From this copy we will create db records in fault_item table
-    var faultCopy = Map.from(json);
-
-    json.remove('create');
-    json.remove('delete');
 
     // Warning only for local db!!!
     // When enable loading from odoo, delete this code
@@ -43,13 +37,35 @@ class FaultController extends Controllers {
     await DBProvider.db.insert(_tableName, json).then((resId) {
       res['code'] = 1;
       res['id'] = resId;
-
-      // Using res id for create assigned fault_item with parent_id = resId
-      // TO DO
+      res['message'] = "Нарушение создано";
     }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error create Fault into $_tableName';
     });
+
+    print("Create() Fault response $res");
+
+    // Main fault db record created, so we can create faultItems records
+    if (res["code"] == 1) {
+      if (pathsToFiles != null && pathsToFiles.length > 0) {
+        for (var photoPath in pathsToFiles) {
+          try {
+            FaultItem item = new FaultItem();
+            item.active = true;
+            item.image = photoPath;
+            item.parent_id = res["id"];
+
+            var insertResp = await FaultItemController.create(item);
+            print("Fault item insert response $insertResp");
+          } catch (e) {
+            print("Create() Fault Error! Error while creating faultItems: $e");
+            res["code"] = -3;
+            res["message"] = "Ошибка при создании нарушения и св. фотографий";
+            return res;
+          }
+        }
+      }
+    }
     DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
     return res;
   }
@@ -87,6 +103,11 @@ class FaultController extends Controllers {
       'id': null,
     };
 
+    print("Update() Fault: $fault, create: $create, delete: $delete");
+    var createdFaultItemsIds = [];
+    var deletedFaultItemsIds = [];
+
+    // Mainly update fault record
     await DBProvider.db
         .update(_tableName, fault.prepareForUpdate())
         .then((resId) async {
@@ -96,6 +117,54 @@ class FaultController extends Controllers {
       res["code"] = -3;
       res["message"] = "Error updating $_tableName";
     });
+
+    // Creating new FaultItems For existing Fault!
+    if (create.length > 0) {
+      for (var path in create) {
+        try {
+          FaultItem faultItem = new FaultItem();
+          faultItem.active = true;
+          faultItem.image = path;
+          // set id of parent
+          faultItem.parent_id = fault.id;
+
+          var createResp = await FaultItemController.create(faultItem);
+          if (createResp["code"] > 0)
+            createdFaultItemsIds.add(createResp["id"]);
+        } catch (e) {
+          print("Fault Update() Error! Error while creating new faultItem: $e");
+          res["code"] = -3;
+          res["message"] = "Ошибка при добавлении новых фото";
+          return res;
+        }
+      }
+    }
+
+    // Delete assigned photos to Fault
+    if (delete.length > 0) {
+      try {
+        for (var faultItemId in delete) {
+          // Find necessary item
+          FaultItem item = await FaultItemController.selectById(faultItemId);
+          print("FaultItem to delete $item");
+          // if not null, delete from db and internal memory
+          if (item != null) {
+            var deleteResp = await FaultItemController.delete(faultItemId);
+            print("print delete resp $deleteResp");
+            if (deleteResp["code"] > 0) {
+              deletedFaultItemsIds.add(deleteResp["id"]);
+              await File(item.image).delete();
+            }
+          }
+        }
+      } catch (e) {
+        print(
+            "Fault Update() Error! Error while deleting existing faultItem: $e");
+        res["code"] = -3;
+        res["message"] = "Ошибка при удалении ранее сохраненных  фото";
+        return res;
+      }
+    }
 
     DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
     return res;
@@ -120,30 +189,37 @@ class FaultController extends Controllers {
       res['message'] = 'Error deleting from $_tableName';
     });
 
-    // TO DO ASSIGNED ITEMS
     var assignedItems = await FaultItemController.select(faultId);
+    // if not found print about it
     if (assignedItems.length == 0) {
       // Some logging
-      print("Delete() Fault");
       print("Not found assigned FaultItems to fault with id: $faultId");
     }
-    // try {
-    //   print("Try to delete assigned FaultItems");
-    //   for (var q in assignedItems) {
-    //     var json = q.toJson();
-    //     var itemId = json["id"];
-    //     await DBProvider.db
-    //         .update('fault_item', {'id': itemId, 'active': 'false'});
-    //   }
-    // } catch (e) {
-    //   print("Delete of assignedItems to Fault ID: $faultId. Error: $e");
-    //   res = {
-    //     'code': -3,
-    //     'message': 'Error deleting from faultItems',
-    //     'id': null,
-    //   };
-    //   return res;
-    // }
+
+    // If found, delete from db and internal memory assigned photos
+    var deletedFotosIds = [];
+    if (assignedItems.length > 0) {
+      try {
+        print("Try to delete assigned FaultItems");
+        for (var fItem in assignedItems) {
+          var json = fItem.toJson();
+          var itemId = json["id"];
+
+          await DBProvider.db
+              .update('fault_item', {'id': itemId, 'active': 'false'});
+          await File(fItem.image).delete();
+          deletedFotosIds.add(itemId);
+        }
+      } catch (e) {
+        print("Delete of assignedItems to Fault ID: $faultId. Error: $e");
+        res = {
+          'code': -3,
+          'message': 'Error deleting from faultItems',
+          'id': null,
+        };
+        return res;
+      }
+    }
 
     res = {
       'code': 1,
@@ -151,6 +227,7 @@ class FaultController extends Controllers {
       'id': 0,
     };
 
+    DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
     return res;
   }
 

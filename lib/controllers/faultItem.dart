@@ -14,7 +14,7 @@ class FaultItemController extends Controllers {
 
     print("Create() FaultItem");
     print("Fault data $faultItem");
-    print(faultItem.toJson());
+
     Map<String, dynamic> json = faultItem.toJson();
 
     json.remove("id");
@@ -48,6 +48,12 @@ class FaultItemController extends Controllers {
     print("FaultItems Select()");
     print(faultItems);
     return faultItems;
+  }
+
+  static Future<FaultItem> selectById(int id) async {
+    if (id == null) return null;
+    var json = await DBProvider.db.selectById(_tableName, id);
+    return FaultItem.fromJson(json);
   }
 
   static Future<Map<String, dynamic>> delete(int faultItemId) async {

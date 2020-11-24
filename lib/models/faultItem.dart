@@ -35,4 +35,9 @@ class FaultItem extends Models {
       'active': (active == null || !active) ? 'false' : 'true',
     };
   }
+
+  @override
+  String toString() {
+    return 'FaultItem {id: $id, odooId: $odooId, parent_id: $parent_id, image: $image, active: $active}';
+  }
 }
