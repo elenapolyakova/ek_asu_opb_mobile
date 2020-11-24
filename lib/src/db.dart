@@ -167,12 +167,6 @@ class DBProvider {
   Future<int> update(String tableName, Map<String, dynamic> values) async {
     // Get a reference to the database.
     final Database db = await database;
-
-    print("Values for update");
-    print(values);
-
-    print("Table name : $tableName");
-
     return db.update(
       tableName,
       values,
