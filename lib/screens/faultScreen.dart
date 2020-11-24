@@ -6,39 +6,13 @@ import 'package:flutter/services.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
-import 'package:ek_asu_opb_mobile/screens/faultListScreen.dart';
-//import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import 'package:ek_asu_opb_mobile/src/fileStorage.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'dart:typed_data';
 import 'package:ek_asu_opb_mobile/models/koap.dart';
+
 //import 'package:permission_handler/permission_handler.dart';
-
-/*class Koap {
-  int id;
-  String article; //Статья
-  String paragraph; // Пункт // Параграф
-  String text; //Описание
-  int man_fine_from; //Штраф на должностное лицо. От
-  int man_fine_to; //Штраф на должностное лицо. До
-  int firm_fine_from; //Штраф на юридическое  лицо. От
-  int firm_fine_to; //Штраф на юридическое  лицо. До
-  int firm_stop; //Срок приостановки деятельности, дней
-  int desc; //Дополнительное описание
-
-  Koap(
-      {this.id,
-      this.article,
-      this.paragraph,
-      this.text,
-      this.man_fine_from,
-      this.man_fine_to,
-      this.firm_fine_from,
-      this.firm_fine_to,
-      this.firm_stop,
-      this.desc});
-}*/
 
 class FaultScreen extends StatefulWidget {
   int faultId;
@@ -50,6 +24,13 @@ class FaultScreen extends StatefulWidget {
   FaultScreen(this.faultId, this.checkListItemId, this.push, this.pop);
   @override
   State<FaultScreen> createState() => _FaultScreen();
+}
+
+class FaultFile {
+  int id;
+  File file;
+  String path;
+  FaultFile(this.id, this.file, this.path);
 }
 
 class _FaultScreen extends State<FaultScreen> {
@@ -71,13 +52,17 @@ class _FaultScreen extends State<FaultScreen> {
 
   File _image;
   int _imageIndex;
-  List<File> _imageList = [];
+  List<FaultFile> _imageList = [];
+
+  //List<File> _imageList = [];
+
   // final _picker = ImagePicker();
   // double width;
   // double height;
   // int quality;
 
   List<Asset> _assetList = List<Asset>();
+
 
   @override
   void initState() {
@@ -160,15 +145,35 @@ class _FaultScreen extends State<FaultScreen> {
 
   Future<void> loadImages() async {
     _imageList = _imageList ?? [];
-    if (faultId == 1) {
-      _imageList.insert(0, await loadFileFromAssets("assets/test/1.jpg"));
-      _imageList.insert(0, await loadFileFromAssets("assets/test/2.jpg"));
-      _imageList.insert(0, await loadFileFromAssets("assets/test/3.jpg"));
-      _imageList.insert(0, await loadFileFromAssets("assets/test/4.jpg"));
-      _imageList.insert(0, await loadFileFromAssets("assets/test/5.jpg"));
+    if (![null, -1].contains(faultId)) {
+      String _path = await getPath();
+      _imageList.insert(
+          0,
+          FaultFile(
+              1, await loadFileFromAssets("assets/test/1.jpg", _path), _path));
+      _path = await getPath();
+      _imageList.insert(
+          0,
+          FaultFile(
+              2, await loadFileFromAssets("assets/test/2.jpg", _path), _path));
+      _path = await getPath();
+      _imageList.insert(
+          0,
+          FaultFile(
+              3, await loadFileFromAssets("assets/test/3.jpg", _path), _path));
+      _path = await getPath();
+      _imageList.insert(
+          0,
+          FaultFile(
+              4, await loadFileFromAssets("assets/test/4.jpg", _path), _path));
+      _path = await getPath();
+      _imageList.insert(
+          0,
+          FaultFile(
+              5, await loadFileFromAssets("assets/test/5.jpg", _path), _path));
     }
     if (_imageList.length > 0) {
-      _image = _imageList[0];
+      _image = _imageList[0].file;
       _imageIndex = 0;
     }
     ;
@@ -213,12 +218,6 @@ class _FaultScreen extends State<FaultScreen> {
     if (koapId == null) return null;
     Koap koap = await KoapController.selectById(koapId);
     return koap != null ? await koap.fineName : '';
-
-    /*_koapItems.firstWhere((koap) => koap.id == koapId, orElse: () => null);
-    if (koapItem != null)
-      return (koapItem.article != null ? 'ст. ${koapItem.article}' : '') +
-          (koapItem.paragraph != null ? ' п. ${koapItem.paragraph}' : '');
-    return null;*/
   }
 
   Future<List<dynamic>> onSearch(String template) async {
@@ -271,10 +270,11 @@ class _FaultScreen extends State<FaultScreen> {
         });
         for (var i = 0; i < _assetList.length; i++) {
           ByteData bytes = await _assetList[i].getByteData();
-          File file = await loadFileFromBytes(bytes);
-          _imageList.insert(i, file);
+          String _path = await getPath();
+          File file = await loadFileFromBytes(bytes, _path);
+          _imageList.insert(i, FaultFile(null, file, _path));
         }
-        _image = _imageList[0];
+        _image = _imageList[0].file;
         _imageIndex = 0;
         setState(() {
           showLoadingImage = false;
@@ -640,6 +640,8 @@ class _FaultScreen extends State<FaultScreen> {
     if (result != null && result) {
       bool hasErorr = false;
       Map<String, dynamic> result;
+      FaultFile deletedFile = _imageList[index];
+
       try {
         //  result = await ComGroupController.delete(groupId);
         //  hasErorr = result["code"] < 0;
@@ -649,11 +651,14 @@ class _FaultScreen extends State<FaultScreen> {
         //        errorSnackBar(text: 'Произошла ошибка при удалении'));
         //   return;
         //   }
+
+        //todo delete from device by  deletedFile.path
+        deletedFile.file.delete();
         _imageList.removeAt(index);
         if (index <= _imageIndex && _imageIndex != 0) _imageIndex--;
 
         if (_imageList.length > 0)
-          _image = _imageList[_imageIndex];
+          _image = _imageList[_imageIndex].file;
         else
           _image = null;
 
@@ -898,7 +903,7 @@ class _FaultScreen extends State<FaultScreen> {
                                             (i) => GestureDetector(
                                               // onLongPress: () => deleteImage(i),
                                               onTap: () => setState(() {
-                                                _image = _imageList[i];
+                                                _image = _imageList[i].file;
                                                 _imageIndex = i;
                                               }),
                                               child: Container(
@@ -919,7 +924,7 @@ class _FaultScreen extends State<FaultScreen> {
                                                                   horizontal:
                                                                       5),
                                                   child: Image.file(
-                                                    _imageList[i],
+                                                    _imageList[i].file,
                                                     fit: BoxFit.cover,
                                                   )),
                                             ),

@@ -60,7 +60,7 @@ class _ISPScreen extends State<ISPScreen> {
           // color: 'green'//Theme.of(context).primaryColor.toString(),
         ),
         children: [
-            Node(
+          Node(
               label: 'Нормативно-правовые акты',
               key: 'waste',
               expanded: false,
@@ -75,7 +75,7 @@ class _ISPScreen extends State<ISPScreen> {
                     key: 'FL1',
                     icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
               ]),
-              Node(
+          Node(
               label: 'Распорядительные документы',
               key: 'water',
               expanded: false,
@@ -90,7 +90,6 @@ class _ISPScreen extends State<ISPScreen> {
                     key: 'letter1',
                     icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
               ]),
-        
           Node(
               label: 'Рабочая документация',
               key: 'docs_work',
@@ -109,12 +108,11 @@ class _ISPScreen extends State<ISPScreen> {
                     label: 'Руководство по инсталяции.pdf',
                     key: 'install_manual',
                     icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
-                 Node(
+                Node(
                     label: 'Программа и методика испытаний.pdf',
                     key: 'test_manual',
                     icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
               ]),
-          
         ],
       )
     ];
@@ -156,28 +154,10 @@ class _ISPScreen extends State<ISPScreen> {
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
-        appBar: new AppBar(
-            title: Container(
-                child: Row(children: [
-              Container(
-                child: TextIcon(
-                    icon: Icons.account_circle_rounded,
-                    text: '${_userInfo != null ? _userInfo.display_name : ""}',
-                    onTap: null,
-                    color: Theme.of(context).primaryColorLight),
-              ),
-              Expanded(child: Center(child: HomeIcon()))
-            ])),
-            backgroundColor: Theme.of(context).primaryColorDark,
-            actions: <Widget>[
-              Padding(
-                  padding: EdgeInsets.only(right: 26),
-                  child: TextIcon(
-                      icon: Icons.exit_to_app,
-                      text: 'Выход',
-                      onTap: LogOut,
-                      color: Theme.of(context).buttonColor)),
-            ]),
+        appBar: PreferredSize(
+            preferredSize: Size.fromHeight(100),
+            child:
+                MyAppBar(showIsp: false, userInfo: _userInfo, syncTask: null)),
         body: Container(
             decoration: BoxDecoration(
                 image: DecorationImage(

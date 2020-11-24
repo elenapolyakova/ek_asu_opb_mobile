@@ -1,6 +1,7 @@
-import 'dart:ffi';
 import 'dart:ui';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
+import 'package:ek_asu_opb_mobile/models/models.dart';
+import 'package:ek_asu_opb_mobile/utils/authenticate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ek_asu_opb_mobile/components/flutter_rounded_date_picker/rounded_picker.dart';
@@ -18,9 +19,17 @@ class TextIcon extends StatefulWidget {
   Function onTap;
   Color color;
   double margin;
+  double fontSize;
+  double iconSize;
 
   TextIcon(
-      {this.icon, this.text = "", this.onTap, this.color, this.margin = 13.0});
+      {this.icon,
+      this.text = "",
+      this.onTap,
+      this.color,
+      this.margin = 13.0,
+      this.fontSize = 16.0,
+      this.iconSize = 24.0});
   @override
   State<TextIcon> createState() => _TextIcon();
 }
@@ -34,15 +43,15 @@ class _TextIcon extends State<TextIcon> {
             margin: EdgeInsets.symmetric(horizontal: widget.margin),
             child: Row(children: <Widget>[
               IconButton(
+                  iconSize: widget.iconSize,
                   padding: EdgeInsets.all(0),
                   icon: Icon(widget.icon), //Icons.logout),
                   color: widget.color,
                   onPressed: widget.onTap),
               new Text(
                 widget.text,
-                style: TextStyle(
-                  color: widget.color,
-                ),
+                style:
+                    TextStyle(color: widget.color, fontSize: widget.fontSize),
               )
             ])));
   }
@@ -303,7 +312,8 @@ class MyButton extends StatelessWidget {
   }
 }
 
-Future<bool> showConfirmDialog(String text, BuildContext parentContext) {
+Future<bool> showConfirmDialog(String text, BuildContext parentContext,
+    {isDelete = true}) {
   return showDialog<bool>(
       context: parentContext,
       barrierDismissible: true,
@@ -323,7 +333,7 @@ Future<bool> showConfirmDialog(String text, BuildContext parentContext) {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           MyButton(
-                              text: 'принять',
+                              text: isDelete ? 'удалить' : 'принять',
                               parentContext: parentContext,
                               onPress: () {
                                 Navigator.pop<bool>(context, true);
@@ -1259,7 +1269,7 @@ class MyRichText extends StatelessWidget {
 
     TextStyle textStyleValue = TextStyle(
         fontWeight: FontWeight.w800,
-       // fontStyle: FontStyle.normal,
+        // fontStyle: FontStyle.normal,
         fontSize: 20,
         color: Theme.of(context).primaryColor);
 
@@ -1369,4 +1379,97 @@ TreeViewTheme getTreeViewTheme(BuildContext context) {
         background: Colors.transparent,
         brightness: Theme.of(context).brightness),
   );
+}
+
+class MyAppBar extends StatefulWidget {
+  bool showBack;
+  UserInfo userInfo;
+  Function syncTask;
+  bool showIsp;
+
+  MyAppBar({this.showBack = true, this.userInfo, this.syncTask, this.showIsp = true});
+
+  @override
+  State<MyAppBar> createState() => _MyAppBar();
+}
+
+class _MyAppBar extends State<MyAppBar> {
+  @override
+  Widget build(BuildContext context) {
+    return new AppBar(
+        toolbarHeight: 100,
+        leadingWidth: 100,
+        centerTitle: false,
+        leading: Column(children: [
+          TextIcon(
+              icon: Icons.message,
+              text: 'Чат',
+              onTap: () => null,
+              margin: 0,
+              color: Theme.of(context).primaryColorLight),
+          widget.showBack
+              ? TextIcon(
+                  icon: Icons.arrow_back_ios,
+                  text: 'Назад',
+                  onTap: () => Navigator.pop(context),
+                  margin: 0,
+                  color: Theme.of(context).primaryColorLight)
+              : Text('')
+        ]),
+        title: Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+          Expanded(child: Center(child: HomeIcon())),
+        ]),
+        automaticallyImplyLeading: false,
+        backgroundColor: Theme.of(context).primaryColorDark,
+        actions: <Widget>[
+          Padding(
+              padding: EdgeInsets.only(right: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  TextIcon(
+                    icon: Icons.account_circle_rounded,
+                    text: widget.userInfo != null
+                        ? widget.userInfo.display_name
+                        : "",
+                    margin: 0,
+                    onTap: () => {},
+                    color: Theme.of(context).primaryColorLight,
+                    fontSize: 20,
+                    iconSize: 30,
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                          child: Center(
+                        child: widget.syncTask != null
+                            ? TextIcon(
+                                icon: Icons.cached,
+                                text: 'Синхронизировать',
+                                onTap: widget.syncTask,
+                                margin: 15,
+                                color: Theme.of(context).primaryColorLight)
+                            : Text(''),
+                      )),
+                      Container(
+                          child: Center(
+                        child: widget.showIsp ? TextIcon(
+                            icon: Icons.plagiarism,
+                            text: 'ИСП',
+                            margin: 15,
+                            onTap: () => Navigator.pushNamed(context, '/ISP'),
+                            color: Theme.of(context).primaryColorLight): Text(''),
+                      )),
+                      TextIcon(
+                          icon: Icons.exit_to_app,
+                          text: 'Выход',
+                          margin: 0,
+                          onTap: () => LogOut(context),
+                          color: Theme.of(context).primaryColorLight),
+                    ],
+                  ),
+                ],
+              ))
+        ]);
+  }
 }

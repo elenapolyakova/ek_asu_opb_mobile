@@ -176,45 +176,13 @@ class _HomeScreen extends State<HomeScreen> {
                 height: double.infinity, width: double.infinity),
           )
         : new Scaffold(
-            appBar: new AppBar(
-                leading:    arguments != null && !arguments['first'] ? 
-                IconButton(icon: Icon(Icons.arrow_back_ios),
-                    onPressed: ()=>Navigator.pop(context),
-                    color: Theme.of(context).primaryColorLight) : null,
-                title: TextIcon(
-                    icon: Icons.account_circle_rounded,
-                    text: '${_userInfo != null ? _userInfo.display_name : ""}',
-                    onTap: ()=>{},
-                    color: Theme.of(context).primaryColorLight),
-                automaticallyImplyLeading: false,
-                backgroundColor: Theme.of(context).primaryColorDark,
-                actions: <Widget>[
-                  TextIcon(
-                      icon: Icons.cached,
-                      text: 'Синхронизировать',
-                      onTap: syncTask,
-                      color: Theme.of(context).primaryColorLight),
-                  TextIcon(
-                      icon: Icons.plagiarism,
-                      text: 'ИСП',
-                      onTap: toISPScreen,
-                      color: Theme.of(context).primaryColorLight),
-                  Padding(
-                      padding: EdgeInsets.only(right: 26),
-                      child: TextIcon(
-                          icon: Icons.exit_to_app,
-                          text: 'Выход',
-                          onTap: LogOut,
-                          color: Theme.of(context).buttonColor)),
-                ]),
-            /*floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => UrlLauncher.launch("tel://$_supportPhoneNumber"),
-          label: Text('Служба поддержки'),
-          icon: Icon(Icons.phone),
-          backgroundColor: Colors.green,
-        ),*/
-
-            body: getBodyContent(),
+            appBar: PreferredSize(
+                preferredSize: Size.fromHeight(100),
+                child: MyAppBar(
+                    showBack: (arguments != null && !arguments['first']),
+                    userInfo: _userInfo,
+                    syncTask: syncTask)),
+          body: getBodyContent(),
             bottomNavigationBar: (_navigationMenu.length > 1)
                 ? BottomNavigationBar(
                     type: BottomNavigationBarType.fixed,

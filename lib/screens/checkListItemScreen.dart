@@ -7,43 +7,6 @@ import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/models/checkListItem.dart';
 
-/*enum STATUS { template, success, fault }
-List<Map<String, dynamic>> statusSelection = [
-  {
-    'id': 1,
-    'name': 'Не рассматривался',
-    'value': STATUS.template,
-    'color': Colors.grey.shade200
-  },
-  {
-    'id': 2,
-    'name': 'Пройдено без замечаний',
-    'value': STATUS.success,
-    'color': Colors.green.shade200
-  },
-  {
-    'id': 3,
-    'name': 'Есть нарушения',
-    'value': STATUS.fault,
-    'color': Colors.red.shade200
-  }
-];
-
-getStatusById(int id) {
-  Map<String, dynamic> statusItem = statusSelection
-      .firstWhere((status) => status['id'] == id, orElse: () => null);
-  if (statusItem != null) return statusItem["value"];
-  return null;
-}
-
-getColorByStatus(STATUS status) {
-  Map<String, dynamic> statusItem = statusSelection
-      .firstWhere((item) => item['value'] == status, orElse: () => null);
-  if (statusItem != null) return statusItem["color"];
-  return Colors.grey.shade200;
-}
-*/
-
 class CheckListItemScreen extends StatefulWidget {
   int checkListId;
   String checkListName;
@@ -73,9 +36,10 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
   ];
 
   List<Map<String, dynamic>> checkListItemHeader = [
-    {'text': 'Вопрос', 'flex': 5.0},
-    {'text': 'Результат', 'flex': 3.0},
-    {'text': 'Комментарий', 'flex': 6.0},
+    {'text': 'Вопрос', 'flex': 10.0},
+    {'text': 'Результат', 'flex': 6.0},
+    {'text': 'Комментарий', 'flex': 12.0},
+    {'text': 'Количество нарушений', 'flex': 3.0},
   ];
 
   List<Map<String, dynamic>> choices = [
@@ -123,16 +87,6 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
         _items.firstWhere((item) => item.id == checkListItemId);
 
     CheckListItem itemCopy = CheckListItem.fromJson(checkListItem.toJson());
-    /*CheckListItem(
-        id: checkListItem.id,
-        odooId: checkListItem.odooId,
-        parent_id: checkListItem.parent_id,
-        name: checkListItem.name,
-        question: checkListItem.question,
-        result: checkListItem.result,
-        description: checkListItem.description,
-        base_id: checkListItem.base_id,
-        active: checkListItem.active);*/
 
     bool result = await showCheckListItemDialog(itemCopy, setState);
     if (result != null && result) {
@@ -153,8 +107,8 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
       bool hasErorr = false;
       Map<String, dynamic> result;
       try {
-          result = await CheckListItemController.delete(checkListItemId);
-          hasErorr = result["code"] < 0;
+        result = await CheckListItemController.delete(checkListItemId);
+        hasErorr = result["code"] < 0;
 
         if (hasErorr) {
           Scaffold.of(context).showSnackBar(
@@ -346,11 +300,11 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
       Map<String, dynamic> result;
       try {
         if (checkListItem.id == null) {
-           result = await CheckListItemController.create(checkListItem);
+          result = await CheckListItemController.create(checkListItem);
         } else {
           result = await CheckListItemController.update(checkListItem);
         }
-         hasErorr = result["code"] < 0;
+        hasErorr = result["code"] < 0;
 
         if (hasErorr) {
           Navigator.pop<bool>(context, false);
@@ -406,15 +360,20 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
     int rowIndex = 0;
     rows.forEach((row) {
       rowIndex++;
+      Color color =
+          (row.faults_count != null && row.faults_count > 0) ? Color(0x44E57373) : Color(0x44ADB439);
       TableRow tableRow = TableRow(
           decoration: BoxDecoration(
-              color: (rowIndex % 2 == 0
+              color:
+                  color /*(rowIndex % 2 == 0
                   ? Theme.of(context).shadowColor
-                  : Colors.white)),
+                  : Colors.white)*/
+              ),
           children: [
             getRowCell(row.question, row.id, 0),
             getRowCell(row.result, row.id, 1),
             getRowCell(row.description, row.id, 2),
+            getRowCell(row.faults_count!= null ? row.faults_count.toString() : '', row.id, 3),
           ]);
       tableRows.add(tableRow);
     });

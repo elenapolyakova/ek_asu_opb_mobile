@@ -1,8 +1,3 @@
-import 'dart:io';
-import 'dart:typed_data';
-import 'package:flutter/services.dart' show rootBundle;
-import 'package:path_provider/path_provider.dart';
-
 //not for bool field!
 String getStr(dynamic source) {
   if (source is bool) if (!source) return "";
@@ -109,23 +104,3 @@ String emailValidator(String value) {
       ? "Неверный e-mail"
       : null;
 }
-
-Future<File> loadFileFromAssets(String key) async {
-  var bytes = await rootBundle.load(key);
-  return loadFileFromBytes(bytes);
- /* String tempPath = (await getTemporaryDirectory()).path;
-  File file = File('$tempPath/file_${DateTime.now().millisecondsSinceEpoch}');
-  await file.writeAsBytes(
-      bytes.buffer.asInt8List(bytes.offsetInBytes, bytes.lengthInBytes));
-  return file;*/
-}
-
-Future<File> loadFileFromBytes (ByteData bytes) async {
-
-  String tempPath = (await getTemporaryDirectory()).path;
-  File file = File('$tempPath/file_${DateTime.now().millisecondsSinceEpoch}');
-  await file.writeAsBytes(
-      bytes.buffer.asInt8List(bytes.offsetInBytes, bytes.lengthInBytes));
-  return file;
-}
-

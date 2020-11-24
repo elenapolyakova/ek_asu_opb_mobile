@@ -128,49 +128,9 @@ class _CheckScreen extends State<CheckScreen> {
                 height: double.infinity, width: double.infinity),
           )
         : new Scaffold(
-            appBar: new AppBar(
-                leading: IconButton(
-                    icon: Icon(Icons.arrow_back_ios),
-                    onPressed: () => Navigator.pop(context),
-                    color: Theme.of(context).primaryColorLight),
-                title: Container(
-                    child: Row(children: [
-                  Container(
-                    child: TextIcon(
-                        icon: Icons.account_circle_rounded,
-                        text:
-                            '${_userInfo != null ? _userInfo.display_name : ""}',
-                        onTap: () => {},
-                        color: Theme.of(context).primaryColorLight),
-                  ),
-                  Expanded(child: Center(child: HomeIcon()))
-                ])),
-                backgroundColor: Theme.of(context).primaryColorDark,
-                actions: <Widget>[
-                  TextIcon(
-                      icon: Icons.cached,
-                      text: 'Синхронизировать',
-                      onTap: syncTask,
-                      color: Theme.of(context).primaryColorLight),
-                  TextIcon(
-                      icon: Icons.plagiarism,
-                      text: 'ИСП',
-                      onTap: toISPScreen,
-                      color: Theme.of(context).primaryColorLight),
-                  Padding(
-                      padding: EdgeInsets.only(right: 26),
-                      child: TextIcon(
-                          icon: Icons.exit_to_app,
-                          text: 'Выход',
-                          onTap: LogOut,
-                          color: Theme.of(context).buttonColor)),
-                ]),
-            /*floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => UrlLauncher.launch("tel://$_supportPhoneNumber"),
-          label: Text('Служба поддержки'),
-          icon: Icon(Icons.phone),
-          backgroundColor: Colors.green,
-        ),*/
+            appBar:  PreferredSize(
+                preferredSize: Size.fromHeight(100),
+                child: MyAppBar(userInfo: _userInfo, syncTask: syncTask)),
 
             body: Column(children: [
               getBodyContent(),

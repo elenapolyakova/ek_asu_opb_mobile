@@ -92,7 +92,6 @@ class _InspectionScreen extends State<InspectionScreen> {
   }
 
   void showError() {
-      
     setState(() {
       errorText = 'Сначала сохраните реквизиты плана проверок';
     });
@@ -112,14 +111,12 @@ class _InspectionScreen extends State<InspectionScreen> {
     }
   }
 
-
-
   Widget getBodyContent() {
     String screenKey = _navigationMenu[_selectedIndex]["key"];
     if (screenList[screenKey] != null) return screenList[screenKey];
     switch (screenKey) {
       case 'inspection':
-       screenList[screenKey] =
+        screenList[screenKey] =
             screens.InspectionPlanScreen(context, planItem, setCheckPlanId);
         break;
       case "map":
@@ -129,7 +126,7 @@ class _InspectionScreen extends State<InspectionScreen> {
         screenList[screenKey] = screens.ReportScreen();
         break;
       case "checkList":
-      //  screenList[screenKey] = screens.CheckListScreen(null);
+        //  screenList[screenKey] = screens.CheckListScreen(null);
         break;
       case "commission":
         screenList[screenKey] = screens.CommissionScreen(context, _checkPlanId);
@@ -154,52 +151,12 @@ class _InspectionScreen extends State<InspectionScreen> {
                 height: double.infinity, width: double.infinity),
           )
         : new Scaffold(
-            appBar: new AppBar(
-                leading: IconButton(icon: Icon(Icons.arrow_back_ios),
-                    onPressed: ()=>Navigator.pop(context),
-                    color: Theme.of(context).primaryColorLight),
-
-                title: Container (
-                  child: Row (children: [
-                    Container(child: TextIcon(
-                    icon: Icons.account_circle_rounded,
-                    text: '${_userInfo != null ? _userInfo.display_name : ""}',
-                    onTap: ()=>{},
-                    color: Theme.of(context).primaryColorLight),),
-                  Expanded(child: Center(child: HomeIcon()))
-                  ])),
-                  automaticallyImplyLeading: true,
-                backgroundColor: Theme.of(context).primaryColorDark,
-                
-                actions: <Widget>[
-                  TextIcon(
-                      icon: Icons.cached,
-                      text: 'Синхронизировать',
-                      onTap: syncTask,
-                      color: Theme.of(context).primaryColorLight),
-                  TextIcon(
-                      icon: Icons.plagiarism,
-                      text: 'ИСП',
-                      onTap: toISPScreen,
-                      color: Theme.of(context).primaryColorLight),
-                  Padding(
-                      padding: EdgeInsets.only(right: 26),
-                      child: TextIcon(
-                          icon: Icons.exit_to_app,
-                          text: 'Выход',
-                          onTap: LogOut,
-                          color: Theme.of(context).buttonColor)),
-                ]),
-            /*floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => UrlLauncher.launch("tel://$_supportPhoneNumber"),
-          label: Text('Служба поддержки'),
-          icon: Icon(Icons.phone),
-          backgroundColor: Colors.green,
-        ),*/
-
+            appBar: PreferredSize(
+                preferredSize: Size.fromHeight(100),
+                child: MyAppBar(userInfo: _userInfo, syncTask: syncTask)),
             body: Column(children: [
               getBodyContent(),
-            //  if (errorText != '')
+              //  if (errorText != '')
               Container(
                   height: 20,
                   width: double.infinity,
