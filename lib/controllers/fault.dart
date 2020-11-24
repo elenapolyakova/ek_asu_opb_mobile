@@ -150,6 +150,7 @@ class FaultController extends Controllers {
           // if not null, delete from db and internal memory
           if (item != null) {
             var deleteResp = await FaultItemController.delete(faultItemId);
+            print("print delete resp $deleteResp");
             if (deleteResp["code"] > 0) {
               deletedFaultItemsIds.add(deleteResp["id"]);
               await File(item.image).delete();
