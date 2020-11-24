@@ -49,4 +49,30 @@ class FaultItemController extends Controllers {
     print(faultItems);
     return faultItems;
   }
+
+  static Future<Map<String, dynamic>> delete(int faultItemId) async {
+    Map<String, dynamic> res = {
+      'code': null,
+      'message': null,
+      'id': null,
+    };
+
+    print("Delete() FaultItem");
+    await DBProvider.db.update(
+        _tableName, {'id': faultItemId, 'active': 'false'}).then((value) async {
+      res['code'] = 1;
+      res['id'] = value;
+    }).catchError((err) {
+      res['code'] = -3;
+      res['message'] = 'Error deleting from $_tableName';
+    });
+
+    res = {
+      'code': 1,
+      'message': 'Успешно удалено',
+      'id': 0,
+    };
+
+    return res;
+  }
 }
