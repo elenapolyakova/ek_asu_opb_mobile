@@ -1,5 +1,5 @@
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
-import "package:ek_asu_opb_mobile/models/checkList.dart";
+import "package:ek_asu_opb_mobile/controllers/faultItem.dart";
 import 'package:ek_asu_opb_mobile/models/fault.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
@@ -22,10 +22,17 @@ class FaultController extends Controllers {
     };
 
     print("Create() Fault");
+    print("Fault data $fault");
+    print(fault.toJson());
     Map<String, dynamic> json = fault.toJson();
 
-    // json["base_id"] = null;
     json.remove("id");
+
+    // From this copy we will create db records in fault_item table
+    var faultCopy = Map.from(json);
+
+    json.remove('create');
+    json.remove('delete');
 
     // Warning only for local db!!!
     // When enable loading from odoo, delete this code
@@ -34,9 +41,12 @@ class FaultController extends Controllers {
     await DBProvider.db.insert(_tableName, json).then((resId) {
       res['code'] = 1;
       res['id'] = resId;
+
+      // Using res id for create assigned fault_item with parent_id = resId
+      // TO DO
     }).catchError((err) {
       res['code'] = -3;
-      res['message'] = 'Error create checkListItem into $_tableName';
+      res['message'] = 'Error create Fault into $_tableName';
     });
     DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
     return res;
@@ -56,8 +66,11 @@ class FaultController extends Controllers {
       where: "parent_id = ? and active = 'true'",
       whereArgs: [parentId],
     );
+
     if (queryRes == null || queryRes.length == 0) return [];
     List<Fault> faults = queryRes.map((e) => Fault.fromJson(e)).toList();
+    print("Fault Select()");
+    print(faults);
     return faults;
   }
 
@@ -69,7 +82,6 @@ class FaultController extends Controllers {
       'id': null,
     };
 
-    print("Update() Fault");
     await DBProvider.db
         .update(_tableName, fault.prepareForUpdate())
         .then((resId) async {
@@ -104,16 +116,12 @@ class FaultController extends Controllers {
     });
 
     // TO DO ASSIGNED ITEMS
-    // var assignedItems = await FaultItemController.select(faultId);
-    // if (assignedItems.length == 0) {
-    //   res = {
-    //     'code': -1,
-    //     'message': 'Не найдены связанные фотографии к нарушению id: $faultId',
-    //     'id': null,
-    //   };
-
-    //   return res;
-    // }
+    var assignedItems = await FaultItemController.select(faultId);
+    if (assignedItems.length == 0) {
+      // Some logging
+      print("Delete() Fault");
+      print("Not found assigned FaultItems to fault with id: $faultId");
+    }
     // try {
     //   print("Try to delete assigned FaultItems");
     //   for (var q in assignedItems) {
@@ -139,5 +147,15 @@ class FaultController extends Controllers {
     };
 
     return res;
+  }
+
+  static Future<int> getFaultsCount(int parentId) async {
+    if (parentId == null) return null;
+
+    var response = await DBProvider.db.executeQuery(
+        "SELECT COUNT(id) FROM $_tableName WHERE parent_id=$parentId and active='true'");
+
+    int count = response[0]["COUNT(id)"];
+    return count;
   }
 }

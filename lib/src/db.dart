@@ -51,14 +51,13 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS check_list(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, base_id INTEGER, is_base TEXT, name TEXT, is_active TEXT, type INTEGER, active TEXT)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS check_list_item(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, base_id INTEGER, name TEXT, question TEXT, result TEXT, description TEXT, active TEXT, faults_count INTEGER)");
+            "CREATE TABLE IF NOT EXISTS check_list_item(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, base_id INTEGER, name TEXT, question TEXT, result TEXT, description TEXT, active TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS fault(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, name TEXT, desc TEXT, fine_desc TEXT, fine INTEGER, koap_id INTEGER, date TEXT, date_done TEXT, desc_done TEXT, active TEXT, lat REAL, lon REAL, plan_fix_date TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS fault_item(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, image TEXT, active TEXT)");
-          await db.execute(
+        await db.execute(
             "CREATE TABLE IF NOT EXISTS koap(id INTEGER PRIMARY KEY, article TEXT, paragraph TEXT, text TEXT, man_fine_from INTEGER, man_fine_to INTEGER, firm_fine_from INTEGER, firm_fine_to INTEGER, firm_stop INTEGER, desc TEXT, search_field TEXT)");
-
       },
       onUpgrade: (db, oldVersion, version) async {
         switch (oldVersion) {
@@ -168,12 +167,6 @@ class DBProvider {
   Future<int> update(String tableName, Map<String, dynamic> values) async {
     // Get a reference to the database.
     final Database db = await database;
-
-    print("Values for update");
-    print(values);
-
-    print("Table name : $tableName");
-
     return db.update(
       tableName,
       values,
