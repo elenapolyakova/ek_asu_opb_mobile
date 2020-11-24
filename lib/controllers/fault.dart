@@ -148,4 +148,14 @@ class FaultController extends Controllers {
 
     return res;
   }
+
+  static Future<int> getFaultsCount(int parentId) async {
+    if (parentId == null) return null;
+
+    var response = await DBProvider.db.executeQuery(
+        "SELECT COUNT(id) FROM $_tableName WHERE parent_id=$parentId and active='true'");
+
+    int count = response[0]["COUNT(id)"];
+    return count;
+  }
 }
