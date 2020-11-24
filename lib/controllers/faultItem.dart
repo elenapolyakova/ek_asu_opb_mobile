@@ -12,25 +12,28 @@ class FaultItemController extends Controllers {
       'id': null,
     };
 
-    print("Create() FaultItem");
-    print("Fault data $faultItem");
-    print(faultItem.toJson());
-    Map<String, dynamic> json = faultItem.toJson();
+    if (faultItem.id == null) {
+      print("Create() FaultItem");
+      print("Fault data $faultItem");
 
-    json.remove("id");
-    // Warning only for local db!!!
-    // When enable loading from odoo, delete this code
-    json["odooId"] = null;
+      Map<String, dynamic> json = faultItem.toJson();
 
-    await DBProvider.db.insert(_tableName, json).then((resId) {
-      res['code'] = 1;
-      res['id'] = resId;
-    }).catchError((err) {
-      res['code'] = -3;
-      res['message'] = 'Error create FaultItem into $_tableName';
-    });
-    DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
-    return res;
+      json.remove("id");
+      // Warning only for local db!!!
+      // When enable loading from odoo, delete this code
+      json["odooId"] = null;
+
+      await DBProvider.db.insert(_tableName, json).then((resId) {
+        res['code'] = 1;
+        res['id'] = resId;
+      }).catchError((err) {
+        res['code'] = -3;
+        res['message'] = 'Error create FaultItem into $_tableName';
+      });
+      DBProvider.db
+          .insert('log', {'date': nowStr(), 'message': res.toString()});
+      return res;
+    }
   }
 
   // Select all fault items by parent_id(by fault Id)
@@ -48,6 +51,12 @@ class FaultItemController extends Controllers {
     print("FaultItems Select()");
     print(faultItems);
     return faultItems;
+  }
+
+  static Future<FaultItem> selectById(int id) async {
+    if (id == null) return null;
+    var json = await DBProvider.db.selectById(_tableName, id);
+    return FaultItem.fromJson(json);
   }
 
   static Future<Map<String, dynamic>> delete(int faultItemId) async {
