@@ -1,23 +1,21 @@
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import 'package:ek_asu_opb_mobile/controllers/fault.dart';
 import "package:ek_asu_opb_mobile/models/checkListItem.dart";
-import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import "package:ek_asu_opb_mobile/controllers/syn.dart";
 
 class CheckListItemController extends Controllers {
   static String _tableName = "check_list_item";
-  // Used for insert primary data from odoo!
+
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     CheckListItem checkListItem = CheckListItem.fromJson(json);
-    print("CheckListItem Insert() to db");
-    print(checkListItem.toJson());
 
     return await DBProvider.db.insert(_tableName, checkListItem.toJson());
   }
 
   // Used for creation of new checkListItem
-  static Future<Map<String, dynamic>> create(
-      CheckListItem checkListItem) async {
+  static Future<Map<String, dynamic>> create(CheckListItem checkListItem,
+      [bool saveOdooId = false]) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
@@ -25,22 +23,24 @@ class CheckListItemController extends Controllers {
     };
 
     print("Create() CheckListItem");
-    Map<String, dynamic> json = checkListItem.toJson();
-    // Set null by default, as it's new question and it doesn't have base question id, which comes from
-    json["base_id"] = null;
-    json.remove("id");
-
-    // Warning only for local db!!!
-    // When enable loading from odoo, delete this code
-    json["odooId"] = null;
+    print(checkListItem);
+    Map<String, dynamic> json = checkListItem.toJson(!saveOdooId);
+    if (saveOdooId) json.remove("id");
 
     await DBProvider.db.insert(_tableName, json).then((resId) {
       res['code'] = 1;
       res['id'] = resId;
+      if (!saveOdooId) {
+        return SynController.create(_tableName, resId).catchError((err) {
+          res['code'] = -2;
+          res['message'] = 'Error updating syn';
+        });
+      }
     }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error create checkListItem into $_tableName';
     });
+
     DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
     return res;
   }
