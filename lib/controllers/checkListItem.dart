@@ -87,18 +87,27 @@ class CheckListItemController extends Controllers {
       'id': null,
     };
 
-    print("Update() CheckListItem");
+    print("Update() CheckListItem!");
+
+    Future<int> odooId = selectOdooId(checkListItem.id);
+    print("Odoo $odooId");
     await DBProvider.db
         .update(_tableName, checkListItem.prepareForUpdate())
         .then((resId) async {
-      print("RES ID $resId");
       res['code'] = 1;
       res['id'] = resId;
+
+      return SynController.edit(_tableName, resId, await odooId)
+          .catchError((err) {
+        res['code'] = -2;
+        res['message'] = 'Error updating syn';
+      });
     }).catchError((err) {
       res["code"] = -3;
       res["message"] = "Error updating $_tableName";
     });
 
+    print("Update RES $res");
     DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
     return res;
   }
@@ -110,10 +119,19 @@ class CheckListItemController extends Controllers {
       'id': null,
     };
     print("Delete() CheckListItem");
+
+    Future<int> odooId = selectOdooId(id);
+    print("Odoo $odooId");
+
     await DBProvider.db
         .update(_tableName, {'id': id, 'active': 'false'}).then((value) async {
       res['code'] = 1;
       res["id"] = value;
+      return SynController.delete(_tableName, id, await odooId)
+          .catchError((err) {
+        res['code'] = -2;
+        res['message'] = 'Error updating syn';
+      });
     }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error deleting from $_tableName';
@@ -146,5 +164,13 @@ class CheckListItemController extends Controllers {
     DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
 
     return res;
+  }
+
+  static Future<int> selectOdooId(int id) async {
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(_tableName,
+        columns: ['odoo_id'], where: "id = ?", whereArgs: [id]);
+    if (queryRes == null || queryRes.length == 0)
+      throw 'No record of table $_tableName with id=$id exist.';
+    return queryRes[0]['odoo_id'];
   }
 }
