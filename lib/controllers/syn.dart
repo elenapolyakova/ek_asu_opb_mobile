@@ -169,7 +169,17 @@ class SynController extends Controllers {
     List<Map<String, dynamic>> records = await DBProvider.db
         .select(syn.localTableName, where: 'id = ?', whereArgs: [syn.recordId]);
     // if (records.length == 0 && syn.method == 'unlink') {}
-    Map<String, dynamic> record = Map.from(records.single);
+    if (records.length != 1) {
+      String error =
+          "There is no record of table ${syn.localTableName} with id=${syn.recordId}";
+      print(error);
+      await DBProvider.db.update(_tableName, {
+        'id': syn.id,
+        'error': error,
+      });
+      return false;
+    }
+    Map<String, dynamic> record = Map.from(records[0]);
 
     List<dynamic> args = [];
 
