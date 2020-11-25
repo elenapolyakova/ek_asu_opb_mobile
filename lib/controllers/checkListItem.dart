@@ -1,5 +1,7 @@
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
+import 'package:ek_asu_opb_mobile/controllers/fault.dart';
 import "package:ek_asu_opb_mobile/models/checkListItem.dart";
+import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class CheckListItemController extends Controllers {
@@ -112,11 +114,34 @@ class CheckListItemController extends Controllers {
         .update(_tableName, {'id': id, 'active': 'false'}).then((value) async {
       res['code'] = 1;
       res["id"] = value;
-      print("Delete value $value");
     }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error deleting from $_tableName';
     });
+
+    var assignedFaults = await FaultController.select(id);
+    print("Assigned faults to checkList $assignedFaults");
+
+    if (assignedFaults.length > 0) {
+      for (var fault in assignedFaults) {
+        try {
+          var deleteResp = await FaultController.delete(fault.id);
+          print("Delete Resp $deleteResp");
+        } catch (e) {
+          print(
+              "Delete() Fault. Error while deleting assigned fault to CheckListItem id: $id");
+          res['code'] = -3;
+          res['message'] =
+              'Ошибка при удалении связанных нарушений к чек-листу';
+
+          return res;
+        }
+      }
+    }
+    // Make success response
+    res['code'] = 1;
+    res['message'] = 'Данные успешно удалены';
+    res['id'] = 0;
 
     DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
 
