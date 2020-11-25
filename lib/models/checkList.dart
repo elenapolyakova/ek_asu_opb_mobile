@@ -78,6 +78,13 @@ class CheckListWork extends Models {
     return res;
   }
 
+  Map<String, dynamic> prepareForUpdate() {
+    return {
+      'id': id,
+      'is_active': is_active,
+    };
+  }
+
   @override
   String toString() {
     return 'CheckListWork{id: $id, odooId: $odoo_id, parent_id: $parent_id, name: $name, type: $type, active: $active, is_base: $is_base, is_active: $is_active }';
