@@ -2,6 +2,7 @@ import 'package:ek_asu_opb_mobile/controllers/checkListItem.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import "package:ek_asu_opb_mobile/models/checkList.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import "package:ek_asu_opb_mobile/controllers/syn.dart";
 
 class CheckListController extends Controllers {
   static String _tableName = "check_list";
@@ -9,9 +10,41 @@ class CheckListController extends Controllers {
     CheckListWork checkList = CheckListWork.fromJson(json);
 
     print("CheckList Insert() to DB");
-    print(checkList.toJson());
+    print(checkList);
 
     return await DBProvider.db.insert(_tableName, checkList.toJson());
+  }
+
+  static Future<Map<String, dynamic>> create(CheckListWork checkList,
+      [bool saveOdooId = false]) async {
+    Map<String, dynamic> res = {
+      'code': null,
+      'message': null,
+      'id': null,
+    };
+
+    print("Create() checkList");
+    print(checkList);
+
+    Map<String, dynamic> json = checkList.toJson(!saveOdooId);
+    if (saveOdooId) json.remove("id");
+
+    await DBProvider.db.insert(_tableName, json).then((resId) {
+      res['code'] = 1;
+      res['id'] = resId;
+      if (!saveOdooId) {
+        return SynController.create(_tableName, resId).catchError((err) {
+          res['code'] = -2;
+          res['message'] = 'Error updating syn';
+        });
+      }
+    }).catchError((err) {
+      res['code'] = -3;
+      res['message'] = 'Error create checkList into $_tableName';
+    });
+
+    DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
+    return res;
   }
 
   static Future<List<Map<String, dynamic>>> selectAll() async {
@@ -48,36 +81,34 @@ class CheckListController extends Controllers {
     if (ids.length > 0) {
       for (var item in ids) {
         // item[id] is used for searching assigned questions for reinserting them as not base
-        var response = await CheckListController.selectById(item["id"]);
-        var checkList = response.toJson();
+        var checkList = await CheckListController.selectById(item["id"]);
+        // var checkList = response.toJson();
 
-        checkList.remove("id");
-
-        checkList["odooId"] = null;
-        checkList["is_base"] = false;
-        checkList["parent_id"] = parentId;
-        checkList["base_id"] = item["id"];
-        checkList["child_ids"] = "";
+        // checkList.remove("id");
+        // checkList["odooId"] = null;
+        checkList.is_base = false;
+        checkList.parent_id = parentId;
+        checkList.base_id = item["id"];
 
         // New id for work check list
-        var workCheckLstId = await CheckListController.insert(checkList);
+        var createResp = await CheckListController.create(checkList);
+        if (createResp["code"] > 0) {
+          var checkListId = createResp["id"];
+          var questions =
+              await CheckListItemController.getCheckListItemsByParentId(
+                  item["id"]);
+          if (questions.length > 0) {
+            for (var q in questions) {
+              var qJson = q.toJson();
+              Map<String, dynamic> copy = Map.from(qJson);
 
-        var questions =
-            await CheckListItemController.getCheckListItemsByParentId(
-                item["id"]);
+              copy.remove("id");
+              copy["odoo_id"] = null;
+              copy["base_id"] = qJson["id"];
+              copy["parent_id"] = checkListId;
 
-        if (questions.length > 0) {
-          for (var q in questions) {
-            var qJson = q.toJson();
-
-            Map<String, dynamic> copy = Map.from(qJson);
-
-            copy.remove("id");
-            copy["odooId"] = null;
-            copy["base_id"] = qJson["id"];
-            copy["parent_id"] = workCheckLstId;
-
-            await CheckListItemController.insert(copy);
+              await CheckListItemController.insert(copy);
+            }
           }
         }
       }
