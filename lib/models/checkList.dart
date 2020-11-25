@@ -3,7 +3,7 @@ import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class CheckListWork extends Models {
   int id;
-  int odooId;
+  int odoo_id;
   // Plan id which uses this check list
   int parent_id;
   bool is_base;
@@ -16,7 +16,7 @@ class CheckListWork extends Models {
 
   CheckListWork({
     this.id,
-    this.odooId,
+    this.odoo_id,
     this.parent_id,
     this.base_id,
     this.is_base,
@@ -47,7 +47,7 @@ class CheckListWork extends Models {
   factory CheckListWork.fromJson(Map<String, dynamic> json) =>
       new CheckListWork(
         id: json["id"],
-        odooId: json["odooId"],
+        odoo_id: json["odoo_id"],
         parent_id: json["parent_id"] is List ? null : getObj(json["parent_id"]),
         is_base: (json["is_base"].toString() == 'true'),
         name: getStr(json["name"]),
@@ -60,7 +60,7 @@ class CheckListWork extends Models {
   Map<String, dynamic> toJson([omitId = false]) {
     Map<String, dynamic> res = {
       'id': id,
-      'odooId': odooId,
+      'odoo_id': odoo_id,
       'parent_id': parent_id,
       'base_id': base_id,
       'name': name,
@@ -72,7 +72,7 @@ class CheckListWork extends Models {
 
     if (omitId) {
       res.remove("id");
-      res.remove("odooId");
+      res.remove("odoo_id");
     }
 
     return res;
@@ -80,6 +80,6 @@ class CheckListWork extends Models {
 
   @override
   String toString() {
-    return 'CheckListWork{id: $id, odooId: $odooId, parent_id: $parent_id, name: $name, type: $type, active: $active, is_base: $is_base, is_active: $is_active }';
+    return 'CheckListWork{id: $id, odooId: $odoo_id, parent_id: $parent_id, name: $name, type: $type, active: $active, is_base: $is_base, is_active: $is_active }';
   }
 }
