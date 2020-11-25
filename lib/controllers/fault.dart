@@ -3,6 +3,7 @@ import "package:ek_asu_opb_mobile/controllers/faultItem.dart";
 import 'package:ek_asu_opb_mobile/models/fault.dart';
 import 'package:ek_asu_opb_mobile/models/faultItem.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import "package:ek_asu_opb_mobile/controllers/syn.dart";
 import 'dart:io';
 
 class FaultController extends Controllers {
@@ -18,7 +19,8 @@ class FaultController extends Controllers {
 
 // path to files means path to photos of Faults storing in internal memory
   static Future<Map<String, dynamic>> create(
-      Fault fault, List<String> pathsToFiles) async {
+      Fault fault, List<String> pathsToFiles,
+      [bool saveOdooId = false]) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
@@ -28,16 +30,19 @@ class FaultController extends Controllers {
     print("Fault $fault; pathToFiles $pathsToFiles");
 
     Map<String, dynamic> json = fault.toJson();
-    json.remove("id");
-
-    // Warning only for local db!!!
-    // When enable loading from odoo, delete this code
-    json["odooId"] = null;
+    if (saveOdooId) json.remove("id");
 
     await DBProvider.db.insert(_tableName, json).then((resId) {
       res['code'] = 1;
       res['id'] = resId;
       res['message'] = "Нарушение создано";
+      print("Fault res $res");
+      if (!saveOdooId) {
+        return SynController.create(_tableName, resId).catchError((err) {
+          res['code'] = -2;
+          res['message'] = 'Error updating syn';
+        });
+      }
     }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error create Fault into $_tableName';
