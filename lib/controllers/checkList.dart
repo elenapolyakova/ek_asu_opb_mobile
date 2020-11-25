@@ -124,6 +124,37 @@ class CheckListController extends Controllers {
     return dataToFront;
   }
 
+  // Update the whole object in db
+  static Future<Map<String, dynamic>> update(CheckListWork checkList) async {
+    Map<String, dynamic> res = {
+      'code': null,
+      'message': null,
+      'id': null,
+    };
+
+    print("Update() CheckList!");
+    print(checkList);
+    Future<int> odooId = selectOdooId(checkList.id);
+    await DBProvider.db
+        .update(_tableName, checkList.prepareForUpdate())
+        .then((resId) async {
+      res['code'] = 1;
+      res['id'] = resId;
+
+      return SynController.edit(_tableName, checkList.id, await odooId)
+          .catchError((err) {
+        res['code'] = -2;
+        res['message'] = 'Error updating syn';
+      });
+    }).catchError((err) {
+      res["code"] = -3;
+      res["message"] = "Error updating $_tableName";
+    });
+
+    DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
+    return res;
+  }
+
   // Set for records of checkLists which comes in ids active = True; ids - [1, 3, 5]
   // By parent id (id of plan) we find all checklists, for id in ids we set active = True, for others active = False;
   static Future<Map<String, dynamic>> setIsActiveTrue(
@@ -158,17 +189,24 @@ class CheckListController extends Controllers {
         for (var cList in allCheckLists) {
           var json = cList.toJson();
           var recordId = json["id"];
-
+          Future<int> odooId = selectOdooId(recordId);
           if (skipIdList.contains(json["id"])) {
             continue;
           } else {
             if (id == json["id"]) {
               await DBProvider.db.executeQuery(
                   "UPDATE $_tableName SET is_active='true' WHERE id=$recordId");
+              // Update is_active in Odoo
             } else {
               await DBProvider.db.executeQuery(
                   "UPDATE $_tableName SET is_active='false' WHERE id=$recordId");
+              // Update is_active in Odoo
             }
+            await SynController.edit(_tableName, recordId, await odooId)
+                .catchError((err) {
+              res['code'] = -2;
+              res['message'] = 'Error updating syn';
+            });
           }
         }
         skipIdList.add(id);
@@ -244,5 +282,13 @@ class CheckListController extends Controllers {
     };
 
     return res;
+  }
+
+  static Future<int> selectOdooId(int id) async {
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(_tableName,
+        columns: ['odoo_id'], where: "id = ?", whereArgs: [id]);
+    if (queryRes == null || queryRes.length == 0)
+      throw 'No record of table $_tableName with id=$id exist.';
+    return queryRes[0]['odoo_id'];
   }
 }
