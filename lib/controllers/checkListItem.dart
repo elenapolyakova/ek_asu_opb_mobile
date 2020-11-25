@@ -88,16 +88,17 @@ class CheckListItemController extends Controllers {
     };
 
     print("Update() CheckListItem!");
-
+    print(checkListItem);
     Future<int> odooId = selectOdooId(checkListItem.id);
     print("Odoo $odooId");
     await DBProvider.db
         .update(_tableName, checkListItem.prepareForUpdate())
         .then((resId) async {
+      print("Update res $res");
       res['code'] = 1;
       res['id'] = resId;
 
-      return SynController.edit(_tableName, resId, await odooId)
+      return SynController.edit(_tableName, checkListItem.id, await odooId)
           .catchError((err) {
         res['code'] = -2;
         res['message'] = 'Error updating syn';
