@@ -1,6 +1,7 @@
 import 'package:ek_asu_opb_mobile/controllers/checkListItem.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import "package:ek_asu_opb_mobile/models/checkList.dart";
+import 'package:ek_asu_opb_mobile/models/checkListItem.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import "package:ek_asu_opb_mobile/controllers/syn.dart";
 
@@ -98,16 +99,20 @@ class CheckListController extends Controllers {
               await CheckListItemController.getCheckListItemsByParentId(
                   item["id"]);
           if (questions.length > 0) {
-            for (var q in questions) {
-              var qJson = q.toJson();
-              Map<String, dynamic> copy = Map.from(qJson);
+            for (var originalQuestion in questions) {
+              CheckListItem copyItem = new CheckListItem();
 
-              copy.remove("id");
-              copy["odoo_id"] = null;
-              copy["base_id"] = qJson["id"];
-              copy["parent_id"] = checkListId;
+              copyItem.odoo_id = null;
+              copyItem.base_id = originalQuestion.id;
+              copyItem.parent_id = checkListId;
+              copyItem.name = originalQuestion.name;
+              copyItem.question = originalQuestion.question;
+              copyItem.result = originalQuestion.result;
+              copyItem.description = originalQuestion.description;
+              copyItem.active = true;
 
-              await CheckListItemController.insert(copy);
+              print("CreateItem from template!");
+              await CheckListItemController.create(copyItem);
             }
           }
         }
