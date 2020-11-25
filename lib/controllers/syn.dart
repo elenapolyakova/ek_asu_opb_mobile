@@ -52,7 +52,10 @@ class SynController extends Controllers {
     },
     'check_list_item': {
       'parent_id': 'check_list',
-    }
+    },
+    'fault': {
+      'parent_id': 'check_list_item',
+    },
   };
   static Map<String, List<Map<String, dynamic>>> tableMany2ManyFieldsMap = {
     'com_group': [
