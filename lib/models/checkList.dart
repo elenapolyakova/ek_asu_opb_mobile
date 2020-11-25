@@ -57,8 +57,8 @@ class CheckListWork extends Models {
         active: (json["active"].toString() == 'true'),
       );
 
-  Map<String, dynamic> toJson() {
-    return {
+  Map<String, dynamic> toJson([omitId = false]) {
+    Map<String, dynamic> res = {
       'id': id,
       'odooId': odooId,
       'parent_id': parent_id,
@@ -69,6 +69,13 @@ class CheckListWork extends Models {
       'is_base': (is_base == null || !is_base) ? 'false' : 'true',
       'is_active': (is_active == null || !is_active) ? 'false' : 'true',
     };
+
+    if (omitId) {
+      res.remove("id");
+      res.remove("odooId");
+    }
+
+    return res;
   }
 
   @override
