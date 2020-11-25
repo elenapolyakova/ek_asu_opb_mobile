@@ -90,11 +90,9 @@ class CheckListItemController extends Controllers {
     print("Update() CheckListItem!");
     print(checkListItem);
     Future<int> odooId = selectOdooId(checkListItem.id);
-    print("Odoo $odooId");
     await DBProvider.db
         .update(_tableName, checkListItem.prepareForUpdate())
         .then((resId) async {
-      print("Update res $res");
       res['code'] = 1;
       res['id'] = resId;
 
@@ -108,7 +106,6 @@ class CheckListItemController extends Controllers {
       res["message"] = "Error updating $_tableName";
     });
 
-    print("Update RES $res");
     DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
     return res;
   }
@@ -122,8 +119,6 @@ class CheckListItemController extends Controllers {
     print("Delete() CheckListItem");
 
     Future<int> odooId = selectOdooId(id);
-    print("Odoo $odooId");
-
     await DBProvider.db
         .update(_tableName, {'id': id, 'active': 'false'}).then((value) async {
       res['code'] = 1;
