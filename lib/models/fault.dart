@@ -3,7 +3,7 @@ import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class Fault extends Models {
   int id;
-  int odooId;
+  int odoo_id;
   // Id of checkListItem
   int parent_id;
   String name;
@@ -24,7 +24,7 @@ class Fault extends Models {
 
   Fault({
     this.id,
-    this.odooId,
+    this.odoo_id,
     this.parent_id,
     this.name,
     this.desc,
@@ -42,7 +42,7 @@ class Fault extends Models {
 
   factory Fault.fromJson(Map<String, dynamic> json) => new Fault(
         id: json["id"],
-        odooId: json["odooId"],
+        odoo_id: json["odoo_id"],
         parent_id: json["parent_id"],
         name: getObj(json["name"]),
         desc: getObj(json["desc"]),
@@ -62,10 +62,10 @@ class Fault extends Models {
             : DateTime.parse(json["plan_fix_date"]),
       );
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson([omitId = false]) {
     return {
       'id': id,
-      'odooId': odooId,
+      'odoo_id': odoo_id,
       'parent_id': parent_id,
       'name': name,
       'desc': desc,
@@ -100,6 +100,6 @@ class Fault extends Models {
 
   @override
   String toString() {
-    return 'Fault {id: $id, odooId: $odooId, parent_id: $parent_id, name: $name, desc: $desc, fine: $fine, fine_desc: $fine_desc, koap_id: $koap_id}';
+    return 'Fault {id: $id, odooId: $odoo_id, parent_id: $parent_id, name: $name, desc: $desc, fine: $fine, fine_desc: $fine_desc, koap_id: $koap_id}';
   }
 }
