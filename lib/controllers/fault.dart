@@ -5,6 +5,7 @@ import 'package:ek_asu_opb_mobile/models/faultItem.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import "package:ek_asu_opb_mobile/controllers/syn.dart";
 import 'dart:io';
+import 'package:ek_asu_opb_mobile/src/fileStorage.dart'
 
 class FaultController extends Controllers {
   static String _tableName = "fault";
@@ -30,13 +31,13 @@ class FaultController extends Controllers {
     print("Fault $fault; pathToFiles $pathsToFiles");
 
     Map<String, dynamic> json = fault.toJson();
+    // 
     if (saveOdooId) json.remove("id");
 
     await DBProvider.db.insert(_tableName, json).then((resId) {
       res['code'] = 1;
       res['id'] = resId;
       res['message'] = "Нарушение создано";
-      print("Fault res $res");
       if (!saveOdooId) {
         return SynController.create(_tableName, resId).catchError((err) {
           res['code'] = -2;
@@ -56,10 +57,11 @@ class FaultController extends Controllers {
         for (var photoPath in pathsToFiles) {
           try {
             FaultItem item = new FaultItem();
+            // Set properties
             item.active = true;
             item.image = photoPath;
             item.parent_id = res["id"];
-
+            item.file_data = fileToBase64(photoPath);
             var insertResp = await FaultItemController.create(item);
             print("Fault item insert response $insertResp");
           } catch (e) {
