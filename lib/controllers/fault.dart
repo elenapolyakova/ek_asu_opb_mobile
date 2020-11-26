@@ -72,7 +72,6 @@ class FaultController extends Controllers {
             print("Create() Fault Error! Error while creating faultItems: $e");
             res["code"] = -3;
             res["message"] = "Ошибка при создании нарушения и св. фотографий";
-            return res;
           }
         }
       }
@@ -158,7 +157,6 @@ class FaultController extends Controllers {
           print("Fault Update() Error! Error while creating new faultItem: $e");
           res["code"] = -3;
           res["message"] = "Ошибка при добавлении новых фото";
-          return res;
         }
       }
     }
@@ -185,7 +183,6 @@ class FaultController extends Controllers {
             "Fault Update() Error! Error while deleting existing faultItem: $e");
         res["code"] = -3;
         res["message"] = "Ошибка при удалении ранее сохраненных  фото";
-        return res;
       }
     }
 
@@ -244,7 +241,6 @@ class FaultController extends Controllers {
           'message': 'Error deleting from faultItems',
           'id': null,
         };
-        return res;
       }
     }
     print("Deleted photos ids $deletedFotosIds");
