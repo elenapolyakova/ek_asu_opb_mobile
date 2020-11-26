@@ -1004,18 +1004,12 @@ class _PlanScreen extends State<PlanScreen> {
 
   Future<void> testClicked() async {
     print('test');
-    try {
-      await DepartmentDocumentController.getLocalDocument(
-          Document(model: 'eco.project', fileId: 49262));
-    } catch (exc) {
-      print(exc.toString());
-    }
 
-    // List result = await DBProvider.db.selectAll('plan_item');
+    List result = await DepartmentDocumentController.selectAll();
     // List result = await DBProvider.db.selectAll('fault');
 
     //await DBProvider.db.deleteAll('plan_item');
     //await DBProvider.db.deleteAll('plan');
-    // print(result);
+    print(result);
   }
 }

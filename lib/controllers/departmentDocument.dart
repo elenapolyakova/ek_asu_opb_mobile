@@ -18,8 +18,7 @@ class DepartmentDocumentController extends Controllers {
 
   static Future firstLoadFromOdoo([int limit]) async {
     List<int> departmentIds = await DepartmentController.selectIDs();
-    List<Map<String, dynamic>> queryRes =
-        await getDataWithAttemp('eco.department', 'search_read', [
+    List queryRes = await getDataWithAttemp('eco.department', 'search_read', [
       [
         ['id', 'in', departmentIds]
       ],
@@ -33,14 +32,12 @@ class DepartmentDocumentController extends Controllers {
     });
   }
 
-  static Future<List<Document>> getDocuments(
-      List<Map<String, dynamic>> queryRes) async {
+  static Future<List<Document>> getDocuments(List queryRes) async {
     List<Document> documents = [];
     await Future.forEach(queryRes, (department) async {
       await Future.forEach(
-          (json.decode(department['f_docs_data_json'])
-                  as Map<String, Map<String, Map<String, dynamic>>>)
-              .entries, (section) async {
+          (json.decode(department['f_docs_data_json'])).entries,
+          (section) async {
         await Future.forEach(section.value.entries, (model) async {
           Map<String, dynamic> docData = {};
           await Future.forEach(model.value[model.value['fn_data']], (dataItem) {
@@ -80,6 +77,10 @@ class DepartmentDocumentController extends Controllers {
     return File(path);
   }
 
+  static Future<List<Map<String, dynamic>>> selectAll() async {
+    return await DBProvider.db.selectAll(_tableName);
+  }
+
   static Future<Map<String, dynamic>> downloadDocument(
       Document document) async {
     // String url =
@@ -110,8 +111,7 @@ class DepartmentDocumentController extends Controllers {
     if (departmentId == null) return res;
 
     if (fromServer && await ping()) {
-      List<Map<String, dynamic>> queryRes =
-          await getDataWithAttemp('eco.department', 'search_read', [
+      List queryRes = await getDataWithAttemp('eco.department', 'search_read', [
         [
           ['id', '=', departmentId]
         ],
