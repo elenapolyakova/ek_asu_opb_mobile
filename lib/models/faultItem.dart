@@ -11,6 +11,8 @@ class FaultItem extends Models {
   // Will paths to file in internal device memory
   String image;
   bool active;
+  String file_name = "img_" + nowStr();
+  String file_data;
 
   FaultItem({
     this.id,
@@ -20,6 +22,8 @@ class FaultItem extends Models {
     this.parent_id,
     this.image,
     this.active,
+    this.file_data,
+    this.file_name,
   });
 
   static Map<int, String> typeSelection = {
@@ -43,6 +47,8 @@ class FaultItem extends Models {
         parent_id: json["parent_id"],
         image: getStr(json["image"]),
         active: (json["active"].toString() == 'true'),
+        file_data: json["file_data"],
+        file_name: json["file_name"],
       );
 
   Map<String, dynamic> toJson([omitId = false]) {
@@ -54,6 +60,8 @@ class FaultItem extends Models {
       'parent_id': parent_id,
       'image': image,
       'active': (active == null || !active) ? 'false' : 'true',
+      'file_data': file_data,
+      'file_name': file_name,
     };
     if (omitId) {
       res.remove("id");
@@ -64,6 +72,6 @@ class FaultItem extends Models {
 
   @override
   String toString() {
-    return 'FaultItem {id: $id, odooId: $odoo_id, name: $name, type: $type, parent_id: $parent_id, image: $image, active: $active}';
+    return 'FaultItem {id: $id, odooId: $odoo_id, name: $name, type: $type, parent_id: $parent_id, image: $image, active: $active, file_data: $file_data, file_name: $file_name}';
   }
 }
