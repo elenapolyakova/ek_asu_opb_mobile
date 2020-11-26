@@ -19,6 +19,7 @@ class SynController extends Controllers {
     'check_list': 'mob.check.list',
     'check_list_item': 'mob.check.list.item',
     'fault': 'mob.check.list.item.fault',
+    'fault_item': 'mob.document'
   };
   static Map<String, List<String>> tableBooleanFieldsMap = {
     'plan': ['active'],
@@ -29,6 +30,7 @@ class SynController extends Controllers {
     'check_list': ['active', 'is_active', 'is_base'],
     'check_list_item': ['active'],
     'fault': ['active'],
+    'fault_item': ['active'],
   };
   static Map<String, Map<String, String>> tableMany2oneFieldsMap = {
     'plan': {},
@@ -56,6 +58,9 @@ class SynController extends Controllers {
     'fault': {
       'parent_id': 'check_list_item',
     },
+    'fault_item': {
+      'parent_id': 'fault',
+    }
   };
   static Map<String, List<Map<String, dynamic>>> tableMany2ManyFieldsMap = {
     'com_group': [
