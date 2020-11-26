@@ -73,28 +73,26 @@ class FaultItemController extends Controllers {
       'id': null,
     };
 
-    Future<int> odooId = selectOdooId(faultItemId);
-
+    // Future<int> odooId = selectOdooId(faultItemId);
     print("Delete() FaultItem");
-    await DBProvider.db.update(
-        _tableName, {'id': faultItemId, 'active': 'false'}).then((value) async {
+    // Set file_data = null for removing base64 photo data
+    await DBProvider.db.update(_tableName, {
+      'id': faultItemId,
+      'active': 'false',
+      'file_data': null
+    }).then((value) async {
       res['code'] = 1;
       res['id'] = value;
-      return SynController.delete(_tableName, faultItemId, await odooId)
-          .catchError((err) {
-        res['code'] = -2;
-        res['message'] = 'Error updating syn';
-      });
+      // Commented because of documents not deleted in odoo!
+      // await SynController.delete(_tableName, faultItemId, await odooId)
+      //     .catchError((err) {
+      //   res['code'] = -2;
+      //   res['message'] = 'Error updating syn';
+      // });
     }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error deleting from $_tableName';
     });
-
-    res = {
-      'code': 1,
-      'message': 'Успешно удалено',
-      'id': 0,
-    };
 
     return res;
   }
