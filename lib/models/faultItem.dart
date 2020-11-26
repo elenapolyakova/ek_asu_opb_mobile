@@ -3,15 +3,19 @@ import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class FaultItem extends Models {
   int id;
-  String name = nowStr();
-  int type = 2;
+  // item name in odoo
+  String name;
+  // See typeSelection below
+  int type;
   int odoo_id;
   // id of Fault
   int parent_id;
   // Will paths to file in internal device memory
   String image;
   bool active;
-  String file_name = "img_" + nowStr();
+  // File name in odoo
+  String file_name;
+  // File data base64
   String file_data;
 
   FaultItem({
