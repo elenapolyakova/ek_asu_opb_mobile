@@ -1,6 +1,7 @@
 import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
+import 'package:ek_asu_opb_mobile/controllers/departmentDocument.dart';
 import "package:ek_asu_opb_mobile/models/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
@@ -164,6 +165,7 @@ class SynController extends Controllers {
       await CheckPlanController.firstLoadFromOdoo(true);
       await CheckPlanItemController.firstLoadFromOdoo(true);
       await ComGroupController.firstLoadFromOdoo(true);
+      await DepartmentDocumentController.firstLoadFromOdoo();
     } else {
       await PlanController.loadChangesFromOdoo();
       await PlanItemController.loadChangesFromOdoo();
@@ -175,6 +177,7 @@ class SynController extends Controllers {
       await CheckPlanItemController.loadChangesFromOdoo(true);
       await ComGroupController.loadChangesFromOdoo(true);
     }
+    await PlanController.finishSync(dateTime);
     await PlanItemController.finishSync(dateTime);
     await CheckPlanController.finishSync(dateTime);
     await CheckPlanItemController.finishSync(dateTime);

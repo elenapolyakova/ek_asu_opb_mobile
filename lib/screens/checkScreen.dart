@@ -9,9 +9,10 @@ import 'dart:async';
 
 class CheckScreen extends StatefulWidget {
   BuildContext context;
+  bool stop;
 
   @override
-  CheckScreen({this.context});
+  CheckScreen({this.context, this.stop});
   @override
   State<CheckScreen> createState() => _CheckScreen();
 }
@@ -66,17 +67,6 @@ class _CheckScreen extends State<CheckScreen> {
     return result;
   }
 
-  void LogOut() {
-    auth.LogOut(context);
-  }
-
-  void toISPScreen() {
-    Navigator.pushNamed(
-      context,
-      '/ISP',
-    );
-  }
-
   Future<void> syncTask() async {
     showLoadingDialog(context);
     try {
@@ -128,10 +118,13 @@ class _CheckScreen extends State<CheckScreen> {
                 height: double.infinity, width: double.infinity),
           )
         : new Scaffold(
-            appBar:  PreferredSize(
+            appBar: PreferredSize(
                 preferredSize: Size.fromHeight(100),
-                child: MyAppBar(userInfo: _userInfo, syncTask: syncTask)),
-
+                child: MyAppBar(
+                    userInfo: _userInfo,
+                    syncTask: syncTask,
+                    parentScreen: 'checkScreen',
+                     stop: widget.stop,)),
             body: Column(children: [
               getBodyContent(),
               //  if (errorText != '')

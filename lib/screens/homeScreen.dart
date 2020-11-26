@@ -12,13 +12,15 @@ import 'package:ek_asu_opb_mobile/controllers/syn.dart';
 
 class HomeScreen extends StatefulWidget {
   BuildContext context;
+  bool stop;
 
-  HomeScreen({this.context});
+  HomeScreen({this.context, this.stop});
   @override
   State<HomeScreen> createState() => _HomeScreen();
 }
 
 class _HomeScreen extends State<HomeScreen> {
+
   UserInfo _userInfo;
   List<Map<String, dynamic>> _navigationMenu;
   int _selectedIndex = 0;
@@ -28,6 +30,7 @@ class _HomeScreen extends State<HomeScreen> {
   Map<String, dynamic> arguments;
 
   Map<String, dynamic> screenList = {};
+
 
 //SpinKitFadingCircle(color: Color(0xFFADB439));
 
@@ -111,21 +114,6 @@ class _HomeScreen extends State<HomeScreen> {
     return result;
   }
 
-  void LogOut() {
-    auth.LogOut(context);
-  }
-
-  void toISPScreen() async {
-    // SynController.selectAll().then((a) => print(a));
-    // PlanController.selectAll().then((a) => print(a));
-    // await SynController.loadFromOdoo();
-    print(await PlanItemController.selectAll());
-    Navigator.pushNamed(
-      context,
-      '/ISP',
-    );
-  }
-
   Future<void> syncTask() async {
     showLoadingDialog(context);
     try {
@@ -154,7 +142,7 @@ class _HomeScreen extends State<HomeScreen> {
         screenList[screenKey] = screens.ReportScreen();
         break;
       case "checkListTemplate":
-       // screenList[screenKey] = screens.CheckListTemplateScreen();
+        // screenList[screenKey] = screens.CheckListTemplateScreen();
         break;
       default:
         return Text("");
@@ -167,6 +155,7 @@ class _HomeScreen extends State<HomeScreen> {
     setState(() {
       arguments = ModalRoute.of(context).settings.arguments;
     });
+   // print('stop: ' + (widget.stop != null ? widget.stop.toString() : 'null'));
     //, controller: _controller);
     return showLoading
         ? new ConstrainedBox(
@@ -181,8 +170,10 @@ class _HomeScreen extends State<HomeScreen> {
                 child: MyAppBar(
                     showBack: (arguments != null && !arguments['first']),
                     userInfo: _userInfo,
+                    parentScreen: 'homeScreen',
+                    stop: widget.stop,
                     syncTask: syncTask)),
-          body: getBodyContent(),
+            body: getBodyContent(),
             bottomNavigationBar: (_navigationMenu.length > 1)
                 ? BottomNavigationBar(
                     type: BottomNavigationBarType.fixed,

@@ -5,6 +5,11 @@ import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:flutter_treeview/tree_view.dart';
 
 class ISPScreen extends StatefulWidget {
+  BuildContext context;
+  bool stop;
+  @override
+  ISPScreen({this.context, this.stop});
+
   @override
   State<ISPScreen> createState() => _ISPScreen();
 }
@@ -147,17 +152,17 @@ class _ISPScreen extends State<ISPScreen> {
     }
   }
 
-  void LogOut() {
-    auth.LogOut(context);
-  }
-
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
         appBar: PreferredSize(
             preferredSize: Size.fromHeight(100),
-            child:
-                MyAppBar(showIsp: false, userInfo: _userInfo, syncTask: null)),
+            child: MyAppBar(
+                showIsp: false,
+                userInfo: _userInfo,
+                syncTask: null,
+                 stop: widget.stop,
+                parentScreen: 'ISPScreen')),
         body: Container(
             decoration: BoxDecoration(
                 image: DecorationImage(

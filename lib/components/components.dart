@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'dart:ui';
+import 'package:ek_asu_opb_mobile/src/messenger.dart';
+import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart';
@@ -1381,40 +1384,163 @@ TreeViewTheme getTreeViewTheme(BuildContext context) {
   );
 }
 
+class MyChatIcon extends StatelessWidget {
+  int _counter;
+
+  MyChatIcon(this._counter);
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      // width: 30,
+      //  height: 30,
+      child: Stack(
+        children: [
+          TextIcon(
+              icon: Icons.message,
+              text: 'Чат',
+              onTap: () => Navigator.pushNamed(context, '/messenger'),
+              margin: 0,
+              color: Theme.of(context).primaryColorLight),
+          _counter != null && _counter > 0
+              ? Container(
+                  width: 30,
+                  height: 30,
+                  alignment: Alignment.topRight,
+                  margin: EdgeInsets.only(top: 5, left: 15),
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(0xFFE57373),
+                        border: Border.all(
+                            color: Theme.of(context).primaryColorLight,
+                            width: 0.5)),
+                    child: Container(
+                      width: 20,
+                      height: 20,
+                      alignment: Alignment.center,
+                      // margin: EdgeInsets.only(top: 4),
+                      child: Text(
+                        _counter != null ? _counter.toString() : '',
+                        style: TextStyle(fontSize: 10),
+                      ),
+                    ),
+                  ),
+                )
+              : Text(''),
+        ],
+      ),
+    );
+  }
+}
+
 class MyAppBar extends StatefulWidget {
   bool showBack;
   UserInfo userInfo;
   Function syncTask;
   bool showIsp;
   bool showMessenger;
+  String parentScreen;
+  bool stop;
 
   MyAppBar(
       {this.showBack = true,
       this.userInfo,
       this.syncTask,
       this.showIsp = true,
-      this.showMessenger = true});
+      this.showMessenger = true,
+      this.parentScreen,
+      this.stop});
 
   @override
   State<MyAppBar> createState() => _MyAppBar();
 }
 
 class _MyAppBar extends State<MyAppBar> {
+  int _countMessage;
+  Timer _messengerTimer;
+  Duration seconds;
+  int refreshMessenger;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _countMessage = 0;
+    if (widget.showMessenger != null && !widget.showMessenger) return;
+    getCountMessage();
+
+    createTimer();
+  }
+
+  void timerTick() {
+    if (widget.stop) return;
+
+    getCountMessage();
+    createTimer();
+  }
+
+  void getCountMessage() async {
+    print(
+        'get new message for user ${widget.userInfo.id} from ${widget.parentScreen}');
+    _countMessage = (await Messenger.messenger.getCountMessage());
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+
+    cancelTimer();
+    super.dispose();
+  }
+
+  void createTimer() {
+    refreshMessenger = refreshMessenger ??
+        int.tryParse(config.getItem("refreshCountMessenger").toString());
+    seconds = seconds ??
+        new Duration(
+            seconds: (refreshMessenger != null ? refreshMessenger : 30));
+    _messengerTimer = Timer(seconds, timerTick);
+  }
+
+  void cancelTimer() {
+    if (_messengerTimer != null) _messengerTimer.cancel();
+    _messengerTimer = null;
+    //setState(() { });
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (widget.showMessenger == null || widget.showMessenger) {
+      if (widget.stop)
+        cancelTimer();
+      else if (_messengerTimer == null) {
+        getCountMessage();
+        createTimer();
+      }
+    }
+    //print('for ${widget.parentScreen} stop is ${widget.stop}');
     return new AppBar(
         toolbarHeight: 100,
         leadingWidth: 100,
         centerTitle: false,
         leading: Column(children: [
-          widget.showMessenger ? 
-          TextIcon(
-              icon: Icons.message,
-              text: 'Чат',
-              onTap: () => Navigator.pushNamed(context, '/messenger'),
-              margin: 0,
-              color: Theme.of(context).primaryColorLight) :
-               Container(child:Text(''), height:  43,),
+          widget.showMessenger
+              ? /*TextIcon(
+                  icon: Icons.message,
+                  text: 'Чат',
+                  onTap: () => Navigator.pushNamed(context, '/messenger'),
+                  margin: 0,
+                  color: hasNewMessage
+                      ? Colors.red
+                      : Theme.of(context).primaryColorLight)*/
+              MyChatIcon(_countMessage)
+              : Container(
+                  child: Text(''),
+                  height: 43,
+                ),
           widget.showBack
               ? TextIcon(
                   icon: Icons.arrow_back_ios,
@@ -1422,7 +1548,10 @@ class _MyAppBar extends State<MyAppBar> {
                   onTap: () => Navigator.pop(context),
                   margin: 0,
                   color: Theme.of(context).primaryColorLight)
-              : Container(child:Text(''), height:  30,),
+              : Container(
+                  child: Text(''),
+                  height: 30,
+                ),
         ]),
         title: Row(mainAxisAlignment: MainAxisAlignment.start, children: [
           Expanded(child: Center(child: HomeIcon())),
@@ -1482,5 +1611,149 @@ class _MyAppBar extends State<MyAppBar> {
                 ],
               ))
         ]);
+  }
+}
+
+class MyChatContainer extends StatelessWidget {
+  int _counter;
+  int _id;
+  String _name;
+  bool isActive;
+  Function(int) onTap;
+
+  MyChatContainer(
+      this._id, this._name, this._counter, this.isActive, this.onTap);
+  @override
+  Widget build(BuildContext context) {
+    TextStyle style = TextStyle(
+      color: isActive
+          ? Theme.of(context).primaryColorLight
+          : Theme.of(context).buttonColor,
+      fontSize: 16,
+    );
+
+    return GestureDetector(
+        onTap: () =>  onTap(_id),
+        child: Container(
+          //height: 70,
+          padding: EdgeInsets.symmetric(horizontal: 10),
+          color: isActive ? Color(0xAAF465C0B) : Color(0x44EFF0D7),
+          child: Row(children: [
+            Expanded(
+                child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              alignment: Alignment.centerLeft,
+              child: Text(
+                _name,
+                style: style,
+              ),
+              //constraints: BoxConstraints(minHeight: 30),
+            )),
+            Container(
+                width: 25,
+                child: Stack(
+                  children: [
+                    _counter != null && _counter > 0
+                        ? Container(
+                            width: 25,
+                            height: 25,
+                            decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFFE57373),
+                                border: Border.all(
+                                    color: Theme.of(context).primaryColorLight,
+                                    width: 0.5)),
+                            child: Container(
+                              width: 25,
+                              height: 25,
+                              alignment: Alignment.center,
+                              // margin: EdgeInsets.only(top: 4),
+                              child: Text(
+                                _counter != null ? _counter.toString() : '',
+                                style: TextStyle(fontSize: 10),
+                              ),
+                            ),
+                          )
+                        : Text(''),
+                  ],
+                ))
+          ]),
+        ));
+  }
+}
+
+class MyMessageContainer extends StatelessWidget {
+  int _id;
+  String _userName;
+  String _text;
+  DateTime _dt;
+  bool _isMy;
+
+  MyMessageContainer(
+      this._id, this._userName, this._text, this._dt, this._isMy);
+  @override
+  Widget build(BuildContext context) {
+    TextStyle style = TextStyle(
+      color: _isMy
+          ? Theme.of(context).primaryColorLight
+          : Theme.of(context).buttonColor,
+      fontSize: 15,
+    );
+
+    String dateTimeString = isDateEqual(this._dt, DateTime.now())
+        ? dateHm(this._dt)
+        : '${dateDMY(this._dt)} ${dateHm(this._dt)}';
+
+    return Container(
+        child: Row(children: [
+      _isMy
+          ? Expanded(
+              child: Container(
+              child: Text(''),
+              width: 300,
+            ))
+          : Text(''),
+      Container(
+          constraints: BoxConstraints(maxWidth: 600),
+          //width: 500,
+          margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          padding: EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+            color: _isMy ? Color(0xAAF465C0B) : Color(0xFFEFF0D7),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!_isMy)
+                Container(
+                    padding: EdgeInsets.all(3),
+                    child: Text('$_userName:',
+                        style: style, textAlign: TextAlign.left),
+                    color: Color(0x44465C0B)),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  _text ?? '',
+                  style: style,
+                ),
+                //constraints: BoxConstraints(minHeight: 30),
+              ),
+              Container(
+                  alignment: Alignment.topRight,
+                  padding: EdgeInsets.all(3),
+                  child: Text('$dateTimeString',
+                      style: style, textAlign: TextAlign.right)),
+            ],
+          )),
+      !_isMy
+          ? Expanded(
+              child: Container(
+              child: Text(''),
+              width: 300,
+            ))
+          : Text(''),
+    ]));
   }
 }

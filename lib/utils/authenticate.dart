@@ -98,6 +98,8 @@ Future<bool> setUserData() async {
         await DBProvider.db.reCreateDictionary();
         //  await DBProvider.db.reCreateTable();
         await _storage.delete(key: 'lastDateUpdate');
+        await _storage.delete(key: 'messengerDates');
+        
       } else
         _isSameUser = true;
     }
@@ -147,6 +149,7 @@ Future<bool> authorize(String login, String password) async {
       if (oldUserInfo.id != uid) {
         await _storage.delete(key: 'pin');
         await _storage.delete(key: 'lastDateUpdate');
+        await _storage.delete(key: 'messengerDates');
         await _storage.delete(key: 'session');
         // await DBProvider.db.deleteAll('userInfo');
         await DBProvider.db.reCreateDictionary();
