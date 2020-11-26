@@ -58,6 +58,8 @@ class DBProvider {
             "CREATE TABLE IF NOT EXISTS fault_item(id INTEGER PRIMARY KEY, odooId INTEGER, parent_id INTEGER, image TEXT, active TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS koap(id INTEGER PRIMARY KEY, article TEXT, paragraph TEXT, text TEXT, man_fine_from INTEGER, man_fine_to INTEGER, firm_fine_from INTEGER, firm_fine_to INTEGER, firm_stop INTEGER, desc TEXT, search_field TEXT)");
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS department_document(id INTEGER PRIMARY KEY, section TEXT, model TEXT, file_name TEXT, file_id INTEGER, department_id INTEGER, file_path TEXT)");
       },
       onUpgrade: (db, oldVersion, version) async {
         switch (oldVersion) {
@@ -68,6 +70,11 @@ class DBProvider {
             continue v2;
           v2:
           case 2:
+            await db.execute(
+                "CREATE TABLE IF NOT EXISTS department_document(id INTEGER PRIMARY KEY, section TEXT, model TEXT, file_name TEXT, file_id INTEGER, department_id INTEGER, file_path TEXT)");
+            continue v3;
+          v3:
+          case 3:
           default:
         }
       },
@@ -82,7 +89,7 @@ class DBProvider {
 
       // Set the version. This executes the onCreate function and provides a
       // path to perform database upgrades and downgrades.
-      version: 2,
+      version: 3,
     );
   }
 

@@ -1,4 +1,6 @@
+import 'package:ek_asu_opb_mobile/controllers/departmentDocument.dart';
 import 'package:ek_asu_opb_mobile/controllers/syn.dart';
+import 'package:ek_asu_opb_mobile/models/departmentDocument.dart';
 import 'package:ek_asu_opb_mobile/src/exchangeData.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -256,7 +258,7 @@ class _PlanScreen extends State<PlanScreen> {
                                 context, planItemHeader, planItems)
                           ])
                       ])),
-                /* Container(
+                  Container(
                       child: MyButton(
                           text: 'test',
                           parentContext: context,
@@ -1003,11 +1005,11 @@ class _PlanScreen extends State<PlanScreen> {
   Future<void> testClicked() async {
     print('test');
 
-    //  List result = await DBProvider.db.selectAll('plan');
-    List result =  await DBProvider.db.selectAll('user');
+    List result = await DepartmentDocumentController.selectAll();
+    // List result = await DBProvider.db.selectAll('fault');
 
     //await DBProvider.db.deleteAll('plan_item');
     //await DBProvider.db.deleteAll('plan');
-     print(result.length);
+    print(result);
   }
 }

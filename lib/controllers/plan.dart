@@ -113,6 +113,10 @@ class PlanController extends Controllers {
     });
   }
 
+  static Future finishSync(dateTime) {
+    return setLastSyncDateForDomain(_tableName, dateTime);
+  }
+
   /// Select the first record matching passed year, type and railwayId.
   /// Returns selected record or null.
   static Future<Plan> select(int year, String type, int railwayId) async {
