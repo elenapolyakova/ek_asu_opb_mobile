@@ -6,6 +6,11 @@ import '../utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 
 class LoginPage extends StatefulWidget {
+  BuildContext context;
+
+  @override
+  LoginPage({this.context});
+
   @override
   State<LoginPage> createState() => _LoginPage();
 }

@@ -47,6 +47,7 @@ void main() async {
 
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 String _lastScreen = "";
+
 Timer _pinTimer;
 
 class MyApp extends StatefulWidget {
@@ -66,6 +67,8 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
       const TextStyle(fontSize: 20.0, color: Color(0xFF252A0E));
   final _sizeTextWhite = const TextStyle(fontSize: 20.0, color: Colors.white);
   final pinFormKey = new GlobalKey<FormState>();
+  RouteAwareWidget prevWidget;
+  RouteAwareWidget curWidget;
 
   @override
   Widget build(BuildContext context) {
@@ -91,18 +94,24 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
             textTheme: TextTheme(bodyText2: TextStyle(color: Colors.black)),
             splashColor: Colors.white),
         navigatorObservers: [routeObserver],
-        home: RouteAwareWidget('/home', child: HomeScreen()),
+        home: RouteAwareWidget('/home'),
+        // child: HomeScreen(context: context, stop: pageStopState['/home']),),
         routes: <String, WidgetBuilder>{
-          '/login': (context) => RouteAwareWidget('/login', child: LoginPage()),
-          '/home': (context) =>
-              RouteAwareWidget('/inspectionhome', child: HomeScreen()),
-          '/ISP': (context) => RouteAwareWidget('/ISP', child: ISPScreen()),
-          '/inspection': (context) => RouteAwareWidget('/inspection',
-              child: InspectionScreen(context: context)),
-          '/checkItem': (context) => RouteAwareWidget('/checkItem',
-              child: CheckScreen(context: context)),
-           '/messenger': (context) => RouteAwareWidget('/messenger',
-              child: MessengerScreen(/*context: context*/)),
+          '/login': (context) => RouteAwareWidget('/login',
+              context: context), //, child: LoginPage(context: context)),
+          '/home': (context) => RouteAwareWidget('/home', context: context), //
+          // child: HomeScreen(context: context, stop: pageStopState['/home'] )),
+          '/ISP': (context) => RouteAwareWidget('/ISP',
+              context: context), //, child: ISPScreen(context: context)),
+          '/inspection': (context) =>
+              RouteAwareWidget('/inspection', context: context),
+          //  child: InspectionScreen(context: context)),
+          '/checkItem': (context) =>
+              RouteAwareWidget('/checkItem', context: context),
+          // child: CheckScreen(context: context)),
+          '/messenger': (context) =>
+              RouteAwareWidget('/messenger', context: context),
+          //  child: MessengerScreen(/*context: context*/)),
 
           /* '/planCbt': (context) =>
               RouteAwareWidget('planCbt', child: PlanCbtScreen()),
@@ -126,8 +135,6 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    print("APP_STATE: $state");
-
     switch (state) {
       case AppLifecycleState.resumed:
         if (_lastScreen == '/login' || _isPinDialogShow) return;
@@ -299,14 +306,22 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
 
 class RouteAwareWidget extends StatefulWidget {
   final String name;
-  final Widget child;
+  BuildContext context;
 
-  RouteAwareWidget(this.name, {@required this.child});
+  // final Widget child;
+
+  RouteAwareWidget(this.name, {this.context});
+
   @override
-  State<RouteAwareWidget> createState() => _RouteAwareWidget();
+  State<RouteAwareWidget> createState() => _RouteAwareWidget(name);
 }
 
 class _RouteAwareWidget extends State<RouteAwareWidget> with RouteAware {
+  Map<String, bool> stop = {};
+  String name;
+  @override
+  _RouteAwareWidget(this.name);
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -321,9 +336,56 @@ class _RouteAwareWidget extends State<RouteAwareWidget> with RouteAware {
 
   @override
   void didPush() {
-    _lastScreen = widget.name;
+    setState(() {
+      _lastScreen = widget.name;
+      stop = {name: false};
+    });
   }
 
   @override
-  build(BuildContext context) => widget.child;
+  void didPushNext() {
+    setState(() {
+      name = widget.name;
+      stop = {name: true};
+    });
+  }
+
+  @override
+  void didPop() {
+    setState(() {
+      name = widget.name;
+      stop = {name: true};
+    });
+  }
+
+  @override
+  void didPopNext() {
+    setState(() {
+      name = widget.name;
+      stop = {name: false};
+    });
+  }
+
+  @override
+  build(BuildContext context) {
+// return widget.child;
+    switch (name) {
+      case '/login':
+        return LoginPage(context: context);
+      case '/home':
+        return HomeScreen(
+            context: context, stop: stop != null ? stop[name] : null);
+      case '/ISP':
+        return ISPScreen(
+            context: context, stop: stop != null ? stop[name] : null);
+      case '/inspection':
+        return InspectionScreen(
+            context: context, stop: stop != null ? stop[name] : null);
+      case '/checkItem':
+        return CheckScreen(
+            context: context, stop: stop != null ? stop[name] : null);
+      case '/messenger':
+        return MessengerScreen(context: context, stop: stop != null ? stop[name] : null);
+    }
+  }
 }

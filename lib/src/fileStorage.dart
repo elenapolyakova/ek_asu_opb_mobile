@@ -70,7 +70,11 @@ String fileToBase64(String path) {
 Future<File> base64ToFile(String img64, {String path}) async {
   String _path = path ?? (await getPath());
   final decodedBytes = base64.decode(img64);
-  File file = File(path);
+  File file = File(_path);
   file.writeAsBytesSync(decodedBytes);
+
+
   return file;
 }
+
+

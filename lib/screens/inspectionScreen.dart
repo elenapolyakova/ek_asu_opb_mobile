@@ -8,9 +8,10 @@ import 'dart:async';
 
 class InspectionScreen extends StatefulWidget {
   BuildContext context;
+   bool stop;
 
   @override
-  InspectionScreen({this.context});
+  InspectionScreen({this.context, this.stop});
   @override
   State<InspectionScreen> createState() => _InspectionScreen();
 }
@@ -72,17 +73,6 @@ class _InspectionScreen extends State<InspectionScreen> {
     });*/
 
     return result;
-  }
-
-  void LogOut() {
-    auth.LogOut(context);
-  }
-
-  void toISPScreen() {
-    Navigator.pushNamed(
-      context,
-      '/ISP',
-    );
   }
 
   void setCheckPlanId(int checkPlanId) {
@@ -153,7 +143,7 @@ class _InspectionScreen extends State<InspectionScreen> {
         : new Scaffold(
             appBar: PreferredSize(
                 preferredSize: Size.fromHeight(100),
-                child: MyAppBar(userInfo: _userInfo, syncTask: syncTask)),
+                child: MyAppBar(userInfo: _userInfo, syncTask: syncTask,  parentScreen: 'inspectionScreen',  stop: widget.stop)),
             body: Column(children: [
               getBodyContent(),
               //  if (errorText != '')
