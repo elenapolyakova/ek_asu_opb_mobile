@@ -262,7 +262,7 @@ class _PlanScreen extends State<PlanScreen> {
                       child: MyButton(
                           text: 'test',
                           parentContext: context,
-                          onPress: testClicked))*/
+                          onPress: testClicked))
                 ])));
   }
 
