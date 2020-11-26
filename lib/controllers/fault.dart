@@ -66,7 +66,6 @@ class FaultController extends Controllers {
             item.type = 2;
             item.name = Uuid().v1();
             item.file_name = item.name + ".jpg";
-            print("Fault_item $item");
             var insertResp = await FaultItemController.create(item);
             print("Fault item insert response $insertResp");
           } catch (e) {
@@ -119,12 +118,20 @@ class FaultController extends Controllers {
     var createdFaultItemsIds = [];
     var deletedFaultItemsIds = [];
 
+    // Get odooId
+    Future<int> odooId = selectOdooId(fault.id);
+
     // Mainly update fault record
     await DBProvider.db
         .update(_tableName, fault.prepareForUpdate())
         .then((resId) async {
       res['code'] = 1;
       res['id'] = resId;
+      await SynController.edit(_tableName, fault.id, await odooId)
+          .catchError((err) {
+        res['code'] = -2;
+        res['message'] = 'Error updating syn';
+      });
     }).catchError((err) {
       res["code"] = -3;
       res["message"] = "Error updating $_tableName";
@@ -137,8 +144,12 @@ class FaultController extends Controllers {
           FaultItem faultItem = new FaultItem();
           faultItem.active = true;
           faultItem.image = path;
-          // set id of parent
           faultItem.parent_id = fault.id;
+          // Get file by path and convert to base64
+          faultItem.file_data = fileToBase64(path);
+          faultItem.type = 2;
+          faultItem.name = Uuid().v1();
+          faultItem.file_name = faultItem.name + ".jpg";
 
           var createResp = await FaultItemController.create(faultItem);
           if (createResp["code"] > 0)
@@ -182,8 +193,6 @@ class FaultController extends Controllers {
     return res;
   }
 
-  // Important! Set active false now only to fault, not assigned photos and etc.
-  // Rework after making controllers for faultItem
   static Future<Map<String, dynamic>> delete(int faultId) async {
     Map<String, dynamic> res = {
       'code': null,
@@ -192,10 +201,17 @@ class FaultController extends Controllers {
     };
 
     print("Delete() Fault");
+    Future<int> odooId = selectOdooId(faultId);
+
     await DBProvider.db.update(
         _tableName, {'id': faultId, 'active': 'false'}).then((value) async {
       res['code'] = 1;
       res['id'] = value;
+      await SynController.delete(_tableName, faultId, await odooId)
+          .catchError((err) {
+        res['code'] = -2;
+        res['message'] = 'Error updating syn';
+      });
     }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error deleting from $_tableName';
@@ -217,8 +233,7 @@ class FaultController extends Controllers {
           var json = fItem.toJson();
           var itemId = json["id"];
 
-          await DBProvider.db
-              .update('fault_item', {'id': itemId, 'active': 'false'});
+          await FaultItemController.delete(itemId);
           await File(fItem.image).delete();
           deletedFotosIds.add(itemId);
         }
@@ -232,7 +247,7 @@ class FaultController extends Controllers {
         return res;
       }
     }
-
+    print("Deleted photos ids $deletedFotosIds");
     res = {
       'code': 1,
       'message': 'Успешно удалено',
@@ -251,5 +266,14 @@ class FaultController extends Controllers {
 
     int count = response[0]["COUNT(id)"];
     return count;
+  }
+
+  // Get odooId by db id
+  static Future<int> selectOdooId(int id) async {
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(_tableName,
+        columns: ['odoo_id'], where: "id = ?", whereArgs: [id]);
+    if (queryRes == null || queryRes.length == 0)
+      throw 'No record of table $_tableName with id=$id exist.';
+    return queryRes[0]['odoo_id'];
   }
 }
