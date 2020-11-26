@@ -1,11 +1,13 @@
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import 'package:ek_asu_opb_mobile/models/faultItem.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import "package:ek_asu_opb_mobile/controllers/syn.dart";
 
 class FaultItemController extends Controllers {
   static String _tableName = "fault_item";
 
-  static Future<Map<String, dynamic>> create(FaultItem faultItem) async {
+  static Future<Map<String, dynamic>> create(FaultItem faultItem,
+      [bool saveOdooId = false]) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
@@ -16,15 +18,23 @@ class FaultItemController extends Controllers {
     print("Fault data $faultItem");
 
     Map<String, dynamic> json = faultItem.toJson();
+    if (saveOdooId) json.remove("id");
 
-    json.remove("id");
-    // Warning only for local db!!!
-    // When enable loading from odoo, delete this code
-    json["odooId"] = null;
+    // json.remove("id");
+    // // Warning only for local db!!!
+    // // When enable loading from odoo, delete this code
+    // json["odooId"] = null;
 
     await DBProvider.db.insert(_tableName, json).then((resId) {
       res['code'] = 1;
       res['id'] = resId;
+      res['message'] = "Фото создано";
+      if (!saveOdooId) {
+        return SynController.create(_tableName, resId).catchError((err) {
+          res['code'] = -2;
+          res['message'] = 'Error updating syn';
+        });
+      }
     }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error create FaultItem into $_tableName';
@@ -63,11 +73,18 @@ class FaultItemController extends Controllers {
       'id': null,
     };
 
+    Future<int> odooId = selectOdooId(faultItemId);
+
     print("Delete() FaultItem");
     await DBProvider.db.update(
         _tableName, {'id': faultItemId, 'active': 'false'}).then((value) async {
       res['code'] = 1;
       res['id'] = value;
+      return SynController.delete(_tableName, faultItemId, await odooId)
+          .catchError((err) {
+        res['code'] = -2;
+        res['message'] = 'Error updating syn';
+      });
     }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error deleting from $_tableName';
@@ -80,5 +97,13 @@ class FaultItemController extends Controllers {
     };
 
     return res;
+  }
+
+  static Future<int> selectOdooId(int id) async {
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(_tableName,
+        columns: ['odoo_id'], where: "id = ?", whereArgs: [id]);
+    if (queryRes == null || queryRes.length == 0)
+      throw 'No record of table $_tableName with id=$id exist.';
+    return queryRes[0]['odoo_id'];
   }
 }
