@@ -1005,7 +1005,7 @@ class _PlanScreen extends State<PlanScreen> {
   Future<void> testClicked() async {
     print('test');
     try {
-      await DepartmentDocumentController.downloadDocument(
+      await DepartmentDocumentController.getLocalDocument(
           Document(model: 'eco.project', fileId: 49262));
     } catch (exc) {
       print(exc.toString());

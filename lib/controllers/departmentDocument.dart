@@ -71,6 +71,7 @@ class DepartmentDocumentController extends Controllers {
       path = newPath;
       await DBProvider.db
           .update(_tableName, {'id': document.id, 'file_path': path});
+      await File(path).create(recursive: true);
       return base64ToFile(
         record['data'],
         path: path,
