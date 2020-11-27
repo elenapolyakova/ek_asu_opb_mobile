@@ -38,7 +38,7 @@ class MyMessage {
 class Messenger {
   Messenger._();
   static final Messenger messenger = Messenger._();
-  int _countMessage = 0;
+  int _countMessage = 2;
 
   List<MyMessage> _messageItems = [
     MyMessage(
@@ -178,7 +178,7 @@ class Messenger {
     //для счетчика количества новых сообщений
     String keyDate = 'countMessageDate';
     dynamic lastDate = (await getLastUpdate(keyDate));
-    int countNew = 1;
+    int countNew = 0;
     //await MessageController.selectAll(userId, lastDate)
 
    // var domain = lastDate != null ? ['write_date', '>', lastDate] : [];

@@ -100,12 +100,12 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
           children: sectionDoc
               .map(
                 (doc) => Node(
-                        label: doc.fileName,
-                        key: doc.id.toString(),
-                        data: doc,
-                        icon: ['', null].contains(doc.filePath)
-                            ? NodeIcon.fromIconData(Icons.get_app)
-                            : NodeIcon.fromIconData(Icons.insert_drive_file)),
+                    label: doc.fileName,
+                    key: doc.id.toString(),
+                    data: doc,
+                    icon: ['', null].contains(doc.filePath)
+                        ? NodeIcon.fromIconData(Icons.get_app)
+                        : NodeIcon.fromIconData(Icons.insert_drive_file)),
               )
               .toList()));
     });
@@ -118,30 +118,36 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
     });
     Node selectedNode = _treeViewController.getNode(key);
     Document doc = selectedNode.data;
-
-    if (['', null].contains(doc.filePath)) {
-      List<Node> updated = _treeViewController.updateNode(
-          key,
-          selectedNode.copyWith(
-              icon: NodeIcon(codePoint: Icons.hourglass_bottom.codePoint)));
-      setState(() {
-        _treeViewController = _treeViewController.copyWith(children: updated);
-      });
-
-      doc.file.then((value) {
-        updated = _treeViewController.updateNode(
+    if (doc != null) {
+      if (['', null].contains(doc.filePath)) {
+        List<Node> updated = _treeViewController.updateNode(
             key,
             selectedNode.copyWith(
-                data: doc,
-                icon: NodeIcon(codePoint: Icons.insert_drive_file.codePoint)));
+                icon: NodeIcon(codePoint: Icons.hourglass_bottom.codePoint)));
         setState(() {
           _treeViewController = _treeViewController.copyWith(children: updated);
         });
 
+        doc.file.then((file) {
+          if (file != null) {
+            updated = _treeViewController.updateNode(
+                key,
+                selectedNode.copyWith(
+                    data: doc,
+                    icon: NodeIcon(
+                        codePoint: Icons.insert_drive_file.codePoint)));
+            setState(() {
+              _treeViewController =
+                  _treeViewController.copyWith(children: updated);
+            });
+
+            OpenFile.open(file.path);
+
+          }
+        });
+      } else
         OpenFile.open(doc.filePath);
-      });
-    } else
-      OpenFile.open(doc.filePath);
+    }
   }
 
   _expandNodeHandler(String key, bool expanded) {
