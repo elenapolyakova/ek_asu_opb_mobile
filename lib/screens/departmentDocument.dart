@@ -68,71 +68,8 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
     }
   }
 
-  Future<void> loadNodesTest() async {
-    _nodes = [
-      Node(
-        label: 'Документы',
-        key: 'docs',
-        expanded: docsOpen,
-        icon: NodeIcon(
-          codePoint:
-              docsOpen ? Icons.folder_open.codePoint : Icons.folder.codePoint,
-          // color: 'green'//Theme.of(context).primaryColor.toString(),
-        ),
-        children: [
-          Node(
-              label: 'Воздух',
-              key: 'air',
-              icon: NodeIcon.fromIconData(Icons.input),
-              expanded: true,
-              children: [
-                Node(
-                    label: 'ПДВ.docx',
-                    key: 'air_1',
-                    icon: NodeIcon.fromIconData(Icons.get_app)),
-                Node(
-                    label: 'ВСВ.pdf',
-                    key: 'air_2',
-                    icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
-              ]),
-          Node(
-              label: 'Вода',
-              key: 'water',
-              expanded: true,
-              icon: NodeIcon.fromIconData(Icons.input),
-              children: [
-                Node(
-                    label: 'ПДС.pdf',
-                    key: 'water_1',
-                    icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
-                Node(
-                    label: 'ВСС.pdf',
-                    key: 'water_2',
-                    icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
-              ]),
-          Node(
-              label: 'Отходы',
-              key: 'waste',
-              expanded: true,
-              icon: NodeIcon.fromIconData(Icons.input),
-              children: [
-                Node(
-                    label: 'Лимит.docx',
-                    key: 'waste_1',
-                    icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
-                Node(
-                    label: 'Разрешение.docx',
-                    key: 'waste_2',
-                    icon: NodeIcon.fromIconData(Icons.insert_drive_file)),
-              ]),
-        ],
-      )
-    ];
-  }
-
   loadNodes() async {
-    await DepartmentDocumentController.select(_departmentId,
-        fromServer: true);
+    await DepartmentDocumentController.select(_departmentId, fromServer: true);
 
     _sectionList =
         await DepartmentDocumentController.getSectionList(_departmentId);
@@ -157,28 +94,54 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
 
       _nodes[0].children.add(Node(
           key: section,
-          label: section,
+          label: sectionName[section],
           icon: NodeIcon.fromIconData(Icons.input),
           expanded: true,
-          children: List.generate(
-            sectionDoc.length,
-            (i) => Node(
-                label: sectionDoc[i].fileName,
-                key: sectionDoc[i].id.toString(),
-                data: sectionDoc[i],
-                icon: ['', null].contains(sectionDoc[i].filePath)
-                    ? NodeIcon.fromIconData(Icons.get_app)
-                    : NodeIcon.fromIconData(Icons.insert_drive_file)),
-          )));
+          children: sectionDoc
+              .map(
+                (doc) => Node(
+                        label: doc.fileName,
+                        key: doc.id.toString(),
+                        data: doc,
+                        icon: ['', null].contains(doc.filePath)
+                            ? NodeIcon.fromIconData(Icons.get_app)
+                            : NodeIcon.fromIconData(Icons.insert_drive_file)),
+              )
+              .toList()));
     });
   }
 
   onNodeTap(key) {
-    debugPrint('sdf');
     setState(() {
       _selectedNode = key;
       _treeViewController = _treeViewController.copyWith(selectedKey: key);
     });
+    Node selectedNode = _treeViewController.getNode(key);
+    Document doc = selectedNode.data;
+
+    if (['', null].contains(doc.filePath)) {
+      List<Node> updated = _treeViewController.updateNode(
+          key,
+          selectedNode.copyWith(
+              icon: NodeIcon(codePoint: Icons.hourglass_bottom.codePoint)));
+      setState(() {
+        _treeViewController = _treeViewController.copyWith(children: updated);
+      });
+
+      doc.file.then((value) {
+        updated = _treeViewController.updateNode(
+            key,
+            selectedNode.copyWith(
+                data: doc,
+                icon: NodeIcon(codePoint: Icons.insert_drive_file.codePoint)));
+        setState(() {
+          _treeViewController = _treeViewController.copyWith(children: updated);
+        });
+
+        OpenFile.open(doc.filePath);
+      });
+    } else
+      OpenFile.open(doc.filePath);
   }
 
   _expandNodeHandler(String key, bool expanded) {
