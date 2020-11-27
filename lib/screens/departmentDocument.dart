@@ -5,6 +5,7 @@ import 'package:ek_asu_opb_mobile/controllers/departmentDocument.dart';
 import 'package:ek_asu_opb_mobile/models/departmentDocument.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:flutter_treeview/tree_view.dart';
+import 'package:open_file/open_file.dart';
 
 class DepartmentDocumentScreen extends StatefulWidget {
   int departmentId;
@@ -28,6 +29,12 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
   List<String> _sectionList;
   int _departmentId;
 
+  Map<String, String> sectionName = {
+    'air': 'Воздух',
+    'waste': 'Отходы',
+    'water': 'Вода'
+  };
+
   @override
   void initState() {
     super.initState();
@@ -47,20 +54,21 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
-    } catch (e) {} finally {
-      hideDialog(context);
-      showLoading = false;
-      loadNodes();
-      loadSections();
+      await loadNodes();
+      //await loadSections();
       _treeViewController = TreeViewController(
         children: _nodes,
         selectedKey: _selectedNode,
       );
+    } catch (e) {} finally {
+      hideDialog(context);
+      showLoading = false;
+
       setState(() => {});
     }
   }
 
-  Future<void> loadNodes() async {
+  Future<void> loadNodesTest() async {
     _nodes = [
       Node(
         label: 'Документы',
@@ -122,11 +130,12 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
     ];
   }
 
-  loadSections() async {
+  loadNodes() async {
+    await DepartmentDocumentController.select(_departmentId,
+        fromServer: true);
+
     _sectionList =
         await DepartmentDocumentController.getSectionList(_departmentId);
-    _documentList = await DepartmentDocumentController.select(_departmentId,
-        fromServer: true);
     _nodes = [
       Node(
           label: 'Документы',
@@ -156,16 +165,20 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
             (i) => Node(
                 label: sectionDoc[i].fileName,
                 key: sectionDoc[i].id.toString(),
+                data: sectionDoc[i],
                 icon: ['', null].contains(sectionDoc[i].filePath)
                     ? NodeIcon.fromIconData(Icons.get_app)
                     : NodeIcon.fromIconData(Icons.insert_drive_file)),
           )));
     });
+  }
 
-    _documentList = await DepartmentDocumentController.select(_departmentId,
-        fromServer: true);
-
-    print(_documentList.length);
+  onNodeTap(key) {
+    debugPrint('sdf');
+    setState(() {
+      _selectedNode = key;
+      _treeViewController = _treeViewController.copyWith(selectedKey: key);
+    });
   }
 
   _expandNodeHandler(String key, bool expanded) {
@@ -217,14 +230,7 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
                             supportParentDoubleTap: false,
                             onExpansionChanged: (key, expanded) =>
                                 _expandNodeHandler(key, expanded),
-                            onNodeTap: (key) {
-                              debugPrint('Selected: $key');
-                              setState(() {
-                                _selectedNode = key;
-                                _treeViewController = _treeViewController
-                                    .copyWith(selectedKey: key);
-                              });
-                            },
+                            onNodeTap: onNodeTap,
                             theme: getTreeViewTheme(context)),
                       )
                     ]))));
