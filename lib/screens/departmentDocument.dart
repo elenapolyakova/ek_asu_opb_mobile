@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
+import 'package:ek_asu_opb_mobile/controllers/departmentDocument.dart';
+import 'package:ek_asu_opb_mobile/models/departmentDocument.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:flutter_treeview/tree_view.dart';
 
@@ -9,7 +11,7 @@ class DepartmentDocumentScreen extends StatefulWidget {
 
   @override
   DepartmentDocumentScreen(this.departmentId);
-  
+
   @override
   State<DepartmentDocumentScreen> createState() => _DepartmentDocumentScreen();
 }
@@ -22,6 +24,9 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
   bool deepExpanded = true;
   TreeViewController _treeViewController;
   List<Node> _nodes = [];
+  List<Document> _documentList;
+  List<String> _sectionList;
+  int _departmentId;
 
   @override
   void initState() {
@@ -31,6 +36,7 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
       if (isLogin) {
         auth.getUserInfo().then((userInfo) {
           _userInfo = userInfo;
+          _departmentId = widget.departmentId;
           loadData();
         });
       } //isLogin == true
@@ -45,6 +51,7 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
       hideDialog(context);
       showLoading = false;
       loadNodes();
+      loadSections();
       _treeViewController = TreeViewController(
         children: _nodes,
         selectedKey: _selectedNode,
@@ -113,6 +120,52 @@ class _DepartmentDocumentScreen extends State<DepartmentDocumentScreen> {
         ],
       )
     ];
+  }
+
+  loadSections() async {
+    _sectionList =
+        await DepartmentDocumentController.getSectionList(_departmentId);
+    _documentList = await DepartmentDocumentController.select(_departmentId,
+        fromServer: true);
+    _nodes = [
+      Node(
+          label: 'Документы',
+          key: 'docs',
+          expanded: docsOpen,
+          icon: NodeIcon(
+            codePoint:
+                docsOpen ? Icons.folder_open.codePoint : Icons.folder.codePoint,
+            // color: 'green'//Theme.of(context).primaryColor.toString(),
+          ),
+          children: [])
+    ];
+
+    await Future.forEach(_sectionList, (String section) async {
+      List<Document> sectionDoc = await DepartmentDocumentController.select(
+          _departmentId,
+          section: section,
+          fromServer: false);
+
+      _nodes[0].children.add(Node(
+          key: section,
+          label: section,
+          icon: NodeIcon.fromIconData(Icons.input),
+          expanded: true,
+          children: List.generate(
+            sectionDoc.length,
+            (i) => Node(
+                label: sectionDoc[i].fileName,
+                key: sectionDoc[i].id.toString(),
+                icon: ['', null].contains(sectionDoc[i].filePath)
+                    ? NodeIcon.fromIconData(Icons.get_app)
+                    : NodeIcon.fromIconData(Icons.insert_drive_file)),
+          )));
+    });
+
+    _documentList = await DepartmentDocumentController.select(_departmentId,
+        fromServer: true);
+
+    print(_documentList.length);
   }
 
   _expandNodeHandler(String key, bool expanded) {

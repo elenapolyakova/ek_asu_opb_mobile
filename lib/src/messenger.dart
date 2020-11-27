@@ -82,10 +82,12 @@ class Messenger {
 
     try {
       //загружаем с одоо в бд все новые чаты
+      //ChatController.select(userId, lastDate)
 
       print('Получаем новые сообщения за ${lastDate ?? null}');
       try {
         //загружаем с одоо в бд все новые сообщения
+        // MessageController.select(userId, lastDate)
 
       } catch (e) {
         print('getMessages error: e');
@@ -103,13 +105,12 @@ class Messenger {
       for (var i = 0; i < chatItems.length; i++) {
         MyChat item = MyChat(chatItems[i]);
 
-        int countNew = await getCount(
-            chatItems[i].id, lastDate != null ? DateTime.tryParse(lastDate) : null, userId);
+        int countNew = await getCount(chatItems[i].id, lastDate, userId);
         item.countMessage = countNew;
         myChatItems.add(item);
       }
     } catch (e) {
-       print('getChats error: e');
+      print('getChats error: e');
     }
 
     return myChatItems;
@@ -138,18 +139,23 @@ class Messenger {
     return messageItems.length;
   }
 
-  Future<int> addMessage(MyMessage msg) async {
+  Future<Map<String, dynamic>> addMessage(MyMessage msg) async {
+    Map<String, dynamic> result;
     int id = _messageItems.length + 1;
     msg.id = id;
-    _messageItems.add(msg); //todo добавлять в бд и одоо
-    return id; //todo delete
+    _messageItems.add(msg);//todo добавлять в бд и одоо
+    result = {'code': 1, 'message': '', 'id': id};//todo delete
+    
+    return result; 
   }
 
-  Future<int> addChat(Chat chat) async {
+  Future<Map<String, dynamic>> addChat(Chat chat) async {
+    Map<String, dynamic> result;
     int id = _chatItems.length + 1;
     chat.id = id;
     _chatItems.add(chat); //todo добавлять в бд и одоо
-    return id; //todo delete
+     result = {'code': 1, 'message': '', 'id': id}; //todo delete
+    return result; 
   }
 
   Future<List<MyMessage>> getMessages(int chatId, DateTime lastDate) async {
@@ -168,12 +174,14 @@ class Messenger {
     return messageItems;
   }
 
-  Future<int> getCountMessage() async {
+  Future<int> getCountMessage(int userId) async {
     //для счетчика количества новых сообщений
     String keyDate = 'countMessageDate';
     dynamic lastDate = (await getLastUpdate(keyDate));
     int countNew = 1;
-    var domain = lastDate != null ? ['write_date', '>', lastDate] : [];
+    //await MessageController.selectAll(userId, lastDate)
+
+   // var domain = lastDate != null ? ['write_date', '>', lastDate] : [];
     //int countNew =
     //await getDataWithAttemp('mob.chat.msg', 'search_count', domain, {});
 
@@ -191,7 +199,7 @@ class Messenger {
     String sLastUpdate = await _storage.read(key: 'messengerDates');
     if (sLastUpdate == null) return null;
     dynamic lastUpdate = json.decode(sLastUpdate);
-    if (lastUpdate[key] != null) return lastUpdate[key];
+    if (lastUpdate[key] != null) return DateTime.parse(lastUpdate[key]);
     return null;
   }
 

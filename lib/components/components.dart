@@ -1322,7 +1322,7 @@ class HomeIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color color = Theme.of(context).primaryColorLight;
-    TextStyle textStyle = TextStyle(fontSize: 12, color: color);
+    TextStyle textStyle = TextStyle(fontSize: 16, color: color);
 
     goHome() {
       Navigator.pushNamed(context, '/home', arguments: {'first': false});
@@ -1330,15 +1330,17 @@ class HomeIcon extends StatelessWidget {
 
     return GestureDetector(
         onTap: goHome,
-        child: Column(children: [
-          Container(
-              height: 20,
-              width: 20,
-              child: IconButton(
-                  padding: EdgeInsets.all(0),
-                  icon: Icon(Icons.home), //Icons.logout),
-                  color: color,
-                  onPressed: goHome)),
+        child: Column(mainAxisAlignment: MainAxisAlignment.start, children: [
+           Container(
+                  alignment: Alignment.topCenter,
+                  height: 40,
+                  width: 40,
+                  child: IconButton(
+                      padding: EdgeInsets.all(0),
+                      icon: Icon(Icons.home),
+                      iconSize: 45, //Icons.logout),
+                      color: color,
+                      onPressed: goHome)),
           new Text('Главная страница', style: textStyle)
         ]));
   }
@@ -1484,7 +1486,8 @@ class _MyAppBar extends State<MyAppBar> {
   void getCountMessage() async {
     print(
         'get new message for user ${widget.userInfo.id} from ${widget.parentScreen}');
-    _countMessage = (await Messenger.messenger.getCountMessage());
+    _countMessage =
+        (await Messenger.messenger.getCountMessage(widget.userInfo.id));
     setState(() {});
   }
 
@@ -1526,9 +1529,13 @@ class _MyAppBar extends State<MyAppBar> {
         toolbarHeight: 100,
         leadingWidth: 100,
         centerTitle: false,
-        leading: Column(children: [
-          widget.showMessenger
-              ? /*TextIcon(
+        leading: null,
+        title: Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+          Expanded(
+            child: Column(children: [
+              Row(children: [
+                widget.showMessenger
+                    ? /*TextIcon(
                   icon: Icons.message,
                   text: 'Чат',
                   onTap: () => Navigator.pushNamed(context, '/messenger'),
@@ -1536,81 +1543,85 @@ class _MyAppBar extends State<MyAppBar> {
                   color: hasNewMessage
                       ? Colors.red
                       : Theme.of(context).primaryColorLight)*/
-              MyChatIcon(_countMessage)
-              : Container(
-                  child: Text(''),
-                  height: 43,
-                ),
-          widget.showBack
-              ? TextIcon(
-                  icon: Icons.arrow_back_ios,
-                  text: 'Назад',
-                  onTap: () => Navigator.pop(context),
-                  margin: 0,
-                  color: Theme.of(context).primaryColorLight)
-              : Container(
-                  child: Text(''),
-                  height: 30,
-                ),
-        ]),
-        title: Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-          Expanded(child: Center(child: HomeIcon())),
+                    MyChatIcon(_countMessage)
+                    : Container(
+                        child: Text(''),
+                        height: 43,
+                      ),
+                Container(
+                    child: Center(
+                  child: widget.showIsp
+                      ? TextIcon(
+                          icon: Icons.plagiarism,
+                          text: 'ИСП',
+                          margin: 10,
+                          onTap: () => Navigator.pushNamed(context, '/ISP'),
+                          color: Theme.of(context).primaryColorLight)
+                      : Text(''),
+                )),
+                Container(
+                    child: Center(
+                  child: widget.syncTask != null
+                      ? TextIcon(
+                          icon: Icons.cached,
+                          text: 'Синхронизировать',
+                          onTap: widget.syncTask,
+                          margin: 10,
+                          color: Theme.of(context).primaryColorLight)
+                      : Text(''),
+                )),
+              ]),
+              widget.showBack
+                  ? TextIcon(
+                      icon: Icons.arrow_back_ios,
+                      text: 'Назад',
+                      onTap: () => Navigator.pop(context),
+                      margin: 0,
+                      color: Theme.of(context).primaryColorLight)
+                  : Container(
+                      child: Text(''),
+                      height: 30,
+                    ),
+            ]),
+          ),
+          Container(child: Center(child: HomeIcon())),
+          Expanded(
+              child: Container(
+                  alignment: Alignment.centerRight,
+                  child: Column(
+                    // mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                        Container(
+                            child: TextIcon(
+                          icon: Icons.account_circle_rounded,
+                          text: widget.userInfo != null
+                              ? widget.userInfo.display_name
+                              : "",
+                          margin: 0,
+                          onTap: () => {},
+                          color: Theme.of(context).primaryColorLight,
+                          fontSize: 20,
+                          iconSize: 30,
+                        ))
+                      ]),
+                      Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                        Container(
+                          child: TextIcon(
+                              icon: Icons.exit_to_app,
+                              text: 'Выход',
+                              margin: 0,
+                              onTap: () => LogOut(context),
+                              color: Theme.of(context).primaryColorLight),
+                        )
+                      ]),
+                    ],
+                  )))
         ]),
         automaticallyImplyLeading: false,
         backgroundColor: Theme.of(context).primaryColorDark,
-        actions: <Widget>[
-          Padding(
-              padding: EdgeInsets.only(right: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  TextIcon(
-                    icon: Icons.account_circle_rounded,
-                    text: widget.userInfo != null
-                        ? widget.userInfo.display_name
-                        : "",
-                    margin: 0,
-                    onTap: () => {},
-                    color: Theme.of(context).primaryColorLight,
-                    fontSize: 20,
-                    iconSize: 30,
-                  ),
-                  Row(
-                    children: [
-                      Container(
-                          child: Center(
-                        child: widget.syncTask != null
-                            ? TextIcon(
-                                icon: Icons.cached,
-                                text: 'Синхронизировать',
-                                onTap: widget.syncTask,
-                                margin: 15,
-                                color: Theme.of(context).primaryColorLight)
-                            : Text(''),
-                      )),
-                      Container(
-                          child: Center(
-                        child: widget.showIsp
-                            ? TextIcon(
-                                icon: Icons.plagiarism,
-                                text: 'ИСП',
-                                margin: 15,
-                                onTap: () =>
-                                    Navigator.pushNamed(context, '/ISP'),
-                                color: Theme.of(context).primaryColorLight)
-                            : Text(''),
-                      )),
-                      TextIcon(
-                          icon: Icons.exit_to_app,
-                          text: 'Выход',
-                          margin: 0,
-                          onTap: () => LogOut(context),
-                          color: Theme.of(context).primaryColorLight),
-                    ],
-                  ),
-                ],
-              ))
-        ]);
+        actions: null);
   }
 }
 
@@ -1633,7 +1644,7 @@ class MyChatContainer extends StatelessWidget {
     );
 
     return GestureDetector(
-        onTap: () =>  onTap(_id),
+        onTap: () => onTap(_id),
         child: Container(
           //height: 70,
           padding: EdgeInsets.symmetric(horizontal: 10),

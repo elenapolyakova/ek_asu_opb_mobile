@@ -12,7 +12,7 @@ class MapScreen extends StatefulWidget {
   int checkPlanId;
 
   @override
-  MapScreen({this.departmentId, checkPlanId});
+  MapScreen({this.departmentId, this.checkPlanId});
 
   @override
   State<MapScreen> createState() => _MapScreen();
@@ -21,6 +21,8 @@ class MapScreen extends StatefulWidget {
 class _MapScreen extends State<MapScreen> {
   UserInfo _userInfo;
   bool showLoading = true;
+  int departmentId;
+  int checkPlanId;
 
   // ADD THIS
   MapController mapController = MapController();
@@ -36,7 +38,8 @@ class _MapScreen extends State<MapScreen> {
       if (isLogin) {
         auth.getUserInfo().then((userInfo) {
           _userInfo = userInfo;
-
+          departmentId = widget.departmentId;
+          checkPlanId = widget.checkPlanId;
           loadData();
         });
       } //isLogin == true
@@ -47,6 +50,8 @@ class _MapScreen extends State<MapScreen> {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
+      //<-----сюда вставить загрузку данных
+
     } catch (e) {} finally {
       hideDialog(context);
       showLoading = false;
@@ -56,6 +61,7 @@ class _MapScreen extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
+  
     // You can use the userLocationOptions object to change the properties
     // of UserLocationOptions in runtime
     userLocationOptions = UserLocationOptions(
@@ -63,7 +69,11 @@ class _MapScreen extends State<MapScreen> {
       mapController: mapController,
       markers: markers,
     );
-    return Expanded(
+    return 
+     showLoading
+            ? Expanded(child: Text("")) :
+
+    Expanded(
         child: Scaffold(
             appBar: AppBar(title: Text("User Location Plugin")),
             body: FlutterMap(

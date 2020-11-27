@@ -42,6 +42,7 @@ class _MessengerScreen extends State<MessengerScreen> {
   String _msg;
   bool _stop;
   ScrollController _controller;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   _MessengerScreen(bool stop) {
     _stop = stop;
@@ -84,7 +85,6 @@ class _MessengerScreen extends State<MessengerScreen> {
       } //isLogin == true
     }); //checkLoginStatus
   }
-
 
   Future<void> loadData() async {
     try {
@@ -136,7 +136,6 @@ class _MessengerScreen extends State<MessengerScreen> {
 
       if (_selectedChat != null) await onChatTap(_selectedChat.item.id);
       setState(() {});
-    
     } catch (e) {
       print(e);
     }
@@ -177,30 +176,55 @@ class _MessengerScreen extends State<MessengerScreen> {
     //Пытаемся сохранить, если успех - добавляем ?
     MyMessage msg =
         MyMessage(null, _selectedChat.item.id, _msg, DateTime.now(), _myUid);
+    bool hasErorr = false;
 
-    int newId = await Messenger.messenger.addMessage(msg);
-    msg.id = newId;
+    try {
+      Map<String, dynamic> result = await Messenger.messenger.addMessage(msg);
+      hasErorr = result["code"] < 0;
 
-    _msg = '';
+      if (hasErorr) {
+        _scaffoldKey.currentState.showSnackBar(
+            errorSnackBar(text: 'Произошла ошибка при отправке сообщения'));
+        return;
+      }
+      msg.id = result["id"];
+      _msg = '';
 
-    setState(() {
-      _messageItems.add(msg);
-    });
-   
+      setState(() {
+        _messageItems.add(msg);
+      });
+    } catch (e) {
+      _scaffoldKey.currentState.showSnackBar(
+          errorSnackBar(text: 'Произошла ошибка при при отправке сообщения'));
+    }
   }
 
   addChat(User reciver) async {
     Chat chat = Chat(null, null, [_myUid, reciver.id], 1);
-    int newId = await Messenger.messenger.addChat(chat);
-    chat.id = newId;
-    chat.name = (await UserController.selectById(reciver.id)).display_name;
-    MyChat newChat = MyChat(chat);
-    _chatItems.add(newChat);
-    _selectedChat.dtLastLoadMessage = null;
-    _selectedChat = newChat;
-    _availableUser.removeWhere((user) => user.id == reciver.id);
-    _messageItems = [];
-    setState(() {});
+    bool hasErorr = false;
+
+    try {
+      Map<String, dynamic> result = await Messenger.messenger.addChat(chat);
+      hasErorr = result["code"] < 0;
+
+      if (hasErorr) {
+        _scaffoldKey.currentState.showSnackBar(
+            errorSnackBar(text: 'Произошла ошибка при отправке сообщения'));
+        return;
+      }
+      chat.id = result["id"];
+      chat.name = (await UserController.selectById(reciver.id)).display_name;
+      MyChat newChat = MyChat(chat);
+      _chatItems.add(newChat);
+      _selectedChat.dtLastLoadMessage = null;
+      _selectedChat = newChat;
+      _availableUser.removeWhere((user) => user.id == reciver.id);
+      _messageItems = [];
+      setState(() {});
+    } catch (e) {
+      _scaffoldKey.currentState.showSnackBar(
+          errorSnackBar(text: 'Произошла ошибка при при отправке сообщения'));
+    }
   }
 
   Future<void> onChatTap(int chatId) async {
@@ -236,7 +260,6 @@ class _MessengerScreen extends State<MessengerScreen> {
       setState(() {
         _messageItems.addAll(newMessageItems);
       });
-     
     } catch (e) {
       print(e);
     }
@@ -277,7 +300,8 @@ class _MessengerScreen extends State<MessengerScreen> {
           duration: Duration(milliseconds: 200), curve: Curves.ease);
     });
 
-    return Scaffold(
+    return new Scaffold(
+        key: _scaffoldKey,
         appBar: PreferredSize(
             preferredSize: Size.fromHeight(100),
             child: MyAppBar(
@@ -285,172 +309,178 @@ class _MessengerScreen extends State<MessengerScreen> {
                 userInfo: _userInfo,
                 syncTask: null,
                 showMessenger: false)),
-        body: Container(
-            child: showLoading
-                ? Text("")
-                : Row(
-                    children: [
-                      Expanded(
-                          flex: 1,
-                          child: Container(
-                              color: Theme.of(context).primaryColor,
-                              child: Column(
-                                children: [
-                                  SearchWidget<User>(
-                                    key:
-                                        Key('userList${_availableUser.length}'),
-                                    dataList: _availableUser,
-                                    hideSearchBoxWhenItemSelected: false,
-                                    listContainerHeight:
-                                        MediaQuery.of(context).size.height / 2,
-                                    queryBuilder: (query, list) {
-                                      return list
-                                          .where((item) => item.display_name
-                                              .toLowerCase()
-                                              .contains(query.toLowerCase()))
-                                          .toList();
-                                    },
-                                    popupListItemBuilder: (item) {
-                                      return PopupListItemWidget(
-                                          item.display_name);
-                                    },
-                                    selectedItemBuilder:
-                                        (selectedItem, deleteSelectedItem) {
-                                      return Text('');
-                                      // return SelectedItemWidget(
-                                      //      selectedItem, deleteSelectedItem);
-                                    },
-                                    // widget customization
-                                    noItemsFoundWidget: NoItemsFound(),
-                                    textFieldBuilder: (controller, focusNode) {
-                                      return MyTextField(controller, focusNode,
-                                          hintText: 'Введите ФИО сотрудника');
-                                    },
-                                    onItemSelected: (item) async {
-                                      await addChat(item);
-                                      //setState(() {});
-                                    },
-                                  ),
+        body: Builder(
+            builder: (context) => Container(
+                child: showLoading
+                    ? Text("")
+                    : Row(
+                        children: [
+                          Expanded(
+                              flex: 1,
+                              child: Container(
+                                  color: Theme.of(context).primaryColor,
+                                  child: Column(
+                                    children: [
+                                      SearchWidget<User>(
+                                        key: Key(
+                                            'userList${_availableUser.length}'),
+                                        dataList: _availableUser,
+                                        hideSearchBoxWhenItemSelected: false,
+                                        listContainerHeight:
+                                            MediaQuery.of(context).size.height /
+                                                2,
+                                        queryBuilder: (query, list) {
+                                          return list
+                                              .where((item) => item.display_name
+                                                  .toLowerCase()
+                                                  .contains(
+                                                      query.toLowerCase()))
+                                              .toList();
+                                        },
+                                        popupListItemBuilder: (item) {
+                                          return PopupListItemWidget(
+                                              item.display_name);
+                                        },
+                                        selectedItemBuilder:
+                                            (selectedItem, deleteSelectedItem) {
+                                          return Text('');
+                                          // return SelectedItemWidget(
+                                          //      selectedItem, deleteSelectedItem);
+                                        },
+                                        // widget customization
+                                        noItemsFoundWidget: NoItemsFound(),
+                                        textFieldBuilder:
+                                            (controller, focusNode) {
+                                          return MyTextField(
+                                              controller, focusNode,
+                                              hintText:
+                                                  'Введите ФИО сотрудника');
+                                        },
+                                        onItemSelected: (item) async {
+                                          await addChat(item);
+                                          //setState(() {});
+                                        },
+                                      ),
+                                      Expanded(
+                                          child: SingleChildScrollView(
+                                              child: Column(
+                                                  children: List.generate(
+                                                      _chatItems.length, (i) {
+                                        int id = _chatItems[i].item.id;
+                                        return MyChatContainer(
+                                            _chatItems[i].item.id,
+                                            _chatItems[i].item.name ?? "",
+                                            _chatItems[i].countMessage,
+                                            _selectedChat != null &&
+                                                _chatItems[i].item.id ==
+                                                    _selectedChat.item.id,
+                                            onChatTap);
+                                      }))))
+                                    ],
+                                  ))),
+                          Expanded(
+                              flex: 3,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                    image: DecorationImage(
+                                        image: AssetImage(
+                                            "assets/images/frameScreen.png"),
+                                        fit: BoxFit.fill)),
+                                child: Column(children: [
                                   Expanded(
                                       child: SingleChildScrollView(
-                                          child: Column(
-                                              children: List.generate(
-                                                  _chatItems.length, (i) {
-                                    int id = _chatItems[i].item.id;
-                                    return MyChatContainer(
-                                        _chatItems[i].item.id,
-                                        _chatItems[i].item.name ?? "",
-                                        _chatItems[i].countMessage,
-                                        _selectedChat != null &&
-                                            _chatItems[i].item.id ==
-                                                _selectedChat.item.id,
-                                        onChatTap);
-                                  }))))
-                                ],
-                              ))),
-                      Expanded(
-                          flex: 3,
-                          child: Container(
-                            decoration: BoxDecoration(
-                                image: DecorationImage(
-                                    image: AssetImage(
-                                        "assets/images/frameScreen.png"),
-                                    fit: BoxFit.fill)),
-                            child: Column(children: [
-                              Expanded(
-                                  child: SingleChildScrollView(
-                                scrollDirection: Axis.vertical,
-                                child: Column(children: msgs),
-                                controller: _controller,
-                              )),
-                              Container(
-                                  child: Container(
-                                      decoration: BoxDecoration(
-                                          border: Border.all(
-                                              color: Theme.of(context)
-                                                  .primaryColorLight,
-                                              width: 1.5),
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(0)),
-                                          color: Theme.of(context)
-                                              .primaryColorLight),
-                                      child: Row(children: [
-                                        Expanded(
-                                            child: ConstrainedBox(
-                                                constraints: BoxConstraints(
-                                                    maxHeight: 150),
-                                                child: SingleChildScrollView(
-                                                    scrollDirection:
-                                                        Axis.vertical,
-                                                    child: GestureDetector(
-                                                        onTap: () {
-                                                          showEdit(
-                                                            _msg,
-                                                            'Сообщение',
-                                                            context,
-                                                          ).then((newValue) =>
-                                                              setState(() {
-                                                                _msg =
-                                                                    newValue ??
-                                                                        "";
-                                                              }));
-                                                        },
-                                                        child: AbsorbPointer(
-                                                          child: TextField(
-                                                            readOnly: true,
-
-                                                            controller: TextEditingController.fromValue(
-                                                                TextEditingValue(
-                                                                    text: _msg !=
-                                                                            null
-                                                                        ? _msg
-                                                                            .toString()
-                                                                        : "")),
-                                                            decoration: new InputDecoration(
-                                                                hintText:
-                                                                    'Введите сообщение...',
-                                                                border: OutlineInputBorder(
-                                                                    borderSide:
-                                                                        BorderSide
-                                                                            .none),
-                                                                contentPadding:
-                                                                    EdgeInsets
-                                                                        .all(
-                                                                            5.0)),
-
-                                                            maxLines: null,
-                                                            // maxLength: 256,
-                                                          ),
-                                                        ))))),
-                                        _msg != null && _msg.length > 0
-                                            ? Container(
-                                                margin: EdgeInsets.all(5),
-                                                height: 40,
-                                                width: 40,
-                                                alignment: Alignment.center,
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.all(
-                                                          Radius.circular(12)),
-                                                  color: Theme.of(context)
-                                                      .primaryColor,
-                                                ),
-                                                child: IconButton(
-                                                  icon: Icon(Icons.send),
-                                                  iconSize: 24,
-                                                  onPressed: _msg != null &&
-                                                          _msg.length > 0
-                                                      ? sendMessage
-                                                      : null,
+                                    scrollDirection: Axis.vertical,
+                                    child: Column(children: msgs),
+                                    controller: _controller,
+                                  )),
+                                  if (_selectedChat != null)
+                                  Container(
+                                      child: Container(
+                                          decoration: BoxDecoration(
+                                              border: Border.all(
                                                   color: Theme.of(context)
                                                       .primaryColorLight,
-                                                ))
-                                            : Text('')
-                                      ])))
-                            ]),
-                          )),
-                    ],
-                  ) //getBodyContent(),
-            ));
+                                                  width: 1.5),
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(0)),
+                                              color: Theme.of(context)
+                                                  .primaryColorLight),
+                                          child: Row(children: [
+                                            Expanded(
+                                                child: ConstrainedBox(
+                                                    constraints: BoxConstraints(
+                                                        maxHeight: 150),
+                                                    child:
+                                                        SingleChildScrollView(
+                                                            scrollDirection:
+                                                                Axis.vertical,
+                                                            child:
+                                                                GestureDetector(
+                                                                    onTap: () {
+                                                                      showEdit(
+                                                                        _msg,
+                                                                        'Сообщение',
+                                                                        context,
+                                                                      ).then((newValue) =>
+                                                                          setState(
+                                                                              () {
+                                                                            _msg =
+                                                                                newValue ?? "";
+                                                                          }));
+                                                                    },
+                                                                    child:
+                                                                        AbsorbPointer(
+                                                                      child:
+                                                                          TextField(
+                                                                        readOnly:
+                                                                            true,
+
+                                                                        controller: TextEditingController.fromValue(TextEditingValue(
+                                                                            text: _msg != null
+                                                                                ? _msg.toString()
+                                                                                : "")),
+                                                                        decoration: new InputDecoration(
+                                                                            hintText:
+                                                                                'Введите сообщение...',
+                                                                            border:
+                                                                                OutlineInputBorder(borderSide: BorderSide.none),
+                                                                            contentPadding: EdgeInsets.all(5.0)),
+
+                                                                        maxLines:
+                                                                            null,
+                                                                        // maxLength: 256,
+                                                                      ),
+                                                                    ))))),
+                                            _msg != null && _msg.length > 0
+                                                ? Container(
+                                                    margin: EdgeInsets.all(5),
+                                                    height: 40,
+                                                    width: 40,
+                                                    alignment: Alignment.center,
+                                                    decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.all(
+                                                              Radius.circular(
+                                                                  12)),
+                                                      color: Theme.of(context)
+                                                          .primaryColor,
+                                                    ),
+                                                    child: IconButton(
+                                                      icon: Icon(Icons.send),
+                                                      iconSize: 24,
+                                                      onPressed: _msg != null &&
+                                                              _msg.length > 0
+                                                          ? () => sendMessage()
+                                                          : null,
+                                                      color: Theme.of(context)
+                                                          .primaryColorLight,
+                                                    ))
+                                                : Text('')
+                                          ])))
+                                ]),
+                              )),
+                        ],
+                      ) //getBodyContent(),
+                )));
   }
 }
