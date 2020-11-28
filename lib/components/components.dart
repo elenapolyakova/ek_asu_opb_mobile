@@ -716,7 +716,7 @@ class _DatePicker extends State<DatePicker> {
                           children: <Widget>[
                             Container(
                                 padding: const EdgeInsets.only(left: 16.0),
-                                child: Text(
+                                child: _selectedDate == null ? Text('') : Text(
                                   DateFormat('dd.MM.yyyy')
                                       .format(_selectedDate),
                                   style: textStyle,
@@ -1485,7 +1485,7 @@ class _MyAppBar extends State<MyAppBar> {
     super.initState();
     _countMessage = 0;
     if (widget.showMessenger != null && !widget.showMessenger) return;
-    getCountMessage();
+    //getCountMessage();
 
     createTimer();
   }

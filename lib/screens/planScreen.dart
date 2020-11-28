@@ -259,11 +259,11 @@ class _PlanScreen extends State<PlanScreen> {
                                 context, planItemHeader, planItems)
                           ])
                       ])),
-                  Container(
+                 /* Container(
                       child: MyButton(
                           text: 'test',
                           parentContext: context,
-                          onPress: testClicked))
+                          onPress: testClicked))*/
                 ])));
   }
 
@@ -1005,14 +1005,14 @@ class _PlanScreen extends State<PlanScreen> {
 
   Future<void> testClicked() async {
     print('test');
-    GeoPoint point = await Geo.geo.geolocatorToGeoPoint();
+   // GeoPoint point = await Geo.geo.geolocatorToGeoPoint();
 
     //List result = await DepartmentDocumentController.selectAll();
-    //List result = await DBProvider.db.selectAll('department_document');
+    List result = await DBProvider.db.selectAll('fault_item');
 
     //await DBProvider.db.deleteAll('plan_item');
     //await DBProvider.db.deleteAll('plan');
-    print(point.latitude);
+  //  print(point.latitude);
     print('result');
   }
 }
