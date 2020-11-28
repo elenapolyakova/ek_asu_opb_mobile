@@ -16,10 +16,10 @@ class Fault extends Models {
   String desc_done;
   // used or not
   bool active;
-  // GEO
-  double lat;
-  double lon;
-  //
+  // // GEO
+  // double lat;
+  // double lon;
+  // //
   DateTime plan_fix_date;
 
   Fault({
@@ -35,8 +35,8 @@ class Fault extends Models {
     this.date_done,
     this.desc_done,
     this.active,
-    this.lat,
-    this.lon,
+    // this.lat,
+    // this.lon,
     this.plan_fix_date,
   });
 
@@ -55,8 +55,8 @@ class Fault extends Models {
             : DateTime.parse(json["date_done"]),
         desc_done: getObj(json["desc_done"]),
         active: (json["active"].toString() == 'true'),
-        lat: getObj(json["lat"]),
-        lon: getObj(json["lon"]),
+        // lat: getObj(json["lat"]),
+        // lon: getObj(json["lon"]),
         plan_fix_date: json["plan_fix_date"] == null
             ? null
             : DateTime.parse(json["plan_fix_date"]),
@@ -76,8 +76,8 @@ class Fault extends Models {
       'date_done': dateTimeToString(date_done),
       'desc_done': desc_done,
       'active': (active == null || !active) ? 'false' : 'true',
-      'lat': lat,
-      'lon': lon,
+      // 'lat': lat,
+      // 'lon': lon,
       'plan_fix_date': dateTimeToString(plan_fix_date),
     };
   }
@@ -94,6 +94,7 @@ class Fault extends Models {
       'fine_desc': fine_desc,
       'fine': fine,
       'koap_id': koap_id,
+      'date_done': dateTimeToString(date_done),
       'plan_fix_date': dateTimeToString(plan_fix_date),
     };
   }
