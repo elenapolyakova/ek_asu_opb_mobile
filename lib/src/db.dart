@@ -63,7 +63,7 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS document_list(id INTEGER PRIMARY KEY, name TEXT, parent_id INTEGER)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS nci_document(id INTEGER PRIMARY KEY, parent2_id INTEGER, name TEXT, date TEXT, number TEXT, description TEXT, file_name TEXT, file_data STRING, type INTEGER, is_new TEXT)");
+            "CREATE TABLE IF NOT EXISTS isp_document(id INTEGER PRIMARY KEY, parent2_id INTEGER, name TEXT, date TEXT, number TEXT, description TEXT, file_name TEXT, file_path TEXT, type INTEGER, is_new TEXT)");
       },
       onUpgrade: (db, oldVersion, version) async {
         switch (oldVersion) {

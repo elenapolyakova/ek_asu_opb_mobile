@@ -1,5 +1,5 @@
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
-import 'package:ek_asu_opb_mobile/models/nci.dart';
+import 'package:ek_asu_opb_mobile/models/isp.dart';
 
 class DocumentListController extends Controllers {
   static String _tableName = "document_list";
@@ -24,6 +24,19 @@ class DocumentListController extends Controllers {
       _tableName,
       where: "parent_id IS NULL",
     );
+
+    if (queryRes == null || queryRes.length == 0) return [];
+
+    List<DocumentList> documentLists =
+        queryRes.map((e) => DocumentList.fromJson(e)).toList();
+
+    return documentLists;
+  }
+
+  // Get child documentList
+  static Future<List<DocumentList>> select(int parentId) async {
+    List<Map<String, dynamic>> queryRes = await DBProvider.db
+        .select(_tableName, where: "parent_id = ?", whereArgs: [parentId]);
 
     if (queryRes == null || queryRes.length == 0) return [];
 
