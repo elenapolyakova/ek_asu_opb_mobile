@@ -11,8 +11,8 @@ class NCIDocument extends Models {
   String description;
   String file_name;
   String file_data;
-  String type;
-  bool is_new = true;
+  int type;
+  bool is_new;
 
   NCIDocument({
     this.id,
