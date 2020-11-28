@@ -92,7 +92,7 @@ class ISPDocumentController extends Controllers {
           .update(_tableName, {'id': document.id, 'file_path': path});
       await File(path).create(recursive: true);
       return base64ToFile(
-        record['data'],
+        record['file_data'],
         path: path,
       );
     }
