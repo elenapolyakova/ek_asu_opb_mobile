@@ -17,4 +17,19 @@ class DocumentListController extends Controllers {
     var json = await DBProvider.db.selectById(_tableName, id);
     return DocumentList.fromJson(json);
   }
+
+  // Get all primary documents lists. Root elements in tree!
+  static Future<List<DocumentList>> getAllRoot() async {
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
+      _tableName,
+      where: "parent_id IS NULL",
+    );
+
+    if (queryRes == null || queryRes.length == 0) return [];
+
+    List<DocumentList> documentLists =
+        queryRes.map((e) => DocumentList.fromJson(e)).toList();
+
+    return documentLists;
+  }
 }
