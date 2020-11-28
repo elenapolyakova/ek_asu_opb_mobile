@@ -18,6 +18,10 @@ class FaultItem extends Models {
   // File data base64
   String file_data;
 
+  // GEO
+  double coord_n;
+  double coord_e;
+
   FaultItem({
     this.id,
     this.odoo_id,
@@ -28,6 +32,8 @@ class FaultItem extends Models {
     this.active,
     this.file_data,
     this.file_name,
+    this.coord_n,
+    this.coord_e,
   });
 
   static Map<int, String> typeSelection = {
@@ -53,6 +59,8 @@ class FaultItem extends Models {
         active: (json["active"].toString() == 'true'),
         file_data: json["file_data"],
         file_name: json["file_name"],
+        coord_e: json["coord_e"],
+        coord_n: json["coord_n"],
       );
 
   Map<String, dynamic> toJson([omitId = false]) {
@@ -66,6 +74,8 @@ class FaultItem extends Models {
       'active': (active == null || !active) ? 'false' : 'true',
       'file_data': file_data,
       'file_name': file_name,
+      'coord_n': coord_n,
+      'coord_e': coord_e,
     };
     if (omitId) {
       res.remove("id");
@@ -76,6 +86,6 @@ class FaultItem extends Models {
 
   @override
   String toString() {
-    return 'FaultItem {id: $id, odooId: $odoo_id, name: $name, type: $type, parent_id: $parent_id, image: $image, active: $active, file_data: $file_data, file_name: $file_name}';
+    return 'FaultItem {id: $id, odooId: $odoo_id, name: $name, type: $type, parent_id: $parent_id, image: $image, active: $active, file_data: $file_data, file_name: $file_name, coord_n: $coord_n, coord_e: $coord_e}';
   }
 }
