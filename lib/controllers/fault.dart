@@ -3,7 +3,10 @@ import "package:ek_asu_opb_mobile/controllers/faultItem.dart";
 import 'package:ek_asu_opb_mobile/models/fault.dart';
 import 'package:ek_asu_opb_mobile/models/faultItem.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import "package:ek_asu_opb_mobile/controllers/syn.dart";
 import 'dart:io';
+import 'package:ek_asu_opb_mobile/src/fileStorage.dart';
+import 'package:uuid/uuid.dart';
 
 class FaultController extends Controllers {
   static String _tableName = "fault";
@@ -18,7 +21,8 @@ class FaultController extends Controllers {
 
 // path to files means path to photos of Faults storing in internal memory
   static Future<Map<String, dynamic>> create(
-      Fault fault, List<String> pathsToFiles) async {
+      Fault fault, List<String> pathsToFiles,
+      [bool saveOdooId = false]) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
@@ -28,16 +32,19 @@ class FaultController extends Controllers {
     print("Fault $fault; pathToFiles $pathsToFiles");
 
     Map<String, dynamic> json = fault.toJson();
-    json.remove("id");
-
-    // Warning only for local db!!!
-    // When enable loading from odoo, delete this code
-    json["odooId"] = null;
+    //
+    if (saveOdooId) json.remove("id");
 
     await DBProvider.db.insert(_tableName, json).then((resId) {
       res['code'] = 1;
       res['id'] = resId;
       res['message'] = "Нарушение создано";
+      if (!saveOdooId) {
+        return SynController.create(_tableName, resId).catchError((err) {
+          res['code'] = -2;
+          res['message'] = 'Error updating syn';
+        });
+      }
     }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error create Fault into $_tableName';
@@ -51,17 +58,20 @@ class FaultController extends Controllers {
         for (var photoPath in pathsToFiles) {
           try {
             FaultItem item = new FaultItem();
+            // Set properties
             item.active = true;
             item.image = photoPath;
             item.parent_id = res["id"];
-
+            item.file_data = fileToBase64(photoPath);
+            item.type = 2;
+            item.name = Uuid().v1();
+            item.file_name = item.name + ".jpg";
             var insertResp = await FaultItemController.create(item);
             print("Fault item insert response $insertResp");
           } catch (e) {
             print("Create() Fault Error! Error while creating faultItems: $e");
             res["code"] = -3;
             res["message"] = "Ошибка при создании нарушения и св. фотографий";
-            return res;
           }
         }
       }
@@ -107,12 +117,20 @@ class FaultController extends Controllers {
     var createdFaultItemsIds = [];
     var deletedFaultItemsIds = [];
 
+    // Get odooId
+    Future<int> odooId = selectOdooId(fault.id);
+
     // Mainly update fault record
     await DBProvider.db
         .update(_tableName, fault.prepareForUpdate())
         .then((resId) async {
       res['code'] = 1;
       res['id'] = resId;
+      await SynController.edit(_tableName, fault.id, await odooId)
+          .catchError((err) {
+        res['code'] = -2;
+        res['message'] = 'Error updating syn';
+      });
     }).catchError((err) {
       res["code"] = -3;
       res["message"] = "Error updating $_tableName";
@@ -125,8 +143,12 @@ class FaultController extends Controllers {
           FaultItem faultItem = new FaultItem();
           faultItem.active = true;
           faultItem.image = path;
-          // set id of parent
           faultItem.parent_id = fault.id;
+          // Get file by path and convert to base64
+          faultItem.file_data = fileToBase64(path);
+          faultItem.type = 2;
+          faultItem.name = Uuid().v1();
+          faultItem.file_name = faultItem.name + ".jpg";
 
           var createResp = await FaultItemController.create(faultItem);
           if (createResp["code"] > 0)
@@ -135,7 +157,6 @@ class FaultController extends Controllers {
           print("Fault Update() Error! Error while creating new faultItem: $e");
           res["code"] = -3;
           res["message"] = "Ошибка при добавлении новых фото";
-          return res;
         }
       }
     }
@@ -162,7 +183,6 @@ class FaultController extends Controllers {
             "Fault Update() Error! Error while deleting existing faultItem: $e");
         res["code"] = -3;
         res["message"] = "Ошибка при удалении ранее сохраненных  фото";
-        return res;
       }
     }
 
@@ -170,8 +190,6 @@ class FaultController extends Controllers {
     return res;
   }
 
-  // Important! Set active false now only to fault, not assigned photos and etc.
-  // Rework after making controllers for faultItem
   static Future<Map<String, dynamic>> delete(int faultId) async {
     Map<String, dynamic> res = {
       'code': null,
@@ -180,10 +198,17 @@ class FaultController extends Controllers {
     };
 
     print("Delete() Fault");
+    Future<int> odooId = selectOdooId(faultId);
+
     await DBProvider.db.update(
         _tableName, {'id': faultId, 'active': 'false'}).then((value) async {
       res['code'] = 1;
       res['id'] = value;
+      await SynController.delete(_tableName, faultId, await odooId)
+          .catchError((err) {
+        res['code'] = -2;
+        res['message'] = 'Error updating syn';
+      });
     }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error deleting from $_tableName';
@@ -205,8 +230,7 @@ class FaultController extends Controllers {
           var json = fItem.toJson();
           var itemId = json["id"];
 
-          await DBProvider.db
-              .update('fault_item', {'id': itemId, 'active': 'false'});
+          await FaultItemController.delete(itemId);
           await File(fItem.image).delete();
           deletedFotosIds.add(itemId);
         }
@@ -217,10 +241,9 @@ class FaultController extends Controllers {
           'message': 'Error deleting from faultItems',
           'id': null,
         };
-        return res;
       }
     }
-
+    print("Deleted photos ids $deletedFotosIds");
     res = {
       'code': 1,
       'message': 'Успешно удалено',
@@ -239,5 +262,14 @@ class FaultController extends Controllers {
 
     int count = response[0]["COUNT(id)"];
     return count;
+  }
+
+  // Get odooId by db id
+  static Future<int> selectOdooId(int id) async {
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(_tableName,
+        columns: ['odoo_id'], where: "id = ?", whereArgs: [id]);
+    if (queryRes == null || queryRes.length == 0)
+      throw 'No record of table $_tableName with id=$id exist.';
+    return queryRes[0]['odoo_id'];
   }
 }

@@ -1,7 +1,10 @@
+import 'package:ek_asu_opb_mobile/controllers/checkList.dart';
+import 'package:ek_asu_opb_mobile/controllers/checkListItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import 'package:ek_asu_opb_mobile/controllers/departmentDocument.dart';
+import 'package:ek_asu_opb_mobile/models/checkList.dart';
 import "package:ek_asu_opb_mobile/models/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
@@ -17,6 +20,10 @@ class SynController extends Controllers {
     'plan_item_check_item': 'mob.check.plan.item',
     'com_group': 'mob.check.plan.com_group',
     'department': 'eco.department',
+    'check_list': 'mob.check.list',
+    'check_list_item': 'mob.check.list.item',
+    'fault': 'mob.check.list.item.fault',
+    'fault_item': 'mob.document'
   };
   static Map<String, List<String>> tableBooleanFieldsMap = {
     'plan': ['active'],
@@ -24,6 +31,10 @@ class SynController extends Controllers {
     'plan_item_check': ['active'],
     'plan_item_check_item': ['active'],
     'com_group': ['active', 'is_main'],
+    'check_list': ['active', 'is_active', 'is_base'],
+    'check_list_item': ['active'],
+    'fault': ['active'],
+    'fault_item': ['active'],
   };
   static Map<String, Map<String, String>> tableMany2oneFieldsMap = {
     'plan': {},
@@ -41,6 +52,19 @@ class SynController extends Controllers {
     'com_group': {
       'parent_id': 'plan_item_check',
     },
+    'check_list': {
+      'parent_id': 'plan_item_check_item',
+      // 'base_id':
+    },
+    'check_list_item': {
+      'parent_id': 'check_list',
+    },
+    'fault': {
+      'parent_id': 'check_list_item',
+    },
+    'fault_item': {
+      'parent_id': 'fault',
+    }
   };
   static Map<String, List<Map<String, dynamic>>> tableMany2ManyFieldsMap = {
     'com_group': [
@@ -149,6 +173,8 @@ class SynController extends Controllers {
       await CheckPlanItemController.firstLoadFromOdoo(true);
       await ComGroupController.firstLoadFromOdoo(true);
       await DepartmentDocumentController.firstLoadFromOdoo();
+      // await CheckListController.firstLoadFromOdoo();
+      // await CheckListController.firstLoadFromOdoo(true);
     } else {
       await PlanController.loadChangesFromOdoo();
       await PlanItemController.loadChangesFromOdoo();
@@ -159,12 +185,15 @@ class SynController extends Controllers {
       await CheckPlanController.loadChangesFromOdoo(true);
       await CheckPlanItemController.loadChangesFromOdoo(true);
       await ComGroupController.loadChangesFromOdoo(true);
+      // await CheckListController.loadChangesFromOdoo();
+      // await CheckListController.loadChangesFromOdoo(true);
     }
     await PlanController.finishSync(dateTime);
     await PlanItemController.finishSync(dateTime);
     await CheckPlanController.finishSync(dateTime);
     await CheckPlanItemController.finishSync(dateTime);
     await ComGroupController.finishSync(dateTime);
+    // await CheckListController.finishSync(dateTime);
     await setLastSyncDateForDomain(_tableName, dateTime);
   }
 
