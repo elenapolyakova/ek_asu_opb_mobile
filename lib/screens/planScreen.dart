@@ -13,6 +13,7 @@ import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'dart:async';
 import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 import 'package:ek_asu_opb_mobile/src/db.dart';
+import 'package:ek_asu_opb_mobile/src/GPS.dart';
 
 class PlanScreen extends StatefulWidget {
   String type;
@@ -258,7 +259,7 @@ class _PlanScreen extends State<PlanScreen> {
                                 context, planItemHeader, planItems)
                           ])
                       ])),
-                  /*Container(
+                 /* Container(
                       child: MyButton(
                           text: 'test',
                           parentContext: context,
@@ -1004,12 +1005,14 @@ class _PlanScreen extends State<PlanScreen> {
 
   Future<void> testClicked() async {
     print('test');
+   // GeoPoint point = await Geo.geo.geolocatorToGeoPoint();
 
     //List result = await DepartmentDocumentController.selectAll();
-     List result = await DBProvider.db.selectAll('department_document');
+    List result = await DBProvider.db.selectAll('fault_item');
 
     //await DBProvider.db.deleteAll('plan_item');
     //await DBProvider.db.deleteAll('plan');
-    print(result);
+  //  print(point.latitude);
+    print('result');
   }
 }

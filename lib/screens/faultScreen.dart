@@ -46,7 +46,7 @@ class _FaultScreen extends State<FaultScreen> {
   String _fineName;
   bool showLoadingImage = false;
   List<int> _deletedIds;
-  List<String> _createdPath;
+  List<Map<String, dynamic>> _createdPath;
 
   File _image;
   int _imageIndex;
@@ -246,10 +246,20 @@ class _FaultScreen extends State<FaultScreen> {
           ByteData bytes = await _assetList[i].getByteData();
           String path = await getPath();
           await loadFileFromBytes(bytes, path);
-          _createdPath.add(path);
           GeoPoint geoPoint = await Geo.geo.getGeoPoint(path);
+          _createdPath.add({
+            'path': path,
+            'coord_e': geoPoint.longitude,
+            'coord_n': geoPoint.latitude
+          });
+          
           FaultItem faultItems = FaultItem(
-              id: null, parent_id: _fault.id, image: path, active: true);
+              id: null,
+              parent_id: _fault.id,
+              image: path,
+              active: true,
+              coord_e: geoPoint.longitude,
+              coord_n: geoPoint.latitude);
           _imageList.insert(i, faultItems);
         }
         _image = File(_imageList[0].image);
@@ -587,10 +597,10 @@ class _FaultScreen extends State<FaultScreen> {
     _fault.date = DateTime.now();
     try {
       if ([-1, null].contains(_fault.id)) {
-        result = await FaultController.create(_fault, _createdPath);
+        result = await FaultController.create(_fault, []); //_createdPath);
       } else {
         result =
-            await FaultController.update(_fault, _createdPath, _deletedIds);
+            await FaultController.update(_fault, /*_createdPath*/ [], _deletedIds);
       }
       hasErorr = result["code"] < 0;
 
@@ -637,7 +647,7 @@ class _FaultScreen extends State<FaultScreen> {
         if (deletedFile.id != null)
           _deletedIds.add(deletedFile.id);
         else {
-          _createdPath.remove(deletedFile.image);
+          _createdPath.removeWhere((image) => image['path'] == deletedFile.image);
           await File(deletedFile.image).delete();
         } //если файл добавили, в бд не сохранили и тут же удалили - просто стираем с устройства
 
@@ -706,8 +716,8 @@ class _FaultScreen extends State<FaultScreen> {
                                             width: 1.5),
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(12)),
-                                        color: Theme.of(context)
-                                                .primaryColorLight,
+                                        color:
+                                            Theme.of(context).primaryColorLight,
                                       ),
                                       padding: EdgeInsets.all(0),
                                       child: TextFormField(
@@ -780,8 +790,7 @@ class _FaultScreen extends State<FaultScreen> {
                                                   children: [
                                                     Container(
                                                       margin: EdgeInsets.only(
-                                                          top: 5,
-                                                          right: 20),
+                                                          top: 5, right: 20),
                                                       child: EditTextField(
                                                         text:
                                                             'Сумма итогового штрафа, руб',
@@ -814,7 +823,8 @@ class _FaultScreen extends State<FaultScreen> {
                                                       ),
                                                     ),
                                                     Container(
-                                                      margin: EdgeInsets.only(bottom: 5, right: 20),
+                                                      margin: EdgeInsets.only(
+                                                          bottom: 5, right: 20),
                                                       child: DatePicker(
                                                           parentContext:
                                                               context,
@@ -827,8 +837,9 @@ class _FaultScreen extends State<FaultScreen> {
                                                               Theme.of(context)
                                                                   .buttonColor,
                                                           selectedDate: _fault
-                                                                  .plan_fix_date ??
-                                                              DateTime.now(),
+                                                              .plan_fix_date // ??
+                                                          //DateTime.now()
+                                                          ,
                                                           onChanged:
                                                               ((DateTime date) {
                                                             setState(() {

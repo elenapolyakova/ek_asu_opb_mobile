@@ -2,16 +2,15 @@ import 'dart:io';
 import 'package:exif/exif.dart';
 import 'package:geolocator/geolocator.dart';
 
-class GeoPoint{
+class GeoPoint {
   double latitude;
   double longitude;
   GeoPoint(this.latitude, this.longitude);
-} 
+}
 
 class Geo {
   Geo._();
   static final Geo geo = Geo._();
-  
 
   Geolocator _gelocator = new Geolocator();
 
@@ -22,7 +21,9 @@ class Geo {
 
   Future<GeoPoint> geolocatorToGeoPoint() async {
     LocationPermission permission = await Geolocator.checkPermission();
-    if (![LocationPermission.denied, LocationPermission.deniedForever]
+    if (LocationPermission.denied == permission)
+      permission = await Geolocator.requestPermission();
+    if ([LocationPermission.always, LocationPermission.whileInUse]
         .contains(permission)) {
       Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
