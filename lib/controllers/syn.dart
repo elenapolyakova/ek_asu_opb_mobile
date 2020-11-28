@@ -1,7 +1,10 @@
+import 'package:ek_asu_opb_mobile/controllers/checkList.dart';
+import 'package:ek_asu_opb_mobile/controllers/checkListItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import 'package:ek_asu_opb_mobile/controllers/departmentDocument.dart';
+import 'package:ek_asu_opb_mobile/models/checkList.dart';
 import "package:ek_asu_opb_mobile/models/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
@@ -166,6 +169,8 @@ class SynController extends Controllers {
       await CheckPlanItemController.firstLoadFromOdoo(true);
       await ComGroupController.firstLoadFromOdoo(true);
       await DepartmentDocumentController.firstLoadFromOdoo();
+      await CheckListController.firstLoadFromOdoo();
+      await CheckListController.firstLoadFromOdoo(true);
     } else {
       await PlanController.loadChangesFromOdoo();
       await PlanItemController.loadChangesFromOdoo();
@@ -176,12 +181,15 @@ class SynController extends Controllers {
       await CheckPlanController.loadChangesFromOdoo(true);
       await CheckPlanItemController.loadChangesFromOdoo(true);
       await ComGroupController.loadChangesFromOdoo(true);
+      // await CheckListController.loadChangesFromOdoo();
+      // await CheckListController.loadChangesFromOdoo(true);
     }
     await PlanController.finishSync(dateTime);
     await PlanItemController.finishSync(dateTime);
     await CheckPlanController.finishSync(dateTime);
     await CheckPlanItemController.finishSync(dateTime);
     await ComGroupController.finishSync(dateTime);
+    // await CheckListController.finishSync(dateTime);
     await setLastSyncDateForDomain(_tableName, dateTime);
   }
 
