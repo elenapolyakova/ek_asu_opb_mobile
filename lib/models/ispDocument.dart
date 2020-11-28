@@ -61,6 +61,6 @@ class ISPDocument extends Models {
 
   @override
   String toString() {
-    return 'ISPDocument {id: $id, parent2_id: $parent2_id, name: $name, file_name: $file_name, is_new: $is_new, file_data: $file_data}';
+    return 'ISPDocument {id: $id, parent2_id: $parent2_id, name: $name, file_name: $file_name, file_path: $file_path, : $is_new, file_data: $file_data}';
   }
 }
