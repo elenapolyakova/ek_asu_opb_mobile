@@ -55,8 +55,6 @@ class Fault extends Models {
             : DateTime.parse(json["date_done"]),
         desc_done: getObj(json["desc_done"]),
         active: (json["active"].toString() == 'true'),
-        // lat: getObj(json["lat"]),
-        // lon: getObj(json["lon"]),
         plan_fix_date: json["plan_fix_date"] == null
             ? null
             : DateTime.parse(json["plan_fix_date"]),
@@ -76,8 +74,6 @@ class Fault extends Models {
       'date_done': dateTimeToString(date_done),
       'desc_done': desc_done,
       'active': (active == null || !active) ? 'false' : 'true',
-      // 'lat': lat,
-      // 'lon': lon,
       'plan_fix_date': dateTimeToString(plan_fix_date),
     };
   }
@@ -101,6 +97,6 @@ class Fault extends Models {
 
   @override
   String toString() {
-    return 'Fault {id: $id, odooId: $odoo_id, parent_id: $parent_id, name: $name, desc: $desc, fine: $fine, fine_desc: $fine_desc, koap_id: $koap_id}';
+    return 'Fault {id: $id, odooId: $odoo_id, parent_id: $parent_id, name: $name, desc: $desc, fine: $fine, fine_desc: $fine_desc, koap_id: $koap_id, plan_fix_date:$plan_fix_date}';
   }
 }
