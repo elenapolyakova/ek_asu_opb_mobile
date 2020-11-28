@@ -5,7 +5,7 @@ import 'package:ek_asu_opb_mobile/utils/convert.dart';
 class CheckListItem extends Models {
   int id;
   int base_id;
-  int odooId;
+  int odoo_id;
   // Id of check list
   int parent_id;
   // Name for question
@@ -18,7 +18,7 @@ class CheckListItem extends Models {
 
   CheckListItem({
     this.id,
-    this.odooId,
+    this.odoo_id,
     this.parent_id,
     this.base_id,
     this.name,
@@ -38,7 +38,7 @@ class CheckListItem extends Models {
   factory CheckListItem.fromJson(Map<String, dynamic> json) =>
       new CheckListItem(
           id: json["id"],
-          odooId: json["odooId"],
+          odoo_id: json["odoo_id"],
           parent_id: json["parent_id"],
           base_id: getObj(json["base_id"]),
           name: getStr(json["name"]),
@@ -47,10 +47,10 @@ class CheckListItem extends Models {
           result: getStr(json["result"]),
           description: getStr(json["description"]));
 
-  Map<String, dynamic> toJson() {
-    return {
+  Map<String, dynamic> toJson([omitId = false]) {
+    Map<String, dynamic> res = {
       'id': id,
-      'odooId': odooId,
+      'odoo_id': odoo_id,
       'parent_id': parent_id,
       'base_id': base_id,
       'name': name,
@@ -59,6 +59,13 @@ class CheckListItem extends Models {
       'description': description,
       'result': result,
     };
+
+    if (omitId) {
+      res.remove("id");
+      res.remove("odoo_id");
+    }
+
+    return res;
   }
 
   // Make json suitable for update() in local DB;
@@ -76,6 +83,6 @@ class CheckListItem extends Models {
 
   @override
   String toString() {
-    return 'CheckListItem{id: $id, odooId: $odooId, : $name, active: $active, question: $question, parent_id: $parent_id}';
+    return 'CheckListItem{id: $id, odooId: $odoo_id, : $name, active: $active, question: $question, parent_id: $parent_id}';
   }
 }

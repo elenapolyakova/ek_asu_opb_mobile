@@ -13,7 +13,13 @@ final limitRecord = config.getItem('limitRecord') ?? 80;
 final cbtRole = config.getItem('cbtRole') ?? 'cbt';
 final ncopRole = config.getItem('ncopRole') ?? 'ncop';
 final _storage = FlutterSecureStorage();
-final List<String> _dict = ['railway', 'department', 'user', 'check_list', 'koap'];
+final List<String> _dict = [
+  'railway',
+  'department',
+  'user',
+  'check_list',
+  'koap'
+];
 
 //загрузка справочников
 //Возвращает List[
@@ -53,10 +59,20 @@ Future<List<Map<String, dynamic>>> getDictionaries(
         case 'koap':
           List<dynamic> domain = new List<dynamic>();
           if (lastUpdate != null) domain.add(lastUpdate);
-          data =
-              await getDataWithAttemp('mob.ref.koap', 'search_read', null, {
+          data = await getDataWithAttemp('mob.ref.koap', 'search_read', null, {
             'domain': domain,
-            'fields': ['id', 'article', 'paragraph', 'text', 'man_fine_from', 'man_fine_to', 'firm_fine_from', 'firm_fine_to', 'firm_stop', 'desc',]
+            'fields': [
+              'id',
+              'article',
+              'paragraph',
+              'text',
+              'man_fine_from',
+              'man_fine_to',
+              'firm_fine_from',
+              'firm_fine_to',
+              'firm_stop',
+              'desc',
+            ]
           });
 
           break;
@@ -87,7 +103,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               'f_coord_e'
             ],
 
-             // 'limit': 100,
+            // 'limit': 100,
           });
 
           break;
@@ -130,7 +146,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
           break;
         case 'check_list':
           List<dynamic> domain = new List<dynamic>();
-          if (lastUpdate != null) domain.add(lastUpdate);
+          // if (lastUpdate != null) domain.add(lastUpdate);
 
           domain.add(['parent_id', '=', null]);
           domain.add(['is_base', '=', true]);
@@ -171,7 +187,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
 
               for (var q in assignedQuestions) {
                 //  As we perform first download from odoo, we set odooId as id of input
-                q["odooId"] = q["id"];
+                q["odoo_id"] = q["id"];
                 // If parent id exists like [3, someName]
                 if (q["parent_id"] is List) {
                   var parent_id = q["parent_id"][0];
@@ -183,7 +199,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
 
               element["q_data"] = assignedQuestions;
               // Set odooId as main ID for check list, as it's first download
-              element["odooId"] = element["id"];
+              element["odoo_id"] = element["id"];
               print("Check list from odoo $element");
             }
           }
@@ -197,9 +213,8 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               await RailwayController.insert(
                   dataList[j] as Map<String, dynamic>);
               break;
-             case 'koap':
-              await KoapController.insert(
-                  dataList[j] as Map<String, dynamic>);
+            case 'koap':
+              await KoapController.insert(dataList[j] as Map<String, dynamic>);
               break;
             case 'department':
               await DepartmentController.insert(
