@@ -8,7 +8,7 @@ import 'dart:async';
 
 class InspectionScreen extends StatefulWidget {
   BuildContext context;
-   bool stop;
+  bool stop;
 
   @override
   InspectionScreen({this.context, this.stop});
@@ -51,7 +51,7 @@ class _InspectionScreen extends State<InspectionScreen> {
     result.add({
       'key': 'inspection',
       'label': 'План проверки',
-      'icon': Icon(Icons.description)
+      'icon': Icon(Icons.description),
     });
     result.add({
       'key': 'commission',
@@ -59,12 +59,13 @@ class _InspectionScreen extends State<InspectionScreen> {
       'icon': Icon(Icons.supervisor_account_outlined)
     });
     result
-        .add({'key': 'map', 'label': 'Карта', 'icon': Icon(Icons.location_on)});
+           .add({'key': 'map', 'label': 'Карта', 'icon': Icon(Icons.location_on)});
 
     result.add({
       'key': 'report',
       'label': 'Отчеты',
-      'icon': Icon(Icons.insert_drive_file)
+      'icon': Icon(Icons.insert_drive_file),
+      'active': false
     });
     /*  result.add({
       'key': 'checkList',
@@ -99,6 +100,10 @@ class _InspectionScreen extends State<InspectionScreen> {
     } catch (e) {} finally {
       hideDialog(context);
     }
+  }
+
+  int getReportIndex() {
+    return _navigationMenu.indexWhere((element) => element["key"] == "report");
   }
 
   Widget getBodyContent() {
@@ -143,7 +148,11 @@ class _InspectionScreen extends State<InspectionScreen> {
         : new Scaffold(
             appBar: PreferredSize(
                 preferredSize: Size.fromHeight(100),
-                child: MyAppBar(userInfo: _userInfo, syncTask: syncTask,  parentScreen: 'inspectionScreen',  stop: widget.stop)),
+                child: MyAppBar(
+                    userInfo: _userInfo,
+                    syncTask: syncTask,
+                    parentScreen: 'inspectionScreen',
+                    stop: widget.stop)),
             body: Column(children: [
               getBodyContent(),
               //  if (errorText != '')
@@ -164,6 +173,7 @@ class _InspectionScreen extends State<InspectionScreen> {
                 selectedFontSize: 14,
                 unselectedFontSize: 14,
                 onTap: (value) {
+                  if (getReportIndex() == value) return;
                   if (_checkPlanId != null)
                     setState(() {
                       _selectedIndex = value;
@@ -184,7 +194,7 @@ class _InspectionScreen extends State<InspectionScreen> {
                         _navigationMenu.length,
                         (i) => BottomNavigationBarItem(
                               label: _navigationMenu[i]["label"],
-                              icon: _navigationMenu[i]["icon"],
+                              icon: _navigationMenu[i]["icon"]
                             ))),
           );
   }

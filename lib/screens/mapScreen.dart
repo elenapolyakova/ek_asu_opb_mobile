@@ -12,7 +12,7 @@ class MapScreen extends StatefulWidget {
   int checkPlanId;
 
   @override
-  MapScreen({this.departmentId, checkPlanId});
+  MapScreen({this.departmentId, this.checkPlanId});
 
   @override
   State<MapScreen> createState() => _MapScreen();
@@ -21,6 +21,8 @@ class MapScreen extends StatefulWidget {
 class _MapScreen extends State<MapScreen> {
   UserInfo _userInfo;
   bool showLoading = true;
+  int departmentId;
+  int checkPlanId;
 
   // ADD THIS
   MapController mapController = MapController();
@@ -36,7 +38,8 @@ class _MapScreen extends State<MapScreen> {
       if (isLogin) {
         auth.getUserInfo().then((userInfo) {
           _userInfo = userInfo;
-
+          departmentId = widget.departmentId;
+          checkPlanId = widget.checkPlanId;
           loadData();
         });
       } //isLogin == true
@@ -47,6 +50,8 @@ class _MapScreen extends State<MapScreen> {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
+      //<-----сюда вставить загрузку данных
+
     } catch (e) {} finally {
       hideDialog(context);
       showLoading = false;
@@ -59,24 +64,28 @@ class _MapScreen extends State<MapScreen> {
     // You can use the userLocationOptions object to change the properties
     // of UserLocationOptions in runtime
     userLocationOptions = UserLocationOptions(
+      updateMapLocationOnPositionChange: false,
+      zoomToCurrentLocationOnLoad: true,
       context: context,
       mapController: mapController,
       markers: markers,
     );
-    return Expanded(
-        child: Scaffold(
-            appBar: AppBar(title: Text("User Location Plugin")),
-            body: FlutterMap(
-              options: MapOptions(
-                center: LatLng(0, 0),
-                zoom: 15.0,
-                plugins: [
-                  // ADD THIS
-                  UserLocationPlugin(),
-                ],
-              ),
-              layers: [
-                /* vasvas 21nov20
+    return showLoading
+        ? Expanded(child: Text(""))
+        : Expanded(
+            child: Scaffold(
+                appBar: AppBar(title: Text("User Location Plugin")),
+                body: FlutterMap(
+                  options: MapOptions(
+                    center: LatLng(0, 0),
+                    zoom: 15.0,
+                    plugins: [
+                      // ADD THIS
+                      UserLocationPlugin(),
+                    ],
+                  ),
+                  layers: [
+                    /* vasvas 21nov20
                 TileLayerOptions(
                   urlTemplate: "https://api.tiles.mapbox.com/v4/"
                       "{id}/{z}/{x}/{y}@2x.png?access_token={accessToken}",
@@ -87,23 +96,23 @@ class _MapScreen extends State<MapScreen> {
                   },
                 ),
                 */
-                TileLayerOptions(
-                  urlTemplate: "https://api.mapbox.com/styles/v1/"
-                      "{id}/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}",
-                  additionalOptions: {
-                    'accessToken':
-                        'pk.eyJ1IjoidmFzdmFzIiwiYSI6ImNraHFha3FmcDFpemUzOG14Y25jYzQxdDAifQ.ZobEXR5Lq9mfXfSs28dh6A',
-                    'id': 'mapbox/streets-v8',
-                  },
-                ),
+                    TileLayerOptions(
+                      urlTemplate: "https://api.mapbox.com/styles/v1/"
+                          "{id}/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}",
+                      additionalOptions: {
+                        'accessToken':
+                            'pk.eyJ1IjoidmFzdmFzIiwiYSI6ImNraHFha3FmcDFpemUzOG14Y25jYzQxdDAifQ.ZobEXR5Lq9mfXfSs28dh6A',
+                        'id': 'mapbox/streets-v8',
+                      },
+                    ),
 
-                // ADD THIS
-                MarkerLayerOptions(markers: markers),
-                // ADD THIS
-                userLocationOptions,
-              ],
-              // ADD THIS
-              mapController: mapController,
-            )));
+                    // ADD THIS
+                    MarkerLayerOptions(markers: markers),
+                    // ADD THIS
+                    userLocationOptions,
+                  ],
+                  // ADD THIS
+                  mapController: mapController,
+                )));
   }
 }

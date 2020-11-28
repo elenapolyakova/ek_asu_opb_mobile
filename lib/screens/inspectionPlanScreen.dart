@@ -724,10 +724,27 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                                 DateTime.now(),
                                                         onChanged:
                                                             ((DateTime date) {
-                                                          // setState(() {
-                                                          inspectionItem.date =
-                                                              date;
-                                                          // });
+                                                          setState(() {
+                                                            inspectionItem
+                                                                .date = date;
+                                                            DateTime _dtFrom =
+                                                                new DateTime(
+                                                                    date.year,
+                                                                    date.month,
+                                                                    date.day,
+                                                                    inspectionItem
+                                                                        .dtFrom
+                                                                        .hour,
+                                                                    inspectionItem
+                                                                        .dtFrom
+                                                                        .minute,
+                                                                    inspectionItem
+                                                                        .dtFrom
+                                                                        .second);
+                                                            inspectionItem
+                                                                    .dtFrom =
+                                                                _dtFrom;
+                                                          });
                                                         })),
                                                   ]))),
                                       Container(
@@ -1111,6 +1128,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       form.save();
       bool hasErorr = false;
       Map<String, dynamic> result;
+      
       if (!hasTimeBegin) inspectionItem.dtFrom = null;
       if (!hasTimeEnd) inspectionItem.dtTo = null;
 

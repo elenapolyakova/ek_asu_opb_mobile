@@ -13,6 +13,7 @@ import 'package:ek_asu_opb_mobile/src/fileStorage.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'dart:typed_data';
 import 'package:ek_asu_opb_mobile/models/koap.dart';
+import 'package:ek_asu_opb_mobile/src/GPS.dart';
 
 //import 'package:permission_handler/permission_handler.dart';
 
@@ -246,6 +247,7 @@ class _FaultScreen extends State<FaultScreen> {
           String path = await getPath();
           await loadFileFromBytes(bytes, path);
           _createdPath.add(path);
+          GeoPoint geoPoint = await Geo.geo.getGeoPoint(path);
           FaultItem faultItems = FaultItem(
               id: null, parent_id: _fault.id, image: path, active: true);
           _imageList.insert(i, faultItems);
@@ -661,10 +663,13 @@ class _FaultScreen extends State<FaultScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final color = Theme.of(context).buttonColor;
+    final textStyle = TextStyle(fontSize: 16.0, color: color);
+
     return showLoading
         ? Text("")
         : Padding(
-            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 50),
+            padding: EdgeInsets.symmetric(vertical: 5, horizontal: 40),
             child: Column(children: [
               Expanded(
                   child: Row(
@@ -692,7 +697,7 @@ class _FaultScreen extends State<FaultScreen> {
                                       )
                                     ]),
                                     Container(
-                                      margin: EdgeInsets.only(bottom: 15),
+                                      margin: EdgeInsets.only(bottom: 10),
                                       height: 45,
                                       decoration: new BoxDecoration(
                                         border: Border.all(
@@ -701,7 +706,8 @@ class _FaultScreen extends State<FaultScreen> {
                                             width: 1.5),
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(12)),
-                                        color: Colors.white,
+                                        color: Theme.of(context)
+                                                .primaryColorLight,
                                       ),
                                       padding: EdgeInsets.all(0),
                                       child: TextFormField(
@@ -734,8 +740,7 @@ class _FaultScreen extends State<FaultScreen> {
                                       ),
                                     ),
                                     Container(
-                                      margin:
-                                          EdgeInsets.symmetric(vertical: 15),
+                                      margin: EdgeInsets.symmetric(vertical: 5),
                                       child: EditTextField(
                                         text: 'Наименование',
                                         value: _fault.name,
@@ -749,8 +754,7 @@ class _FaultScreen extends State<FaultScreen> {
                                       ),
                                     ),
                                     Container(
-                                      margin:
-                                          EdgeInsets.symmetric(vertical: 15),
+                                      margin: EdgeInsets.symmetric(vertical: 5),
                                       child: EditTextField(
                                         text: 'Описание штрафа',
                                         value: _fault.fine_desc,
@@ -759,7 +763,7 @@ class _FaultScreen extends State<FaultScreen> {
                                         context: context,
                                         borderColor:
                                             Theme.of(context).primaryColorDark,
-                                        height: 180,
+                                        height: 160,
                                         maxLines: 9,
                                         margin: 0,
                                       ),
@@ -770,36 +774,70 @@ class _FaultScreen extends State<FaultScreen> {
                                         children: [
                                           Expanded(
                                               flex: 2,
-                                              child: Container(
-                                                margin: EdgeInsets.only(
-                                                    top: 10,
-                                                    right: 20,
-                                                    bottom: 5),
-                                                child: EditTextField(
-                                                  text:
-                                                      'Сумма итогового штрафа, руб',
-                                                  value: _fault.fine != null
-                                                      ? _fault.fine.toString()
-                                                      : '',
-                                                  onSaved: (value) => {
-                                                    _fault.fine =
-                                                        int.tryParse(value)
-                                                  },
-                                                  context: context,
-                                                  borderColor: Theme.of(context)
-                                                      .primaryColorDark,
-                                                  height: 40,
-                                                  inputFormatters: <
-                                                      TextInputFormatter>[
-                                                    FilteringTextInputFormatter
-                                                        .digitsOnly
-                                                  ], // Only numbers can be entered
-                                                  textInputType: TextInputType
-                                                      .numberWithOptions(
-                                                          decimal: true),
-                                                  margin: 0,
-                                                ),
-                                              )),
+                                              child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Container(
+                                                      margin: EdgeInsets.only(
+                                                          top: 5,
+                                                          right: 20),
+                                                      child: EditTextField(
+                                                        text:
+                                                            'Сумма итогового штрафа, руб',
+                                                        value:
+                                                            _fault.fine != null
+                                                                ? _fault.fine
+                                                                    .toString()
+                                                                : '',
+                                                        onSaved: (value) => {
+                                                          _fault.fine =
+                                                              int.tryParse(
+                                                                  value)
+                                                        },
+                                                        context: context,
+                                                        borderColor: Theme.of(
+                                                                context)
+                                                            .primaryColorDark,
+                                                        height: 40,
+                                                        inputFormatters: <
+                                                            TextInputFormatter>[
+                                                          FilteringTextInputFormatter
+                                                              .digitsOnly
+                                                        ], // Only numbers can be entered
+                                                        textInputType:
+                                                            TextInputType
+                                                                .numberWithOptions(
+                                                                    decimal:
+                                                                        true),
+                                                        margin: 0,
+                                                      ),
+                                                    ),
+                                                    Container(
+                                                      margin: EdgeInsets.only(bottom: 5, right: 20),
+                                                      child: DatePicker(
+                                                          parentContext:
+                                                              context,
+                                                          text:
+                                                              "Плановая дата устранения",
+                                                          width:
+                                                              double.infinity,
+                                                          height: 40,
+                                                          borderColor:
+                                                              Theme.of(context)
+                                                                  .buttonColor,
+                                                          selectedDate: _fault
+                                                                  .plan_fix_date ??
+                                                              DateTime.now(),
+                                                          onChanged:
+                                                              ((DateTime date) {
+                                                            setState(() {
+                                                              _fault.plan_fix_date =
+                                                                  date;
+                                                            });
+                                                          })),
+                                                    )
+                                                  ])),
                                           Expanded(
                                               flex: 1,
                                               child: Container(
@@ -962,11 +1000,11 @@ class _FaultScreen extends State<FaultScreen> {
                                 context: context,
                                 borderColor: Theme.of(context).primaryColorDark,
                                 height: 440,
-                                maxLines: 23,
+                                maxLines: 22,
                                 margin: 0,
                               ),
                             ),
-                          )))
+                          ))),
                         ],
                       )),
                 ],

@@ -41,6 +41,10 @@ class _CheckScreen extends State<CheckScreen> {
     });
   }
 
+  int getReportIndex() {
+    return _navigationMenu.indexWhere((element) => element["key"] == "report");
+  }
+
   List<Map<String, dynamic>> getNavigationMenu() {
     List<Map<String, dynamic>> result = [];
 
@@ -55,7 +59,7 @@ class _CheckScreen extends State<CheckScreen> {
       'label': 'Документы',
       'icon': Icon(Icons.folder_special)
     });
-    result
+     result
         .add({'key': 'map', 'label': 'Карта', 'icon': Icon(Icons.location_on)});
 
     result.add({
@@ -121,10 +125,11 @@ class _CheckScreen extends State<CheckScreen> {
             appBar: PreferredSize(
                 preferredSize: Size.fromHeight(100),
                 child: MyAppBar(
-                    userInfo: _userInfo,
-                    syncTask: syncTask,
-                    parentScreen: 'checkScreen',
-                     stop: widget.stop,)),
+                  userInfo: _userInfo,
+                  syncTask: syncTask,
+                  parentScreen: 'checkScreen',
+                  stop: widget.stop,
+                )),
             body: Column(children: [
               getBodyContent(),
               //  if (errorText != '')
@@ -137,6 +142,7 @@ class _CheckScreen extends State<CheckScreen> {
                 selectedFontSize: 14,
                 unselectedFontSize: 14,
                 onTap: (value) {
+                  if (getReportIndex() == value) return;
                   setState(() {
                     _selectedIndex = value;
 

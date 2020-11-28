@@ -60,6 +60,7 @@ class Document extends Models {
       'file_name': fileName,
       'file_id': fileId,
       'file_path': filePath,
+      'department_id': departmentId,
     };
     if (omitId) {
       res.remove('id');

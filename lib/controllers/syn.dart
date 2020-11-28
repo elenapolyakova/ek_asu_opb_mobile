@@ -104,11 +104,13 @@ class SynController extends Controllers {
 
   /// Adds a record to create into syn table
   static Future<int> create(String localTableName, int resId) async {
-    return DBProvider.db.insert(_tableName, {
+    int res = await DBProvider.db.insert(_tableName, {
       'record_id': resId,
       'local_table_name': localTableName,
       'method': 'create',
     });
+    await syncTask();
+    return res;
   }
 
   /// If a record wasn't uploaded yet, do nothing.
@@ -127,11 +129,13 @@ class SynController extends Controllers {
       //sync record 'create' exists and local record does not have odooId => check for 'write'
       //sync record 'write' exists and local record has odooId => wasn't uploaded
       return null;
-    return DBProvider.db.insert(_tableName, {
+    int res = await DBProvider.db.insert(_tableName, {
       'record_id': resId,
       'local_table_name': localTableName,
       'method': 'write',
     });
+    await syncTask();
+    return res;
   }
 
   /// If a record to delete wasn't uploaded, removes existing records to sync.
