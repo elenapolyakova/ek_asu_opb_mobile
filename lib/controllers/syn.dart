@@ -173,8 +173,8 @@ class SynController extends Controllers {
       await CheckPlanItemController.firstLoadFromOdoo(true);
       await ComGroupController.firstLoadFromOdoo(true);
       await DepartmentDocumentController.firstLoadFromOdoo();
-      await CheckListController.firstLoadFromOdoo();
-      await CheckListController.firstLoadFromOdoo(true);
+      // await CheckListController.firstLoadFromOdoo();
+      // await CheckListController.firstLoadFromOdoo(true);
     } else {
       await PlanController.loadChangesFromOdoo();
       await PlanItemController.loadChangesFromOdoo();
