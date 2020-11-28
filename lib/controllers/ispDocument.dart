@@ -1,28 +1,20 @@
 import 'dart:async';
 
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
-import 'package:ek_asu_opb_mobile/models/nciDocument.dart';
+import 'package:ek_asu_opb_mobile/models/ispDocument.dart';
 
-class NCIDocumentController extends Controllers {
-  static String _tableName = "nci_document";
+class ISPDocumentController extends Controllers {
+  static String _tableName = "isp_document";
 
   static Future<dynamic> insert(Map<String, dynamic> json) async {
-    NCIDocument nciDocument = NCIDocument.fromJson(json);
+    ISPDocument nciDocument = ISPDocument.fromJson(json);
 
     print("NCIDocument Insert() to DB");
     print(nciDocument.toJson());
     return await DBProvider.db.insert(_tableName, nciDocument.toJson());
   }
 
-  // static Future<NCIDocument> selectById(int id) async {
-  //   if (id == null) return null;
-  //   var json = await DBProvider.db.selectById(_tableName, id);
-  //   return NCIDocument.fromJson(json);
-  // }
-
-  static Future<List<NCIDocument>> select(int parent2Id) async {
-    var res = await setIsNewFalse(parent2Id);
-
+  static Future<List<ISPDocument>> select(int parent2Id) async {
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       where: "parent2_id = ?",
@@ -31,8 +23,11 @@ class NCIDocumentController extends Controllers {
 
     if (queryRes == null || queryRes.length == 0) return [];
 
-    List<NCIDocument> nciDocs =
-        queryRes.map((e) => NCIDocument.fromJson(e)).toList();
+    List<ISPDocument> nciDocs =
+        queryRes.map((e) => ISPDocument.fromJson(e)).toList();
+
+    var res = await setIsNewFalse(parent2Id);
+    print("Updates is_new state $res");
 
     return nciDocs;
   }
