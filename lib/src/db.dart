@@ -53,9 +53,9 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS check_list_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, base_id INTEGER, name TEXT, question TEXT, result TEXT, description TEXT, active TEXT)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS fault(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, desc TEXT, fine_desc TEXT, fine INTEGER, koap_id INTEGER, date TEXT, date_done TEXT, desc_done TEXT, active TEXT, lat REAL, lon REAL, plan_fix_date TEXT)");
+            "CREATE TABLE IF NOT EXISTS fault(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, desc TEXT, fine_desc TEXT, fine INTEGER, koap_id INTEGER, date TEXT, date_done TEXT, desc_done TEXT, active TEXT, plan_fix_date TEXT)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS fault_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, name STRING, type INTEGER, parent_id INTEGER, image TEXT, active TEXT, file_name STRING, file_data STRING)");
+            "CREATE TABLE IF NOT EXISTS fault_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, name STRING, type INTEGER, parent_id INTEGER, image TEXT, active TEXT, file_name STRING, file_data STRING, coord_n REAL, coord_e REAL)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS koap(id INTEGER PRIMARY KEY, article TEXT, paragraph TEXT, text TEXT, man_fine_from INTEGER, man_fine_to INTEGER, firm_fine_from INTEGER, firm_fine_to INTEGER, firm_stop INTEGER, desc TEXT, search_field TEXT)");
         await db.execute(
