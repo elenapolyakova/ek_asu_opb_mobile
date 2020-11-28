@@ -116,7 +116,7 @@ class EditTextField extends StatefulWidget {
       this.color,
       this.onSaved,
       this.showEditDialog = true,
-      this.height = 35.0,
+      this.height = 35,
       this.margin = 13.0,
       this.maxLines = 1,
       this.textInputType = TextInputType.text,
@@ -154,57 +154,66 @@ class _EditTextField extends State<EditTextField> {
                 padding: EdgeInsets.only(bottom: 5.0),
                 child: Text(widget.text,
                     textAlign: TextAlign.left, style: textStyle)),
-          GestureDetector(
-              onLongPress: widget.onLongPress,
-              onTapDown: widget.onTapDown,
-              onTap: () {
-                if (!widget.showEditDialog || widget.readOnly) return;
-                showEdit(
-                  widget.value,
-                  widget.text,
-                  widget.context,
-                  textInputType: widget.textInputType,
-                  inputFormatters: widget.inputFormatters,
-                  validator: widget.validator ?? (val) => null,
-                ).then((newValue) => setState(() {
-                      widget.value = newValue ?? "";
-                      if (widget.onSaved != null)
-                        return widget.onSaved(newValue);
-                    }));
-              },
-              child: Container(
-                  height: widget.height,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                        color: widget.borderColor ?? Colors.white, width: 1.5),
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                    color: widget.backgroundColor ?? Colors.white,
-                  ),
-                  child: AbsorbPointer(
-                    child: TextFormField(
-                      readOnly: widget.showEditDialog && !widget.readOnly,
-                      keyboardType: widget.textInputType,
-                      inputFormatters: widget.inputFormatters,
-                      validator: widget.validator ?? (val) => null,
-                      controller: TextEditingController.fromValue(
-                          TextEditingValue(
-                              text: widget.value != null
-                                  ? widget.value.toString()
-                                  : "")),
-                      decoration: new InputDecoration(
-                          border:
-                              OutlineInputBorder(borderSide: BorderSide.none),
-                          contentPadding: EdgeInsets.all(5.0)),
-                      // initialValue:
-                      //     _value, //widget.value != null ? widget.value.toString() : '',
+          Container(
+              height: widget.height,
+              decoration: BoxDecoration(
+                border: Border.all(
+                    color: widget.borderColor ?? Colors.white, width: 1.5),
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                color: widget.backgroundColor ?? Colors.white,
+              ),
+              child: ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: widget.height),
+                  child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: GestureDetector(
+                          onLongPress: widget.onLongPress,
+                          onTapDown: widget.onTapDown,
+                          onTap: () {
+                            if (!widget.showEditDialog || widget.readOnly)
+                              return;
+                            showEdit(
+                              widget.value,
+                              widget.text,
+                              widget.context,
+                              textInputType: widget.textInputType,
+                              inputFormatters: widget.inputFormatters,
+                              validator: widget.validator ?? (val) => null,
+                            ).then((newValue) => setState(() {
+                                  widget.value = newValue ?? "";
+                                  if (widget.onSaved != null)
+                                    return widget.onSaved(newValue);
+                                }));
+                          },
+                          child: AbsorbPointer(
+                            child: TextFormField(
+                                
+                                readOnly:
+                                    widget.showEditDialog && !widget.readOnly,
+                                keyboardType: widget.textInputType,
+                                inputFormatters: widget.inputFormatters,
+                                validator: widget.validator ?? (val) => null,
+                                controller: TextEditingController.fromValue(
+                                    TextEditingValue(
+                                        text: widget.value != null
+                                            ? widget.value.toString()
+                                            : "")),
+                                decoration: new InputDecoration(
+                                  
+                                    border: OutlineInputBorder(
+                                        borderSide: BorderSide.none),
+                                    contentPadding: EdgeInsets.all(5.0)),
+                                // initialValue:
+                                //     _value, //widget.value != null ? widget.value.toString() : '',
 
-                      cursorColor: widget.color,
-                      style: textStyle,
-                      onSaved: widget.onSaved,
-                      maxLines: widget.maxLines,
-                      // maxLength: 256,
-                    ),
-                  )))
+                                cursorColor: widget.color,
+                                style: textStyle,
+                                onSaved: widget.onSaved,
+                                minLines: widget.maxLines,
+                                maxLines: null // widget.maxLines,
+                                // maxLength: 256,
+                                ),
+                          )))))
         ]));
   }
 }
@@ -565,6 +574,8 @@ class DatePicker extends StatefulWidget {
   final text;
   bool enable;
   double width;
+  double height;
+  Color borderColor;
 
   final BuildContext parentContext;
   DatePicker(
@@ -574,6 +585,8 @@ class DatePicker extends StatefulWidget {
       this.text,
       this.parentContext,
       this.width = 200,
+      this.height,
+      this.borderColor,
       this.enable = true})
       : super(key: key);
 
@@ -684,12 +697,13 @@ class _DatePicker extends State<DatePicker> {
                       child: Text(_text,
                           textAlign: TextAlign.left, style: textStyle)),
                   Container(
-                      height: 35,
+                      height: widget.height ?? 35,
                       width: double.infinity,
                       decoration: BoxDecoration(
                           border: Border.all(
                               color: widget.enable
-                                  ? Theme.of(context).primaryColorLight
+                                  ? (widget.borderColor ??
+                                      Theme.of(context).primaryColorLight)
                                   : disabledColor,
                               width: 1.5),
                           borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -1331,16 +1345,16 @@ class HomeIcon extends StatelessWidget {
     return GestureDetector(
         onTap: goHome,
         child: Column(mainAxisAlignment: MainAxisAlignment.start, children: [
-           Container(
-                  alignment: Alignment.topCenter,
-                  height: 40,
-                  width: 40,
-                  child: IconButton(
-                      padding: EdgeInsets.all(0),
-                      icon: Icon(Icons.home),
-                      iconSize: 45, //Icons.logout),
-                      color: color,
-                      onPressed: goHome)),
+          Container(
+              alignment: Alignment.topCenter,
+              height: 40,
+              width: 40,
+              child: IconButton(
+                  padding: EdgeInsets.all(0),
+                  icon: Icon(Icons.home),
+                  iconSize: 45, //Icons.logout),
+                  color: color,
+                  onPressed: goHome)),
           new Text('Главная страница', style: textStyle)
         ]));
   }

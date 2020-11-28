@@ -51,6 +51,7 @@ dependencies:
   permission_handler: ^5.0.1
   open_file: ^3.0.3
   geolocator: ^6.1.7
+  exif: ^1.0.3
 
   #flutter_rounded_date_picker: ^1.0.5
 
