@@ -1,8 +1,8 @@
 import 'package:ek_asu_opb_mobile/controllers/checkList.dart';
 import 'package:ek_asu_opb_mobile/controllers/checkListItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
-import 'package:ek_asu_opb_mobile/controllers/nciDocument.dart';
-import 'package:ek_asu_opb_mobile/controllers/nci.dart';
+import 'package:ek_asu_opb_mobile/controllers/ispDocument.dart';
+import 'package:ek_asu_opb_mobile/controllers/isp.dart';
 import 'package:ek_asu_opb_mobile/src/odooClient.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
@@ -106,7 +106,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               'f_coord_e'
             ],
 
-           // 'limit': 100,
+            // 'limit': 100,
           });
 
           break;
@@ -288,7 +288,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
                   }
                   // Important!
                   doc['is_new'] = true;
-                  await NCIDocumentController.insert(
+                  await ISPDocumentController.insert(
                       doc as Map<String, dynamic>);
                 }
               }
