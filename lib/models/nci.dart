@@ -1,4 +1,5 @@
 import "package:ek_asu_opb_mobile/models/models.dart";
+import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class DocumentList extends Models {
   int id;
@@ -16,7 +17,7 @@ class DocumentList extends Models {
   factory DocumentList.fromJson(Map<String, dynamic> json) => new DocumentList(
         id: json["id"],
         name: json["name"],
-        parent_id: json["parent_id"],
+        parent_id: getObj(json["parent_id"]),
       );
 
   Map<String, dynamic> toJson() {
