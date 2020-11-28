@@ -1,6 +1,8 @@
 import 'package:ek_asu_opb_mobile/controllers/checkList.dart';
 import 'package:ek_asu_opb_mobile/controllers/checkListItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
+import 'package:ek_asu_opb_mobile/controllers/nciDocument.dart';
+import 'package:ek_asu_opb_mobile/controllers/nci.dart';
 import 'package:ek_asu_opb_mobile/src/odooClient.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
@@ -18,7 +20,8 @@ final List<String> _dict = [
   'department',
   'user',
   'check_list',
-  'koap'
+  'koap',
+  'nci'
 ];
 
 //загрузка справочников
@@ -204,6 +207,47 @@ Future<List<Map<String, dynamic>>> getDictionaries(
             }
           }
           break;
+        case 'nci':
+          List<dynamic> domain = new List<dynamic>();
+          // if (lastUpdate != null) domain.add(lastUpdate);
+
+          data = await getDataWithAttemp(
+              'mob.document_list', 'search_read', null, {
+            'domain': domain,
+            'fields': ['id', 'parent_id', 'name']
+          });
+          if (data.length > 0) {
+            for (var docList in data) {
+              // Это вложение
+              if (docList["parent_id"] is List) {
+                docList['parent_id'] = docList['parent_id'][0];
+              }
+              // if (docList["parent_id"] is bool) {
+              //   docList.remove("parent_id");
+              // }
+
+              // domain.add();
+              var assignedDocs =
+                  await getDataWithAttemp('mob.document', 'search_read', null, {
+                'domain': [
+                  ['parent2_id', '=', docList["id"]]
+                ],
+                'fields': [
+                  'id',
+                  'parent2_id',
+                  'name',
+                  'file_name',
+                  'type',
+                  'number',
+                  'description'
+                ]
+              });
+              docList["docs"] = assignedDocs;
+              // print("DocList $docList");
+              // print("AssignedDocs $assignedDocs");
+            }
+          }
+          break;
       } //switch
       if (data != null) {
         List<dynamic> dataList = data as List<dynamic>;
@@ -233,6 +277,21 @@ Future<List<Map<String, dynamic>>> getDictionaries(
                 }
               }
               break;
+            case 'nci':
+              await DocumentListController.insert(
+                  dataList[j] as Map<String, dynamic>);
+
+              if (dataList[j]["docs"].length > 0) {
+                for (var doc in dataList[j]["docs"]) {
+                  if (doc['parent2_id'] is List) {
+                    doc['parent2_id'] = doc['parent2_id'][0];
+                  }
+                  // Important!
+                  doc['is_new'] = true;
+                  await NCIDocumentController.insert(
+                      doc as Map<String, dynamic>);
+                }
+              }
           } //switch
         } //for j
 

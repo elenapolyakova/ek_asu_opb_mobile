@@ -60,6 +60,10 @@ class DBProvider {
             "CREATE TABLE IF NOT EXISTS koap(id INTEGER PRIMARY KEY, article TEXT, paragraph TEXT, text TEXT, man_fine_from INTEGER, man_fine_to INTEGER, firm_fine_from INTEGER, firm_fine_to INTEGER, firm_stop INTEGER, desc TEXT, search_field TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS department_document(id INTEGER PRIMARY KEY, section TEXT, model TEXT, file_name TEXT, file_id INTEGER, department_id INTEGER, file_path TEXT)");
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS document_list(id INTEGER PRIMARY KEY, name TEXT, parent_id INTEGER)");
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS nci_document(id INTEGER PRIMARY KEY, parent2_id INTEGER, name TEXT, date TEXT, number TEXT, description TEXT, file_name TEXT, file_data STRING, type INTEGER, is_new TEXT)");
       },
       onUpgrade: (db, oldVersion, version) async {
         switch (oldVersion) {
