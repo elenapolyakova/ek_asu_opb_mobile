@@ -1,7 +1,7 @@
 import "package:ek_asu_opb_mobile/models/models.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
-class NCIDocument extends Models {
+class ISPDocument extends Models {
   int id;
   // id of parent DocumentList
   int parent2_id;
@@ -11,10 +11,11 @@ class NCIDocument extends Models {
   String description;
   String file_name;
   String file_data;
+  String file_path;
   int type;
   bool is_new;
 
-  NCIDocument({
+  ISPDocument({
     this.id,
     this.parent2_id,
     this.name,
@@ -25,9 +26,10 @@ class NCIDocument extends Models {
     this.file_data,
     this.type,
     this.is_new,
+    this.file_path,
   });
 
-  factory NCIDocument.fromJson(Map<String, dynamic> json) => new NCIDocument(
+  factory ISPDocument.fromJson(Map<String, dynamic> json) => new ISPDocument(
         id: json["id"],
         parent2_id: json["parent2_id"],
         name: getObj(json["name"]),
@@ -38,6 +40,7 @@ class NCIDocument extends Models {
         file_data: getObj(json["file_data"]),
         type: getObj(json["type"]),
         is_new: (json["is_new"].toString() == 'true'),
+        file_path: getObj(json["file_path"]),
       );
 
   Map<String, dynamic> toJson() {
@@ -52,11 +55,12 @@ class NCIDocument extends Models {
       'file_data': file_data,
       'type': type,
       'is_new': (is_new == null || !is_new) ? 'false' : 'true',
+      'file_path': file_path,
     };
   }
 
   @override
   String toString() {
-    return 'NCIDocument {id: $id, parent2_id: $parent2_id, name: $name, file_name: $file_name, is_new: $is_new, file_data: $file_data}';
+    return 'ISPDocument {id: $id, parent2_id: $parent2_id, name: $name, file_name: $file_name, is_new: $is_new, file_data: $file_data}';
   }
 }
