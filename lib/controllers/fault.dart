@@ -1,5 +1,7 @@
+import 'package:ek_asu_opb_mobile/controllers/checkListItem.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import "package:ek_asu_opb_mobile/controllers/faultItem.dart";
+import 'package:ek_asu_opb_mobile/models/checkListItem.dart';
 import 'package:ek_asu_opb_mobile/models/fault.dart';
 import 'package:ek_asu_opb_mobile/models/faultItem.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
@@ -7,6 +9,7 @@ import "package:ek_asu_opb_mobile/controllers/syn.dart";
 import 'dart:io';
 import 'package:ek_asu_opb_mobile/src/fileStorage.dart';
 import 'package:uuid/uuid.dart';
+import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 
 class FaultController extends Controllers {
   static String _tableName = "fault";
@@ -20,6 +23,7 @@ class FaultController extends Controllers {
   }
 
   // faultItems is a List of json data FaultItem
+  // delete paths
   static Future<Map<String, dynamic>> create(
       Fault fault, List<Map<String, dynamic>> faultItems, List<String> delete,
       [bool saveOdooId = false]) async {
@@ -308,5 +312,159 @@ class FaultController extends Controllers {
     if (queryRes == null || queryRes.length == 0)
       throw 'No record of table $_tableName with id=$id exist.';
     return queryRes[0]['odoo_id'];
+  }
+
+  static Future<Fault> selectByOdooId(int odooId) async {
+    if (odooId == null) return null;
+    var json = await DBProvider.db
+        .select(_tableName, where: "odoo_id = ?", whereArgs: [odooId]);
+    if (json == null || json.isEmpty) return null;
+    return Fault.fromJson(json[0]);
+  }
+
+  static firstLoadFromOdoo([bool loadRelated = false, int limit]) async {
+    List<String> fields;
+    List<List> domain = [];
+    if (loadRelated) {
+      fields = ['parent_id'];
+      List<Map<String, dynamic>> queryRes =
+          await DBProvider.db.select(_tableName, columns: ['odoo_id']);
+      domain = [
+        ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
+      ];
+    } else
+      fields = [
+        'name',
+        'desc',
+        'fine_desc',
+        'fine',
+        'koap_id',
+        'date',
+        'date_done',
+        'active',
+        'plan_fix_date'
+      ];
+
+    List<dynamic> json = await getDataWithAttemp(
+        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
+      domain,
+      fields
+    ], {
+      'limit': limit,
+      'context': {'create_or_update': true}
+    });
+
+    print("Fault firstLoad $json");
+    // Before we delete all data for collisions escape
+    if (!loadRelated) await DBProvider.db.deleteAll(_tableName);
+
+    return Future.forEach(json, (e) async {
+      // base_id from odoo is like [3, _unknown, 3]
+      if (e['base_id'] is List) {
+        e['base_id'] = e['base_id'][0];
+      }
+
+      if (loadRelated) {
+        Fault fault = await selectByOdooId(e['id']);
+        Map<String, dynamic> res = {};
+        if (e['parent_id'] is List) {
+          CheckListItem parentCheckListItem =
+              await CheckListItemController.selectByOdooId(
+                  unpackListId(e['parent_id'])['id']);
+          assert(parentCheckListItem != null,
+              "Model check_list_item has to be loaded before $_tableName");
+          res['id'] = fault.id;
+          res['parent_id'] = parentCheckListItem.id;
+        }
+
+        if (res['id'] != null) return DBProvider.db.update(_tableName, res);
+        return null;
+      } else {
+        Map<String, dynamic> res = {
+          ...e,
+          'id': null,
+          'odoo_id': e['id'],
+          'active': 'true',
+        };
+
+        print("firstLoadFromOdoo() Fault insert! $res");
+        Fault json = Fault.fromJson(res);
+        // second and third params needs for creation faultItems as photos
+        // In this case we don't need to create the from here
+        // They will be created in faultItemController!
+        return FaultController.create(json, [], [], true);
+      }
+    });
+  }
+
+  static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
+    List<String> fields;
+    if (loadRelated)
+      fields = ['parent_id'];
+    else
+      fields = [
+        'name',
+        'desc',
+        'fine_desc',
+        'fine',
+        'koap_id',
+        'date',
+        'date_done',
+        'active',
+        'plan_fix_date'
+      ];
+
+    List domain = await getLastSyncDateDomain(_tableName);
+    List<dynamic> json = await getDataWithAttemp(
+        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
+      domain,
+      fields
+    ], {
+      'limit': limit,
+      'context': {'create_or_update': true}
+    });
+
+    print("Fault, Load changes from odoo! $json");
+
+    return Future.forEach(json, (e) async {
+      if (e['base_id'] is List) {
+        e['base_id'] = e['base_id'][0];
+      }
+      Fault fault = await selectByOdooId(e['id']);
+      if (loadRelated) {
+        Map<String, dynamic> res = {};
+        if (e['parent_id'] is List) {
+          CheckListItem parentCheckListItem =
+              await CheckListItemController.selectByOdooId(
+                  unpackListId(e['parent_id'])['id']);
+          assert(parentCheckListItem != null,
+              "Model check_list_item has to be loaded before $_tableName");
+          res['id'] = fault.id;
+          res['parent_id'] = parentCheckListItem.id;
+        }
+        if (res['id'] != null) return DBProvider.db.update(_tableName, res);
+        return null;
+      } else {
+        if (fault == null) {
+          Map<String, dynamic> res = Fault.fromJson({
+            ...e,
+            'active': e['active'] ? 'true' : 'false',
+          }).toJson(true);
+          res['odoo_id'] = e['id'];
+          return DBProvider.db.insert(_tableName, res);
+        }
+        Map<String, dynamic> res = CheckListItem.fromJson({
+          ...e,
+          'id': fault.id,
+          'odoo_id': fault.odoo_id,
+          'active': e['active'] ? 'true' : 'false',
+        }).toJson();
+        return DBProvider.db.update(_tableName, res);
+      }
+    });
+  }
+
+  static Future finishSync(dateTime) {
+    return setLastSyncDateForDomain(_tableName, dateTime);
   }
 }
