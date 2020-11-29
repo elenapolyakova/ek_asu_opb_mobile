@@ -1,7 +1,11 @@
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
+import 'package:ek_asu_opb_mobile/controllers/fault.dart';
 import 'package:ek_asu_opb_mobile/models/faultItem.dart';
+import 'package:ek_asu_opb_mobile/models/fault.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import "package:ek_asu_opb_mobile/controllers/syn.dart";
+import "package:ek_asu_opb_mobile/src/exchangeData.dart";
+import "package:ek_asu_opb_mobile/src/fileStorage.dart";
 
 class FaultItemController extends Controllers {
   static String _tableName = "fault_item";
@@ -19,11 +23,6 @@ class FaultItemController extends Controllers {
 
     Map<String, dynamic> json = faultItem.toJson();
     if (saveOdooId) json.remove("id");
-
-    // json.remove("id");
-    // // Warning only for local db!!!
-    // // When enable loading from odoo, delete this code
-    // json["odooId"] = null;
 
     await DBProvider.db.insert(_tableName, json).then((resId) {
       res['code'] = 1;
@@ -118,5 +117,154 @@ class FaultItemController extends Controllers {
     if (queryRes == null || queryRes.length == 0)
       throw 'No record of table $_tableName with id=$id exist.';
     return queryRes[0]['odoo_id'];
+  }
+
+  static Future<FaultItem> selectByOdooId(int odooId) async {
+    if (odooId == null) return null;
+    var json = await DBProvider.db
+        .select(_tableName, where: "odoo_id = ?", whereArgs: [odooId]);
+    if (json == null || json.isEmpty) return null;
+    return FaultItem.fromJson(json[0]);
+  }
+
+  static firstLoadFromOdoo([bool loadRelated = false, int limit]) async {
+    List<String> fields;
+    List<List> domain = [];
+    if (loadRelated) {
+      fields = ['parent_id'];
+      List<Map<String, dynamic>> queryRes =
+          await DBProvider.db.select(_tableName, columns: ['odoo_id']);
+      domain = [
+        ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
+      ];
+    } else
+      fields = [
+        'name',
+        'type',
+        'file_name',
+        'file_data',
+        'coord_n',
+        'coord_e',
+      ];
+    domain.add(['parent2_id', '=', null]);
+
+    List<dynamic> json = await getDataWithAttemp(
+        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
+      domain,
+      fields
+    ], {
+      'limit': limit,
+      'context': {'create_or_update': true}
+    });
+
+    print("FaultItem firstLoad $json");
+    // Before we delete all data for collisions escape
+    if (!loadRelated) await DBProvider.db.deleteAll(_tableName);
+
+    return Future.forEach(json, (e) async {
+      if (loadRelated) {
+        FaultItem faultItem = await selectByOdooId(e['id']);
+        Map<String, dynamic> res = {};
+        if (e['parent_id'] is List) {
+          Fault parentFault = await FaultController.selectByOdooId(
+              unpackListId(e['parent_id'])['id']);
+          assert(parentFault != null,
+              "Model fault has to be loaded before $_tableName");
+          res['id'] = faultItem.id;
+          res['parent_id'] = parentFault.id;
+        }
+
+        if (res['id'] != null) return DBProvider.db.update(_tableName, res);
+        return null;
+      } else {
+        Map<String, dynamic> res = {
+          ...e,
+          'id': null,
+          'odoo_id': e['id'],
+          'active': 'true',
+        };
+
+        print("firstLoadFromOdoo() FaultItem insert! $res");
+        FaultItem json = FaultItem.fromJson(res);
+
+        // Create local file
+        var file = await base64ToFile(json.file_data);
+        print("Path ");
+        print(file.path);
+
+        json.image = file.path;
+        return FaultItemController.create(json, true);
+      }
+    });
+  }
+
+  static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
+    List<String> fields;
+    if (loadRelated)
+      fields = ['parent_id'];
+    else
+      fields = [
+        'name',
+        'type',
+        'file_name',
+        'file_data',
+        'coord_n',
+        'coord_e',
+      ];
+
+    List domain = await getLastSyncDateDomain(_tableName);
+    // Get only photos for fault! By this
+    domain.add(['parent2_id', '=', null]);
+
+    List<dynamic> json = await getDataWithAttemp(
+        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
+      domain,
+      fields
+    ], {
+      'limit': limit,
+      'context': {'create_or_update': true}
+    });
+
+    print("FaultItem, Load changes from odoo! $json");
+
+    return Future.forEach(json, (e) async {
+      FaultItem faultItem = await selectByOdooId(e['id']);
+      if (loadRelated) {
+        Map<String, dynamic> res = {};
+        if (e['parent_id'] is List) {
+          Fault parentFault = await FaultController.selectByOdooId(
+              unpackListId(e['parent_id'])['id']);
+          assert(parentFault != null,
+              "Model fault has to be loaded before $_tableName");
+          res['id'] = faultItem.id;
+          res['parent_id'] = parentFault.id;
+        }
+        if (res['id'] != null) return DBProvider.db.update(_tableName, res);
+        return null;
+      } else {
+        if (faultItem == null) {
+          // Firstly create file!
+          var file = await base64ToFile(e["file_data"]);
+          // Set path
+          e["image"] = file.path;
+
+          Map<String, dynamic> res =
+              FaultItem.fromJson({...e, 'active': 'true'}).toJson(true);
+          res['odoo_id'] = e['id'];
+          return DBProvider.db.insert(_tableName, res);
+        }
+        Map<String, dynamic> res = FaultItem.fromJson({
+          ...e,
+          'id': faultItem.id,
+          'odoo_id': faultItem.odoo_id,
+          'active': 'true',
+        }).toJson();
+        return DBProvider.db.update(_tableName, res);
+      }
+    });
+  }
+
+  static Future finishSync(dateTime) {
+    return setLastSyncDateForDomain(_tableName, dateTime);
   }
 }
