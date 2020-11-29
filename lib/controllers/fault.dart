@@ -79,6 +79,35 @@ class FaultController extends Controllers {
         }
       }
     }
+
+    var deletedFaultItemsIds = [];
+    // Delete assigned photos to Fault
+    if (delete.length > 0) {
+      try {
+        for (var path in delete) {
+          // Find necessary item
+          List<FaultItem> itemsList =
+              await FaultItemController.selectItemByPath(path);
+          print("FaultItems to delete $itemsList");
+          // if not null, delete from db and internal memory
+          if (itemsList != null && itemsList.length > 0) {
+            for (var item in itemsList) {
+              var deleteResp = await FaultItemController.delete(item.id);
+              print("print delete resp $deleteResp");
+              if (deleteResp["code"] > 0) {
+                deletedFaultItemsIds.add(deleteResp["id"]);
+                await File(item.image).delete();
+              }
+            }
+          }
+        }
+      } catch (e) {
+        print(
+            "Fault Create() Error! Error while deleting existing faultItem: $e");
+        res["code"] = -3;
+        res["message"] = "Ошибка при удалении ранее сохраненных  фото";
+      }
+    }
     DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
     return res;
   }
