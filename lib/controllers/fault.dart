@@ -19,9 +19,9 @@ class FaultController extends Controllers {
     return await DBProvider.db.insert(_tableName, fault.toJson());
   }
 
-// path to files means path to photos of Faults storing in internal memory
+  // faultItems is a List of json data FaultItem
   static Future<Map<String, dynamic>> create(
-      Fault fault, List<String> pathsToFiles,
+      Fault fault, List<Map<String, dynamic>> faultItems,
       [bool saveOdooId = false]) async {
     Map<String, dynamic> res = {
       'code': null,
@@ -29,7 +29,7 @@ class FaultController extends Controllers {
       'id': null,
     };
     print("Create() Fault");
-    print("Fault $fault; pathToFiles $pathsToFiles");
+    print("Fault $fault; faultItems $faultItems");
 
     Map<String, dynamic> json = fault.toJson();
     //
@@ -54,18 +54,21 @@ class FaultController extends Controllers {
 
     // Main fault db record created, so we can create faultItems records
     if (res["code"] == 1) {
-      if (pathsToFiles != null && pathsToFiles.length > 0) {
-        for (var photoPath in pathsToFiles) {
+      if (faultItems != null && faultItems.length > 0) {
+        for (var fItem in faultItems) {
           try {
             FaultItem item = new FaultItem();
             // Set properties
             item.active = true;
-            item.image = photoPath;
+            item.image = fItem["path"];
+            item.coord_e = fItem["coord_e"];
+            item.coord_n = fItem["coord_n"];
             item.parent_id = res["id"];
-            item.file_data = fileToBase64(photoPath);
+            item.file_data = fileToBase64(fItem["path"]);
             item.type = 2;
             item.name = Uuid().v1();
             item.file_name = item.name + ".jpg";
+
             var insertResp = await FaultItemController.create(item);
             print("Fault item insert response $insertResp");
           } catch (e) {
@@ -103,17 +106,17 @@ class FaultController extends Controllers {
   }
 
   // Update fault also allows to add or delete photos for 1 Fault
-  // create - list with paths to photos in internal memory
+  // faultItems - list with data as photoPath coord_e coord_n and etc.
   // delete - list ids of photos(faultItems) to delete
-  static Future<Map<String, dynamic>> update(
-      Fault fault, List<String> create, List<int> delete) async {
+  static Future<Map<String, dynamic>> update(Fault fault,
+      List<Map<String, dynamic>> faultItems, List<String> delete) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
       'id': null,
     };
 
-    print("Update() Fault: $fault, create: $create, delete: $delete");
+    print("Update() Fault: $fault, faultItems: $faultItems, delete: $delete");
     var createdFaultItemsIds = [];
     var deletedFaultItemsIds = [];
 
@@ -137,20 +140,22 @@ class FaultController extends Controllers {
     });
 
     // Creating new FaultItems For existing Fault!
-    if (create.length > 0) {
-      for (var path in create) {
+    if (faultItems.length > 0) {
+      for (var fItem in faultItems) {
         try {
-          FaultItem faultItem = new FaultItem();
-          faultItem.active = true;
-          faultItem.image = path;
-          faultItem.parent_id = fault.id;
-          // Get file by path and convert to base64
-          faultItem.file_data = fileToBase64(path);
-          faultItem.type = 2;
-          faultItem.name = Uuid().v1();
-          faultItem.file_name = faultItem.name + ".jpg";
+          FaultItem item = new FaultItem();
+          // Set properties
+          item.active = true;
+          item.image = fItem["path"];
+          item.coord_e = fItem["coord_e"];
+          item.coord_n = fItem["coord_n"];
+          item.parent_id = res["id"];
+          item.file_data = fileToBase64(fItem["path"]);
+          item.type = 2;
+          item.name = Uuid().v1();
+          item.file_name = item.name + ".jpg";
 
-          var createResp = await FaultItemController.create(faultItem);
+          var createResp = await FaultItemController.create(item);
           if (createResp["code"] > 0)
             createdFaultItemsIds.add(createResp["id"]);
         } catch (e) {
@@ -164,17 +169,20 @@ class FaultController extends Controllers {
     // Delete assigned photos to Fault
     if (delete.length > 0) {
       try {
-        for (var faultItemId in delete) {
+        for (var path in delete) {
           // Find necessary item
-          FaultItem item = await FaultItemController.selectById(faultItemId);
-          print("FaultItem to delete $item");
+          List<FaultItem> itemsList =
+              await FaultItemController.selectItemByPath(path);
+          print("FaultItems to delete $itemsList");
           // if not null, delete from db and internal memory
-          if (item != null) {
-            var deleteResp = await FaultItemController.delete(faultItemId);
-            print("print delete resp $deleteResp");
-            if (deleteResp["code"] > 0) {
-              deletedFaultItemsIds.add(deleteResp["id"]);
-              await File(item.image).delete();
+          if (itemsList != null && itemsList.length > 0) {
+            for (var item in itemsList) {
+              var deleteResp = await FaultItemController.delete(item.id);
+              print("print delete resp $deleteResp");
+              if (deleteResp["code"] > 0) {
+                deletedFaultItemsIds.add(deleteResp["id"]);
+                await File(item.image).delete();
+              }
             }
           }
         }

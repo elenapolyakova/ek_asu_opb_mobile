@@ -60,6 +60,21 @@ class FaultItemController extends Controllers {
     return faultItems;
   }
 
+  // param image stay for path
+  static Future<List<FaultItem>> selectItemByPath(String filePath) async {
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
+      _tableName,
+      where: "image = ? and active = 'true'",
+      whereArgs: [filePath],
+    );
+    if (queryRes == null || queryRes.length == 0) return [];
+    List<FaultItem> faultItems =
+        queryRes.map((e) => FaultItem.fromJson(e)).toList();
+    print("FaultItems SelectItemByPath()");
+    print(faultItems);
+    return faultItems;
+  }
+
   static Future<FaultItem> selectById(int id) async {
     if (id == null) return null;
     var json = await DBProvider.db.selectById(_tableName, id);

@@ -252,7 +252,7 @@ class _FaultScreen extends State<FaultScreen> {
             'coord_e': geoPoint.longitude,
             'coord_n': geoPoint.latitude
           });
-          
+
           FaultItem faultItems = FaultItem(
               id: null,
               parent_id: _fault.id,
@@ -597,10 +597,10 @@ class _FaultScreen extends State<FaultScreen> {
     _fault.date = DateTime.now();
     try {
       if ([-1, null].contains(_fault.id)) {
-        result = await FaultController.create(_fault, []); //_createdPath);
+        result = await FaultController.create(_fault, _createdPath);
       } else {
         result =
-            await FaultController.update(_fault, /*_createdPath*/ [], _deletedIds);
+            await FaultController.update(_fault, _createdPath, _deletedIds);
       }
       hasErorr = result["code"] < 0;
 
@@ -647,7 +647,8 @@ class _FaultScreen extends State<FaultScreen> {
         if (deletedFile.id != null)
           _deletedIds.add(deletedFile.id);
         else {
-          _createdPath.removeWhere((image) => image['path'] == deletedFile.image);
+          _createdPath
+              .removeWhere((image) => image['path'] == deletedFile.image);
           await File(deletedFile.image).delete();
         } //если файл добавили, в бд не сохранили и тут же удалили - просто стираем с устройства
 
