@@ -21,7 +21,7 @@ final List<String> _dict = [
   'user',
   'check_list',
   'koap',
-  'nci'
+  'isp'
 ];
 
 //загрузка справочников
@@ -106,7 +106,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               'f_coord_e'
             ],
 
-           //  'limit': 100,
+            //  'limit': 100,
           });
 
           break;
@@ -207,7 +207,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
             }
           }
           break;
-        case 'nci':
+        case 'isp':
           List<dynamic> domain = new List<dynamic>();
           if (lastUpdate != null) domain.add(lastUpdate);
 
@@ -222,11 +222,11 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               if (docList["parent_id"] is List) {
                 docList['parent_id'] = docList['parent_id'][0];
               }
-
-              domain.add(['parent2_id', '=', docList["id"]]);
               var assignedDocs =
                   await getDataWithAttemp('mob.document', 'search_read', null, {
-                'domain': domain,
+                'domain': [
+                  ['parent2_id', '=', docList["id"]]
+                ],
                 'fields': [
                   'id',
                   'parent2_id',
@@ -272,7 +272,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
                 }
               }
               break;
-            case 'nci':
+            case 'isp':
               await DocumentListController.insert(
                   dataList[j] as Map<String, dynamic>);
 
