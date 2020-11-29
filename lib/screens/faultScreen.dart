@@ -644,14 +644,14 @@ class _FaultScreen extends State<FaultScreen> {
         //   return;
         //   }
 
-        if (deletedFile.id != null)
-          _deletedPath.add(deletedFile.image);
-        else {
-          _created
+        if (deletedFile.id == null){
+           _created
               .removeWhere((image) => image['path'] == deletedFile.image);
           //await File(deletedFile.image).delete();
         } //если файл добавили, в бд не сохранили и тут же удалили - не передаём его в _createdPath
-
+      
+       _deletedPath.add(deletedFile.image);
+        
         _imageList.removeAt(index);
         if (index <= _imageIndex && _imageIndex != 0) _imageIndex--;
 
