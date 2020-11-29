@@ -342,7 +342,7 @@ class FaultController extends Controllers {
         'date',
         'date_done',
         'active',
-        'plan_fix_date'
+        // 'plan_fix_date'
       ];
 
     List<dynamic> json = await getDataWithAttemp(
@@ -359,11 +359,17 @@ class FaultController extends Controllers {
     if (!loadRelated) await DBProvider.db.deleteAll(_tableName);
 
     return Future.forEach(json, (e) async {
-      // base_id from odoo is like [3, _unknown, 3]
-      if (e['base_id'] is List) {
-        e['base_id'] = e['base_id'][0];
+      // koap_id from odoo is like []
+      if (e['koap_id'] is List) {
+        e['koap_id'] = e['koap_id'][0];
       }
-
+      // If date done not set, save empty string
+      if (e['date_done'] is bool) {
+        e['date_done'] = null;
+      }
+      if (e['date'] is bool) {
+        e['date'] = null;
+      }
       if (loadRelated) {
         Fault fault = await selectByOdooId(e['id']);
         Map<String, dynamic> res = {};
@@ -411,10 +417,11 @@ class FaultController extends Controllers {
         'date',
         'date_done',
         'active',
-        'plan_fix_date'
+        // 'plan_fix_date'
       ];
 
     List domain = await getLastSyncDateDomain(_tableName);
+
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
       domain,
@@ -427,8 +434,15 @@ class FaultController extends Controllers {
     print("Fault, Load changes from odoo! $json");
 
     return Future.forEach(json, (e) async {
-      if (e['base_id'] is List) {
-        e['base_id'] = e['base_id'][0];
+      if (e['koap_id'] is List) {
+        e['koap_id'] = e['koap_id'][0];
+      }
+      // If date done not set, save empty string
+      if (e['date_done'] is bool) {
+        e['date_done'] = null;
+      }
+      if (e['date'] is bool) {
+        e['date'] = null;
       }
       Fault fault = await selectByOdooId(e['id']);
       if (loadRelated) {
