@@ -275,6 +275,7 @@ class CheckListItemController extends Controllers {
     });
 
     print("CheckListItem, Load changes from odoo! $json");
+    print("Domain $domain");
 
     return Future.forEach(json, (e) async {
       if (e['base_id'] is List) {
