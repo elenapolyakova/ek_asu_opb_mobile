@@ -431,6 +431,7 @@ class CheckListController extends Controllers {
           Map<String, dynamic> res = CheckListWork.fromJson({
             ...e,
             'active': e['active'] ? 'true' : 'false',
+            'is_active': e['is_active'] ? 'true' : 'false',
           }).toJson(true);
           res['odoo_id'] = e['id'];
           return DBProvider.db.insert(_tableName, res);
@@ -440,6 +441,7 @@ class CheckListController extends Controllers {
           'id': checkList.id,
           'odoo_id': checkList.odoo_id,
           'active': e['active'] ? 'true' : 'false',
+          'is_active': e['is_active'] ? 'true' : 'false',
         }).toJson();
         return DBProvider.db.update(_tableName, res);
       }
