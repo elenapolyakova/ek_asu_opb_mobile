@@ -173,8 +173,8 @@ class SynController extends Controllers {
       await CheckPlanItemController.firstLoadFromOdoo(true);
       await ComGroupController.firstLoadFromOdoo(true);
       await DepartmentDocumentController.firstLoadFromOdoo();
-      // await CheckListController.firstLoadFromOdoo();
-      // await CheckListController.firstLoadFromOdoo(true);
+      await CheckListController.firstLoadFromOdoo();
+      await CheckListController.firstLoadFromOdoo(true);
     } else {
       await PlanController.loadChangesFromOdoo();
       await PlanItemController.loadChangesFromOdoo();
@@ -185,15 +185,15 @@ class SynController extends Controllers {
       await CheckPlanController.loadChangesFromOdoo(true);
       await CheckPlanItemController.loadChangesFromOdoo(true);
       await ComGroupController.loadChangesFromOdoo(true);
-      // await CheckListController.loadChangesFromOdoo();
-      // await CheckListController.loadChangesFromOdoo(true);
+      await CheckListController.loadChangesFromOdoo();
+      await CheckListController.loadChangesFromOdoo(true);
     }
     await PlanController.finishSync(dateTime);
     await PlanItemController.finishSync(dateTime);
     await CheckPlanController.finishSync(dateTime);
     await CheckPlanItemController.finishSync(dateTime);
     await ComGroupController.finishSync(dateTime);
-    // await CheckListController.finishSync(dateTime);
+    await CheckListController.finishSync(dateTime);
     await setLastSyncDateForDomain(_tableName, dateTime);
   }
 
