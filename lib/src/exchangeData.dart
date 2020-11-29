@@ -149,7 +149,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
           break;
         case 'check_list':
           List<dynamic> domain = new List<dynamic>();
-          // if (lastUpdate != null) domain.add(lastUpdate);
+          if (lastUpdate != null) domain.add(lastUpdate);
 
           domain.add(['parent_id', '=', null]);
           domain.add(['is_base', '=', true]);
@@ -209,7 +209,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
           break;
         case 'nci':
           List<dynamic> domain = new List<dynamic>();
-          // if (lastUpdate != null) domain.add(lastUpdate);
+          if (lastUpdate != null) domain.add(lastUpdate);
 
           data = await getDataWithAttemp(
               'mob.document_list', 'search_read', null, {
@@ -222,16 +222,11 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               if (docList["parent_id"] is List) {
                 docList['parent_id'] = docList['parent_id'][0];
               }
-              // if (docList["parent_id"] is bool) {
-              //   docList.remove("parent_id");
-              // }
 
-              // domain.add();
+              domain.add(['parent2_id', '=', docList["id"]]);
               var assignedDocs =
                   await getDataWithAttemp('mob.document', 'search_read', null, {
-                'domain': [
-                  ['parent2_id', '=', docList["id"]]
-                ],
+                'domain': domain,
                 'fields': [
                   'id',
                   'parent2_id',
