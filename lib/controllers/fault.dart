@@ -64,7 +64,7 @@ class FaultController extends Controllers {
             item.coord_e = fItem["coord_e"];
             item.coord_n = fItem["coord_n"];
             item.parent_id = res["id"];
-            // item.file_data = fileToBase64(photoPath);
+            item.file_data = fileToBase64(fItem["path"]);
             item.type = 2;
             item.name = Uuid().v1();
             item.file_name = item.name + ".jpg";
@@ -109,7 +109,7 @@ class FaultController extends Controllers {
   // faultItems - list with data as photoPath coord_e coord_n and etc.
   // delete - list ids of photos(faultItems) to delete
   static Future<Map<String, dynamic>> update(Fault fault,
-      List<Map<String, dynamic>> faultItems, List<int> delete) async {
+      List<Map<String, dynamic>> faultItems, List<String> delete) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
@@ -150,7 +150,7 @@ class FaultController extends Controllers {
           item.coord_e = fItem["coord_e"];
           item.coord_n = fItem["coord_n"];
           item.parent_id = res["id"];
-          // item.file_data = fileToBase64(photoPath);
+          item.file_data = fileToBase64(fItem["path"]);
           item.type = 2;
           item.name = Uuid().v1();
           item.file_name = item.name + ".jpg";
@@ -169,17 +169,20 @@ class FaultController extends Controllers {
     // Delete assigned photos to Fault
     if (delete.length > 0) {
       try {
-        for (var faultItemId in delete) {
+        for (var path in delete) {
           // Find necessary item
-          FaultItem item = await FaultItemController.selectById(faultItemId);
-          print("FaultItem to delete $item");
+          List<FaultItem> itemsList =
+              await FaultItemController.selectItemByPath(path);
+          print("FaultItems to delete $itemsList");
           // if not null, delete from db and internal memory
-          if (item != null) {
-            var deleteResp = await FaultItemController.delete(faultItemId);
-            print("print delete resp $deleteResp");
-            if (deleteResp["code"] > 0) {
-              deletedFaultItemsIds.add(deleteResp["id"]);
-              await File(item.image).delete();
+          if (itemsList != null && itemsList.length > 0) {
+            for (var item in itemsList) {
+              var deleteResp = await FaultItemController.delete(item.id);
+              print("print delete resp $deleteResp");
+              if (deleteResp["code"] > 0) {
+                deletedFaultItemsIds.add(deleteResp["id"]);
+                await File(item.image).delete();
+              }
             }
           }
         }
