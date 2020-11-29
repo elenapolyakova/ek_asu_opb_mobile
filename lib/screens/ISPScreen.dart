@@ -1,4 +1,3 @@
-
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
@@ -6,41 +5,10 @@ import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:flutter_treeview/tree_view.dart';
 import 'package:open_file/open_file.dart';
-
-class DocList {
-  int parent_id;
-  int id;
-  String name;
-  DocList(this.parent_id, this.id, this.name);
-}
-
-class DocFile {
-  int parent_id;
-  int id;
-  String name;
-  DateTime date;
-  String number;
-  String file_name;
-  String filePath;
-  String description;
-  bool isNew;
-  DocFile(this.parent_id, this.id, this.name, this.file_name, this.isNew);
-}
-
-List<DocList> docList = [
-  DocList(null, 1, '1'),
-  DocList(1, 2, '2'),
-  DocList(1, 3, '3'),
-];
-
-List<DocFile> allFileList = [
-  DocFile(2, 1, '1', '1', true),
-  DocFile(2, 2, '2', '2', false),
-  DocFile(3, 3, '3', '3', false),
-  DocFile(3, 4, '4', '4', false),
-  DocFile(1, 5, '5', '5', false),
-  DocFile(1, 6, '6', '6', true),
-];
+import 'package:ek_asu_opb_mobile/models/isp.dart';
+import 'package:ek_asu_opb_mobile/models/ispDocument.dart';
+import 'package:ek_asu_opb_mobile/controllers/isp.dart';
+import 'package:ek_asu_opb_mobile/controllers/ispDocument.dart';
 
 class ISPScreen extends StatefulWidget {
   BuildContext context;
@@ -79,7 +47,7 @@ class _ISPScreen extends State<ISPScreen> {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
-      loadNodes();
+      _nodes = await loadNodes();
       // loadNodesTest();
     } catch (e) {} finally {
       hideDialog(context);
@@ -94,11 +62,11 @@ class _ISPScreen extends State<ISPScreen> {
     }
   }
 
-  loadNodes() async {
-    List<DocList> rootList = docList
-        .where((folder) => folder.parent_id == null)
-        .toList(); //загружаем все корневые каталоги (parent_id = null)
-    _nodes = [
+  Future<List<Node>> loadNodes() async {
+    List<DocumentList> rootList = await DocumentListController.getAllRoot();
+    //загружаем все корневые каталоги (parent_id  = null)
+    List<Node> nodes = [];
+    nodes = [
       Node(
           label: 'Документы',
           key: 'docs',
@@ -111,53 +79,56 @@ class _ISPScreen extends State<ISPScreen> {
           children: [])
     ];
 
-    await Future.forEach(rootList, (DocList root) async {
+    await Future.forEach(rootList, (DocumentList root) async {
       List<Node<dynamic>> children = [];
       List<Node<dynamic>> folders = await getFolders(root.id);
       if (folders != null && folders.length > 0) children.addAll(folders);
 
-      List<Node<DocFile>> files = await getFiles(root.id);
+      List<Node<ISPDocument>> files = await getFiles(root.id);
       if (files != null && files.length > 0) children.addAll(files);
 
-      _nodes[0].children.add(Node(
+      nodes[0].children.add(Node(
           key: 'dir_${root.id}',
           label: root.name,
           icon: NodeIcon.fromIconData(Icons.folder),
           expanded: true,
           children: children));
     });
+    return nodes;
   }
 
   Future<List<Node<dynamic>>> getFolders(int parent_id) async {
-    List<DocList> folderList = docList
-        .where((folder) => folder.parent_id == parent_id)
-        .toList(); //загружаем все каталоги (по parent_id)
+    List<DocumentList> folderList =
+        await DocumentListController.select(parent_id);
+    //загружаем все каталоги (по parent_id)
     List<Node> result = [];
 
-    await Future.forEach(folderList, (DocList folder) async {
+    await Future.forEach(folderList, (DocumentList folder) async {
       List<Node<dynamic>> children = [];
+      try {
+        List<Node<dynamic>> folders = await getFolders(folder.id);
+        if (folders != null && folders.length > 0) children.addAll(folders);
 
-      List<Node<dynamic>> folders = await getFolders(folder.id);
-      if (folders != null && folders.length > 0) children.addAll(folders);
+        List<Node<ISPDocument>> files = await getFiles(folder.id);
+        if (files != null && files.length > 0) children.addAll(files);
 
-      List<Node<DocFile>> files = await getFiles(folder.id);
-      if (files != null && files.length > 0) children.addAll(files);
-
-      result.add(Node(
-          key: 'dir_${folder.id}',
-          label: folder.name,
-          icon: NodeIcon.fromIconData(Icons.folder),
-          expanded: true,
-          children: children));
+        result.add(Node(
+            key: 'dir_${folder.id}',
+            label: folder.name,
+            icon: NodeIcon.fromIconData(Icons.folder),
+            expanded: true,
+            children: children));
+      } catch (e) {
+        print(e);
+      }
     });
 
     return result;
   }
 
-  Future<List<Node<DocFile>>> getFiles(int parent_id) async {
-    List<DocFile> fileList = allFileList
-        .where((file) => file.parent_id == parent_id)
-        .toList(); //загружаем все файлы (по parent_id)
+  Future<List<Node<ISPDocument>>> getFiles(int parent_id) async {
+    List<ISPDocument> fileList = await ISPDocumentController.select(
+        parent_id); //загружаем все файлы (по parent_id)
 
     return fileList
         .map(
@@ -165,9 +136,11 @@ class _ISPScreen extends State<ISPScreen> {
               label: file.name,
               key: 'file_${file.id}',
               data: file,
-              icon: ['', null].contains(file.filePath)
-                  ? (file.isNew
-                      ? NodeIcon(codePoint: Icons.new_releases.codePoint, color: 'red400')
+              icon: ['', null].contains(file.file_path)
+                  ? (file.is_new
+                      ? NodeIcon(
+                          codePoint: Icons.new_releases.codePoint,
+                          color: 'red400')
                       : NodeIcon.fromIconData(Icons.get_app))
                   : NodeIcon.fromIconData(Icons.insert_drive_file)),
         )
@@ -182,9 +155,9 @@ class _ISPScreen extends State<ISPScreen> {
     if (key.indexOf('dir_') > -1) return;
 
     Node selectedNode = _treeViewController.getNode(key);
-    DocFile doc = selectedNode.data;
+    ISPDocument doc = selectedNode.data;
     if (doc != null) {
-      if (['', null].contains(doc.filePath)) {
+      if (['', null].contains(doc.file_path)) {
         List<Node> updated = _treeViewController.updateNode(
             key,
             selectedNode.copyWith(
@@ -193,7 +166,7 @@ class _ISPScreen extends State<ISPScreen> {
           _treeViewController = _treeViewController.copyWith(children: updated);
         });
 
-        downloadFile(doc.id).then((file) {
+        doc.file.then((file) {
           if (file != null) {
             updated = _treeViewController.updateNode(
                 key,
@@ -210,7 +183,7 @@ class _ISPScreen extends State<ISPScreen> {
           }
         });
       } else
-        OpenFile.open(doc.filePath);
+        OpenFile.open(doc.file_path);
     }
   }
 
@@ -276,14 +249,7 @@ class _ISPScreen extends State<ISPScreen> {
                             supportParentDoubleTap: false,
                             onExpansionChanged: (key, expanded) =>
                                 _expandNodeHandler(key, expanded),
-                            onNodeTap: (key) {
-                              debugPrint('Selected: $key');
-                              setState(() {
-                                _selectedNode = key;
-                                _treeViewController = _treeViewController
-                                    .copyWith(selectedKey: key);
-                              });
-                            },
+                            onNodeTap: onNodeTap,
                             theme: getTreeViewTheme(context)),
                       )
                     ]))) //getBodyContent(),
