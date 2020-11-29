@@ -213,6 +213,9 @@ class FaultItemController extends Controllers {
       ];
 
     List domain = await getLastSyncDateDomain(_tableName);
+    // Delete condition 'active' in [true, false]
+    // as mob.document has no active!
+    domain.removeAt(1);
     // Get only photos for fault! By this
     domain.add(['parent2_id', '=', null]);
 
@@ -226,6 +229,7 @@ class FaultItemController extends Controllers {
     });
 
     print("FaultItem, Load changes from odoo! $json");
+    print("Domain $domain");
 
     return Future.forEach(json, (e) async {
       FaultItem faultItem = await selectByOdooId(e['id']);
