@@ -64,6 +64,7 @@ class CheckListController extends Controllers {
   /// Select all CheckLists with matching parentId
   /// Returns found records or null.
   static Future<List<CheckListWork>> select(int parentId) async {
+    print("CheckList Select() parent_id=$parentId");
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       where: "parent_id = ? and active = 'true'",
@@ -82,6 +83,7 @@ class CheckListController extends Controllers {
     var ids = await DBProvider.db.executeQuery(
         "SELECT A.id from (SELECT id from check_list where is_base = 'true') as A LEFT JOIN (SELECT base_id from check_list where is_base = 'false' and parent_id =$parentId) as B ON A.id = B.base_id where B.base_id is NULL");
 
+    print("Ids $ids");
     if (ids.length > 0) {
       for (var item in ids) {
         // item[id] is used for searching assigned questions for reinserting them as not base
@@ -114,7 +116,6 @@ class CheckListController extends Controllers {
               copyItem.description = originalQuestion.description;
               copyItem.active = true;
 
-              print("CreateItem from template!");
               await CheckListItemController.create(copyItem);
             }
           }
@@ -321,13 +322,14 @@ class CheckListController extends Controllers {
         'is_active',
         'type',
         'active',
-        // 'check_result',
       ];
+
+    // Get only work check list not templates!
+    domain.add(['is_base', '=', false]);
+
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-      [
-        ['is_base', '=', false]
-      ],
+      domain,
       fields
     ], {
       'limit': limit,
@@ -335,7 +337,7 @@ class CheckListController extends Controllers {
     });
 
     print("First load json $json");
-    // Rework As we don't need to delete templates !!!!
+    // We don't need to delete templates !!!!
     if (!loadRelated)
       await DBProvider.db
           .executeQuery("DELETE FROM $_tableName WHERE is_base = 'false'");
@@ -388,15 +390,16 @@ class CheckListController extends Controllers {
         'is_active',
         'type',
         'active',
-        // 'check_result',
       ];
 
     List domain = await getLastSyncDateDomain(_tableName);
+    print("domain $domain");
+
+    // Get only work check list not templates!
+    domain.add(['is_base', '=', false]);
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-      [
-        ['is_base', '=', false]
-      ],
+      domain,
       fields
     ], {
       'limit': limit,
@@ -404,7 +407,6 @@ class CheckListController extends Controllers {
     });
 
     print("Load changes from odoo! $json");
-    print("Input json $json");
 
     return Future.forEach(json, (e) async {
       if (e['base_id'] is List) {
@@ -426,7 +428,7 @@ class CheckListController extends Controllers {
         return null;
       } else {
         if (checkList == null) {
-          Map<String, dynamic> res = CheckPlanItem.fromJson({
+          Map<String, dynamic> res = CheckListWork.fromJson({
             ...e,
             'active': e['active'] ? 'true' : 'false',
           }).toJson(true);
