@@ -21,7 +21,7 @@ class FaultController extends Controllers {
 
   // faultItems is a List of json data FaultItem
   static Future<Map<String, dynamic>> create(
-      Fault fault, List<Map<String, dynamic>> faultItems,
+      Fault fault, List<Map<String, dynamic>> faultItems, List<String> delete,
       [bool saveOdooId = false]) async {
     Map<String, dynamic> res = {
       'code': null,

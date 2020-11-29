@@ -45,8 +45,8 @@ class _FaultScreen extends State<FaultScreen> {
   int _selectedKoapId;
   String _fineName;
   bool showLoadingImage = false;
-  List<int> _deletedIds;
-  List<Map<String, dynamic>> _createdPath;
+  List<String> _deletedPath;
+  List<Map<String, dynamic>> _created;
 
   File _image;
   int _imageIndex;
@@ -82,8 +82,8 @@ class _FaultScreen extends State<FaultScreen> {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
       _fineName = '';
-      _deletedIds = [];
-      _createdPath = [];
+      _deletedPath = [];
+      _created = [];
       await loadFault();
       await loadImages();
     } catch (e) {} finally {
@@ -247,7 +247,7 @@ class _FaultScreen extends State<FaultScreen> {
           String path = await getPath();
           await loadFileFromBytes(bytes, path);
           GeoPoint geoPoint = await Geo.geo.getGeoPoint(path);
-          _createdPath.add({
+          _created.add({
             'path': path,
             'coord_e': geoPoint.longitude,
             'coord_n': geoPoint.latitude
@@ -597,10 +597,10 @@ class _FaultScreen extends State<FaultScreen> {
     _fault.date = DateTime.now();
     try {
       if ([-1, null].contains(_fault.id)) {
-        result = await FaultController.create(_fault, _createdPath);
+        result = await FaultController.create(_fault, _created, _deletedPath);
       } else {
         result =
-            await FaultController.update(_fault, _createdPath, _deletedIds);
+            await FaultController.update(_fault, _created, _deletedPath);
       }
       hasErorr = result["code"] < 0;
 
@@ -612,8 +612,8 @@ class _FaultScreen extends State<FaultScreen> {
           _fault.id = result["id"];
         }
 
-        _createdPath = [];
-        _deletedIds = [];
+        _created = [];
+        _deletedPath = [];
         setState(() {});
 
         // Navigator.pop<bool>(context, true);
@@ -645,12 +645,12 @@ class _FaultScreen extends State<FaultScreen> {
         //   }
 
         if (deletedFile.id != null)
-          _deletedIds.add(deletedFile.id);
+          _deletedPath.add(deletedFile.image);
         else {
-          _createdPath
+          _created
               .removeWhere((image) => image['path'] == deletedFile.image);
-          await File(deletedFile.image).delete();
-        } //если файл добавили, в бд не сохранили и тут же удалили - просто стираем с устройства
+          //await File(deletedFile.image).delete();
+        } //если файл добавили, в бд не сохранили и тут же удалили - не передаём его в _createdPath
 
         _imageList.removeAt(index);
         if (index <= _imageIndex && _imageIndex != 0) _imageIndex--;

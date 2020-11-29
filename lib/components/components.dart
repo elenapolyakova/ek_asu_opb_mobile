@@ -1485,7 +1485,7 @@ class _MyAppBar extends State<MyAppBar> {
     super.initState();
     _countMessage = 0;
     if (widget.showMessenger != null && !widget.showMessenger) return;
-    //getCountMessage();
+    getCountMessages();
 
     createTimer();
   }
@@ -1493,13 +1493,13 @@ class _MyAppBar extends State<MyAppBar> {
   void timerTick() {
     if (widget.stop) return;
 
-    getCountMessage();
+    getCountMessages();
     createTimer();
   }
 
-  void getCountMessage() async {
-    print(
-        'get new message for user ${widget.userInfo.id} from ${widget.parentScreen}');
+  void getCountMessages() async {
+    //print(
+  //     'get new message for user ${widget.userInfo.id} from ${widget.parentScreen}');
     _countMessage =
         (await Messenger.messenger.getCountMessage(widget.userInfo.id));
     setState(() {});
@@ -1534,7 +1534,7 @@ class _MyAppBar extends State<MyAppBar> {
       if (widget.stop)
         cancelTimer();
       else if (_messengerTimer == null) {
-        getCountMessage();
+        getCountMessages();
         createTimer();
       }
     }
