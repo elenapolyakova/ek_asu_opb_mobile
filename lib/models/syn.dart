@@ -21,7 +21,7 @@ class Syn extends Models {
   }
 
   Map<String, dynamic> toJson() {
-    Map res = {
+    Map<String, dynamic> res = {
       'id': id,
       'record_id': recordId,
       'local_table_name': localTableName,

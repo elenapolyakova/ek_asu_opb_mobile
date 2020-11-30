@@ -281,48 +281,59 @@ class SynController extends Controllers {
           // Replace many2one with odoo_id of its related record
           print(
               "Querying for ${syn.localTableName}.${el.key}=$many2oneFieldId");
-          return DBProvider.db
-              .select(
+          List<Map<String, dynamic>> many2oneRecord =
+              await DBProvider.db.select(
             localTable,
             columns: ['odoo_id'],
             where: "id = ?",
             whereArgs: [many2oneFieldId],
-          )
-              .then((List<Map<String, dynamic>> many2oneRecord) async {
-            if (many2oneRecord == null || many2oneRecord.length == 0) {
-              // If no record is found, log error and exit
-              print(
-                  'Tried to synchronize record $syn. Specified record has ${el.key}=$many2oneFieldId. But no record of table $localTable with id=$many2oneFieldId was found');
-              DBProvider.db.insert('log', {
-                'date': nowStr(),
-                'message':
-                    "Tried to synchronize record $syn. Specified record has ${el.key}=$many2oneFieldId. But no record of table $localTable with id=$many2oneFieldId was found"
-              });
-              return false;
-            } else if (many2oneRecord[0]['odoo_id'] == null) {
-              // If a record was found, but it has no odoo_id
-              List<Map<String, dynamic>> synList = await DBProvider.db.select(
-                _tableName,
-                limit: 1,
-                where: "record_id = ? and local_table_name = ? and method = ?",
-                whereArgs: [many2oneRecord[0]['id'], localTable, 'create'],
-              );
-              print(
-                  'Tried to synchronize record $syn. Specified record has ${el.key}=$many2oneFieldId. Synchronizing it first...');
-              DBProvider.db.insert('log', {
-                'date': nowStr(),
-                'message':
-                    "Tried to synchronize record $syn. Specified record has ${el.key}=$many2oneFieldId. Synchronizing it first..."
-              });
-              // Synchronize the related record first
-              await doSync(Syn.fromJson(synList[0]));
-              // Try to synchronize the original record again
-              return doSync(syn);
-            }
+          );
+          if (many2oneRecord == null || many2oneRecord.length == 0) {
+            // If no record is found, log error and exit
             print(
-                "${el.key} of ${syn.localTableName} to upload = ${many2oneRecord[0]['odoo_id']}");
-            record[el.key] = many2oneRecord[0]['odoo_id'];
-          });
+                'Tried to synchronize record $syn. Specified record has ${el.key}=$many2oneFieldId. But no record of table $localTable with id=$many2oneFieldId was found');
+            DBProvider.db.insert('log', {
+              'date': nowStr(),
+              'message':
+                  "Tried to synchronize record $syn. Specified record has ${el.key}=$many2oneFieldId. But no record of table $localTable with id=$many2oneFieldId was found"
+            });
+            return false;
+          } else if (many2oneRecord[0]['odoo_id'] == null) {
+            // If a record was found, but it has no odoo_id
+            List<Map<String, dynamic>> synList = await DBProvider.db.select(
+              _tableName,
+              limit: 1,
+              where: "record_id = ? and local_table_name = ? and method = ?",
+              whereArgs: [many2oneFieldId, localTable, 'create'],
+            );
+            print(
+                'Tried to synchronize record $syn. Specified record has ${el.key}=$many2oneFieldId. Synchronizing it first...');
+            await DBProvider.db.insert('log', {
+              'date': nowStr(),
+              'message':
+                  "Tried to synchronize record $syn. Specified record has ${el.key}=$many2oneFieldId. Synchronizing it first..."
+            });
+            // Synchronize the related record first
+            if (synList.isEmpty) {
+              int id = await insert({
+                'record_id': many2oneFieldId,
+                'local_table_name': localTable,
+                'method': 'create',
+              });
+              synList.add({
+                'record_id': many2oneFieldId,
+                'local_table_name': localTable,
+                'method': 'create',
+                'id': id,
+              });
+            }
+            await doSync(Syn.fromJson(synList[0]));
+            // Try to synchronize the original record again
+            return doSync(syn);
+          }
+          print(
+              "${el.key} of ${syn.localTableName} to upload = ${many2oneRecord[0]['odoo_id']}");
+          record[el.key] = many2oneRecord[0]['odoo_id'];
         }
       });
     }
