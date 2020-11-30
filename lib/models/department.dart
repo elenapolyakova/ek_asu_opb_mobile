@@ -20,10 +20,10 @@ class Department extends Models {
   int railway_id;
   int parent_id;
   bool active;
-  String inn;
-  String ogrn;
-  String okpo;
-  String addr;
+  String f_inn;
+  String f_ogrn;
+  String f_okpo;
+  String f_addr;
   String director_fio;
   String director_email;
   String director_phone;
@@ -35,8 +35,6 @@ class Department extends Models {
   double f_coord_n;
   double f_coord_e;
 
- 
-
   Department(
       {this.id,
       this.name,
@@ -44,10 +42,10 @@ class Department extends Models {
       this.railway_id,
       this.parent_id,
       this.active,
-      this.inn,
-      this.okpo,
-      this.ogrn,
-      this.addr,
+      this.f_inn,
+      this.f_okpo,
+      this.f_addr,
+      this.f_ogrn,
       this.director_fio,
       this.director_email,
       this.director_phone,
@@ -68,10 +66,10 @@ class Department extends Models {
           : json["railway_id"],
       parent_id: getIdFromList(json["parent_id"]),
       active: (json["active"].toString() == 'true'),
-      inn: getObj(json["inn"]),
-      ogrn: getObj(json["ogrn"]),
-      okpo: getObj(json["okpo"]),
-      addr: getObj(json["addr"]),
+      f_inn: getObj(json["f_inn"]),
+      f_ogrn: getObj(json["f_ogrn"]),
+      f_okpo: getObj(json["f_okpo"]),
+      f_addr: getObj(json["f_addr"]),
       director_fio: getObj(json["director_fio"]),
       director_email: getObj(json["director_email"]),
       director_phone: getObj(json["director_phone"]),
@@ -95,10 +93,10 @@ class Department extends Models {
       'railway_id': railway_id,
       'parent_id': parent_id,
       'active': (active == null || !active) ? 'false' : 'true',
-      'inn': inn,
-      'ogrn': ogrn,
-      'okpo': okpo,
-      'addr': addr,
+      'f_inn': f_inn,
+      'f_ogrn': f_ogrn,
+      'f_okpo': f_okpo,
+      'f_addr': f_addr,
       'director_fio': director_fio,
       'director_email': director_email,
       'director_phone': director_phone,
@@ -118,9 +116,9 @@ class Department extends Models {
   Map<String, dynamic> prepareForUpdate() {
     return {
       'id': id,
-      'inn': inn,
-      'ogrn': ogrn,
-      'okpo': okpo,
+      'f_inn': f_inn,
+      'f_ogrn': f_ogrn,
+      'f_okpo': f_okpo,
       'director_fio': director_fio,
       'director_email': director_email,
       'director_phone': director_phone,
@@ -132,6 +130,6 @@ class Department extends Models {
 
   @override
   String toString() {
-    return 'Department{id: $id, name: $name, short_name: $short_name, addr: $addr, inn: $inn, ogrn: $ogrn, okpo: $okpo, director_fio: $director_fio}';
+    return 'Department{id: $id, name: $name, short_name: $short_name, addr: $f_addr, inn: $f_inn, ogrn: $f_ogrn, okpo: $f_okpo, director_fio: $director_fio}';
   }
 }
