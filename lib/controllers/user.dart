@@ -35,7 +35,8 @@ class UserController extends Controllers {
       where: "id in (${ids.map((e) => "?").join(',')})",
       whereArgs: ids,
     );
-    return json.map((e) => User.fromJson(e)).toList();
+    var res = json.map((e) => User.fromJson(e)).toList();
+    return res;
   }
 
   static loadFromOdoo([int limit]) async {

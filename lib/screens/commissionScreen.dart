@@ -167,8 +167,8 @@ class _CommissionScreen extends State<CommissionScreen> {
   }
 
   Future<List<Member>> getMembers(ComGroup group) async {
-    List<User> users = (await group.comUsers) ?? [];
-    int headId = await group.headId;
+    List<User> users = await group.comUsers;
+    int headId = group.headId;
     List<Member> result = List.generate(users.length, (index) {
       if (headId == users[index].id)
         return Member(users[index],
