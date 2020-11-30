@@ -24,7 +24,9 @@ class SynController extends Controllers {
     'check_list': 'mob.check.list',
     'check_list_item': 'mob.check.list.item',
     'fault': 'mob.check.list.item.fault',
-    'fault_item': 'mob.document'
+    'fault_item': 'mob.document',
+    'chat': 'mob.chat',
+    'chat_message': 'mob.chat.msg',
   };
   static Map<String, List<String>> tableBooleanFieldsMap = {
     'plan': ['active'],
@@ -36,6 +38,8 @@ class SynController extends Controllers {
     'check_list_item': ['active'],
     'fault': ['active'],
     'fault_item': ['active'],
+    'chat': [],
+    'chat_message': [],
   };
   static Map<String, Map<String, String>> tableMany2oneFieldsMap = {
     'plan': {},
@@ -65,7 +69,13 @@ class SynController extends Controllers {
     },
     'fault_item': {
       'parent_id': 'fault',
-    }
+    },
+    'chat': {
+      'group_id': 'com_group',
+    },
+    'chat_message': {
+      'parent_id': 'chat',
+    },
   };
   static Map<String, List<Map<String, dynamic>>> tableMany2ManyFieldsMap = {
     'com_group': [
@@ -83,8 +93,18 @@ class SynController extends Controllers {
         'my_field': 'com_group_id',
         // поле промежуточной модели с id модели 'to'
         'other_field': 'user_id',
-      }
+      },
     ],
+    'chat': [
+      {
+        'field': 'user_ids',
+        'to_has_odoo_id': false,
+        'to': 'user',
+        'through': 'rel_chat_user',
+        'my_field': 'group_id',
+        'other_field': 'user_id',
+      },
+    ]
   };
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     Syn syn = Syn.fromJson(json); //нужно, чтобы преобразовать одоо rel в id

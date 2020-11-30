@@ -7,7 +7,7 @@ import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:search_widget/search_widget.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
-import 'package:ek_asu_opb_mobile/src/messenger.dart';
+import 'package:ek_asu_opb_mobile/src/messenger.dart' as messenger;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 final _storage = FlutterSecureStorage();
@@ -18,7 +18,7 @@ class MessengerScreen extends StatefulWidget {
 
   @override
   MessengerScreen({this.context, this.stop}) {
-    Messenger.messenger.resetCount();
+    messenger.Messenger.messenger.resetCount();
     createState();
   }
 
@@ -29,7 +29,7 @@ class MessengerScreen extends StatefulWidget {
 class _MessengerScreen extends State<MessengerScreen> {
   UserInfo _userInfo;
   bool showLoading;
-  List<MyChat> _chatItems;
+  List<messenger.MyChat> _chatItems;
   List<int> _myReciver;
   List<User> _availableUser;
   List<User> allUsers;
@@ -37,8 +37,8 @@ class _MessengerScreen extends State<MessengerScreen> {
   Timer _messengerTimer;
   int refreshMessenger;
   Duration seconds;
-  MyChat _selectedChat;
-  List<MyMessage> _messageItems;
+  messenger.MyChat _selectedChat;
+  List<messenger.MyMessage> _messageItems;
   String _msg;
   bool _stop;
   ScrollController _controller;
@@ -97,12 +97,12 @@ class _MessengerScreen extends State<MessengerScreen> {
 
   Future<void> loadChat() async {
     try {
-      List<MyChat> chatItems =
-          await Messenger.messenger.getChatsAndMessageForTimer(_myUid);
+      List<messenger.MyChat> chatItems = await messenger.Messenger.messenger
+          .getChatsAndMessageForTimer(_myUid);
 
       if (chatItems != null) {
         chatItems.forEach((newChat) {
-          MyChat oldChat = _chatItems.firstWhere(
+          messenger.MyChat oldChat = _chatItems.firstWhere(
               (chat) => chat.item.id == newChat.item.id,
               orElse: () => null);
           if (oldChat != null) {
@@ -115,7 +115,7 @@ class _MessengerScreen extends State<MessengerScreen> {
 
       _chatItems = chatItems ?? [];
 
-      List<MyChat> personalChats =
+      List<messenger.MyChat> personalChats =
           chatItems.where((chat) => chat.item.type == 1).toList();
 
       await Future.forEach(personalChats, (personalChat) async {
@@ -174,12 +174,13 @@ class _MessengerScreen extends State<MessengerScreen> {
 
   void sendMessage() async {
     //Пытаемся сохранить, если успех - добавляем ?
-    MyMessage msg =
-        MyMessage(null, _selectedChat.item.id, _msg, DateTime.now(), _myUid);
+    messenger.MyMessage msg = messenger.MyMessage(
+        null, _selectedChat.item.id, _msg, DateTime.now(), _myUid);
     bool hasErorr = false;
 
     try {
-      Map<String, dynamic> result = await Messenger.messenger.addMessage(msg);
+      Map<String, dynamic> result =
+          await messenger.Messenger.messenger.addMessage(msg);
       hasErorr = result["code"] < 0;
 
       if (hasErorr) {
@@ -200,11 +201,12 @@ class _MessengerScreen extends State<MessengerScreen> {
   }
 
   addChat(User reciver) async {
-    Chat chat = Chat(null, null, [_myUid, reciver.id], 1);
+    messenger.Chat chat = messenger.Chat(null, null, [_myUid, reciver.id], 1);
     bool hasErorr = false;
 
     try {
-      Map<String, dynamic> result = await Messenger.messenger.addChat(chat);
+      Map<String, dynamic> result =
+          await messenger.Messenger.messenger.addChat(chat);
       hasErorr = result["code"] < 0;
 
       if (hasErorr) {
@@ -214,7 +216,7 @@ class _MessengerScreen extends State<MessengerScreen> {
       }
       chat.id = result["id"];
       chat.name = (await UserController.selectById(reciver.id)).display_name;
-      MyChat newChat = MyChat(chat);
+      messenger.MyChat newChat = messenger.MyChat(chat);
       _chatItems.add(newChat);
       _selectedChat.dtLastLoadMessage = null;
       _selectedChat = newChat;
@@ -231,7 +233,7 @@ class _MessengerScreen extends State<MessengerScreen> {
     if (_selectedChat != null && _selectedChat.item.id != chatId)
       _selectedChat.dtLastLoadMessage = null;
 
-    MyChat selectedChat = _chatItems
+    messenger.MyChat selectedChat = _chatItems
         .firstWhere((chat) => chat.item.id == chatId, orElse: () => null);
     selectedChat.countMessage = 0;
 
@@ -240,13 +242,14 @@ class _MessengerScreen extends State<MessengerScreen> {
     await getMessagesForChat(_selectedChat);
   }
 
-  Future<void> getMessagesForChat(MyChat selectedChat) async {
+  Future<void> getMessagesForChat(messenger.MyChat selectedChat) async {
     if (selectedChat == null) return;
     DateTime now = DateTime.now();
     DateTime lastLoadMessage = selectedChat.dtLastLoadMessage;
 
     try {
-      List<MyMessage> newMessageItems = await Messenger.messenger
+      List<messenger.MyMessage> newMessageItems = await messenger
+          .Messenger.messenger
           .getMessages(selectedChat.item.id, lastLoadMessage);
 
       _selectedChat.dtLastLoadMessage = now;
@@ -394,89 +397,88 @@ class _MessengerScreen extends State<MessengerScreen> {
                                     controller: _controller,
                                   )),
                                   if (_selectedChat != null)
-                                  Container(
-                                      child: Container(
-                                          decoration: BoxDecoration(
-                                              border: Border.all(
-                                                  color: Theme.of(context)
-                                                      .primaryColorLight,
-                                                  width: 1.5),
-                                              borderRadius: BorderRadius.all(
-                                                  Radius.circular(0)),
-                                              color: Theme.of(context)
-                                                  .primaryColorLight),
-                                          child: Row(children: [
-                                            Expanded(
-                                                child: ConstrainedBox(
-                                                    constraints: BoxConstraints(
-                                                        maxHeight: 150),
-                                                    child:
-                                                        SingleChildScrollView(
-                                                            scrollDirection:
-                                                                Axis.vertical,
-                                                            child:
-                                                                GestureDetector(
-                                                                    onTap: () {
-                                                                      showEdit(
-                                                                        _msg,
-                                                                        'Сообщение',
-                                                                        context,
-                                                                      ).then((newValue) =>
-                                                                          setState(
-                                                                              () {
-                                                                            _msg =
-                                                                                newValue ?? "";
-                                                                          }));
-                                                                    },
-                                                                    child:
-                                                                        AbsorbPointer(
+                                    Container(
+                                        child: Container(
+                                            decoration: BoxDecoration(
+                                                border: Border.all(
+                                                    color: Theme.of(context)
+                                                        .primaryColorLight,
+                                                    width: 1.5),
+                                                borderRadius: BorderRadius.all(
+                                                    Radius.circular(0)),
+                                                color: Theme.of(context)
+                                                    .primaryColorLight),
+                                            child: Row(children: [
+                                              Expanded(
+                                                  child: ConstrainedBox(
+                                                      constraints:
+                                                          BoxConstraints(
+                                                              maxHeight: 150),
+                                                      child:
+                                                          SingleChildScrollView(
+                                                              scrollDirection:
+                                                                  Axis.vertical,
+                                                              child:
+                                                                  GestureDetector(
+                                                                      onTap:
+                                                                          () {
+                                                                        showEdit(
+                                                                          _msg,
+                                                                          'Сообщение',
+                                                                          context,
+                                                                        ).then((newValue) =>
+                                                                            setState(() {
+                                                                              _msg = newValue ?? "";
+                                                                            }));
+                                                                      },
                                                                       child:
-                                                                          TextField(
-                                                                        readOnly:
-                                                                            true,
+                                                                          AbsorbPointer(
+                                                                        child:
+                                                                            TextField(
+                                                                          readOnly:
+                                                                              true,
 
-                                                                        controller: TextEditingController.fromValue(TextEditingValue(
-                                                                            text: _msg != null
-                                                                                ? _msg.toString()
-                                                                                : "")),
-                                                                        decoration: new InputDecoration(
-                                                                            hintText:
-                                                                                'Введите сообщение...',
-                                                                            border:
-                                                                                OutlineInputBorder(borderSide: BorderSide.none),
-                                                                            contentPadding: EdgeInsets.all(5.0)),
+                                                                          controller:
+                                                                              TextEditingController.fromValue(TextEditingValue(text: _msg != null ? _msg.toString() : "")),
+                                                                          decoration: new InputDecoration(
+                                                                              hintText: 'Введите сообщение...',
+                                                                              border: OutlineInputBorder(borderSide: BorderSide.none),
+                                                                              contentPadding: EdgeInsets.all(5.0)),
 
-                                                                        maxLines:
-                                                                            null,
-                                                                        // maxLength: 256,
-                                                                      ),
-                                                                    ))))),
-                                            _msg != null && _msg.length > 0
-                                                ? Container(
-                                                    margin: EdgeInsets.all(5),
-                                                    height: 40,
-                                                    width: 40,
-                                                    alignment: Alignment.center,
-                                                    decoration: BoxDecoration(
-                                                      borderRadius:
-                                                          BorderRadius.all(
-                                                              Radius.circular(
-                                                                  12)),
-                                                      color: Theme.of(context)
-                                                          .primaryColor,
-                                                    ),
-                                                    child: IconButton(
-                                                      icon: Icon(Icons.send),
-                                                      iconSize: 24,
-                                                      onPressed: _msg != null &&
-                                                              _msg.length > 0
-                                                          ? () => sendMessage()
-                                                          : null,
-                                                      color: Theme.of(context)
-                                                          .primaryColorLight,
-                                                    ))
-                                                : Text('')
-                                          ])))
+                                                                          maxLines:
+                                                                              null,
+                                                                          // maxLength: 256,
+                                                                        ),
+                                                                      ))))),
+                                              _msg != null && _msg.length > 0
+                                                  ? Container(
+                                                      margin: EdgeInsets.all(5),
+                                                      height: 40,
+                                                      width: 40,
+                                                      alignment:
+                                                          Alignment.center,
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius.all(
+                                                                Radius.circular(
+                                                                    12)),
+                                                        color: Theme.of(context)
+                                                            .primaryColor,
+                                                      ),
+                                                      child: IconButton(
+                                                        icon: Icon(Icons.send),
+                                                        iconSize: 24,
+                                                        onPressed: _msg !=
+                                                                    null &&
+                                                                _msg.length > 0
+                                                            ? () =>
+                                                                sendMessage()
+                                                            : null,
+                                                        color: Theme.of(context)
+                                                            .primaryColorLight,
+                                                      ))
+                                                  : Text('')
+                                            ])))
                                 ]),
                               )),
                         ],

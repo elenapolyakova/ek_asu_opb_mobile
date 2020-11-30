@@ -1,10 +1,8 @@
-import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
-import 'package:ek_asu_opb_mobile/models/comGroup.dart';
 import 'package:ek_asu_opb_mobile/models/models.dart';
 
-class RelComGroupUserController extends Controllers {
-  static String _tableName = "rel_com_group_user";
+class RelChatUserController extends Controllers {
+  static String _tableName = "rel_chat_user";
 
   static Future<List<int>> selectIDs() async {
     List<Map<String, dynamic>> maps =
@@ -24,28 +22,28 @@ class RelComGroupUserController extends Controllers {
     return json;
   }
 
-  /// Select ComGroup records by provided userId.
+  /// Select Chat records by provided userId.
   /// Returns selected records or an empty list.
-  static Future<List<ComGroup>> selectByUserId(int userId) async {
+  static Future<List<Chat>> selectByUserId(int userId) async {
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
-      columns: ['com_group_id'],
+      columns: ['chat_id'],
       where: "user_id = ?", // and active = 'true'",
       whereArgs: [userId],
     );
     if (queryRes == null || queryRes.length == 0) return [];
-    return ComGroupController.selectByIds(
-        queryRes.map((e) => e['com_group_id']).toList());
+    return ChatController.selectByIds(
+        queryRes.map((e) => e['chat_id']).toList());
   }
 
-  /// Select User records by provided comGroupId.
+  /// Select User records by provided chatId.
   /// Returns selected records or an empty list.
-  static Future<List<User>> selectByComGroupId(int comGroupId) async {
+  static Future<List<User>> selectByChatId(int chatId) async {
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       columns: ['user_id'],
-      where: "com_group_id = ?", // and active = 'true'",
-      whereArgs: [comGroupId],
+      where: "chat_id = ?", // and active = 'true'",
+      whereArgs: [chatId],
     );
     var a = await DBProvider.db.selectAll(_tableName);
     if (queryRes == null || queryRes.length == 0) return [];
@@ -53,26 +51,25 @@ class RelComGroupUserController extends Controllers {
         queryRes.map((e) => e['user_id'] as int).toList());
   }
 
-  static Future insertByComGroupId(int comGroupId, List<int> userIds) async {
+  static Future insertByChatId(int chatId, List<int> userIds) async {
     var batch = await DBProvider.db.batch;
     userIds.forEach((int userId) {
       batch.insert(_tableName, {
         'user_id': userId,
-        'com_group_id': comGroupId,
+        'chat_id': chatId,
       });
     });
     return batch.commit(noResult: true);
   }
 
-  /// Find a ComGroup record with provided comGroupId.
+  /// Find a Chat record with provided chatId.
   /// Update its users with provided newUserIds.
-  static Future updateComGroupUsers(
-      int comGroupId, List<int> newUserIds) async {
+  static Future updateChatUsers(int chatId, List<int> newUserIds) async {
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       columns: ['user_id', 'id'],
-      where: "com_group_id = ?",
-      whereArgs: [comGroupId],
+      where: "chat_id = ?",
+      whereArgs: [chatId],
     );
     List<int> toDelete = [];
     List<int> toInsert = [];
@@ -99,7 +96,7 @@ class RelComGroupUserController extends Controllers {
     toInsert.forEach((int userId) {
       batch.insert(_tableName, {
         'user_id': userId,
-        'com_group_id': comGroupId,
+        'chat_id': chatId,
       });
     });
     return batch.commit(noResult: true);
