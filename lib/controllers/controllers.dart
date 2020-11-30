@@ -7,6 +7,11 @@ export 'package:ek_asu_opb_mobile/controllers/plan.dart';
 export 'package:ek_asu_opb_mobile/controllers/planItem.dart';
 export 'package:ek_asu_opb_mobile/controllers/checkPlan.dart';
 export 'package:ek_asu_opb_mobile/controllers/koap.dart';
+export 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
+export 'package:ek_asu_opb_mobile/controllers/chat.dart';
+export 'package:ek_asu_opb_mobile/controllers/chatMessage.dart';
+export 'package:ek_asu_opb_mobile/controllers/relChatUser.dart';
+export 'package:ek_asu_opb_mobile/controllers/relComGroupUser.dart';
 export 'package:ek_asu_opb_mobile/src/db.dart';
 
 abstract class Controllers {

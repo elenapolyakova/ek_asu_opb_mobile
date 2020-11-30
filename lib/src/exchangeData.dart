@@ -391,8 +391,14 @@ Future<List> getLastSyncDateDomain(modelName) async {
         [true, false]
       ]
     ];
+  DateTime datetime = stringToDateTime(lastUpdate[modelName]);
+  datetime.subtract(Duration(hours: 3));
   return [
-    ['write_date', '>', lastUpdate[modelName]],
+    [
+      'write_date',
+      '>',
+      dateTimeToString(datetime, true),
+    ],
     [
       'active',
       'in',

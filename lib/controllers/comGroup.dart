@@ -37,10 +37,10 @@ class ComGroupController extends Controllers {
 
   static Future<List<ComGroup>> selectByIds(List<int> ids) async {
     if (ids == null || ids.length == 0) return [];
-    var json = await DBProvider.db.select(
+    List<Map<String, dynamic>> json = await DBProvider.db.select(
       _tableName,
-      where: "id in ?",
-      whereArgs: [ids],
+      where: "id in (${ids.map((e) => "?").join(',')})",
+      whereArgs: ids,
     );
     return json.map((e) => ComGroup.fromJson(e));
   }
@@ -209,15 +209,7 @@ class ComGroupController extends Controllers {
   /// Select all records with matching parentId.
   /// Returns found records or null.
   static Future<List<ComGroup>> selectAllGroups(int parentId) async {
-    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
-      _tableName,
-      where: "parent_id = ? and active = 'true'",
-      whereArgs: [parentId],
-    );
-    if (queryRes == null || queryRes.length == 0) return [];
-    List<ComGroup> planItems =
-        queryRes.map((e) => ComGroup.fromJson(e)).toList();
-    return planItems;
+    return select(parentId);
   }
 
   /// Try to insert into the table.
