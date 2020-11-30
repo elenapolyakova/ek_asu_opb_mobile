@@ -157,13 +157,14 @@ class _CheckListScreen extends State<CheckListScreen> {
         List.generate(activeTemplates.length, (i) => activeTemplates[i].id);
 
     try {
-       result = await CheckListController.setIsActiveTrue(ids, checkPlanItemId);
+      result = await CheckListController.setIsActiveTrue(ids, checkPlanItemId);
 
-       hasErorr =  result["code"] < 0;
+      hasErorr = result["code"] < 0;
 
       if (hasErorr) {
         Navigator.pop<bool>(context, false);
-        Scaffold.of(context).showSnackBar(errorSnackBar(text: result["message"]));
+        Scaffold.of(context)
+            .showSnackBar(errorSnackBar(text: result["message"]));
       } else {
         setState(() {
           _allItems = itemsCopy;
@@ -222,20 +223,22 @@ class _CheckListScreen extends State<CheckListScreen> {
                 )));
     List<TableRow> tableRows = [headerTableRow];
     int rowIndex = 0;
-    rows.forEach((row) {
-      rowIndex++;
+    if (rows != null) {
+      rows.forEach((row) {
+        rowIndex++;
 
-      TableRow tableRow = TableRow(
-          decoration: BoxDecoration(
-              color: (rowIndex % 2 == 0
-                  ? Theme.of(context).shadowColor
-                  : Colors.white)),
-          children: [
-            getRowCell(row.name, row.id, 0),
-            getRowCell(CheckListWork.typeSelection[row.type], row.id, 1),
-          ]);
-      tableRows.add(tableRow);
-    });
+        TableRow tableRow = TableRow(
+            decoration: BoxDecoration(
+                color: (rowIndex % 2 == 0
+                    ? Theme.of(context).shadowColor
+                    : Colors.white)),
+            children: [
+              getRowCell(row.name, row.id, 0),
+              getRowCell(CheckListWork.typeSelection[row.type], row.id, 1),
+            ]);
+        tableRows.add(tableRow);
+      });
+    }
 
     return Table(
       border: TableBorder.all(),
