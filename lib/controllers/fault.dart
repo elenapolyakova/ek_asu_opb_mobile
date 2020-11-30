@@ -467,7 +467,7 @@ class FaultController extends Controllers {
           res['odoo_id'] = e['id'];
           return DBProvider.db.insert(_tableName, res);
         }
-        Map<String, dynamic> res = CheckListItem.fromJson({
+        Map<String, dynamic> res = Fault.fromJson({
           ...e,
           'id': fault.id,
           'odoo_id': fault.odoo_id,
