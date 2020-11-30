@@ -74,7 +74,8 @@ class DBProvider {
       onUpgrade: (db, oldVersion, version) async {
         switch (oldVersion) {
           case 0:
-          // case 1:
+          case 1:
+          // case 2:
           //   await db.execute(
           //       "CREATE TABLE IF NOT EXISTS koap(id INTEGER PRIMARY KEY, article TEXT, paragraph TEXT, text TEXT, man_fine_from INTEGER, man_fine_to INTEGER, firm_fine_from INTEGER, firm_fine_to INTEGER, firm_stop INTEGER, desc TEXT, search_field TEXT)");
           //   continue v2;
@@ -93,7 +94,7 @@ class DBProvider {
 
       // Set the version. This executes the onCreate function and provides a
       // path to perform database upgrades and downgrades.
-      version: 0,
+      version: 1,
     );
   }
 
