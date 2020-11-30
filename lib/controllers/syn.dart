@@ -218,8 +218,8 @@ class SynController extends Controllers {
       await CheckListItemController.loadChangesFromOdoo(true);
       await FaultController.loadChangesFromOdoo();
       await FaultController.loadChangesFromOdoo(true);
-      // await FaultItemController.loadChangesFromOdoo();
-      // await FaultItemController.loadChangesFromOdoo(true);
+      await FaultItemController.loadChangesFromOdoo();
+      await FaultItemController.loadChangesFromOdoo(true);
     }
     await PlanController.finishSync(dateTime);
     await PlanItemController.finishSync(dateTime);
