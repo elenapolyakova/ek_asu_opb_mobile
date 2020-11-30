@@ -91,10 +91,10 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               'short_name',
               'rel_railway_id',
               'active',
-              'inn',
-              'ogrn',
-              'okpo',
-              'addr',
+              'f_inn',
+              'f_ogrn',
+              'f_okpo',
+              'f_addr',
               'director_fio',
               'director_email',
               'director_phone',
@@ -105,8 +105,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               'f_coord_n',
               'f_coord_e'
             ],
-
-            //  'limit': 100,
+            'limit': 100,
           });
 
           break;
