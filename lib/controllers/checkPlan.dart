@@ -55,7 +55,21 @@ class CheckPlanController extends Controllers {
       domain = [
         ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
       ];
-    } else
+    } else {
+      await DBProvider.db.deleteAll(_tableName);
+      List<List> toAdd = [];
+      await Future.forEach(
+          SynController.tableMany2oneFieldsMap[_tableName].entries,
+          (element) async {
+        List<Map<String, dynamic>> queryRes =
+            await DBProvider.db.select(element.value, columns: ['odoo_id']);
+        toAdd.add([
+          element.key,
+          'in',
+          queryRes.map((e) => e['odoo_id'] as int).toList()
+        ]);
+      });
+      domain += toAdd;
       fields = [
         'name',
         'rw_id',
@@ -69,6 +83,8 @@ class CheckPlanController extends Controllers {
         'app_post',
         'num_set',
       ];
+    }
+    print('first load plan_item_check $loadRelated');
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
       domain,
@@ -77,8 +93,9 @@ class CheckPlanController extends Controllers {
       'limit': limit,
       'context': {'create_or_update': true}
     });
-    if (!loadRelated) DBProvider.db.deleteAll(_tableName);
-    return Future.forEach(json, (e) async {
+    if (!loadRelated) {}
+    print(1);
+    var result = await Future.forEach(json, (e) async {
       if (loadRelated) {
         Map<String, dynamic> res = {};
         CheckPlan checkPlan = await selectByOdooId(e['id']);
@@ -110,6 +127,8 @@ class CheckPlanController extends Controllers {
         return insert(CheckPlan.fromJson(res), true);
       }
     });
+    print('first load plan_item_check $loadRelated finish');
+    return result;
   }
 
   static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {

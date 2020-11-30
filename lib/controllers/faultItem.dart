@@ -137,7 +137,20 @@ class FaultItemController extends Controllers {
       domain = [
         ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
       ];
-    } else
+    } else {
+      List<List> toAdd = [];
+      await Future.forEach(
+          SynController.tableMany2oneFieldsMap[_tableName].entries,
+          (element) async {
+        List<Map<String, dynamic>> queryRes =
+            await DBProvider.db.select(element.value, columns: ['odoo_id']);
+        toAdd.add([
+          element.key,
+          'in',
+          queryRes.map((e) => e['odoo_id'] as int).toList()
+        ]);
+      });
+      domain += toAdd;
       fields = [
         'name',
         'type',
@@ -146,6 +159,7 @@ class FaultItemController extends Controllers {
         'coord_n',
         'coord_e',
       ];
+    }
     domain.add(['parent2_id', '=', null]);
 
     List<dynamic> json = await getDataWithAttemp(
