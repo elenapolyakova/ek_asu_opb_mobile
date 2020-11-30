@@ -87,7 +87,7 @@ class CheckListController extends Controllers {
     if (ids.length > 0) {
       for (var item in ids) {
         // item[id] is used for searching assigned questions for reinserting them as not base
-        var checkList = await CheckListController.selectById(item["id"]);
+        var checkList = await CheckListController.selectById(item["A.id"]);
 
         checkList.is_base = false;
         checkList.parent_id = parentId;
