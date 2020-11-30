@@ -88,10 +88,7 @@ class CheckListController extends Controllers {
       for (var item in ids) {
         // item[id] is used for searching assigned questions for reinserting them as not base
         var checkList = await CheckListController.selectById(item["id"]);
-        // var checkList = response.toJson();
 
-        // checkList.remove("id");
-        // checkList["odooId"] = null;
         checkList.is_base = false;
         checkList.parent_id = parentId;
         checkList.base_id = item["id"];
@@ -216,22 +213,18 @@ class CheckListController extends Controllers {
         skipIdList.add(id);
       }
 
-      return {
-        "code": 1,
-        "message": "Successfully updates",
-        "id": 0,
-      };
+      res['code'] = 1;
+      res['message'] = 'Успешно изменен статус чек-листа!';
+
+      print("RES Set is active! checkList $res");
     } catch (e) {
       print("setIsActiveTrue() Error: $e");
       res["code"] = -3;
       res["message"] = "Error updating table $_tableName, err: $e";
       res["id"] = null;
-
-      DBProvider.db
-          .insert('log', {'date': nowStr(), 'message': res.toString()});
-
-      return res;
     }
+    DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
+    return res;
   }
 
   static Future<Map<String, dynamic>> delete(int checkListId) async {
@@ -253,21 +246,26 @@ class CheckListController extends Controllers {
 
     var assignedItems = await CheckListItemController.select(checkListId);
     if (assignedItems.length == 0) {
-      res = {
-        'code': -1,
-        'message': 'Не найдены связанные вопросы к чек листу id: $checkListId',
-        'id': null,
-      };
+      print(
+          "Delete CheckList(). Not found assigned checkListItems! ID: $checkListId");
+      // res = {
+      //   'code': -1,
+      //   'message': 'Не найдены связанные вопросы к чек листу id: $checkListId',
+      //   'id': null,
+      // };
 
-      return res;
+      // return res;
     }
     try {
       print("Try to delete assigned checkListsItems");
       for (var q in assignedItems) {
         var json = q.toJson();
         var itemId = json["id"];
-        await DBProvider.db
-            .update('check_list_item', {'id': itemId, 'active': 'false'});
+        await CheckListItemController.delete(itemId);
+        res['code'] = 1;
+        res['message'] = 'Связанный вопрос с чек-листом успешно удален!';
+        // await DBProvider.db
+        // .update('check_list_item', {'id': itemId, 'active': 'false'});
       }
     } catch (e) {
       print("Delete of assignedItems to CheckList ID: $checkListId. Error: $e");
@@ -276,14 +274,13 @@ class CheckListController extends Controllers {
         'message': 'Error deleting from checkListItems',
         'id': null,
       };
-      return res;
     }
 
-    res = {
-      'code': 1,
-      'message': 'Успешно удалено',
-      'id': 0,
-    };
+    // res = {
+    //   'code': 1,
+    //   'message': 'Успешно удалено',
+    //   'id': 0,
+    // };
 
     return res;
   }
@@ -336,7 +333,7 @@ class CheckListController extends Controllers {
       'context': {'create_or_update': true}
     });
 
-    print("First load json $json");
+    print("CheckList. First load json $json");
     // We don't need to delete templates !!!!
     if (!loadRelated)
       await DBProvider.db
@@ -370,8 +367,6 @@ class CheckListController extends Controllers {
           'odoo_id': e['id'],
           'active': 'true',
         };
-
-        print("firstLoadFromOdoo() CheckListTo insert! $res");
         CheckListWork json = CheckListWork.fromJson(res);
         return CheckListController.create(json, true);
       }
@@ -393,7 +388,6 @@ class CheckListController extends Controllers {
       ];
 
     List domain = await getLastSyncDateDomain(_tableName);
-    print("domain $domain");
 
     // Get only work check list not templates!
     domain.add(['is_base', '=', false]);
@@ -406,7 +400,7 @@ class CheckListController extends Controllers {
       'context': {'create_or_update': true}
     });
 
-    print("Load changes from odoo! $json");
+    print("CheckList. Load changes from odoo! $json");
 
     return Future.forEach(json, (e) async {
       if (e['base_id'] is List) {

@@ -32,6 +32,9 @@ class FaultController extends Controllers {
       'message': null,
       'id': null,
     };
+    // Set date_done as plan_fix_date for uploading data to odoo!
+    fault.date_done = fault.plan_fix_date;
+
     print("Create() Fault");
     print("Fault $fault; faultItems $faultItems");
 
@@ -133,8 +136,6 @@ class FaultController extends Controllers {
 
     if (queryRes == null || queryRes.length == 0) return [];
     List<Fault> faults = queryRes.map((e) => Fault.fromJson(e)).toList();
-    print("Fault Select()");
-    print(faults);
     return faults;
   }
 
@@ -148,6 +149,9 @@ class FaultController extends Controllers {
       'message': null,
       'id': null,
     };
+
+    // Set date_done as plan fix date for uploading to odoo!
+    fault.date_done = fault.plan_fix_date;
 
     print("Update() Fault: $fault, faultItems: $faultItems, delete: $delete");
     var createdFaultItemsIds = [];
@@ -342,7 +346,6 @@ class FaultController extends Controllers {
         'date',
         'date_done',
         'active',
-        // 'plan_fix_date'
       ];
 
     List<dynamic> json = await getDataWithAttemp(
@@ -370,6 +373,10 @@ class FaultController extends Controllers {
       if (e['date'] is bool) {
         e['date'] = null;
       }
+
+      // Set plan_fix_date as it's name in odoo date_done
+      e['plan_fix_date'] = e['date_done'];
+
       if (loadRelated) {
         Fault fault = await selectByOdooId(e['id']);
         Map<String, dynamic> res = {};
@@ -444,6 +451,9 @@ class FaultController extends Controllers {
       if (e['date'] is bool) {
         e['date'] = null;
       }
+      // Set plan_fix_date as date_done property in odoo!
+      e['plan_fix_date'] = e['date_done'];
+
       Fault fault = await selectByOdooId(e['id']);
       if (loadRelated) {
         Map<String, dynamic> res = {};
@@ -467,7 +477,7 @@ class FaultController extends Controllers {
           res['odoo_id'] = e['id'];
           return DBProvider.db.insert(_tableName, res);
         }
-        Map<String, dynamic> res = CheckListItem.fromJson({
+        Map<String, dynamic> res = Fault.fromJson({
           ...e,
           'id': fault.id,
           'odoo_id': fault.odoo_id,

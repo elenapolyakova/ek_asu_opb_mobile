@@ -54,9 +54,10 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
       setState(() => {showLoading = true});
 
       _department = await DepartmentController.selectById(departmentId);
-      if ([null, '', 'null'].contains(_department.inn)) _department.inn = _inn;
-      if ([null, '', 'null'].contains(_department.ogrn))
-        _department.ogrn = _ogrn;
+      if ([null, '', 'null'].contains(_department.f_inn))
+        _department.f_inn = _inn;
+      if ([null, '', 'null'].contains(_department.f_ogrn))
+        _department.f_ogrn = _ogrn;
     } catch (e) {} finally {
       hideDialog(context);
       showLoading = false;
@@ -87,10 +88,10 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
       id: _department.id,
       railway_id: _department.railway_id,
       name: _department.name,
-      inn: _department.inn,
-      ogrn: _department.ogrn,
-      okpo: _department.okpo,
-      addr: _department.addr,
+      f_inn: _department.f_inn,
+      f_ogrn: _department.f_ogrn,
+      f_okpo: _department.f_okpo,
+      f_addr: _department.f_addr,
       director_fio: _department.director_fio,
       director_email: _department.director_email,
       director_phone: _department.director_phone,
@@ -159,27 +160,27 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
                                     Expanded(
                                       child: EditTextField(
                                         text: 'ИНН',
-                                        value: departmentCopy.inn,
+                                        value: departmentCopy.f_inn,
                                         onSaved: (value) =>
-                                            {departmentCopy.inn = value},
+                                            {departmentCopy.f_inn = value},
                                         context: context,
                                       ),
                                     ),
                                     Expanded(
                                       child: EditTextField(
                                         text: 'ОГРН',
-                                        value: departmentCopy.ogrn,
+                                        value: departmentCopy.f_ogrn,
                                         onSaved: (value) =>
-                                            {departmentCopy.ogrn = value},
+                                            {departmentCopy.f_ogrn = value},
                                         context: context,
                                       ),
                                     ),
                                     Expanded(
                                       child: EditTextField(
                                         text: 'ОКПО',
-                                        value: departmentCopy.okpo,
+                                        value: departmentCopy.f_okpo,
                                         onSaved: (value) =>
-                                            {departmentCopy.okpo = value},
+                                            {departmentCopy.f_okpo = value},
                                         context: context,
                                       ),
                                     ),
@@ -285,7 +286,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
                                   ]),
                                   MyRichText(
                                     'Адрес: ',
-                                    departmentCopy.addr,
+                                    departmentCopy.f_addr,
                                   ),
                                 ])))),
                             Container(
@@ -454,17 +455,17 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
                                                 Expanded(
                                                     child: MyRichText(
                                                   'ОГРН: ',
-                                                  _department.ogrn,
+                                                  _department.f_ogrn,
                                                 )),
                                                 Expanded(
                                                     child: MyRichText(
                                                   'ИНН: ',
-                                                  _department.inn,
+                                                  _department.f_inn,
                                                 )),
                                                 Expanded(
                                                     child: MyRichText(
                                                   'ОКПО: ',
-                                                  _department.okpo,
+                                                  _department.f_okpo,
                                                 )),
                                               ],
                                             ),
@@ -485,7 +486,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
                                             margin: EdgeInsets.symmetric(
                                                 vertical: 10),
                                             child: MyRichText(
-                                                'Адрес: ', _department.addr),
+                                                'Адрес: ', _department.f_addr),
                                           ),
                                         ]),
                                     flex: 3),
