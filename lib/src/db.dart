@@ -29,7 +29,7 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS railway(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER,  active TEXT, search_field TEXT, inn TEXT, ogrn TEXT, okpo TEXT, addr TEXT, director_fio TEXT, director_email TEXT, director_phone TEXT, deputy_fio TEXT, deputy_email TEXT, deputy_phone TEXT, rel_sector_id INTEGER, rel_sector_name TEXT, f_coord_n REAL, f_coord_e REAL)");
+            "CREATE TABLE IF NOT EXISTS department(id INTEGER PRIMARY KEY, name TEXT, short_name INTEGER, railway_id INTEGER, parent_id INTEGER,  active TEXT, search_field TEXT, f_inn TEXT, f_ogrn TEXT, f_okpo TEXT, f_addr TEXT, director_fio TEXT, director_email TEXT, director_phone TEXT, deputy_fio TEXT, deputy_email TEXT, deputy_phone TEXT, rel_sector_id INTEGER, rel_sector_name TEXT, f_coord_n REAL, f_coord_e REAL)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS user(id INTEGER PRIMARY KEY, login TEXT,  display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT, search_field TEXT,  user_role TEXT)");
         await db
