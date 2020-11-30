@@ -186,7 +186,7 @@ class FaultController extends Controllers {
           item.image = fItem["path"];
           item.coord_e = fItem["coord_e"];
           item.coord_n = fItem["coord_n"];
-          item.parent_id = res["id"];
+          item.parent_id = fault.id;
           item.file_data = fileToBase64(fItem["path"]);
           item.type = 2;
           item.name = Uuid().v1();
@@ -438,7 +438,6 @@ class FaultController extends Controllers {
         'date',
         'date_done',
         'active',
-        // 'plan_fix_date'
       ];
 
     List domain = await getLastSyncDateDomain(_tableName);
