@@ -187,7 +187,6 @@ class _EditTextField extends State<EditTextField> {
                           },
                           child: AbsorbPointer(
                             child: TextFormField(
-                                
                                 readOnly:
                                     widget.showEditDialog && !widget.readOnly,
                                 keyboardType: widget.textInputType,
@@ -199,7 +198,6 @@ class _EditTextField extends State<EditTextField> {
                                             ? widget.value.toString()
                                             : "")),
                                 decoration: new InputDecoration(
-                                  
                                     border: OutlineInputBorder(
                                         borderSide: BorderSide.none),
                                     contentPadding: EdgeInsets.all(5.0)),
@@ -716,11 +714,13 @@ class _DatePicker extends State<DatePicker> {
                           children: <Widget>[
                             Container(
                                 padding: const EdgeInsets.only(left: 16.0),
-                                child: _selectedDate == null ? Text('') : Text(
-                                  DateFormat('dd.MM.yyyy')
-                                      .format(_selectedDate),
-                                  style: textStyle,
-                                )),
+                                child: _selectedDate == null
+                                    ? Text('')
+                                    : Text(
+                                        DateFormat('dd.MM.yyyy')
+                                            .format(_selectedDate),
+                                        style: textStyle,
+                                      )),
                             Container(
                               padding: const EdgeInsets.only(
                                   left: 12.0, right: 12.0),
@@ -1499,7 +1499,7 @@ class _MyAppBar extends State<MyAppBar> {
 
   void getCountMessages() async {
     //print(
-  //     'get new message for user ${widget.userInfo.id} from ${widget.parentScreen}');
+    //     'get new message for user ${widget.userInfo.id} from ${widget.parentScreen}');
     _countMessage =
         (await Messenger.messenger.getCountMessage(widget.userInfo.id));
     setState(() {});
@@ -1614,7 +1614,12 @@ class _MyAppBar extends State<MyAppBar> {
                               ? widget.userInfo.display_name
                               : "",
                           margin: 0,
-                          onTap: () => {},
+                          onTap: () async {
+                            (await DBProvider.db.selectAll('com_group'))
+                                .forEach((element) {
+                              print(element);
+                            });
+                          },
                           color: Theme.of(context).primaryColorLight,
                           fontSize: 20,
                           iconSize: 30,

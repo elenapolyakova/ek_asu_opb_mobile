@@ -369,8 +369,8 @@ class SynController extends Controllers {
           List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
             el['to'],
             columns: ['odoo_id'],
-            where: ids.map((e) => "id = ?").join(' or '),
-            whereArgs: [ids],
+            where: "id in (${ids.map((e) => "?").join(',')})",
+            whereArgs: ids,
           );
           ids = queryRes.map((toRecord) => toRecord['odoo_id'] as int).toList();
           print(
