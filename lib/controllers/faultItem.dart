@@ -198,75 +198,75 @@ class FaultItemController extends Controllers {
     });
   }
 
-  static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
-    List<String> fields;
-    if (loadRelated)
-      fields = ['parent_id'];
-    else
-      fields = [
-        'name',
-        'type',
-        'file_name',
-        'file_data',
-        'coord_n',
-        'coord_e',
-      ];
+  // static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
+  //   List<String> fields;
+  //   if (loadRelated)
+  //     fields = ['parent_id'];
+  //   else
+  //     fields = [
+  //       'name',
+  //       'type',
+  //       'file_name',
+  //       'file_data',
+  //       'coord_n',
+  //       'coord_e',
+  //     ];
 
-    List domain = await getLastSyncDateDomain(_tableName);
-    // Delete condition 'active' in [true, false]
-    // as mob.document has no active!
-    domain.removeAt(1);
-    // Get only photos for fault! By this
-    domain.add(['parent2_id', '=', null]);
+  //   List domain = await getLastSyncDateDomain(_tableName);
+  //   // Delete condition 'active' in [true, false]
+  //   // as mob.document has no active!
+  //   domain.removeAt(1);
+  //   // Get only photos for fault! By this
+  //   domain.add(['parent2_id', '=', null]);
 
-    List<dynamic> json = await getDataWithAttemp(
-        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-      domain,
-      fields
-    ], {
-      'limit': limit,
-      'context': {'create_or_update': true}
-    });
+  //   List<dynamic> json = await getDataWithAttemp(
+  //       SynController.localRemoteTableNameMap[_tableName], 'search_read', [
+  //     domain,
+  //     fields
+  //   ], {
+  //     'limit': limit,
+  //     'context': {'create_or_update': true}
+  //   });
 
-    print("FaultItem, Load changes from odoo! $json");
-    print("Domain $domain");
+  //   print("FaultItem, Load changes from odoo! $json");
+  //   print("Domain $domain");
 
-    return Future.forEach(json, (e) async {
-      FaultItem faultItem = await selectByOdooId(e['id']);
-      if (loadRelated) {
-        Map<String, dynamic> res = {};
-        if (e['parent_id'] is List) {
-          Fault parentFault = await FaultController.selectByOdooId(
-              unpackListId(e['parent_id'])['id']);
-          assert(parentFault != null,
-              "Model fault has to be loaded before $_tableName");
-          res['id'] = faultItem.id;
-          res['parent_id'] = parentFault.id;
-        }
-        if (res['id'] != null) return DBProvider.db.update(_tableName, res);
-        return null;
-      } else {
-        if (faultItem == null) {
-          // Firstly create file!
-          var file = await base64ToFile(e["file_data"]);
-          // Set path
-          e["image"] = file.path;
+  //   return Future.forEach(json, (e) async {
+  //     FaultItem faultItem = await selectByOdooId(e['id']);
+  //     if (loadRelated) {
+  //       Map<String, dynamic> res = {};
+  //       if (e['parent_id'] is List) {
+  //         Fault parentFault = await FaultController.selectByOdooId(
+  //             unpackListId(e['parent_id'])['id']);
+  //         assert(parentFault != null,
+  //             "Model fault has to be loaded before $_tableName");
+  //         res['id'] = faultItem.id;
+  //         res['parent_id'] = parentFault.id;
+  //       }
+  //       if (res['id'] != null) return DBProvider.db.update(_tableName, res);
+  //       return null;
+  //     } else {
+  //       if (faultItem == null) {
+  //         // Firstly create file!
+  //         var file = await base64ToFile(e["file_data"]);
+  //         // Set path
+  //         e["image"] = file.path;
 
-          Map<String, dynamic> res =
-              FaultItem.fromJson({...e, 'active': 'true'}).toJson(true);
-          res['odoo_id'] = e['id'];
-          return DBProvider.db.insert(_tableName, res);
-        }
-        Map<String, dynamic> res = FaultItem.fromJson({
-          ...e,
-          'id': faultItem.id,
-          'odoo_id': faultItem.odoo_id,
-          'active': 'true',
-        }).toJson();
-        return DBProvider.db.update(_tableName, res);
-      }
-    });
-  }
+  //         Map<String, dynamic> res =
+  //             FaultItem.fromJson({...e, 'active': 'true'}).toJson(true);
+  //         res['odoo_id'] = e['id'];
+  //         return DBProvider.db.insert(_tableName, res);
+  //       }
+  //       Map<String, dynamic> res = FaultItem.fromJson({
+  //         ...e,
+  //         'id': faultItem.id,
+  //         'odoo_id': faultItem.odoo_id,
+  //         'active': 'true',
+  //       }).toJson();
+  //       return DBProvider.db.update(_tableName, res);
+  //     }
+  //   });
+  // }
 
   static Future finishSync(dateTime) {
     return setLastSyncDateForDomain(_tableName, dateTime);

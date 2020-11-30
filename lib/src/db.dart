@@ -47,7 +47,7 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS com_group(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, head_id INTEGER, group_num TEXT, is_main TEXT, active TEXT)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS rel_com_group_user(id INTEGER PRIMARY KEY, com_group_id INTEGER, user_id INTEGER, active TEXT)");
+            "CREATE TABLE IF NOT EXISTS rel_com_group_user(id INTEGER PRIMARY KEY, com_group_id INTEGER, user_id INTEGER)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS check_list(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, base_id INTEGER, is_base TEXT, name TEXT, is_active TEXT, type INTEGER, active TEXT)");
         await db.execute(
@@ -64,21 +64,22 @@ class DBProvider {
             "CREATE TABLE IF NOT EXISTS document_list(id INTEGER PRIMARY KEY, name TEXT, parent_id INTEGER)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS isp_document(id INTEGER PRIMARY KEY, parent2_id INTEGER, name TEXT, date TEXT, number TEXT, description TEXT, file_name TEXT, file_path TEXT, type INTEGER, is_new TEXT)");
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS chat(id INTEGER PRIMARY KEY, odoo_id INTEGER, name TEXT, type INTEGER, group_id INTEGER)");
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS chat_message(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, msg TEXT, create_date TEXT)");
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS rel_chat_user(id INTEGER PRIMARY KEY, group_id INTEGER, user_id INTEGER)");
       },
       onUpgrade: (db, oldVersion, version) async {
         switch (oldVersion) {
           case 0:
           case 1:
-            await db.execute(
-                "CREATE TABLE IF NOT EXISTS koap(id INTEGER PRIMARY KEY, article TEXT, paragraph TEXT, text TEXT, man_fine_from INTEGER, man_fine_to INTEGER, firm_fine_from INTEGER, firm_fine_to INTEGER, firm_stop INTEGER, desc TEXT, search_field TEXT)");
-            continue v2;
-          v2:
-          case 2:
-            await db.execute(
-                "CREATE TABLE IF NOT EXISTS department_document(id INTEGER PRIMARY KEY, section TEXT, model TEXT, file_name TEXT, file_id INTEGER, department_id INTEGER, file_path TEXT)");
-            continue v3;
-          v3:
-          case 3:
+          // case 2:
+          //   await db.execute(
+          //       "CREATE TABLE IF NOT EXISTS koap(id INTEGER PRIMARY KEY, article TEXT, paragraph TEXT, text TEXT, man_fine_from INTEGER, man_fine_to INTEGER, firm_fine_from INTEGER, firm_fine_to INTEGER, firm_stop INTEGER, desc TEXT, search_field TEXT)");
+          //   continue v2;
+          // v2:
           default:
         }
       },
@@ -93,7 +94,7 @@ class DBProvider {
 
       // Set the version. This executes the onCreate function and provides a
       // path to perform database upgrades and downgrades.
-      version: 3,
+      version: 1,
     );
   }
 
