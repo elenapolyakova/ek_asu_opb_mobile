@@ -1611,11 +1611,11 @@ class _MyAppBar extends State<MyAppBar> {
                             child: TextIcon(
                           icon: Icons.account_circle_rounded,
                           text: widget.userInfo != null
-                              ? widget.userInfo.display_name
+                              ? 'Галицын Максим Андреевич'//widget.userInfo.display_name
                               : "",
                           margin: 0,
                           onTap: () async {
-                            (await DBProvider.db.selectAll('com_group'))
+                            (await DBProvider.db.selectAll('plan_item_check'))
                                 .forEach((element) {
                               print(element);
                             });
