@@ -130,7 +130,7 @@ class SynController extends Controllers {
       'local_table_name': localTableName,
       'method': 'create',
     });
-    await syncTask();
+    await syncTask(noLoadFromOdoo: true);
     return res;
   }
 
@@ -155,7 +155,7 @@ class SynController extends Controllers {
       'local_table_name': localTableName,
       'method': 'write',
     });
-    await syncTask();
+    await syncTask(noLoadFromOdoo: true);
     return res;
   }
 
@@ -466,14 +466,14 @@ class SynController extends Controllers {
     });
   }
 
-  static Future<bool> syncTask() async {
+  static Future<bool> syncTask({bool noLoadFromOdoo: false}) async {
     if (ongoingSync) return true;
     ongoingSync = true;
     try {
       while (!await ping()) {
         await Future.delayed(Duration(seconds: 12));
       }
-      await SynController.loadFromOdoo();
+      if (!noLoadFromOdoo) await SynController.loadFromOdoo();
       while (true) {
         // Load a syn record
         List<Map<String, dynamic>> toSyn = await DBProvider.db.select(
