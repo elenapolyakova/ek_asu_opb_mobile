@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
 import 'package:ek_asu_opb_mobile/src/messenger.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
@@ -1611,17 +1612,17 @@ class _MyAppBar extends State<MyAppBar> {
                             child: TextIcon(
                           icon: Icons.account_circle_rounded,
                           text: widget.userInfo != null
-                              ? 'Галицын Максим Андреевич'//widget.userInfo.display_name
+                              ? widget.userInfo.display_name
                               : "",
                           margin: 0,
                           onTap: () async {
-                            // await PlanItemController.firstLoadFromOdoo(true);
+                             await CheckPlanController.firstLoadFromOdoo(true);
                             // await DBProvider.db.deleteAll('plan');
                             // await DBProvider.db.deleteAll('plan_item');
                             // await DBProvider.db.deleteAll('plan_item_check');
                             // await DBProvider.db
                             //     .deleteAll('plan_item_check_item');
-                            (await DBProvider.db.selectAll('plan_item'))
+                            (await DBProvider.db.selectAll('plan_item_check'))
                                 .forEach((element) {
                               print(element);
                             });
