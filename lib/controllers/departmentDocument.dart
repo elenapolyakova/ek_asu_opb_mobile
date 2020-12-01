@@ -27,9 +27,11 @@ class DepartmentDocumentController extends Controllers {
       ]
     ], {});
     if (queryRes.length == 0) return null;
-    return Future.forEach(await getDocuments(queryRes), (doc) {
+    var result = await Future.forEach(await getDocuments(queryRes), (doc) {
       return insert(doc);
     });
+    print("loaded ${queryRes.length} records of $_tableName");
+    return result;
   }
 
   static Future<List<Document>> getDocuments(List queryRes) async {

@@ -56,16 +56,30 @@ class ChatController extends Controllers {
     List<String> fields;
     List<List> domain = [];
     if (loadRelated) {
-      List<Map<String, dynamic>> queryRes =
-          await DBProvider.db.select(_tableName, columns: ['odoo_id']);
-      domain = [
-        ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
-      ];
+      // List<Map<String, dynamic>> queryRes =
+      //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
+      // domain = [
+      //   ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
+      // ];
       fields = [
         'group_id',
         'user_ids',
       ];
     } else {
+      await DBProvider.db.deleteAll(_tableName);
+      // List<List> toAdd = [];
+      // await Future.forEach(
+      //     SynController.tableMany2oneFieldsMap[_tableName].entries,
+      //     (element) async {
+      //   List<Map<String, dynamic>> queryRes =
+      //       await DBProvider.db.select(element.value, columns: ['odoo_id']);
+      //   toAdd.add([
+      //     element.key,
+      //     'in',
+      //     queryRes.map((e) => e['odoo_id'] as int).toList()
+      //   ]);
+      // });
+      // domain += toAdd;
       fields = [
         'name',
         'type',
@@ -79,13 +93,13 @@ class ChatController extends Controllers {
       'limit': limit,
       'context': {'create_or_update': true}
     });
-    if (!loadRelated) await DBProvider.db.deleteAll(_tableName);
-    return Future.forEach(json, (e) async {
+    var result = await Future.forEach(json, (e) async {
       if (loadRelated) {
         ComGroup comGroup = await ComGroupController.selectByOdooId(
             unpackListId(e['group_id'])['id']);
-        assert(comGroup != null,
-            "Model com_group has to be loaded before $_tableName");
+        if (comGroup == null) return null;
+        // assert(comGroup != null,
+        //     "Model com_group has to be loaded before $_tableName");
         Chat chat = await selectByOdooId(e['id']);
         Map<String, dynamic> res = {
           'id': chat.id,
@@ -103,6 +117,9 @@ class ChatController extends Controllers {
         return insert(Chat.fromJson(res), [], true);
       }
     });
+    print(
+        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
+    return result;
   }
 
   static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
@@ -126,13 +143,14 @@ class ChatController extends Controllers {
       'limit': limit,
       'context': {'create_or_update': true}
     });
-    return Future.forEach(json, (e) async {
+    var result = await Future.forEach(json, (e) async {
       Chat chat = await selectByOdooId(e['id']);
       if (loadRelated) {
         ComGroup comGroup = await ComGroupController.selectByOdooId(
             unpackListId(e['group_id'])['id']);
-        assert(comGroup != null,
-            "Model com_group has to be loaded before $_tableName");
+        if (comGroup == null) return null;
+        // assert(comGroup != null,
+        //     "Model com_group has to be loaded before $_tableName");
         Map<String, dynamic> res = {
           'id': chat.id,
           'group_id': comGroup.id,
@@ -156,6 +174,9 @@ class ChatController extends Controllers {
         return DBProvider.db.update(_tableName, res);
       }
     });
+    print(
+        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
+    return result;
   }
 
   static Future finishSync(dateTime) {

@@ -42,7 +42,7 @@ class PlanController extends Controllers {
   }
 
   static firstLoadFromOdoo([int limit]) async {
-    print('first load plan');
+    await DBProvider.db.deleteAll(_tableName);
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
       [],
@@ -61,7 +61,6 @@ class PlanController extends Controllers {
       'limit': limit,
       'context': {'create_or_update': true}
     });
-    await DBProvider.db.deleteAll(_tableName);
     var result = await Future.forEach(json, (e) async {
       Map<String, dynamic> res = {
         ...e,
@@ -71,7 +70,7 @@ class PlanController extends Controllers {
       };
       return insert(Plan.fromJson(res), true);
     });
-    print('first load plan finish');
+    print('loaded ${json.length} unrelated records of $_tableName');
     return result;
   }
 
@@ -96,7 +95,7 @@ class PlanController extends Controllers {
       'limit': limit,
       'context': {'create_or_update': true}
     });
-    return Future.forEach(json, (e) async {
+    var result = await Future.forEach(json, (e) async {
       Plan plan = await selectByOdooId(e['id']);
       if (plan == null) {
         Map<String, dynamic> res = Plan.fromJson({
@@ -114,6 +113,8 @@ class PlanController extends Controllers {
       }).toJson();
       return DBProvider.db.update(_tableName, res);
     });
+    print('loaded ${json.length} unrelated records of $_tableName');
+    return result;
   }
 
   static Future finishSync(dateTime) {

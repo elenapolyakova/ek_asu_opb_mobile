@@ -331,25 +331,26 @@ class FaultController extends Controllers {
     List<List> domain = [];
     if (loadRelated) {
       fields = ['parent_id'];
-      List<Map<String, dynamic>> queryRes =
-          await DBProvider.db.select(_tableName, columns: ['odoo_id']);
-      domain = [
-        ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
-      ];
+      // List<Map<String, dynamic>> queryRes =
+      //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
+      // domain = [
+      //   ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
+      // ];
     } else {
-      List<List> toAdd = [];
-      await Future.forEach(
-          SynController.tableMany2oneFieldsMap[_tableName].entries,
-          (element) async {
-        List<Map<String, dynamic>> queryRes =
-            await DBProvider.db.select(element.value, columns: ['odoo_id']);
-        toAdd.add([
-          element.key,
-          'in',
-          queryRes.map((e) => e['odoo_id'] as int).toList()
-        ]);
-      });
-      domain += toAdd;
+      await DBProvider.db.deleteAll(_tableName);
+      // List<List> toAdd = [];
+      // await Future.forEach(
+      //     SynController.tableMany2oneFieldsMap[_tableName].entries,
+      //     (element) async {
+      //   List<Map<String, dynamic>> queryRes =
+      //       await DBProvider.db.select(element.value, columns: ['odoo_id']);
+      //   toAdd.add([
+      //     element.key,
+      //     'in',
+      //     queryRes.map((e) => e['odoo_id'] as int).toList()
+      //   ]);
+      // });
+      // domain += toAdd;
       fields = [
         'name',
         'desc',
@@ -371,11 +372,7 @@ class FaultController extends Controllers {
       'context': {'create_or_update': true}
     });
 
-    print("Fault firstLoad $json");
-    // Before we delete all data for collisions escape
-    if (!loadRelated) await DBProvider.db.deleteAll(_tableName);
-
-    return Future.forEach(json, (e) async {
+    var result = await Future.forEach(json, (e) async {
       // koap_id from odoo is like []
       if (e['koap_id'] is List) {
         e['koap_id'] = e['koap_id'][0];
@@ -398,8 +395,9 @@ class FaultController extends Controllers {
           CheckListItem parentCheckListItem =
               await CheckListItemController.selectByOdooId(
                   unpackListId(e['parent_id'])['id']);
-          assert(parentCheckListItem != null,
-              "Model check_list_item has to be loaded before $_tableName");
+          if (parentCheckListItem == null) return null;
+          // assert(parentCheckListItem != null,
+          //     "Model check_list_item has to be loaded before $_tableName");
           res['id'] = fault.id;
           res['parent_id'] = parentCheckListItem.id;
         }
@@ -422,6 +420,10 @@ class FaultController extends Controllers {
         return FaultController.create(json, [], [], true);
       }
     });
+
+    print(
+        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
+    return result;
   }
 
   static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
@@ -453,7 +455,7 @@ class FaultController extends Controllers {
 
     print("Fault, Load changes from odoo! $json");
 
-    return Future.forEach(json, (e) async {
+    var result = await Future.forEach(json, (e) async {
       if (e['koap_id'] is List) {
         e['koap_id'] = e['koap_id'][0];
       }
@@ -474,8 +476,9 @@ class FaultController extends Controllers {
           CheckListItem parentCheckListItem =
               await CheckListItemController.selectByOdooId(
                   unpackListId(e['parent_id'])['id']);
-          assert(parentCheckListItem != null,
-              "Model check_list_item has to be loaded before $_tableName");
+          if (parentCheckListItem == null) return null;
+          // assert(parentCheckListItem != null,
+          //     "Model check_list_item has to be loaded before $_tableName");
           res['id'] = fault.id;
           res['parent_id'] = parentCheckListItem.id;
         }
@@ -499,6 +502,9 @@ class FaultController extends Controllers {
         return DBProvider.db.update(_tableName, res);
       }
     });
+    print(
+        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
+    return result;
   }
 
   static Future finishSync(dateTime) {

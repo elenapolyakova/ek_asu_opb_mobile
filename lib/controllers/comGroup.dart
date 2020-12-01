@@ -59,27 +59,26 @@ class ComGroupController extends Controllers {
     if (loadRelated) {
       fields = ['parent_id', 'com_user_ids'];
 
-      List<Map<String, dynamic>> queryRes =
-          await DBProvider.db.select(_tableName, columns: ['odoo_id']);
-      domain = [
-        ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
-      ];
-      print('first load com_group related');
+      // List<Map<String, dynamic>> queryRes =
+      //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
+      // domain = [
+      //   ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
+      // ];
     } else {
-      List<List> toAdd = [];
-      await Future.forEach(
-          SynController.tableMany2oneFieldsMap[_tableName].entries,
-          (element) async {
-        List<Map<String, dynamic>> queryRes =
-            await DBProvider.db.select(element.value, columns: ['odoo_id']);
-        toAdd.add([
-          element.key,
-          'in',
-          queryRes.map((e) => e['odoo_id'] as int).toList()
-        ]);
-      });
-      domain += toAdd;
-      print('first load com_group unrelated');
+      await DBProvider.db.deleteAll(_tableName);
+      // List<List> toAdd = [];
+      // await Future.forEach(
+      //     SynController.tableMany2oneFieldsMap[_tableName].entries,
+      //     (element) async {
+      //   List<Map<String, dynamic>> queryRes =
+      //       await DBProvider.db.select(element.value, columns: ['odoo_id']);
+      //   toAdd.add([
+      //     element.key,
+      //     'in',
+      //     queryRes.map((e) => e['odoo_id'] as int).toList()
+      //   ]);
+      // });
+      // domain += toAdd;
       fields = [
         'head_id',
         'group_num',
@@ -94,13 +93,13 @@ class ComGroupController extends Controllers {
       'limit': limit,
       'context': {'create_or_update': true}
     });
-    if (!loadRelated) await DBProvider.db.deleteAll(_tableName);
-    return Future.forEach(json, (e) async {
+    var result = await Future.forEach(json, (e) async {
       if (loadRelated) {
         CheckPlan checkPlan = await CheckPlanController.selectByOdooId(
             unpackListId(e['parent_id'])['id']);
-        assert(checkPlan != null,
-            "Model plan_item_check has to be loaded before $_tableName");
+        if (checkPlan == null) return;
+        // assert(checkPlan != null,
+        //     "Model plan_item_check has to be loaded before $_tableName");
         ComGroup comGroup = await selectByOdooId(e['id']);
         Map<String, dynamic> res = {
           'id': comGroup.id,
@@ -120,6 +119,9 @@ class ComGroupController extends Controllers {
         return insert(ComGroup.fromJson(res), [], true);
       }
     });
+    print(
+        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
+    return result;
   }
 
   static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
@@ -142,13 +144,14 @@ class ComGroupController extends Controllers {
       'limit': limit,
       'context': {'create_or_update': true}
     });
-    return Future.forEach(json, (e) async {
+    var result = await Future.forEach(json, (e) async {
       ComGroup comGroup = await selectByOdooId(e['id']);
       if (loadRelated) {
         CheckPlan checkPlan = await CheckPlanController.selectByOdooId(
             unpackListId(e['parent_id'])['id']);
-        assert(checkPlan != null,
-            "Model plan_item_check has to be loaded before $_tableName");
+        if (checkPlan == null) return null;
+        // assert(checkPlan != null,
+        //     "Model plan_item_check has to be loaded before $_tableName");
         Map<String, dynamic> res = {
           'id': comGroup.id,
           'parent_id': checkPlan.id,
@@ -176,6 +179,9 @@ class ComGroupController extends Controllers {
         return DBProvider.db.update(_tableName, res);
       }
     });
+    print(
+        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
+    return result;
   }
 
   static Future finishSync(dateTime) {

@@ -18,7 +18,7 @@ class CheckListItemController extends Controllers {
 
   // Used for creation of new checkListItem
   static Future<Map<String, dynamic>> create(CheckListItem checkListItem,
-      [bool saveOdooId = false]) async {
+      {bool saveOdooId = false, bool dontSync = false}) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
@@ -33,7 +33,7 @@ class CheckListItemController extends Controllers {
     await DBProvider.db.insert(_tableName, json).then((resId) {
       res['code'] = 1;
       res['id'] = resId;
-      if (!saveOdooId) {
+      if (!saveOdooId && !dontSync) {
         return SynController.create(_tableName, resId).catchError((err) {
           res['code'] = -2;
           res['message'] = 'Error updating syn';
@@ -186,25 +186,26 @@ class CheckListItemController extends Controllers {
     List<List> domain = [];
     if (loadRelated) {
       fields = ['parent_id'];
-      List<Map<String, dynamic>> queryRes =
-          await DBProvider.db.select(_tableName, columns: ['odoo_id']);
-      domain = [
-        ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
-      ];
+      // List<Map<String, dynamic>> queryRes =
+      //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
+      // domain = [
+      //   ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
+      // ];
     } else {
-      List<List> toAdd = [];
-      await Future.forEach(
-          SynController.tableMany2oneFieldsMap[_tableName].entries,
-          (element) async {
-        List<Map<String, dynamic>> queryRes =
-            await DBProvider.db.select(element.value, columns: ['odoo_id']);
-        toAdd.add([
-          element.key,
-          'in',
-          queryRes.map((e) => e['odoo_id'] as int).toList()
-        ]);
-      });
-      domain += toAdd;
+      await DBProvider.db.deleteAll(_tableName);
+      // List<List> toAdd = [];
+      // await Future.forEach(
+      //     SynController.tableMany2oneFieldsMap[_tableName].entries,
+      //     (element) async {
+      //   List<Map<String, dynamic>> queryRes =
+      //       await DBProvider.db.select(element.value, columns: ['odoo_id']);
+      //   toAdd.add([
+      //     element.key,
+      //     'in',
+      //     queryRes.map((e) => e['odoo_id'] as int).toList()
+      //   ]);
+      // });
+      // domain += toAdd;
       fields = [
         'base_id',
         'name',
@@ -224,11 +225,7 @@ class CheckListItemController extends Controllers {
       'context': {'create_or_update': true}
     });
 
-    print("CheckListItem firstLoad $json");
-    // Before we delete all data for collisions escape
-    if (!loadRelated) await DBProvider.db.deleteAll(_tableName);
-
-    return Future.forEach(json, (e) async {
+    var result = await Future.forEach(json, (e) async {
       // base_id from odoo is like [3, _unknown, 3]
       if (e['base_id'] is List) {
         e['base_id'] = e['base_id'][0];
@@ -241,8 +238,9 @@ class CheckListItemController extends Controllers {
           CheckListWork parentCheckList =
               await CheckListController.selectByOdooId(
                   unpackListId(e['parent_id'])['id']);
-          assert(parentCheckList != null,
-              "Model check_list has to be loaded before $_tableName");
+          if (parentCheckList == null) return null;
+          // assert(parentCheckList != null,
+          //     "Model check_list has to be loaded before $_tableName");
           res['id'] = checkListItem.id;
           res['parent_id'] = parentCheckList.id;
         }
@@ -259,9 +257,12 @@ class CheckListItemController extends Controllers {
 
         print("firstLoadFromOdoo() CheckListItem insert! $res");
         CheckListItem json = CheckListItem.fromJson(res);
-        return CheckListItemController.create(json, true);
+        return CheckListItemController.create(json, saveOdooId: true);
       }
     });
+    print(
+        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
+    return result;
   }
 
   static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
@@ -291,7 +292,7 @@ class CheckListItemController extends Controllers {
     print("CheckListItem, Load changes from odoo! $json");
     print("Domain $domain");
 
-    return Future.forEach(json, (e) async {
+    var result = await Future.forEach(json, (e) async {
       if (e['base_id'] is List) {
         e['base_id'] = e['base_id'][0];
       }
@@ -302,8 +303,9 @@ class CheckListItemController extends Controllers {
           CheckListWork parentCheckList =
               await CheckListController.selectByOdooId(
                   unpackListId(e['parent_id'])['id']);
-          assert(parentCheckList != null,
-              "Model check_list has to be loaded before $_tableName");
+          if (parentCheckList == null) return null;
+          // assert(parentCheckList != null,
+          //     "Model check_list has to be loaded before $_tableName");
           res['id'] = checkListItem.id;
           res['parent_id'] = parentCheckList.id;
         }
@@ -327,6 +329,9 @@ class CheckListItemController extends Controllers {
         return DBProvider.db.update(_tableName, res);
       }
     });
+    print(
+        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
+    return result;
   }
 
   static Future finishSync(dateTime) {
