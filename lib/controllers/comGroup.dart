@@ -64,12 +64,28 @@ class ComGroupController extends Controllers {
       domain = [
         ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
       ];
-    } else
+      print('first load com_group related');
+    } else {
+      List<List> toAdd = [];
+      await Future.forEach(
+          SynController.tableMany2oneFieldsMap[_tableName].entries,
+          (element) async {
+        List<Map<String, dynamic>> queryRes =
+            await DBProvider.db.select(element.value, columns: ['odoo_id']);
+        toAdd.add([
+          element.key,
+          'in',
+          queryRes.map((e) => e['odoo_id'] as int).toList()
+        ]);
+      });
+      domain += toAdd;
+      print('first load com_group unrelated');
       fields = [
         'head_id',
         'group_num',
         'is_main',
       ];
+    }
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
       domain,
@@ -78,7 +94,7 @@ class ComGroupController extends Controllers {
       'limit': limit,
       'context': {'create_or_update': true}
     });
-    if (!loadRelated) DBProvider.db.deleteAll(_tableName);
+    if (!loadRelated) await DBProvider.db.deleteAll(_tableName);
     return Future.forEach(json, (e) async {
       if (loadRelated) {
         CheckPlan checkPlan = await CheckPlanController.selectByOdooId(

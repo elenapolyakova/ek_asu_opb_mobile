@@ -79,7 +79,7 @@ class ChatController extends Controllers {
       'limit': limit,
       'context': {'create_or_update': true}
     });
-    if (!loadRelated) DBProvider.db.deleteAll(_tableName);
+    if (!loadRelated) await DBProvider.db.deleteAll(_tableName);
     return Future.forEach(json, (e) async {
       if (loadRelated) {
         ComGroup comGroup = await ComGroupController.selectByOdooId(

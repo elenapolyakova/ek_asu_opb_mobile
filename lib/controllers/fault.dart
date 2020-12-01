@@ -186,7 +186,7 @@ class FaultController extends Controllers {
           item.image = fItem["path"];
           item.coord_e = fItem["coord_e"];
           item.coord_n = fItem["coord_n"];
-          item.parent_id = res["id"];
+          item.parent_id = fault.id;
           item.file_data = fileToBase64(fItem["path"]);
           item.type = 2;
           item.name = Uuid().v1();
@@ -336,7 +336,20 @@ class FaultController extends Controllers {
       domain = [
         ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
       ];
-    } else
+    } else {
+      List<List> toAdd = [];
+      await Future.forEach(
+          SynController.tableMany2oneFieldsMap[_tableName].entries,
+          (element) async {
+        List<Map<String, dynamic>> queryRes =
+            await DBProvider.db.select(element.value, columns: ['odoo_id']);
+        toAdd.add([
+          element.key,
+          'in',
+          queryRes.map((e) => e['odoo_id'] as int).toList()
+        ]);
+      });
+      domain += toAdd;
       fields = [
         'name',
         'desc',
@@ -347,6 +360,7 @@ class FaultController extends Controllers {
         'date_done',
         'active',
       ];
+    }
 
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
@@ -424,7 +438,6 @@ class FaultController extends Controllers {
         'date',
         'date_done',
         'active',
-        // 'plan_fix_date'
       ];
 
     List domain = await getLastSyncDateDomain(_tableName);

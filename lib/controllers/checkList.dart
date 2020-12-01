@@ -87,11 +87,11 @@ class CheckListController extends Controllers {
     if (ids.length > 0) {
       for (var item in ids) {
         // item[id] is used for searching assigned questions for reinserting them as not base
-        var checkList = await CheckListController.selectById(item["id"]);
+        var checkList = await CheckListController.selectById(item["A.id"]);
 
         checkList.is_base = false;
         checkList.parent_id = parentId;
-        checkList.base_id = item["id"];
+        checkList.base_id = item["A.id"];
 
         // New id for work check list
         var createResp = await CheckListController.create(checkList);
@@ -99,7 +99,7 @@ class CheckListController extends Controllers {
           var checkListId = createResp["id"];
           var questions =
               await CheckListItemController.getCheckListItemsByParentId(
-                  item["id"]);
+                  item["A.id"]);
           if (questions.length > 0) {
             for (var originalQuestion in questions) {
               CheckListItem copyItem = new CheckListItem();
@@ -311,7 +311,20 @@ class CheckListController extends Controllers {
       domain = [
         ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
       ];
-    } else
+    } else {
+      List<List> toAdd = [];
+      await Future.forEach(
+          SynController.tableMany2oneFieldsMap[_tableName].entries,
+          (element) async {
+        List<Map<String, dynamic>> queryRes =
+            await DBProvider.db.select(element.value, columns: ['odoo_id']);
+        toAdd.add([
+          element.key,
+          'in',
+          queryRes.map((e) => e['odoo_id'] as int).toList()
+        ]);
+      });
+      domain += toAdd;
       fields = [
         'is_base',
         'base_id',
@@ -320,6 +333,7 @@ class CheckListController extends Controllers {
         'type',
         'active',
       ];
+    }
 
     // Get only work check list not templates!
     domain.add(['is_base', '=', false]);

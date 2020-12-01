@@ -47,10 +47,10 @@ class RelComGroupUserController extends Controllers {
       where: "com_group_id = ?", // and active = 'true'",
       whereArgs: [comGroupId],
     );
-    var a = await DBProvider.db.selectAll(_tableName);
     if (queryRes == null || queryRes.length == 0) return [];
-    return UserController.selectByIds(
+    var res = await UserController.selectByIds(
         queryRes.map((e) => e['user_id'] as int).toList());
+    return res;
   }
 
   static Future insertByComGroupId(int comGroupId, List<int> userIds) async {

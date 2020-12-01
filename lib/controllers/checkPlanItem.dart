@@ -56,7 +56,20 @@ class CheckPlanItemController extends Controllers {
       domain = [
         ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
       ];
-    } else
+    } else {
+      List<List> toAdd = [];
+      await Future.forEach(
+          SynController.tableMany2oneFieldsMap[_tableName].entries,
+          (element) async {
+        List<Map<String, dynamic>> queryRes =
+            await DBProvider.db.select(element.value, columns: ['odoo_id']);
+        toAdd.add([
+          element.key,
+          'in',
+          queryRes.map((e) => e['odoo_id'] as int).toList()
+        ]);
+      });
+      domain += toAdd;
       fields = [
         'name',
         'type',
@@ -65,6 +78,8 @@ class CheckPlanItemController extends Controllers {
         'dt_from',
         'dt_to',
       ];
+    }
+    print('first load plan_item_check_item $loadRelated');
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
       domain,
@@ -73,8 +88,10 @@ class CheckPlanItemController extends Controllers {
       'limit': limit,
       'context': {'create_or_update': true}
     });
-    if (!loadRelated) DBProvider.db.deleteAll(_tableName);
-    return Future.forEach(json, (e) async {
+    if (!loadRelated) {
+      await DBProvider.db.deleteAll(_tableName);
+    }
+    var result = await Future.forEach(json, (e) async {
       if (loadRelated) {
         CheckPlanItem checkPlanItem = await selectByOdooId(e['id']);
         Map<String, dynamic> res = {};
@@ -82,7 +99,7 @@ class CheckPlanItemController extends Controllers {
           CheckPlan checkPlan = await CheckPlanController.selectByOdooId(
               unpackListId(e['parent_id'])['id']);
           assert(checkPlan != null,
-              "Model plan_item has to be loaded before $_tableName");
+              "Model plan_item_check has to be loaded before $_tableName");
           res['id'] = checkPlanItem.id;
           res['parent_id'] = checkPlan.id;
         }
@@ -106,6 +123,8 @@ class CheckPlanItemController extends Controllers {
         return insert(CheckPlanItem.fromJson(res), true);
       }
     });
+    print('first load plan_item_check_item $loadRelated finish');
+    return result;
   }
 
   static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
