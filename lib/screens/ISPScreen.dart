@@ -44,9 +44,9 @@ class _ISPScreen extends State<ISPScreen> {
   }
 
   Future<void> loadData() async {
+    showLoadingDialog(context);
+    setState(() => {showLoading = true});
     try {
-      showLoadingDialog(context);
-      setState(() => {showLoading = true});
       _nodes = await loadNodes();
       // loadNodesTest();
     } catch (e) {} finally {
@@ -223,23 +223,23 @@ class _ISPScreen extends State<ISPScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-        appBar: PreferredSize(
-            preferredSize: Size.fromHeight(100),
-            child: MyAppBar(
-                showIsp: false,
-                userInfo: _userInfo,
-                syncTask: null,
-                stop: widget.stop,
-                parentScreen: 'ISPScreen')),
-        body: Container(
-            decoration: BoxDecoration(
-                image: DecorationImage(
-                    image: AssetImage("assets/images/frameScreen.png"),
-                    fit: BoxFit.fitWidth)),
-            child: showLoading
-                ? Text("")
-                : Padding(
+    return showLoading
+        ? Text("")
+        : new Scaffold(
+            appBar: PreferredSize(
+                preferredSize: Size.fromHeight(100),
+                child: MyAppBar(
+                    showIsp: false,
+                    userInfo: _userInfo,
+                    syncTask: null,
+                    stop: widget.stop,
+                    parentScreen: 'ISPScreen')),
+            body: Container(
+                decoration: BoxDecoration(
+                    image: DecorationImage(
+                        image: AssetImage("assets/images/frameScreen.png"),
+                        fit: BoxFit.fitWidth)),
+                child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     child: Column(children: [
                       Expanded(
@@ -253,6 +253,6 @@ class _ISPScreen extends State<ISPScreen> {
                             theme: getTreeViewTheme(context)),
                       )
                     ]))) //getBodyContent(),
-        );
+            );
   }
 }
