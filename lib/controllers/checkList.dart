@@ -81,17 +81,18 @@ class CheckListController extends Controllers {
 
     // [{id: 1}, {}...]
     var ids = await DBProvider.db.executeQuery(
-        "SELECT A.id from (SELECT id from check_list where is_base = 'true') as A LEFT JOIN (SELECT base_id from check_list where is_base = 'false' and parent_id =$parentId) as B ON A.id = B.base_id where B.base_id is NULL");
+        "SELECT A.id as id_check_list from (SELECT id from check_list where is_base = 'true') as A LEFT JOIN (SELECT base_id from check_list where is_base = 'false' and parent_id =$parentId) as B ON id_check_list = B.base_id where B.base_id is NULL");
 
     print("Ids $ids");
     if (ids.length > 0) {
       for (var item in ids) {
         // item[id] is used for searching assigned questions for reinserting them as not base
-        var checkList = await CheckListController.selectById(item["A.id"]);
+        var checkList =
+            await CheckListController.selectById(item["id_check_list"]);
 
         checkList.is_base = false;
         checkList.parent_id = parentId;
-        checkList.base_id = item["A.id"];
+        checkList.base_id = item["id_check_list"];
 
         // New id for work check list
         var createResp = await CheckListController.create(checkList);
@@ -99,7 +100,7 @@ class CheckListController extends Controllers {
           var checkListId = createResp["id"];
           var questions =
               await CheckListItemController.getCheckListItemsByParentId(
-                  item["A.id"]);
+                  item["id_check_list"]);
           if (questions.length > 0) {
             for (var originalQuestion in questions) {
               CheckListItem copyItem = new CheckListItem();
