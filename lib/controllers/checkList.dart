@@ -91,7 +91,7 @@ class CheckListController extends Controllers {
 
         checkList.is_base = false;
         checkList.parent_id = parentId;
-        checkList.base_id = item["id"];
+        checkList.base_id = item["A.id"];
 
         // New id for work check list
         var createResp = await CheckListController.create(checkList);
