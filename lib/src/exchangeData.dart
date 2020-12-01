@@ -222,11 +222,11 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               if (docList["parent_id"] is List) {
                 docList['parent_id'] = docList['parent_id'][0];
               }
+
+              domain.add(['parent2_id', '=', docList["id"]]);
               var assignedDocs =
                   await getDataWithAttemp('mob.document', 'search_read', null, {
-                'domain': [
-                  ['parent2_id', '=', docList["id"]]
-                ],
+                'domain': domain,
                 'fields': [
                   'id',
                   'parent2_id',
