@@ -155,6 +155,7 @@ class CheckListController extends Controllers {
           }
         }
       }
+      SynController.syncTask(noLoadFromOdoo: true);
     }
 
     var dataToFront = await CheckListController.select(parentId);
