@@ -1616,14 +1616,15 @@ class _MyAppBar extends State<MyAppBar> {
                               : "",
                           margin: 0,
                           onTap: () async {
-                             await CheckPlanController.firstLoadFromOdoo(true);
+                            //   await CheckPlanController.firstLoadFromOdoo(true);
                             // await DBProvider.db.deleteAll('plan');
                             // await DBProvider.db.deleteAll('plan_item');
                             // await DBProvider.db.deleteAll('plan_item_check');
                             // await DBProvider.db
                             //     .deleteAll('plan_item_check_item');
-                            (await DBProvider.db.selectAll('plan_item_check'))
-                                .forEach((element) {
+                            var result = await DBProvider.db
+                                .selectAll('plan_item_check_item');
+                            result.forEach((element) {
                               print(element);
                             });
                           },

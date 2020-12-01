@@ -82,7 +82,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
         case 'department':
           List<dynamic> domain = new List<dynamic>();
           if (lastUpdate != null) domain.add(lastUpdate);
-          //domain.add(['id', 'in', [32229,32230,22886,21818]]);
+          domain.add(['id', 'in', [32229,32230,22886,21818]]);
           data =
               await getDataWithAttemp('eco.department', 'search_read', null, {
             'domain': domain,

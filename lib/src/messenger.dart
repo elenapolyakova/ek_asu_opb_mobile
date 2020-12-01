@@ -1,47 +1,38 @@
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:ek_asu_opb_mobile/models/chat.dart';
+import 'package:ek_asu_opb_mobile/models/chatMessage.dart';
+import 'package:ek_asu_opb_mobile/controllers/chat.dart';
+import 'package:ek_asu_opb_mobile/controllers/chatMessage.dart';
 
 final _storage = FlutterSecureStorage();
 
-class Chat {
-  int id;
-  String name;
-  int type;
-  List<int> reciverUserIds;
-  Chat(this.id, this.name, this.reciverUserIds, this.type);
-  static Map<int, String> typeSelection = {1: 'С работником', 2: 'С группой'};
-}
-
 class MyChat {
   Chat item;
+  String name;
   int countMessage;
   DateTime dtLastLoadMessage;
-  /* MyChat(id, name, reciverUserIds, type,
-      {this.countMessage = 0, this.dtLastLoadMessage}) {
-    item = Chat(id, name, reciverUserIds, type);
-  }*/
-  MyChat(this.item, {this.countMessage = 0, this.dtLastLoadMessage});
 
-  ///Варианты  типа чата
-  static Map<int, String> typeSelection = {1: 'С работником', 2: 'С группой'};
+  MyChat(this.item, this.name, {this.countMessage = 0, this.dtLastLoadMessage});
 }
 
-class MyMessage {
+/*class MyMessage {
   int id;
   int parent_id; //ссылка на чат
   int userId;
   String msg;
   DateTime dt;
   MyMessage(this.id, this.parent_id, this.msg, this.dt, this.userId);
-}
+}*/
 
 class Messenger {
   Messenger._();
   static final Messenger messenger = Messenger._();
-  int _countMessage = 2;
+  int _countMessage = 0;
 
-  List<MyMessage> _messageItems = [
-    MyMessage(
+  /* List<MyMessage> _messageItems = [];
+ List<Chat> _chatItems = [];
+  MyMessage(
         1,
         3,
         'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
@@ -71,20 +62,17 @@ class Messenger {
     Chat(1, 'Группа 1', [2710, 28827], 2),
     Chat(2, 'Группа 2', [2710, 28827], 2),
     Chat(3, null, [2710, 28827], 1),
-  ];
+  ];*/
 
   Future<List<MyChat>> getChatsAndMessageForTimer(int userId) async {
-    String keyDate = 'chatDate';
-    dynamic lastDate = (await getLastUpdate(keyDate));
-    print('Получаем новые чаты за ${lastDate ?? null}');
     List<Chat> chatItems = [];
     List<MyChat> myChatItems = [];
 
     try {
+      //ChatController.loadChangesFromOdoo();
       //загружаем с одоо в бд все новые чаты
       //ChatController.select(userId, lastDate)
 
-      print('Получаем новые сообщения за ${lastDate ?? null}');
       try {
         //загружаем с одоо в бд все новые сообщения
         // MessageController.select(userId, lastDate)
@@ -93,19 +81,23 @@ class Messenger {
         print('getMessages error: e');
       }
 
-      setLastUpdate(keyDate);
-
       //получаем из базы все чаты (без учета времени)
 
-      _chatItems.forEach((chat) {
+      /*_chatItems.forEach((chat) {
         chatItems.add(Chat(chat.id, chat.name, chat.reciverUserIds, chat.type));
-      });
+      });*/
+      chatItems = await ChatController.select();
       chatItems = chatItems ?? [];
 
       for (var i = 0; i < chatItems.length; i++) {
-        MyChat item = MyChat(chatItems[i]);
+        String name;
+        if (chatItems[i].groupId != null)
+          name = (await chatItems[i].group).groupNum;
 
-        int countNew = await getCount(chatItems[i].id, lastDate, userId);
+        MyChat item = MyChat(chatItems[i], name);
+
+        int countNew = 0;
+         //await getCount(chatItems[i].id, lastDate, userId); ???????
         item.countMessage = countNew;
         myChatItems.add(item);
       }
@@ -121,15 +113,16 @@ class Messenger {
     //select chatItems[i].id + > lastDate || lastDate is NULL  + userId
     //из БД
 
-    List<MyMessage> messageItems = [];
+    List<ChatMessage> messageItems = [];
 
     //todo delete
     try {
-      messageItems = _messageItems.where((msg) {
+      messageItems = await ChatMessageController.select(chatId);
+      /*_messageItems.where((msg) {
         return (msg.parent_id == chatId &&
             msg.userId != userId &&
             (lastDate == null || msg.dt.isAfter(lastDate)));
-      }).toList();
+      }).toList();*/
       //todo delete
       messageItems = messageItems ?? [];
     } catch (e) {
@@ -139,80 +132,59 @@ class Messenger {
     return messageItems.length;
   }
 
-  Future<Map<String, dynamic>> addMessage(MyMessage msg) async {
-    Map<String, dynamic> result;
-    int id = _messageItems.length + 1;
-    msg.id = id;
-    _messageItems.add(msg);//todo добавлять в бд и одоо
-    result = {'code': 1, 'message': '', 'id': id};//todo delete
-    
-    return result; 
+  Future<Map<String, dynamic>> addMessage(ChatMessage msg) async {
+    // Map<String, dynamic> result;
+    // int id = _messageItems.length + 1;
+    //msg.id = id;
+    // _messageItems.add(msg); //todo добавлять в бд и одоо
+    // result = {'code': 1, 'message': '', 'id': id}; //todo delete
+    return await ChatMessageController.insert(msg);
   }
 
   Future<Map<String, dynamic>> addChat(Chat chat) async {
-    Map<String, dynamic> result;
-    int id = _chatItems.length + 1;
-    chat.id = id;
-    _chatItems.add(chat); //todo добавлять в бд и одоо
-     result = {'code': 1, 'message': '', 'id': id}; //todo delete
-    return result; 
+    //Map<String, dynamic> result;
+    // int id = _chatItems.length + 1;
+    // chat.id = id;
+    //  _chatItems.add(chat); //todo добавлять в бд и одоо
+    //result = {'code': 1, 'message': '', 'id': id}; //todo delete
+    return await ChatController.insert(chat); //result;
   }
 
-  Future<List<MyMessage>> getMessages(int chatId, DateTime lastDate) async {
+  Future<List<ChatMessage>> getMessages(int chatId) async {
     //получаем все свежие сообщения чата из БД
     //select chatItems[i].id + > lastDate || lastDate is NULL
-    List<MyMessage> messageItems = [];
+    List<ChatMessage> messageItems = [];
 
     //todo delete
-    messageItems = _messageItems.where((msg) {
+    /* messageItems = _messageItems.where((msg) {
       return (msg.parent_id == chatId &&
           (lastDate == null || msg.dt.isAfter(lastDate)));
-    }).toList();
-    //todo delete
-    messageItems = messageItems ?? [];
+    }).toList();*/
+    try {
+      messageItems = await ChatMessageController.select(chatId);
+      //todo delete
+      messageItems = messageItems ?? [];
+    } catch (e) {}
 
     return messageItems;
   }
 
   Future<int> getCountMessage(int userId) async {
     //для счетчика количества новых сообщений
-    String keyDate = 'countMessageDate';
-    dynamic lastDate = (await getLastUpdate(keyDate));
+
     int countNew = 0;
     //await MessageController.selectAll(userId, lastDate)
 
-   // var domain = lastDate != null ? ['write_date', '>', lastDate] : [];
+    // var domain = lastDate != null ? ['write_date', '>', lastDate] : [];
     //int countNew =
     //await getDataWithAttemp('mob.chat.msg', 'search_count', domain, {});
 
     _countMessage += countNew;
 
-    setLastUpdate(keyDate);
     return _countMessage;
   }
 
   void resetCount() {
     _countMessage = 0;
-  }
-
-  Future<dynamic> getLastUpdate(key) async {
-    String sLastUpdate = await _storage.read(key: 'messengerDates');
-    if (sLastUpdate == null) return null;
-    dynamic lastUpdate = json.decode(sLastUpdate);
-    if (lastUpdate[key] != null) return DateTime.parse(lastUpdate[key]);
-    return null;
-  }
-
-  Future<void> setLastUpdate(key) async {
-    String sLastUpdate = await _storage.read(key: 'messengerDates');
-    Map<String, dynamic> lastUpdate;
-    if (sLastUpdate == null)
-      lastUpdate = {key: DateTime.now().toString()};
-    else {
-      lastUpdate = json.decode(sLastUpdate);
-      lastUpdate[key] = DateTime.now().toString();
-    }
-
-    await _storage.write(key: 'messengerDates', value: json.encode(lastUpdate));
   }
 }

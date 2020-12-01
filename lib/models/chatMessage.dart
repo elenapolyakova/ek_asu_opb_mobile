@@ -13,6 +13,9 @@ class ChatMessage extends Models {
   ///Сообщение
   String message;
 
+ //add Полякова
+  int userId;
+
   ///Дата создания
   DateTime createDate = DateTime.now();
 
