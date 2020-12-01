@@ -202,7 +202,6 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               element["q_data"] = assignedQuestions;
               // Set odooId as main ID for check list, as it's first download
               element["odoo_id"] = element["id"];
-              print("Check list from odoo $element");
             }
           }
           break;
@@ -215,6 +214,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
             'domain': domain,
             'fields': ['id', 'parent_id', 'name']
           });
+
           if (data.length > 0) {
             for (var docList in data) {
               // Это вложение
@@ -223,6 +223,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
               }
 
               domain.add(['parent2_id', '=', docList["id"]]);
+
               var assignedDocs =
                   await getDataWithAttemp('mob.document', 'search_read', null, {
                 'domain': domain,
@@ -237,8 +238,11 @@ Future<List<Map<String, dynamic>>> getDictionaries(
                 ]
               });
               docList["docs"] = assignedDocs;
-              // print("DocList $docList");
-              // print("AssignedDocs $assignedDocs");
+
+              // Update domain for new docListInputs
+              domain = [];
+              // IF not null get only last added docs!
+              if (lastUpdate != null) domain.add(lastUpdate);
             }
           }
           break;
@@ -361,11 +365,15 @@ Future<List<dynamic>> getLastUpdate(modelName) async {
 Future<void> setLastUpdate(modelName) async {
   String sLastUpdate = await _storage.read(key: 'lastDateUpdate');
   Map<String, dynamic> lastUpdate;
+
+  DateTime dateTime = DateTime.now();
+  dateTime = dateTime.subtract(new Duration(hours: 3));
+  print("Datetime SetLastUpdate $dateTime");
   if (sLastUpdate == null)
-    lastUpdate = {modelName: DateTime.now().toString()};
+    lastUpdate = {modelName: dateTime.toString()};
   else {
     lastUpdate = json.decode(sLastUpdate);
-    lastUpdate[modelName] = DateTime.now().toString();
+    lastUpdate[modelName] = dateTime.toString();
   }
 
   await _storage.write(key: 'lastDateUpdate', value: json.encode(lastUpdate));
