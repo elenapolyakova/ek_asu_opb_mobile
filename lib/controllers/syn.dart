@@ -180,45 +180,53 @@ class SynController extends Controllers {
     // });
   }
 
-  static Future loadFromOdoo() async {
+  static Future loadFromOdoo({
+    bool forceFirstLoad = false,
+  }) async {
+    if (forceFirstLoad) {
+      await removeLastSyncDate(_tableName);
+      print('removed last sync date');
+    }
     List lastDateDomain = await getLastSyncDateDomain(_tableName);
     DateTime dateTime = DateTime.now();
     if (lastDateDomain.length == 1) {
       await PlanController.firstLoadFromOdoo();
       await PlanItemController.firstLoadFromOdoo();
-      await PlanItemController.firstLoadFromOdoo(true);
+      await ComGroupController.firstLoadFromOdoo();
       await CheckPlanController.firstLoadFromOdoo();
       await CheckPlanItemController.firstLoadFromOdoo();
-      await ComGroupController.firstLoadFromOdoo();
-      await CheckPlanController.firstLoadFromOdoo(true);
-      await CheckPlanItemController.firstLoadFromOdoo(true);
-      await ComGroupController.firstLoadFromOdoo(true);
       await DepartmentDocumentController.firstLoadFromOdoo();
       await CheckListController.firstLoadFromOdoo();
-      await CheckListController.firstLoadFromOdoo(true);
       await CheckListItemController.firstLoadFromOdoo();
-      await CheckListItemController.firstLoadFromOdoo(true);
       await FaultController.firstLoadFromOdoo();
-      await FaultController.firstLoadFromOdoo(true);
       await FaultItemController.firstLoadFromOdoo();
+
+      await PlanItemController.firstLoadFromOdoo(true);
+      await CheckPlanController.firstLoadFromOdoo(true);
+      await ComGroupController.firstLoadFromOdoo(true);
+      await CheckPlanItemController.firstLoadFromOdoo(true);
+      await CheckListController.firstLoadFromOdoo(true);
+      await CheckListItemController.firstLoadFromOdoo(true);
+      await FaultController.firstLoadFromOdoo(true);
       await FaultItemController.firstLoadFromOdoo(true);
     } else {
       await PlanController.loadChangesFromOdoo();
       await PlanItemController.loadChangesFromOdoo();
-      await PlanItemController.loadChangesFromOdoo(true);
+      await ComGroupController.loadChangesFromOdoo();
       await CheckPlanController.loadChangesFromOdoo();
       await CheckPlanItemController.loadChangesFromOdoo();
-      await ComGroupController.loadChangesFromOdoo();
+      await CheckListController.loadChangesFromOdoo();
+      await CheckListItemController.loadChangesFromOdoo();
+      await FaultController.loadChangesFromOdoo();
+      await FaultItemController.loadChangesFromOdoo();
+
+      await PlanItemController.loadChangesFromOdoo(true);
       await CheckPlanController.loadChangesFromOdoo(true);
       await CheckPlanItemController.loadChangesFromOdoo(true);
       await ComGroupController.loadChangesFromOdoo(true);
-      await CheckListController.loadChangesFromOdoo();
       await CheckListController.loadChangesFromOdoo(true);
-      await CheckListItemController.loadChangesFromOdoo();
       await CheckListItemController.loadChangesFromOdoo(true);
-      await FaultController.loadChangesFromOdoo();
       await FaultController.loadChangesFromOdoo(true);
-      await FaultItemController.loadChangesFromOdoo();
       await FaultItemController.loadChangesFromOdoo(true);
     }
     await PlanController.finishSync(dateTime);

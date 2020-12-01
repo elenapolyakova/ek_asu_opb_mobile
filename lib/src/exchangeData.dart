@@ -427,3 +427,16 @@ Future<void> setLastSyncDateForDomain(modelName, DateTime dateTime) async {
 
   await _storage.write(key: 'lastDateUpdate', value: json.encode(lastUpdate));
 }
+
+Future<void> removeLastSyncDate(modelName) async {
+  String sLastUpdate = await _storage.read(key: 'lastDateUpdate');
+  Map<String, dynamic> lastUpdate;
+  if (sLastUpdate == null)
+    return;
+  else {
+    lastUpdate = json.decode(sLastUpdate);
+    lastUpdate.remove(modelName);
+  }
+
+  await _storage.write(key: 'lastDateUpdate', value: json.encode(lastUpdate));
+}

@@ -20,7 +20,7 @@ class CheckListController extends Controllers {
   }
 
   static Future<Map<String, dynamic>> create(CheckListWork checkList,
-      [bool saveOdooId = false]) async {
+      {bool saveOdooId = false, bool dontSync = false}) async {
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
@@ -36,7 +36,7 @@ class CheckListController extends Controllers {
     await DBProvider.db.insert(_tableName, json).then((resId) {
       res['code'] = 1;
       res['id'] = resId;
-      if (!saveOdooId) {
+      if (!saveOdooId && !dontSync) {
         return SynController.create(_tableName, resId).catchError((err) {
           res['code'] = -2;
           res['message'] = 'Error updating syn';
@@ -76,31 +76,67 @@ class CheckListController extends Controllers {
     return checkLists;
   }
 
+  /// Select all CheckLists with is_base = true
+  static Future<List<CheckListWork>> selectBase() async {
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
+      _tableName,
+      where: "is_base = 'true'",
+    );
+    if (queryRes == null || queryRes.length == 0) return [];
+    List<CheckListWork> checkLists =
+        queryRes.map((e) => CheckListWork.fromJson(e)).toList();
+    return checkLists;
+  }
+
+  /// Select all CheckLists with is_base = true
+  static Future<List<CheckListWork>> selectNotBase(int parentId) async {
+    if (parentId == null) return [];
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(_tableName,
+        where: "is_base != 'true' and parent_id = ?", whereArgs: [parentId]);
+    if (queryRes == null || queryRes.length == 0) return [];
+    List<CheckListWork> checkLists =
+        queryRes.map((e) => CheckListWork.fromJson(e)).toList();
+    return checkLists;
+  }
+
+  /// Select all CheckLists templates
+  static Future<List<CheckListWork>> selectTemplates(int parentId) async {
+    List hasResult = await selectBase();
+    List<int> excludeResult =
+        (await selectNotBase(parentId)).map((e) => e.base_id).toList();
+    return List<CheckListWork>.from(
+        hasResult.where((element) => !excludeResult.contains(element.id)));
+  }
+
   static Future<List<CheckListWork>> selectByParentId(int parentId) async {
     if (parentId == null) return null;
 
     // [{id: 1}, {}...]
-    var ids = await DBProvider.db.executeQuery(
-        "SELECT A.id as id_check_list from (SELECT id from check_list where is_base = 'true') as A LEFT JOIN (SELECT base_id from check_list where is_base = 'false' and parent_id =$parentId) as B ON id_check_list = B.base_id where B.base_id is NULL");
+    // var ids = await DBProvider.db.executeQuery(
+    //     "SELECT A.id from (SELECT id from check_list where is_base = 'true') as A LEFT JOIN (SELECT base_id from check_list where is_base = 'false' and parent_id =$parentId) as B ON A.id = B.base_id where B.base_id is NULL");
+
+    List<CheckListWork> templates = await selectTemplates(parentId);
+    // print(ids);
+    var ids = templates.map((element) => {'id': element.id}).toList();
 
     print("Ids $ids");
     if (ids.length > 0) {
       for (var item in ids) {
         // item[id] is used for searching assigned questions for reinserting them as not base
-        var checkList =
-            await CheckListController.selectById(item["id_check_list"]);
+        var checkList = await CheckListController.selectById(item["id"]);
 
         checkList.is_base = false;
         checkList.parent_id = parentId;
-        checkList.base_id = item["id_check_list"];
+        checkList.base_id = item["id"];
 
         // New id for work check list
-        var createResp = await CheckListController.create(checkList);
+        var createResp =
+            await CheckListController.create(checkList, dontSync: true);
         if (createResp["code"] > 0) {
           var checkListId = createResp["id"];
           var questions =
               await CheckListItemController.getCheckListItemsByParentId(
-                  item["id_check_list"]);
+                  item["id"]);
           if (questions.length > 0) {
             for (var originalQuestion in questions) {
               CheckListItem copyItem = new CheckListItem();
@@ -114,7 +150,7 @@ class CheckListController extends Controllers {
               copyItem.description = originalQuestion.description;
               copyItem.active = true;
 
-              await CheckListItemController.create(copyItem);
+              await CheckListItemController.create(copyItem, dontSync: true);
             }
           }
         }
@@ -307,25 +343,27 @@ class CheckListController extends Controllers {
     List<List> domain = [];
     if (loadRelated) {
       fields = ['parent_id'];
-      List<Map<String, dynamic>> queryRes =
-          await DBProvider.db.select(_tableName, columns: ['odoo_id']);
-      domain = [
-        ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
-      ];
+      // List<Map<String, dynamic>> queryRes =
+      //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
+      // domain = [
+      //   ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
+      // ];
     } else {
-      List<List> toAdd = [];
-      await Future.forEach(
-          SynController.tableMany2oneFieldsMap[_tableName].entries,
-          (element) async {
-        List<Map<String, dynamic>> queryRes =
-            await DBProvider.db.select(element.value, columns: ['odoo_id']);
-        toAdd.add([
-          element.key,
-          'in',
-          queryRes.map((e) => e['odoo_id'] as int).toList()
-        ]);
-      });
-      domain += toAdd;
+      await DBProvider.db
+          .executeQuery("DELETE FROM $_tableName WHERE is_base = 'false'");
+      // List<List> toAdd = [];
+      // await Future.forEach(
+      //     SynController.tableMany2oneFieldsMap[_tableName].entries,
+      //     (element) async {
+      //   List<Map<String, dynamic>> queryRes =
+      //       await DBProvider.db.select(element.value, columns: ['odoo_id']);
+      //   toAdd.add([
+      //     element.key,
+      //     'in',
+      //     queryRes.map((e) => e['odoo_id'] as int).toList()
+      //   ]);
+      // });
+      // domain += toAdd;
       fields = [
         'is_base',
         'base_id',
@@ -348,13 +386,7 @@ class CheckListController extends Controllers {
       'context': {'create_or_update': true}
     });
 
-    print("CheckList. First load json $json");
-    // We don't need to delete templates !!!!
-    if (!loadRelated)
-      await DBProvider.db
-          .executeQuery("DELETE FROM $_tableName WHERE is_base = 'false'");
-
-    return Future.forEach(json, (e) async {
+    var result = await Future.forEach(json, (e) async {
       // base_id from odoo is like [3, _unknown, 3]
       if (e['base_id'] is List) {
         e['base_id'] = e['base_id'][0];
@@ -367,8 +399,9 @@ class CheckListController extends Controllers {
           CheckPlanItem checkPlanItem =
               await CheckPlanItemController.selectByOdooId(
                   unpackListId(e['parent_id'])['id']);
-          assert(checkPlanItem != null,
-              "Model plan_item has to be loaded before $_tableName");
+          if (checkPlanItem == null) return null;
+          // assert(checkPlanItem != null,
+          //     "Model plan_item has to be loaded before $_tableName");
           res['id'] = checkList.id;
           res['parent_id'] = checkPlanItem.id;
         }
@@ -383,9 +416,12 @@ class CheckListController extends Controllers {
           'active': 'true',
         };
         CheckListWork json = CheckListWork.fromJson(res);
-        return CheckListController.create(json, true);
+        return CheckListController.create(json, saveOdooId: true);
       }
     });
+    print(
+        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
+    return result;
   }
 
   static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
@@ -417,7 +453,7 @@ class CheckListController extends Controllers {
 
     print("CheckList. Load changes from odoo! $json");
 
-    return Future.forEach(json, (e) async {
+    var result = await Future.forEach(json, (e) async {
       if (e['base_id'] is List) {
         e['base_id'] = e['base_id'][0];
       }
@@ -428,8 +464,9 @@ class CheckListController extends Controllers {
           CheckPlanItem checkPlanItem =
               await CheckPlanItemController.selectByOdooId(
                   unpackListId(e['parent_id'])['id']);
-          assert(checkPlanItem != null,
-              "Model checkPlanItem has to be loaded before $_tableName");
+          if (checkPlanItem == null) return null;
+          //   assert(checkPlanItem != null,
+          //       "Model checkPlanItem has to be loaded before $_tableName");
           res['id'] = checkList.id;
           res['parent_id'] = checkPlanItem.id;
         }
@@ -455,6 +492,9 @@ class CheckListController extends Controllers {
         return DBProvider.db.update(_tableName, res);
       }
     });
+    print(
+        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
+    return result;
   }
 
   static Future finishSync(dateTime) {

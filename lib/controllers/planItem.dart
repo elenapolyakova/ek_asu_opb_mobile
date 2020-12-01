@@ -47,25 +47,26 @@ class PlanItemController extends Controllers {
     List<List> domain = [];
     if (loadRelated) {
       fields = ['parent_id'];
-      List<Map<String, dynamic>> queryRes =
-          await DBProvider.db.select(_tableName, columns: ['odoo_id']);
-      domain = [
-        ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
-      ];
+      // List<Map<String, dynamic>> queryRes =
+      //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
+      // domain = [
+      //   ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
+      // ];
     } else {
-      List<List> toAdd = [];
-      await Future.forEach(
-          SynController.tableMany2oneFieldsMap[_tableName].entries,
-          (element) async {
-        List<Map<String, dynamic>> queryRes =
-            await DBProvider.db.select(element.value, columns: ['odoo_id']);
-        toAdd.add([
-          element.key,
-          'in',
-          queryRes.map((e) => e['odoo_id'] as int).toList()
-        ]);
-      });
-      domain += toAdd;
+      await DBProvider.db.deleteAll(_tableName);
+      // List<List> toAdd = [];
+      // await Future.forEach(
+      //     SynController.tableMany2oneFieldsMap[_tableName].entries,
+      //     (element) async {
+      //   List<Map<String, dynamic>> queryRes =
+      //       await DBProvider.db.select(element.value, columns: ['odoo_id']);
+      //   toAdd.add([
+      //     element.key,
+      //     'in',
+      //     queryRes.map((e) => e['odoo_id'] as int).toList()
+      //   ]);
+      // });
+      // domain += toAdd;
       fields = [
         'name',
         'department_txt',
@@ -75,7 +76,6 @@ class PlanItemController extends Controllers {
         'check_result',
       ];
     }
-    print('first load plan_item $loadRelated');
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
       domain,
@@ -84,15 +84,13 @@ class PlanItemController extends Controllers {
       'limit': limit,
       'context': {'create_or_update': true}
     });
-    if (!loadRelated) {
-      await DBProvider.db.deleteAll(_tableName);
-    }
-    var result = json.forEach((e) async {
+    var result = await Future.forEach(json, (e) async {
       if (loadRelated) {
         if (e['parent_id'] is bool && !e['parent_id']) return null;
         Plan plan = await PlanController.selectByOdooId(
             unpackListId(e['parent_id'])['id']);
-        assert(plan != null, "Model plan has to be loaded before $_tableName");
+        if (plan == null) return null;
+        // assert(plan != null, "Model plan has to be loaded before $_tableName");
         PlanItem planItem = await selectByOdooId(e['id']);
         Map<String, dynamic> res = {
           'id': planItem.id,
@@ -109,7 +107,8 @@ class PlanItemController extends Controllers {
         return await insert(PlanItem.fromJson(res), true);
       }
     });
-    print('first load plan_item $loadRelated finish');
+    print(
+        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
     return result;
   }
 
@@ -136,13 +135,14 @@ class PlanItemController extends Controllers {
       'limit': limit,
       'context': {'create_or_update': true}
     });
-    return Future.forEach(json, (e) async {
+    var result = await Future.forEach(json, (e) async {
       PlanItem planItem = await selectByOdooId(e['id']);
       if (loadRelated) {
         if (e['parent_id'] is bool && !e['parent_id']) return null;
         Plan plan = await PlanController.selectByOdooId(
             unpackListId(e['parent_id'])['id']);
-        assert(plan != null, "Model plan has to be loaded before $_tableName");
+        if (plan == null) return null;
+        // assert(plan != null, "Model plan has to be loaded before $_tableName");
         Map<String, dynamic> res = {
           'id': planItem.id,
           'parent_id': plan.id,
@@ -166,6 +166,9 @@ class PlanItemController extends Controllers {
         return DBProvider.db.update(_tableName, res);
       }
     });
+    print(
+        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
+    return result;
   }
 
   static Future finishSync(dateTime) {
