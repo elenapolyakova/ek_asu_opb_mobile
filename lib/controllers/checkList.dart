@@ -99,7 +99,7 @@ class CheckListController extends Controllers {
           var checkListId = createResp["id"];
           var questions =
               await CheckListItemController.getCheckListItemsByParentId(
-                  item["id"]);
+                  item["A.id"]);
           if (questions.length > 0) {
             for (var originalQuestion in questions) {
               CheckListItem copyItem = new CheckListItem();
