@@ -105,7 +105,28 @@ class ChatMessageController extends Controllers {
           stringToDateTime(element['create_date']).isAfter(chat.lastRead));
     }
     chat.lastRead = DateTime.now();
-    ChatController.update(chat);
+    await ChatController.update(chat);
+    return queryRes.length;
+  }
+
+  ///Load message count of a chat from specified date.
+  ///Chat can be either int or Chat.
+  ///Returns message count or null.
+  static Future<int> newMessagesCountFromDate(
+      dynamic chat, int userId, DateTime dateTime) async {
+    if (chat is int) chat = await ChatController.selectById(chat);
+    if (chat == null || chat.id == null) return null;
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
+      _tableName,
+      columns: ['id'] + (dateTime != null ? ['create_date'] : []),
+      where: "parent_id = ? and create_uid != ?",
+      whereArgs: [chat.id, userId],
+    );
+    if (dateTime != null) {
+      queryRes = queryRes.where((element) =>
+          stringToDateTime(element['create_date']).isAfter(dateTime));
+    }
+    await ChatController.update(chat);
     return queryRes.length;
   }
 
