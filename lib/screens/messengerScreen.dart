@@ -179,7 +179,8 @@ class _MessengerScreen extends State<MessengerScreen> {
         odooId: null,
         parentId: _selectedChat.item.id,
         message: _msg,
-        createDate: DateTime.now()); //, _myUid); ????????
+        createDate: DateTime.now(),
+        userId: _myUid); 
     bool hasErorr = false;
 
     try {
@@ -205,11 +206,12 @@ class _MessengerScreen extends State<MessengerScreen> {
 
   addChat(User reciver) async {
     Chat chat = Chat(id: null, odooId: null, groupId: null, type: 1);
-  
+
     bool hasErorr = false;
 
     try {
-      Map<String, dynamic> result = await Messenger.messenger.addChat(chat, [_myUid, reciver.id]);
+      Map<String, dynamic> result =
+          await Messenger.messenger.addChat(chat, [_myUid, reciver.id]);
       hasErorr = result["code"] < 0;
 
       if (hasErorr) {
@@ -252,16 +254,22 @@ class _MessengerScreen extends State<MessengerScreen> {
 
     try {
       List<ChatMessage> newMessageItems =
-          await Messenger.messenger.getMessages(selectedChat, allMsg);
+          await Messenger.messenger.getMessages(selectedChat, allMsg, _myUid);
 
       _selectedChat.dtLastLoadMessage =
-          getLastMessageDate(newMessageItems); //now;
-      _messageItems.removeWhere((oldMessage) {
-        if (lastLoadMessage == null || oldMessage.createDate == null)
-          return true;
-        if (oldMessage.createDate.isAfter(lastLoadMessage)) return true;
-        return false;
-      });
+            getLastMessageDate(newMessageItems); 
+            
+      if (allMsg)
+        _messageItems = [];
+      else {
+        //now;
+        _messageItems.removeWhere((oldMessage) {
+          if (lastLoadMessage == null || oldMessage.createDate == null)
+            return true;
+          if (oldMessage.createDate.isAfter(lastLoadMessage)) return true;
+          return false;
+        });
+      }
       _messageItems = _messageItems ?? [];
 
       setState(() {
