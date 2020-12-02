@@ -96,7 +96,7 @@ class ChatMessageController extends Controllers {
     if (chat == null || chat.id == null) return null;
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
-      columns: ['id'],
+      columns: ['id'] + (chat.lastRead != null ? ['create_date'] : []),
       where: "parent_id = ? and create_uid != ?",
       whereArgs: [chat.id, userId],
     );
@@ -109,11 +109,12 @@ class ChatMessageController extends Controllers {
     return queryRes.length;
   }
 
-  ///Load message count of a chat from specified date.
+  ///Load messages of a chat from specified date.
   ///Chat can be either int or Chat.
-  ///Returns message count or null.
-  static Future<int> newMessagesCountFromDate(
-      dynamic chat, int userId, DateTime dateTime) async {
+  ///If count is false (default) returns List<ChatMessage>.
+  ///If count is true, returns message count.
+  static Future newMessagesFromDate(dynamic chat, int userId, DateTime dateTime,
+      {bool count: false}) async {
     if (chat is int) chat = await ChatController.selectById(chat);
     if (chat == null || chat.id == null) return null;
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
@@ -127,7 +128,10 @@ class ChatMessageController extends Controllers {
           stringToDateTime(element['create_date']).isAfter(dateTime));
     }
     await ChatController.update(chat);
-    return queryRes.length;
+    if (count)
+      return queryRes.length;
+    else
+      return queryRes.map((e) => ChatMessage.fromJson(e)).toList();
   }
 
   static loadFromOdoo({bool clean: false, int limit, int offset}) async {
