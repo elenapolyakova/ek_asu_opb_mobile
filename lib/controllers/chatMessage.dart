@@ -84,7 +84,7 @@ class ChatMessageController extends Controllers {
         'search_count',
         [domain],
         {});
-    return int.tryParse(json);
+    return int.tryParse(json.toString());
   }
 
   ///Load message count of a chat.

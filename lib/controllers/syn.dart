@@ -101,7 +101,7 @@ class SynController extends Controllers {
         'to_has_odoo_id': false,
         'to': 'user',
         'through': 'rel_chat_user',
-        'my_field': 'group_id',
+        'my_field': 'chat_id',
         'other_field': 'user_id',
       },
     ]
