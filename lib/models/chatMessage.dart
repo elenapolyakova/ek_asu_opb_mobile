@@ -13,16 +13,23 @@ class ChatMessage extends Models {
   ///Сообщение
   String message;
 
- //add Полякова
-  int userId;
-
   ///Дата создания
   DateTime createDate = DateTime.now();
+
+  /// Id автора сообщения
+  int userId;
+  User _user;
 
   ///Группа
   Future<Chat> get parent async {
     if (_parent == null) _parent = await ChatController.selectById(parentId);
     return _parent;
+  }
+
+  ///Пользователь
+  Future<User> get user async {
+    if (_user == null) _user = await UserController.selectById(userId);
+    return _user;
   }
 
   ChatMessage({
@@ -31,6 +38,7 @@ class ChatMessage extends Models {
     this.parentId,
     this.message,
     this.createDate,
+    this.userId,
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
@@ -40,6 +48,7 @@ class ChatMessage extends Models {
       parentId: unpackListId(json["parent_id"])['id'],
       message: getObj(json["msg"]),
       createDate: stringToDateTime(json["create_date"]),
+      userId: unpackListId(json["create_uid"])['id'],
     );
     return res;
   }
@@ -51,6 +60,7 @@ class ChatMessage extends Models {
       'parent_id': parentId,
       'msg': message,
       'create_date': dateTimeToString(createDate),
+      'create_uid': userId,
     };
     if (omitId) {
       res.remove('id');

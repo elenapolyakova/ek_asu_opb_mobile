@@ -209,6 +209,9 @@ class SynController extends Controllers {
       await CheckListItemController.firstLoadFromOdoo(true);
       await FaultController.firstLoadFromOdoo(true);
       await FaultItemController.firstLoadFromOdoo(true);
+
+      await ChatController.loadFromOdoo(clean: true);
+      await ChatMessageController.loadFromOdoo(clean: true);
     } else {
       await PlanController.loadChangesFromOdoo();
       await PlanItemController.loadChangesFromOdoo();
@@ -228,6 +231,9 @@ class SynController extends Controllers {
       await CheckListItemController.loadChangesFromOdoo(true);
       await FaultController.loadChangesFromOdoo(true);
       await FaultItemController.loadChangesFromOdoo(true);
+
+      await ChatController.loadFromOdoo();
+      await ChatMessageController.loadFromOdoo();
     }
     await PlanController.finishSync(dateTime);
     await PlanItemController.finishSync(dateTime);

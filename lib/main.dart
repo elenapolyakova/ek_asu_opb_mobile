@@ -385,7 +385,8 @@ class _RouteAwareWidget extends State<RouteAwareWidget> with RouteAware {
         return CheckScreen(
             context: context, stop: stop != null ? stop[name] : null);
       case '/messenger':
-        return MessengerScreen(context: context, stop: stop != null ? stop[name] : null);
+        return MessengerScreen(
+            context: context, stop: stop != null ? stop[name] : null);
     }
   }
 }

@@ -52,136 +52,165 @@ class ChatController extends Controllers {
     return queryRes[0]['odoo_id'];
   }
 
-  static firstLoadFromOdoo([bool loadRelated = false, int limit]) async {
-    List<String> fields;
-    List<List> domain = [];
-    if (loadRelated) {
-      // List<Map<String, dynamic>> queryRes =
-      //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
-      // domain = [
-      //   ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
-      // ];
-      fields = [
-        'group_id',
-        'user_ids',
-      ];
-    } else {
+  static loadFromOdoo({bool clean: false, int limit, int offset}) async {
+    await ComGroupController.loadChangesFromOdoo();
+    await ComGroupController.loadChangesFromOdoo(true);
+
+    List<String> fields = [
+      'name',
+      'group_id',
+      'type',
+      'user_ids',
+    ];
+    List domain;
+    if (clean) {
+      domain = [];
       await DBProvider.db.deleteAll(_tableName);
-      // List<List> toAdd = [];
-      // await Future.forEach(
-      //     SynController.tableMany2oneFieldsMap[_tableName].entries,
-      //     (element) async {
-      //   List<Map<String, dynamic>> queryRes =
-      //       await DBProvider.db.select(element.value, columns: ['odoo_id']);
-      //   toAdd.add([
-      //     element.key,
-      //     'in',
-      //     queryRes.map((e) => e['odoo_id'] as int).toList()
-      //   ]);
-      // });
-      // domain += toAdd;
-      fields = [
-        'name',
-        'type',
-      ];
-    }
+    } else
+      domain = await getLastSyncDateDomain(_tableName);
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
       domain,
       fields
     ], {
       'limit': limit,
+      'offset': offset,
       'context': {'create_or_update': true}
     });
     var result = await Future.forEach(json, (e) async {
-      if (loadRelated) {
-        ComGroup comGroup = await ComGroupController.selectByOdooId(
-            unpackListId(e['group_id'])['id']);
-        if (comGroup == null) return null;
-        // assert(comGroup != null,
-        //     "Model com_group has to be loaded before $_tableName");
-        Chat chat = await selectByOdooId(e['id']);
-        Map<String, dynamic> res = {
-          'id': chat.id,
-          'group_id': comGroup.id,
-        };
-        await DBProvider.db.update(_tableName, res);
-        return RelChatUserController.updateChatUsers(chat.id,
-            List<int>.from(e['user_ids'].map((userId) => userId as int)));
+      int chatId = await selectOdooId(e['id']);
+      int groupId = await ComGroupController.selectOdooId(
+          unpackListId(e['group_id'])['id']);
+      List userIds = e.remove('user_ids');
+      Map<String, dynamic> res = {
+        ...e,
+        'group_id': groupId,
+      };
+      if (chatId != null) {
+        res['id'] = chatId;
+        chatId = await DBProvider.db.update(_tableName, res);
       } else {
-        Map<String, dynamic> res = {
-          ...e,
-          'id': null,
-          'odoo_id': e['id'],
-        };
-        return insert(Chat.fromJson(res), [], true);
+        res['odoo_id'] = e['id'];
+        await DBProvider.db.insert(_tableName, res);
       }
+      await RelChatUserController.updateChatUsers(
+        chatId,
+        List<int>.from(
+            userIds.map((userId) => unpackListId(userId)['id'] as int)),
+      );
     });
-    print(
-        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
+    print('loaded ${json.length} records of $_tableName');
+    await setLastSyncDateForDomain(_tableName, DateTime.now());
     return result;
   }
 
-  static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
-    List<String> fields;
-    if (loadRelated)
-      fields = [
-        'group_id',
-        'user_ids',
-      ];
-    else
-      fields = [
-        'name',
-        'type',
-      ];
-    List domain = await getLastSyncDateDomain(_tableName);
-    List<dynamic> json = await getDataWithAttemp(
-        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-      domain,
-      fields
-    ], {
-      'limit': limit,
-      'context': {'create_or_update': true}
-    });
-    var result = await Future.forEach(json, (e) async {
-      Chat chat = await selectByOdooId(e['id']);
-      if (loadRelated) {
-        ComGroup comGroup = await ComGroupController.selectByOdooId(
-            unpackListId(e['group_id'])['id']);
-        if (comGroup == null) return null;
-        // assert(comGroup != null,
-        //     "Model com_group has to be loaded before $_tableName");
-        Map<String, dynamic> res = {
-          'id': chat.id,
-          'group_id': comGroup.id,
-        };
-        await DBProvider.db.update(_tableName, res);
-        return RelChatUserController.updateChatUsers(chat.id,
-            List<int>.from(e['user_ids'].map((userId) => userId as int)));
-      } else {
-        if (chat == null) {
-          Map<String, dynamic> res = Chat.fromJson({
-            ...e,
-          }).toJson(true);
-          res['odoo_id'] = e['id'];
-          return DBProvider.db.insert(_tableName, res);
-        }
-        Map<String, dynamic> res = Chat.fromJson({
-          ...e,
-          'id': chat.id,
-          'odoo_id': chat.odooId,
-        }).toJson();
-        return DBProvider.db.update(_tableName, res);
-      }
-    });
-    print(
-        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
-    return result;
-  }
+  // static firstLoadFromOdoo([bool loadRelated = false, int limit]) async {
+  //   List<String> fields;
+  //   List<List> domain = [];
+  //   if (loadRelated) {
+  //     fields = [
+  //       'group_id',
+  //       'user_ids',
+  //     ];
+  //   } else {
+  //     await DBProvider.db.deleteAll(_tableName);
+  //     fields = [
+  //       'name',
+  //       'type',
+  //     ];
+  //   }
+  //   List<dynamic> json = await getDataWithAttemp(
+  //       SynController.localRemoteTableNameMap[_tableName], 'search_read', [
+  //     domain,
+  //     fields
+  //   ], {
+  //     'limit': limit,
+  //     'context': {'create_or_update': true}
+  //   });
+  //   var result = await Future.forEach(json, (e) async {
+  //     if (loadRelated) {
+  //       ComGroup comGroup = await ComGroupController.selectByOdooId(
+  //           unpackListId(e['group_id'])['id']);
+  //       Chat chat = await selectByOdooId(e['id']);
+  //       if (comGroup != null) {
+  //         Map<String, dynamic> res = {
+  //           'id': chat.id,
+  //           'group_id': comGroup.id,
+  //         };
+  //         await DBProvider.db.update(_tableName, res);
+  //       }
+  //       return RelChatUserController.updateChatUsers(chat.id,
+  //           List<int>.from(e['user_ids'].map((userId) => userId as int)));
+  //     } else {
+  //       Map<String, dynamic> res = {
+  //         ...e,
+  //         'odoo_id': e['id'],
+  //       };
+  //       return insert(Chat.fromJson(res), [], true);
+  //     }
+  //   });
+  //   print(
+  //       'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
+  //   return result;
+  // }
 
-  static Future finishSync(dateTime) {
-    return setLastSyncDateForDomain(_tableName, dateTime);
-  }
+  // static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
+  //   List<String> fields;
+  //   if (loadRelated)
+  //     fields = [
+  //       'group_id',
+  //       'user_ids',
+  //     ];
+  //   else
+  //     fields = [
+  //       'name',
+  //       'type',
+  //     ];
+  //   List domain = await getLastSyncDateDomain(_tableName);
+  //   List<dynamic> json = await getDataWithAttemp(
+  //       SynController.localRemoteTableNameMap[_tableName], 'search_read', [
+  //     domain,
+  //     fields
+  //   ], {
+  //     'limit': limit,
+  //     'context': {'create_or_update': true}
+  //   });
+  //   var result = await Future.forEach(json, (e) async {
+  //     Chat chat = await selectByOdooId(e['id']);
+  //     if (loadRelated) {
+  //       ComGroup comGroup = await ComGroupController.selectByOdooId(
+  //           unpackListId(e['group_id'])['id']);
+  //       if (comGroup != null) {
+  //         Map<String, dynamic> res = {
+  //           'id': chat.id,
+  //           'group_id': comGroup.id,
+  //         };
+  //         await DBProvider.db.update(_tableName, res);
+  //       }
+  //       return RelChatUserController.updateChatUsers(chat.id,
+  //           List<int>.from(e['user_ids'].map((userId) => userId as int)));
+  //     } else {
+  //       if (chat == null) {
+  //         Map<String, dynamic> res = Chat.fromJson(e).toJson(true);
+  //         res['odoo_id'] = e['id'];
+  //         return DBProvider.db.insert(_tableName, res);
+  //       }
+  //       Map<String, dynamic> res = Chat.fromJson({
+  //         ...e,
+  //         'id': chat.id,
+  //         'odoo_id': chat.odooId,
+  //       }).toJson();
+  //       return DBProvider.db.update(_tableName, res);
+  //     }
+  //   });
+  //   print(
+  //       'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
+  //   return result;
+  // }
+
+  // static Future finishSync(dateTime) {
+  //   return setLastSyncDateForDomain(_tableName, dateTime);
+  // }
 
   /// Select all records with matching groupId.
   /// Or return a List with one record by matched id.
