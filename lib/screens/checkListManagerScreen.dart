@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/screens/screens.dart' as screens;
 import 'dart:collection';
+import 'package:ek_asu_opb_mobile/src/CheckListManager.dart';
 
 class CheckListManagerScreen extends StatefulWidget {
   int checkPlanItemId;
+  GlobalKey key;
 
-  CheckListManagerScreen(this.checkPlanItemId);
+  CheckListManagerScreen(this.checkPlanItemId, this.key);
 
   @override
   State<CheckListManagerScreen> createState() =>
@@ -25,8 +27,13 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
   String checkListName;
   String checkListItemName;
   Map<String, dynamic> _screenList = {};
+  bool _isSyncData;
   String _selectedPage = '';
-  _CheckListManagerScreen(this.checkPlanItemId);
+
+  _CheckListManagerScreen(int parCheckPlanItemId) {
+    checkPlanItemId = parCheckPlanItemId;
+    Manager.manager.checkPlanItemId = parCheckPlanItemId;
+  }
   Queue<Map<String, String>> _navigation = Queue<Map<String, String>>();
 
   // List<Map<String, Object>> typeCheckListList;
@@ -70,7 +77,8 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
     return null;
   }
 
-  Widget getBodyContenet() {
+  Widget getBodyContenet(bool _isSyncData) {
+    print('$_isSyncData ============================');
     //String screenKey = _navigation[_selectedPage];
     //if (_screenList[_selectedPage] != null) return _screenList[_selectedPage];
 
@@ -96,7 +104,8 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
         break;
 
       case "fault":
-        _screenList[_selectedPage] = screens.FaultScreen(faultId, checkListItemId, push, pop);
+        _screenList[_selectedPage] =
+            screens.FaultScreen(faultId, checkListItemId, push, pop);
 
         break;
 
@@ -130,7 +139,7 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
                                 })
                             //  Text(route["text"])
                             : Text('')),
-                    Expanded(child: getBodyContenet()),
+                    Expanded(child: getBodyContenet(_isSyncData)),
                   ])));
   }
 }

@@ -1275,9 +1275,10 @@ class FormTitle extends StatelessWidget {
 class MyRichText extends StatelessWidget {
   String title;
   String value;
+  Color color;
 
   @override
-  MyRichText(this.title, this.value);
+  MyRichText(this.title, this.value, {this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -1290,7 +1291,7 @@ class MyRichText extends StatelessWidget {
         fontWeight: FontWeight.w800,
         // fontStyle: FontStyle.normal,
         fontSize: 20,
-        color: Theme.of(context).primaryColor);
+        color: color ?? Theme.of(context).primaryColor);
 
     return Container(
         padding: EdgeInsets.all(5),

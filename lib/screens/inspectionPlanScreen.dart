@@ -41,9 +41,13 @@ class InspectionPlanScreen extends StatefulWidget {
   BuildContext context;
   Map<String, dynamic> planItem;
   Function(int) setCheckPlanId;
+  GlobalKey key;
+  bool isSyncData;
+  Function syncComplete;
 
   @override
-  InspectionPlanScreen(this.context, this.planItem, this.setCheckPlanId);
+  InspectionPlanScreen(this.context, this.planItem, this.setCheckPlanId,
+      this.key, this.isSyncData, this.syncComplete);
 
   @override
   State<InspectionPlanScreen> createState() => _InspectionPlanScreen(planItem);
@@ -131,6 +135,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       setState(() => {});
       if (_inspection.id == null) editInspectionClicked();
     }
+    if (widget.isSyncData) widget.syncComplete();
   }
 
   Future<void> reloadInspection(int planItemId) async {
@@ -149,7 +154,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
           railwayId: planItem["railwayId"],
           active: true);
 
-    if (_inspection.id != null)
+    if (_inspection.id != null && !widget.isSyncData)
       widget.setCheckPlanId(_inspection
           .id); //если сохранили план проверок  - передаем в родителя id для комиссии, карты и тд...
 
@@ -1128,7 +1133,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       form.save();
       bool hasErorr = false;
       Map<String, dynamic> result;
-      
+
       if (!hasTimeBegin) inspectionItem.dtFrom = null;
       if (!hasTimeEnd) inspectionItem.dtTo = null;
 
