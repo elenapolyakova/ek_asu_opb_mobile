@@ -212,12 +212,17 @@ class ChatController extends Controllers {
   //   return setLastSyncDateForDomain(_tableName, dateTime);
   // }
 
-  /// Select all records with matching groupId.
-  /// Or return a List with one record by matched id.
+  /// Select all records by provided parameters.
+  /// Without any parameters return all records.
   /// Returns a List of records.
   static Future<List<Chat>> select({int groupId, int id}) async {
-    if (groupId == null && id == null || groupId != null && id != null) {
-      throw 'Need to specify a single parameter';
+    if (groupId != null && id != null) {
+      throw 'Need to specify at most one parameter';
+    }
+    if (groupId == null && id == null) {
+      List<Map<String, dynamic>> queryRes = await selectAll();
+      List<Chat> chats = queryRes.map((e) => Chat.fromJson(e)).toList();
+      return chats;
     }
     if (id == null) {
       List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
@@ -226,8 +231,8 @@ class ChatController extends Controllers {
         whereArgs: [groupId],
       );
       if (queryRes == null || queryRes.length == 0) return [];
-      List<Chat> planItems = queryRes.map((e) => Chat.fromJson(e)).toList();
-      return planItems;
+      List<Chat> chats = queryRes.map((e) => Chat.fromJson(e)).toList();
+      return chats;
     } else {
       return [await selectById(id)];
     }
