@@ -91,8 +91,9 @@ class Messenger {
     }
 
     chatItems = chatItems ?? [];
-    try {
-      for (var i = 0; i < chatItems.length; i++) {
+
+    for (var i = 0; i < chatItems.length; i++) {
+      try {
         String name;
         if (chatItems[i].groupId != null)
           name = (await chatItems[i].group).groupNum;
@@ -102,9 +103,9 @@ class Messenger {
         int countNew = await chatItems[i].getNewMessagesCount(userId);
         item.countMessage = countNew;
         myChatItems.add(item);
+      } catch (e) {
+        print('get count for chat id  error: $e');
       }
-    } catch (e) {
-      print('get count for chat id ${chatItems[i].id} error: $e');
     }
 
     return myChatItems;

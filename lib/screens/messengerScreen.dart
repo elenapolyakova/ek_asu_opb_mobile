@@ -216,7 +216,7 @@ class _MessengerScreen extends State<MessengerScreen> {
 
       if (hasErorr) {
         _scaffoldKey.currentState.showSnackBar(
-            errorSnackBar(text: 'Произошла ошибка при отправке сообщения'));
+            errorSnackBar(text: 'Произошла ошибка при добавлении нового чата'));
         return;
       }
       chat.id = result["id"];
@@ -258,7 +258,7 @@ class _MessengerScreen extends State<MessengerScreen> {
 
       _selectedChat.dtLastLoadMessage =
             getLastMessageDate(newMessageItems); 
-            
+
       if (allMsg)
         _messageItems = [];
       else {
