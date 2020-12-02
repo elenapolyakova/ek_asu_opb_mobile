@@ -61,6 +61,12 @@ class Chat extends Models {
     return ChatMessageController.newMessagesCount(this, userId);
   }
 
+  ///Количество новых сообщений, начиная с даты
+  Future<int> newMessagesCountFromDate(int userId, DateTime dateTime) {
+    return ChatMessageController.newMessagesCountFromDate(
+        this, userId, dateTime);
+  }
+
   Chat({
     this.id,
     this.odooId,
