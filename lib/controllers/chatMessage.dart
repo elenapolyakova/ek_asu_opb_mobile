@@ -146,8 +146,10 @@ class ChatMessageController extends Controllers {
     if (clean) {
       domain = [];
       await DBProvider.db.deleteAll(_tableName);
-    } else
+    } else {
       domain = await getLastSyncDateDomain(_tableName);
+      domain.removeLast();
+    }
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
       domain,
