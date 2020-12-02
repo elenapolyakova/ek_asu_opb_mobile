@@ -10,8 +10,9 @@ import 'package:ek_asu_opb_mobile/components/components.dart';
 class InfoCheckScreen extends StatefulWidget {
   int departmentId;
   BuildContext context;
+   GlobalKey key;
   @override
-  InfoCheckScreen(this.context, this.departmentId);
+  InfoCheckScreen(this.context, this.departmentId, this.key);
 
   @override
   State<InfoCheckScreen> createState() => _InfoCheckScreen(departmentId);
@@ -98,6 +99,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
       deputy_fio: _department.deputy_fio,
       deputy_email: _department.deputy_email,
       deputy_phone: _department.deputy_phone,
+      
     );
     setState(() {});
     bool result = await showEditDialog(departmentCopy, setState);
@@ -155,6 +157,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
                                   MyRichText(
                                     'Наименование структурного подразделения: ',
                                     departmentCopy.name,
+                                     color: Theme.of(context).primaryColorDark,
                                   ),
                                   Row(children: [
                                     Expanded(
@@ -287,6 +290,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
                                   MyRichText(
                                     'Адрес: ',
                                     departmentCopy.f_addr,
+                                    color: Theme.of(context).primaryColorDark,
                                   ),
                                 ])))),
                             Container(

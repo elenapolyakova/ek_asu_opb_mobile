@@ -46,8 +46,10 @@ enum TYPE_LIST { commission, group, available }
 class CommissionScreen extends StatefulWidget {
   int checkPlanId;
   BuildContext context;
+   GlobalKey key;
+
   @override
-  CommissionScreen(this.context, this.checkPlanId);
+  CommissionScreen(this.context, this.checkPlanId, this.key);
 
   @override
   State<CommissionScreen> createState() => _CommissionScreen(checkPlanId);

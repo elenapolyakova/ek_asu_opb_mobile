@@ -26,6 +26,7 @@ class _CheckScreen extends State<CheckScreen> {
   Map<String, dynamic> checkPlanItem;
   int _checkPlanItemId;
   int _departmentId;
+  bool isSyncData = false;
 
   Map<String, dynamic> screenList = {};
 
@@ -59,7 +60,7 @@ class _CheckScreen extends State<CheckScreen> {
       'label': 'Документы',
       'icon': Icon(Icons.folder_special)
     });
-     result
+    result
         .add({'key': 'map', 'label': 'Карта', 'icon': Icon(Icons.location_on)});
 
     result.add({
@@ -78,14 +79,24 @@ class _CheckScreen extends State<CheckScreen> {
     } catch (e) {} finally {
       hideDialog(context);
     }
+    setState(() {
+      isSyncData = true;
+    });
   }
 
-  Widget getBodyContent() {
+  void syncComplete() {
+    setState(() {
+      isSyncData = false;
+    });
+  }
+
+  Widget getBodyContent(isSyncData) {
     String screenKey = _navigationMenu[_selectedIndex]["key"];
-    if (screenList[screenKey] != null) return screenList[screenKey];
+    if (!isSyncData)
+      if (screenList[screenKey] != null) return screenList[screenKey];
     switch (screenKey) {
       case 'info':
-        screenList[screenKey] = screens.InfoCheckScreen(context, _departmentId);
+        screenList[screenKey] = screens.InfoCheckScreen(context, _departmentId, GlobalKey());
         break;
       case "map":
         screenList[screenKey] = screens.MapScreen(departmentId: _departmentId);
@@ -95,10 +106,10 @@ class _CheckScreen extends State<CheckScreen> {
         break;
       case "checkList":
         screenList[screenKey] =
-            screens.CheckListManagerScreen(_checkPlanItemId);
+            screens.CheckListManagerScreen(_checkPlanItemId, GlobalKey());
         break;
       case "documents":
-        screenList[screenKey] = screens.DepartmentDocumentScreen(_departmentId);
+        screenList[screenKey] = screens.DepartmentDocumentScreen(_departmentId, GlobalKey());
         break;
       default:
         return Text("");
@@ -131,7 +142,7 @@ class _CheckScreen extends State<CheckScreen> {
                   stop: widget.stop,
                 )),
             body: Column(children: [
-              getBodyContent(),
+              getBodyContent(isSyncData),
               //  if (errorText != '')
             ]),
             bottomNavigationBar: BottomNavigationBar(

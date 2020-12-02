@@ -97,8 +97,8 @@ class _MessengerScreen extends State<MessengerScreen> {
 
   Future<void> loadChat() async {
     try {
-      List<MyChat> chatItems = await Messenger.messenger
-          .getChatsAndMessageForTimer(_myUid);
+      List<MyChat> chatItems =
+          await Messenger.messenger.getChatsAndMessageForTimer(_myUid);
 
       if (chatItems != null) {
         chatItems.forEach((newChat) {
@@ -174,13 +174,16 @@ class _MessengerScreen extends State<MessengerScreen> {
 
   void sendMessage() async {
     //Пытаемся сохранить, если успех - добавляем ?
-    ChatMessage msg = ChatMessage( 
-        id: null, odooId: null, parentId:_selectedChat.item.id, message:_msg, createDate: DateTime.now()); //, _myUid); ????????
+    ChatMessage msg = ChatMessage(
+        id: null,
+        odooId: null,
+        parentId: _selectedChat.item.id,
+        message: _msg,
+        createDate: DateTime.now()); //, _myUid); ????????
     bool hasErorr = false;
 
     try {
-      Map<String, dynamic> result =
-          await Messenger.messenger.addMessage(msg);
+      Map<String, dynamic> result = await Messenger.messenger.addMessage(msg);
       hasErorr = result["code"] < 0;
 
       if (hasErorr) {
@@ -197,17 +200,16 @@ class _MessengerScreen extends State<MessengerScreen> {
     } catch (e) {
       _scaffoldKey.currentState.showSnackBar(
           errorSnackBar(text: 'Произошла ошибка при при отправке сообщения'));
-    } 
+    }
   }
 
   addChat(User reciver) async {
-    Chat chat = Chat(id: null, odooId: null, groupId:null, type: 1);
-    //chat.users =  [_myUid, reciver.id]; //?????
+    Chat chat = Chat(id: null, odooId: null, groupId: null, type: 1);
+  
     bool hasErorr = false;
 
     try {
-      Map<String, dynamic> result =
-          await Messenger.messenger.addChat(chat);
+      Map<String, dynamic> result = await Messenger.messenger.addChat(chat, [_myUid, reciver.id]);
       hasErorr = result["code"] < 0;
 
       if (hasErorr) {
@@ -231,8 +233,8 @@ class _MessengerScreen extends State<MessengerScreen> {
   }
 
   Future<void> onChatTap(int chatId) async {
-    if (_selectedChat != null && _selectedChat.item.id != chatId)
-      _selectedChat.dtLastLoadMessage = null;
+    bool allMsg = _selectedChat != null && _selectedChat.item.id != chatId;
+    //_selectedChat.dtLastLoadMessage = null;
 
     MyChat selectedChat = _chatItems
         .firstWhere((chat) => chat.item.id == chatId, orElse: () => null);
@@ -240,21 +242,23 @@ class _MessengerScreen extends State<MessengerScreen> {
 
     _selectedChat = selectedChat;
     setState(() {});
-    await getMessagesForChat(_selectedChat);
+    await getMessagesForChat(_selectedChat, allMsg);
   }
 
-  Future<void> getMessagesForChat(MyChat selectedChat) async {
+  Future<void> getMessagesForChat(MyChat selectedChat, bool allMsg) async {
     if (selectedChat == null) return;
-    DateTime now = DateTime.now();
+    // DateTime now = DateTime.now();
     DateTime lastLoadMessage = selectedChat.dtLastLoadMessage;
 
     try {
-      List<ChatMessage> newMessageItems = await Messenger.messenger
-          .getMessages(selectedChat.item.id);
+      List<ChatMessage> newMessageItems =
+          await Messenger.messenger.getMessages(selectedChat, allMsg);
 
-      _selectedChat.dtLastLoadMessage = now;
+      _selectedChat.dtLastLoadMessage =
+          getLastMessageDate(newMessageItems); //now;
       _messageItems.removeWhere((oldMessage) {
-        if (lastLoadMessage == null || oldMessage.createDate == null) return true;
+        if (lastLoadMessage == null || oldMessage.createDate == null)
+          return true;
         if (oldMessage.createDate.isAfter(lastLoadMessage)) return true;
         return false;
       });
@@ -266,6 +270,17 @@ class _MessengerScreen extends State<MessengerScreen> {
     } catch (e) {
       print(e);
     }
+  }
+
+  DateTime getLastMessageDate(List<ChatMessage> messageItems) {
+    DateTime maxDt;
+    if (messageItems != null) {
+      maxDt = messageItems[0].createDate;
+      messageItems.forEach((msg) {
+        if (msg.createDate.isAfter(maxDt)) maxDt = msg.createDate;
+      });
+    }
+    return maxDt;
   }
 
   @override

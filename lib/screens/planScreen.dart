@@ -20,6 +20,7 @@ class PlanScreen extends StatefulWidget {
   GlobalKey key;
 
   PlanScreen({this.type, this.key});
+
   @override
   State<PlanScreen> createState() => _PlanScreen(type);
 }
@@ -32,9 +33,8 @@ class _PlanScreen extends State<PlanScreen> {
   String _type;
   int _railway_id;
   var _tapPosition;
-  int _count = 0;
-  final GlobalKey _menuKey = new GlobalKey();
   Plan _plan;
+
   //создаём копию и при редактировании работаем с ней
   //если пользователь отменит или ошибка при сохранении - вернем на начальное значение _plan
 
@@ -57,6 +57,7 @@ class _PlanScreen extends State<PlanScreen> {
 
   _PlanScreen(type) {
     _type = type;
+
   }
   final formPlanKey = new GlobalKey<FormState>();
   final formPlanItemKey = new GlobalKey<FormState>();
@@ -259,7 +260,7 @@ class _PlanScreen extends State<PlanScreen> {
                                 context, planItemHeader, planItems)
                           ])
                       ])),
-                 /* Container(
+                  /* Container(
                       child: MyButton(
                           text: 'test',
                           parentContext: context,
@@ -1005,14 +1006,14 @@ class _PlanScreen extends State<PlanScreen> {
 
   Future<void> testClicked() async {
     print('test');
-   // GeoPoint point = await Geo.geo.geolocatorToGeoPoint();
+    // GeoPoint point = await Geo.geo.geolocatorToGeoPoint();
 
     //List result = await DepartmentDocumentController.selectAll();
     List result = await DBProvider.db.selectAll('fault_item');
 
     //await DBProvider.db.deleteAll('plan_item');
     //await DBProvider.db.deleteAll('plan');
-  //  print(point.latitude);
+    //  print(point.latitude);
     print('result');
   }
 }

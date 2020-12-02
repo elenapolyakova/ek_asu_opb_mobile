@@ -69,14 +69,13 @@ class Messenger {
     List<MyChat> myChatItems = [];
 
     try {
-      //ChatController.loadChangesFromOdoo();
+      await ChatController.loadChangesFromOdoo();
       //загружаем с одоо в бд все новые чаты
       //ChatController.select(userId, lastDate)
 
       try {
         //загружаем с одоо в бд все новые сообщения
-        // MessageController.select(userId, lastDate)
-
+        //await ChatMessageController.loadChangesFromOdoo();
       } catch (e) {
         print('getMessages error: e');
       }
@@ -96,8 +95,7 @@ class Messenger {
 
         MyChat item = MyChat(chatItems[i], name);
 
-        int countNew = 0;
-         //await getCount(chatItems[i].id, lastDate, userId); ???????
+        int countNew = await getCount(item, userId); 
         item.countMessage = countNew;
         myChatItems.add(item);
       }
@@ -108,22 +106,18 @@ class Messenger {
     return myChatItems;
   }
 
-  Future<int> getCount(int chatId, DateTime lastDate, int userId) async {
+  Future<int> getCount(MyChat chat, int userId) async {
     //считаем количество новых чужих сообщений в каждом чате  (с учетом времени)
     //select chatItems[i].id + > lastDate || lastDate is NULL  + userId
     //из БД
 
     List<ChatMessage> messageItems = [];
 
-    //todo delete
+   
     try {
-      messageItems = await ChatMessageController.select(chatId);
-      /*_messageItems.where((msg) {
-        return (msg.parent_id == chatId &&
-            msg.userId != userId &&
-            (lastDate == null || msg.dt.isAfter(lastDate)));
-      }).toList();*/
-      //todo delete
+      //????????
+     // messageItems = await ChatMessageController.select(chat.item.id, chat.dtLastLoadMessage, userId);
+      
       messageItems = messageItems ?? [];
     } catch (e) {
       print(e);
@@ -133,36 +127,22 @@ class Messenger {
   }
 
   Future<Map<String, dynamic>> addMessage(ChatMessage msg) async {
-    // Map<String, dynamic> result;
-    // int id = _messageItems.length + 1;
-    //msg.id = id;
-    // _messageItems.add(msg); //todo добавлять в бд и одоо
-    // result = {'code': 1, 'message': '', 'id': id}; //todo delete
     return await ChatMessageController.insert(msg);
   }
 
-  Future<Map<String, dynamic>> addChat(Chat chat) async {
-    //Map<String, dynamic> result;
-    // int id = _chatItems.length + 1;
-    // chat.id = id;
-    //  _chatItems.add(chat); //todo добавлять в бд и одоо
-    //result = {'code': 1, 'message': '', 'id': id}; //todo delete
-    return await ChatController.insert(chat); //result;
+  Future<Map<String, dynamic>> addChat(Chat chat, List<int> users) async {
+    return await ChatController.insert(chat, users);
   }
 
-  Future<List<ChatMessage>> getMessages(int chatId) async {
+  Future<List<ChatMessage>> getMessages(MyChat selectedChat, bool allMsg ) async {
     //получаем все свежие сообщения чата из БД
     //select chatItems[i].id + > lastDate || lastDate is NULL
     List<ChatMessage> messageItems = [];
 
-    //todo delete
-    /* messageItems = _messageItems.where((msg) {
-      return (msg.parent_id == chatId &&
-          (lastDate == null || msg.dt.isAfter(lastDate)));
-    }).toList();*/
+  
     try {
-      messageItems = await ChatMessageController.select(chatId);
-      //todo delete
+     // messageItems = await ChatMessageController.select(selectedChat.item, allMsg ? null : selectedChat.dtLastLoadMessage);
+      //????????
       messageItems = messageItems ?? [];
     } catch (e) {}
 
@@ -171,6 +151,7 @@ class Messenger {
 
   Future<int> getCountMessage(int userId) async {
     //для счетчика количества новых сообщений
+    //????????
 
     int countNew = 0;
     //await MessageController.selectAll(userId, lastDate)

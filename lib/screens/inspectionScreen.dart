@@ -25,6 +25,7 @@ class _InspectionScreen extends State<InspectionScreen> {
   Map<String, dynamic> planItem;
   int _checkPlanId;
   String errorText;
+  bool isSyncData = false;
 
   Map<String, dynamic> screenList = {};
 
@@ -59,7 +60,7 @@ class _InspectionScreen extends State<InspectionScreen> {
       'icon': Icon(Icons.supervisor_account_outlined)
     });
     result
-           .add({'key': 'map', 'label': 'Карта', 'icon': Icon(Icons.location_on)});
+        .add({'key': 'map', 'label': 'Карта', 'icon': Icon(Icons.location_on)});
 
     result.add({
       'key': 'report',
@@ -100,19 +101,29 @@ class _InspectionScreen extends State<InspectionScreen> {
     } catch (e) {} finally {
       hideDialog(context);
     }
+   setState(() {
+      isSyncData = true;
+    });
+  }
+
+  void syncComplete() {
+    setState(() {
+      isSyncData = false;
+    });
   }
 
   int getReportIndex() {
     return _navigationMenu.indexWhere((element) => element["key"] == "report");
   }
 
-  Widget getBodyContent() {
+  Widget getBodyContent(bool isSyncData) {
     String screenKey = _navigationMenu[_selectedIndex]["key"];
-    if (screenList[screenKey] != null) return screenList[screenKey];
+    if (!isSyncData) 
+      if (screenList[screenKey] != null) return screenList[screenKey];
     switch (screenKey) {
       case 'inspection':
         screenList[screenKey] =
-            screens.InspectionPlanScreen(context, planItem, setCheckPlanId);
+            screens.InspectionPlanScreen(context, planItem, setCheckPlanId, GlobalKey(), isSyncData, syncComplete);
         break;
       case "map":
         screenList[screenKey] = screens.MapScreen(checkPlanId: _checkPlanId);
@@ -124,7 +135,7 @@ class _InspectionScreen extends State<InspectionScreen> {
         //  screenList[screenKey] = screens.CheckListScreen(null);
         break;
       case "commission":
-        screenList[screenKey] = screens.CommissionScreen(context, _checkPlanId);
+        screenList[screenKey] = screens.CommissionScreen(context, _checkPlanId, GlobalKey());
         break;
       default:
         return Text("");
@@ -154,7 +165,7 @@ class _InspectionScreen extends State<InspectionScreen> {
                     parentScreen: 'inspectionScreen',
                     stop: widget.stop)),
             body: Column(children: [
-              getBodyContent(),
+              getBodyContent(isSyncData),
               //  if (errorText != '')
               Container(
                   height: 20,
@@ -193,9 +204,8 @@ class _InspectionScreen extends State<InspectionScreen> {
                     : List.generate(
                         _navigationMenu.length,
                         (i) => BottomNavigationBarItem(
-                              label: _navigationMenu[i]["label"],
-                              icon: _navigationMenu[i]["icon"]
-                            ))),
+                            label: _navigationMenu[i]["label"],
+                            icon: _navigationMenu[i]["icon"]))),
           );
   }
 }

@@ -20,7 +20,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreen extends State<HomeScreen> {
-
   UserInfo _userInfo;
   List<Map<String, dynamic>> _navigationMenu;
   int _selectedIndex = 0;
@@ -30,7 +29,7 @@ class _HomeScreen extends State<HomeScreen> {
   Map<String, dynamic> arguments;
 
   Map<String, dynamic> screenList = {};
-
+  bool isSyncData = false;
 
 //SpinKitFadingCircle(color: Color(0xFFADB439));
 
@@ -121,11 +120,21 @@ class _HomeScreen extends State<HomeScreen> {
     } catch (e) {} finally {
       hideDialog(context);
     }
+    setState(() {
+      isSyncData = true;
+    });
   }
 
-  Widget getBodyContent() {
+  void syncComplete() {
+    setState(() {
+      isSyncData = false;
+    });
+  }
+
+  Widget getBodyContent(bool isSyncData) {
     String screenKey = _navigationMenu[_selectedIndex]["key"];
-    if (screenList[screenKey] != null) return screenList[screenKey];
+    if (!isSyncData)
+      if (screenList[screenKey] != null) return screenList[screenKey];
     switch (screenKey) {
       case "cbt":
         screenList[screenKey] =
@@ -155,7 +164,7 @@ class _HomeScreen extends State<HomeScreen> {
     setState(() {
       arguments = ModalRoute.of(context).settings.arguments;
     });
-   // print('stop: ' + (widget.stop != null ? widget.stop.toString() : 'null'));
+    // print('stop: ' + (widget.stop != null ? widget.stop.toString() : 'null'));
     //, controller: _controller);
     return showLoading
         ? new ConstrainedBox(
@@ -173,7 +182,7 @@ class _HomeScreen extends State<HomeScreen> {
                     parentScreen: 'homeScreen',
                     stop: widget.stop,
                     syncTask: syncTask)),
-            body: getBodyContent(),
+            body: getBodyContent(isSyncData),
             bottomNavigationBar: (_navigationMenu.length > 1)
                 ? BottomNavigationBar(
                     type: BottomNavigationBarType.fixed,

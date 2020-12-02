@@ -9,9 +9,10 @@ import 'package:open_file/open_file.dart';
 
 class DepartmentDocumentScreen extends StatefulWidget {
   int departmentId;
+  GlobalKey key;
 
   @override
-  DepartmentDocumentScreen(this.departmentId);
+  DepartmentDocumentScreen(this.departmentId, this.key);
 
   @override
   State<DepartmentDocumentScreen> createState() => _DepartmentDocumentScreen();
