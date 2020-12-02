@@ -446,6 +446,10 @@ class SynController extends Controllers {
     }
 
     // Upload to backend
+    record.remove('create_uid');
+    record.remove('write_uid');
+    record.remove('create_date');
+    record.remove('write_date');
     print("Uploading $record");
     return await getDataWithAttemp(
             localRemoteTableNameMap[syn.localTableName], syn.method, args, {})
