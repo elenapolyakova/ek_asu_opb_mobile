@@ -9,6 +9,7 @@ import 'package:search_widget/search_widget.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:ek_asu_opb_mobile/src/messenger.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/services.dart';
 
 final _storage = FlutterSecureStorage();
 
@@ -42,7 +43,9 @@ class _MessengerScreen extends State<MessengerScreen> {
   String _msg;
   bool _stop;
   ScrollController _controller;
+  TextEditingController _textController;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final formMsgKey = new GlobalKey<FormState>();
 
   _MessengerScreen(bool stop) {
     _stop = stop;
@@ -68,6 +71,7 @@ class _MessengerScreen extends State<MessengerScreen> {
     showLoading = true;
     //  WidgetsFlutterBinding.ensureInitialized();
     _controller = ScrollController();
+    _textController = new TextEditingController();
 
     auth.checkLoginStatus(context).then((isLogin) {
       if (isLogin) {
@@ -122,7 +126,7 @@ class _MessengerScreen extends State<MessengerScreen> {
         var users = await personalChat.item.users;
         await Future.forEach(users, (User reciverUser) async {
           if (reciverUser.id != _myUid) {
-            personalChat.item.name = reciverUser.display_name;
+            personalChat.name = reciverUser.display_name;
             _myReciver.add(reciverUser.id);
           }
         });
@@ -171,35 +175,49 @@ class _MessengerScreen extends State<MessengerScreen> {
     loadChat();
   }
 
+  void hideKeyboard() {
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
+  }
+
   void sendMessage() async {
-    //Пытаемся сохранить, если успех - добавляем ?
-    ChatMessage msg = ChatMessage(
-        id: null,
-        odooId: null,
-        parentId: _selectedChat.item.id,
-        message: _msg,
-        createDate: DateTime.now(),
-        userId: _myUid);
-    bool hasErorr = false;
+    final form = formMsgKey.currentState;
+    hideKeyboard();
+    if (form.validate()) {
+      form.save();
 
-    try {
-      Map<String, dynamic> result = await Messenger.messenger.addMessage(msg);
-      hasErorr = result["code"] < 0;
+      if (_msg != null && _msg.length > 0) {
+        //Пытаемся сохранить, если успех - добавляем ?
+        ChatMessage msg = ChatMessage(
+            id: null,
+            odooId: null,
+            parentId: _selectedChat.item.id,
+            message: _msg,
+            createDate: DateTime.now(),
+            userId: _myUid);
+        bool hasErorr = false;
 
-      if (hasErorr) {
-        _scaffoldKey.currentState.showSnackBar(
-            errorSnackBar(text: 'Произошла ошибка при отправке сообщения'));
-        return;
+        try {
+          Map<String, dynamic> result =
+              await Messenger.messenger.addMessage(msg);
+          hasErorr = result["code"] < 0;
+
+          if (hasErorr) {
+            _scaffoldKey.currentState.showSnackBar(
+                errorSnackBar(text: 'Произошла ошибка при отправке сообщения'));
+            return;
+          }
+          msg.id = result["id"];
+
+          setState(() {
+            _messageItems.add(msg);
+            _msg = '';
+            _textController.text = '';
+          });
+        } catch (e) {
+          _scaffoldKey.currentState.showSnackBar(errorSnackBar(
+              text: 'Произошла ошибка при при отправке сообщения'));
+        }
       }
-      msg.id = result["id"];
-      _msg = '';
-
-      setState(() {
-        _messageItems.add(msg);
-      });
-    } catch (e) {
-      _scaffoldKey.currentState.showSnackBar(
-          errorSnackBar(text: 'Произошла ошибка при при отправке сообщения'));
     }
   }
 
@@ -219,17 +237,17 @@ class _MessengerScreen extends State<MessengerScreen> {
         return;
       }
       chat.id = result["id"];
-      String name = (await UserController.selectById(reciver.id)).display_name;
+      String name = reciver.display_name;
       MyChat newChat = MyChat(chat, name);
       _chatItems.add(newChat);
-      _selectedChat.dtLastLoadMessage = null;
+      // _selectedChat.dtLastLoadMessage = null;
       _selectedChat = newChat;
       _availableUser.removeWhere((user) => user.id == reciver.id);
       _messageItems = [];
       setState(() {});
     } catch (e) {
       _scaffoldKey.currentState.showSnackBar(
-          errorSnackBar(text: 'Произошла ошибка при отправке сообщения'));
+          errorSnackBar(text: 'Произошла ошибка при добавлении нового чата'));
     }
   }
 
@@ -239,6 +257,7 @@ class _MessengerScreen extends State<MessengerScreen> {
 
     MyChat selectedChat = _chatItems
         .firstWhere((chat) => chat.item.id == chatId, orElse: () => null);
+    if (selectedChat == null) return;
     selectedChat.countMessage = 0;
 
     _selectedChat = selectedChat;
@@ -255,7 +274,8 @@ class _MessengerScreen extends State<MessengerScreen> {
       List<ChatMessage> newMessageItems =
           await Messenger.messenger.getMessages(selectedChat, allMsg, _myUid);
 
-      _selectedChat.dtLastLoadMessage = getLastMessageDate(newMessageItems);
+      _selectedChat.dtLastLoadMessage = getLastMessageDate(newMessageItems) ??
+          _selectedChat.dtLastLoadMessage;
 
       if (allMsg)
         _messageItems = [];
@@ -280,7 +300,7 @@ class _MessengerScreen extends State<MessengerScreen> {
 
   DateTime getLastMessageDate(List<ChatMessage> messageItems) {
     DateTime maxDt;
-    if (messageItems != null) {
+    if (messageItems != null && messageItems.length > 0) {
       maxDt = messageItems[0].createDate;
       messageItems.forEach((msg) {
         if (msg.createDate.isAfter(maxDt)) maxDt = msg.createDate;
@@ -393,7 +413,7 @@ class _MessengerScreen extends State<MessengerScreen> {
                                         int id = _chatItems[i].item.id;
                                         return MyChatContainer(
                                             _chatItems[i].item.id,
-                                            _chatItems[i].item.name ?? "",
+                                            _chatItems[i].name ?? "",
                                             _chatItems[i].countMessage,
                                             _selectedChat != null &&
                                                 _chatItems[i].item.id ==
@@ -439,66 +459,60 @@ class _MessengerScreen extends State<MessengerScreen> {
                                                           SingleChildScrollView(
                                                               scrollDirection:
                                                                   Axis.vertical,
-                                                              child:
-                                                                  GestureDetector(
-                                                                      onTap:
-                                                                          () {
-                                                                        showEdit(
-                                                                          _msg,
-                                                                          'Сообщение',
-                                                                          context,
-                                                                        ).then((newValue) =>
-                                                                            setState(() {
-                                                                              _msg = newValue ?? "";
-                                                                            }));
-                                                                      },
-                                                                      child:
-                                                                          AbsorbPointer(
-                                                                        child:
-                                                                            TextField(
-                                                                          readOnly:
-                                                                              true,
+                                                              child: Form(
+                                                                key: formMsgKey,
+                                                                child:
+                                                                    TextFormField(
+                                                                  // readOnly:
+                                                                  //     true,
 
-                                                                          controller:
-                                                                              TextEditingController.fromValue(TextEditingValue(text: _msg != null ? _msg.toString() : "")),
-                                                                          decoration: new InputDecoration(
-                                                                              hintText: 'Введите сообщение...',
-                                                                              border: OutlineInputBorder(borderSide: BorderSide.none),
-                                                                              contentPadding: EdgeInsets.all(5.0)),
+                                                                  // controller:
+                                                                  //     TextEditingController.fromValue(TextEditingValue(text: _msg != null ? _msg.toString() : "")),
+                                                                  decoration: new InputDecoration(
+                                                                      hintText:
+                                                                          'Введите сообщение...',
+                                                                      border: OutlineInputBorder(
+                                                                          borderSide: BorderSide
+                                                                              .none),
+                                                                      contentPadding:
+                                                                          EdgeInsets.all(
+                                                                              5.0)),
 
-                                                                          maxLines:
-                                                                              null,
-                                                                          // maxLength: 256,
-                                                                        ),
-                                                                      ))))),
-                                              _msg != null && _msg.length > 0
-                                                  ? Container(
-                                                      margin: EdgeInsets.all(5),
-                                                      height: 40,
-                                                      width: 40,
-                                                      alignment:
-                                                          Alignment.center,
-                                                      decoration: BoxDecoration(
-                                                        borderRadius:
-                                                            BorderRadius.all(
-                                                                Radius.circular(
-                                                                    12)),
-                                                        color: Theme.of(context)
-                                                            .primaryColor,
-                                                      ),
-                                                      child: IconButton(
-                                                        icon: Icon(Icons.send),
-                                                        iconSize: 24,
-                                                        onPressed: _msg !=
-                                                                    null &&
-                                                                _msg.length > 0
-                                                            ? () =>
-                                                                sendMessage()
-                                                            : null,
-                                                        color: Theme.of(context)
-                                                            .primaryColorLight,
-                                                      ))
-                                                  : Text('')
+                                                                  maxLines:
+                                                                      null,
+                                                                  // initialValue:
+                                                                  //     _msg ??
+                                                                  //         '',
+                                                                  controller:
+                                                                      _textController,
+                                                                  onSaved:
+                                                                      (val) =>
+                                                                          _msg =
+                                                                              val,
+
+                                                                  // maxLength: 256,
+                                                                ),
+                                                              )))),
+                                              Container(
+                                                  margin: EdgeInsets.all(5),
+                                                  height: 40,
+                                                  width: 40,
+                                                  alignment: Alignment.center,
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                            Radius.circular(
+                                                                12)),
+                                                    color: Theme.of(context)
+                                                        .primaryColor,
+                                                  ),
+                                                  child: IconButton(
+                                                    icon: Icon(Icons.send),
+                                                    iconSize: 24,
+                                                    onPressed: sendMessage,
+                                                    color: Theme.of(context)
+                                                        .primaryColorLight,
+                                                  ))
                                             ])))
                                 ]),
                               )),

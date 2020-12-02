@@ -47,8 +47,9 @@ class CheckListScreen extends StatefulWidget {
   int checkPlanItemId;
   Function(Map<String, String>, dynamic arg) push;
   Map<String, String> Function() pop;
+  GlobalKey key;
 
-  CheckListScreen(this.checkPlanItemId, this.push, this.pop);
+  CheckListScreen(this.checkPlanItemId, this.push, this.pop, this.key);
 
   @override
   State<CheckListScreen> createState() => _CheckListScreen(checkPlanItemId);

@@ -1,6 +1,4 @@
-import 'package:ek_asu_opb_mobile/controllers/departmentDocument.dart';
-import 'package:ek_asu_opb_mobile/controllers/syn.dart';
-import 'package:ek_asu_opb_mobile/models/departmentDocument.dart';
+
 import 'package:ek_asu_opb_mobile/src/exchangeData.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,7 +11,7 @@ import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'dart:async';
 import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 import 'package:ek_asu_opb_mobile/src/db.dart';
-import 'package:ek_asu_opb_mobile/src/GPS.dart';
+
 
 class PlanScreen extends StatefulWidget {
   String type;

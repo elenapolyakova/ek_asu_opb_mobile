@@ -22,9 +22,11 @@ class FaultScreen extends StatefulWidget {
   int checkListItemId;
   Function(Map<String, String>, dynamic arg) push;
   Map<String, String> Function() pop;
+  GlobalKey key;
 
   @override
-  FaultScreen(this.faultId, this.checkListItemId, this.push, this.pop);
+  FaultScreen(
+      this.faultId, this.checkListItemId, this.push, this.pop, this.key);
   @override
   State<FaultScreen> createState() => _FaultScreen();
 }
@@ -599,8 +601,7 @@ class _FaultScreen extends State<FaultScreen> {
       if ([-1, null].contains(_fault.id)) {
         result = await FaultController.create(_fault, _created, _deletedPath);
       } else {
-        result =
-            await FaultController.update(_fault, _created, _deletedPath);
+        result = await FaultController.update(_fault, _created, _deletedPath);
       }
       hasErorr = result["code"] < 0;
 
@@ -644,14 +645,13 @@ class _FaultScreen extends State<FaultScreen> {
         //   return;
         //   }
 
-        if (deletedFile.id == null){
-           _created
-              .removeWhere((image) => image['path'] == deletedFile.image);
+        if (deletedFile.id == null) {
+          _created.removeWhere((image) => image['path'] == deletedFile.image);
           //await File(deletedFile.image).delete();
         } //если файл добавили, в бд не сохранили и тут же удалили - не передаём его в _createdPath
-      
-       _deletedPath.add(deletedFile.image);
-        
+
+        _deletedPath.add(deletedFile.image);
+
         _imageList.removeAt(index);
         if (index <= _imageIndex && _imageIndex != 0) _imageIndex--;
 

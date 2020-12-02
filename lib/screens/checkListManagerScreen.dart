@@ -3,17 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/screens/screens.dart' as screens;
 import 'dart:collection';
-import 'package:ek_asu_opb_mobile/src/CheckListManager.dart';
 
 class CheckListManagerScreen extends StatefulWidget {
   int checkPlanItemId;
-  GlobalKey key;
+  bool isSyncData;
 
-  CheckListManagerScreen(this.checkPlanItemId, this.key);
+  CheckListManagerScreen(this.checkPlanItemId, this.isSyncData) {
+    createState();
+  }
 
   @override
-  State<CheckListManagerScreen> createState() =>
-      _CheckListManagerScreen(checkPlanItemId);
+  _CheckListManagerScreen createState() =>
+      _CheckListManagerScreen(checkPlanItemId, this.isSyncData);
 }
 
 class _CheckListManagerScreen extends State<CheckListManagerScreen> {
@@ -30,9 +31,10 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
   bool _isSyncData;
   String _selectedPage = '';
 
-  _CheckListManagerScreen(int parCheckPlanItemId) {
-    checkPlanItemId = parCheckPlanItemId;
-    Manager.manager.checkPlanItemId = parCheckPlanItemId;
+  _CheckListManagerScreen(this.checkPlanItemId, this._isSyncData) {
+    print('$_isSyncData====================');
+    //checkPlanItemId = parCheckPlanItemId;
+    //Manager.manager.checkPlanItemId = parCheckPlanItemId;
   }
   Queue<Map<String, String>> _navigation = Queue<Map<String, String>>();
 
@@ -42,6 +44,7 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
 
   @override
   void initState() {
+    print('initState');
     super.initState();
 
     setState(() {
@@ -49,6 +52,7 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
       _selectedPage = 'checkList';
     });
   }
+ 
 
   void push(Map<String, String> route, dynamic args) {
     setState(() {
@@ -78,34 +82,33 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
   }
 
   Widget getBodyContenet(bool _isSyncData) {
-    print('$_isSyncData ============================');
     //String screenKey = _navigation[_selectedPage];
     //if (_screenList[_selectedPage] != null) return _screenList[_selectedPage];
 
     switch (_selectedPage) {
       case 'checkList':
         _screenList[_selectedPage] =
-            screens.CheckListScreen(checkPlanItemId, push, pop);
+            screens.CheckListScreen(checkPlanItemId, push, pop, GlobalKey());
 
         break;
       case "checkListItem":
         _screenList[_selectedPage] = screens.CheckListItemScreen(
           checkListId,
           push,
-          pop,
+          pop, GlobalKey(),
           checkListName: checkListName,
         );
 
         break;
       case "faultList":
         _screenList[_selectedPage] = screens.FaultListScreen(
-            checkListItemId, push, pop,
+            checkListItemId, push, pop,  GlobalKey(),
             checkListItemName: checkListItemName);
         break;
 
       case "fault":
         _screenList[_selectedPage] =
-            screens.FaultScreen(faultId, checkListItemId, push, pop);
+            screens.FaultScreen(faultId, checkListItemId, push, pop, GlobalKey());
 
         break;
 

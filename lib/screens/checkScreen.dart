@@ -106,7 +106,7 @@ class _CheckScreen extends State<CheckScreen> {
         break;
       case "checkList":
         screenList[screenKey] =
-            screens.CheckListManagerScreen(_checkPlanItemId, GlobalKey());
+            screens.CheckListManagerScreen(_checkPlanItemId, isSyncData);
         break;
       case "documents":
         screenList[screenKey] = screens.DepartmentDocumentScreen(_departmentId, GlobalKey());

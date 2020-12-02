@@ -49,9 +49,10 @@ class FaultListScreen extends StatefulWidget {
   Function(Map<String, String>, dynamic arg) push;
   Map<String, String> Function() pop;
   String checkListItemName;
+  GlobalKey key;
 
   @override
-  FaultListScreen(this.checkListItemId, this.push, this.pop,
+  FaultListScreen(this.checkListItemId, this.push, this.pop, this.key,
       {this.checkListItemName});
   @override
   State<FaultListScreen> createState() => _FaultListScreen();
@@ -120,10 +121,8 @@ class _FaultListScreen extends State<FaultListScreen> {
       for (int i = 0; i < items.length; i++) {
         String fineName = await getFineName(items[i].koap_id);
         _items.add(MyFault(items[i], fineName));
-      }  
+      }
   }
-
-
 
   Widget generateFaultTable(BuildContext context,
       List<Map<String, dynamic>> headers, List<MyFault> rows) {
@@ -160,7 +159,7 @@ class _FaultListScreen extends State<FaultListScreen> {
           children: [
             getRowCell(row.desc, row.id, 0),
             getRowCell(dateDMY(row.date), row.id, 1),
-            getRowCell(row.fine != null? row.fine.toString() : '', row.id, 2),
+            getRowCell(row.fine != null ? row.fine.toString() : '', row.id, 2),
             getRowCell(row.fine_desc, row.id, 3),
             getRowCell(fault.fineName, row.id, 4),
           ]);

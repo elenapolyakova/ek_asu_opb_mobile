@@ -18,8 +18,9 @@ class CheckListItemScreen extends StatefulWidget {
   String checkListName;
   Function(Map<String, String>, dynamic arg) push;
   Map<String, String> Function() pop;
+  GlobalKey key;
 
-  CheckListItemScreen(this.checkListId, this.push, this.pop,
+  CheckListItemScreen(this.checkListId, this.push, this.pop, this.key,
       {this.checkListName});
   @override
   State<CheckListItemScreen> createState() => _CheckListItemScreen();
@@ -133,8 +134,9 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
   }
 
   void forwardFault(int checkListItemId) {
-    MyCheckListItem checkListItem = _items
-        .firstWhere((item) => item.item.id == checkListItemId, orElse: () => null);
+    MyCheckListItem checkListItem = _items.firstWhere(
+        (item) => item.item.id == checkListItemId,
+        orElse: () => null);
 
     return widget.push({
       "pathTo": 'faultList',
@@ -142,7 +144,8 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
       'text': 'Назад к вопросам'
     }, {
       'checkListItemId': checkListItemId,
-      'checkListItemName': checkListItem != null ? checkListItem.item.question : ''
+      'checkListItemName':
+          checkListItem != null ? checkListItem.item.question : ''
     });
   }
 
@@ -393,7 +396,10 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
             getRowCell(row.question, row.id, 0),
             getRowCell(row.result, row.id, 1),
             getRowCell(row.description, row.id, 2),
-            getRowCell(item.faultCount!= null ? item.faultCount.toString() : '', row.id, 3),
+            getRowCell(
+                item.faultCount != null ? item.faultCount.toString() : '',
+                row.id,
+                3),
           ]);
       tableRows.add(tableRow);
     });
@@ -442,8 +448,8 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
   }
 
   Future<void> addCheckListItemClicked(StateSetter setState) async {
-    MyCheckListItem checkListItem =
-        new MyCheckListItem(CheckListItem(id: null, parent_id: checkListId, active: true), 0);
+    MyCheckListItem checkListItem = new MyCheckListItem(
+        CheckListItem(id: null, parent_id: checkListId, active: true), 0);
     bool result = await showCheckListItemDialog(checkListItem, setState);
     if (result != null && result) {
       setState(() {});
