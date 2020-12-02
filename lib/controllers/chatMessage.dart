@@ -127,7 +127,8 @@ class ChatMessageController extends Controllers {
       queryRes = queryRes.where((element) =>
           stringToDateTime(element['create_date']).isAfter(dateTime));
     }
-    await ChatController.update(chat);
+    // chat.lastRead = DateTime.now();
+    // await ChatController.update(chat);
     if (count)
       return queryRes.length;
     else
