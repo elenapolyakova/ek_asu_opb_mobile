@@ -80,9 +80,10 @@ class ChatController extends Controllers {
       'context': {'create_or_update': true}
     });
     var result = await Future.forEach(json, (e) async {
-      int chatId = await selectOdooId(e['id']);
-      int groupId = await ComGroupController.selectOdooId(
-          unpackListId(e['group_id'])['id']);
+      int chatId = (await selectByOdooId(e['id']))?.id;
+      int groupId = (await ComGroupController.selectByOdooId(
+              unpackListId(e['group_id'])['id']))
+          ?.id;
       List userIds = e.remove('user_ids');
       Map<String, dynamic> res = {
         ...e,
@@ -90,10 +91,11 @@ class ChatController extends Controllers {
       };
       if (chatId != null) {
         res['id'] = chatId;
-        chatId = await DBProvider.db.update(_tableName, res);
+        await DBProvider.db.update(_tableName, Chat.fromJson(res).toJson());
       } else {
         res['odoo_id'] = e['id'];
-        await DBProvider.db.insert(_tableName, res);
+        chatId =
+            await DBProvider.db.insert(_tableName, Chat.fromJson(res).toJson());
       }
       await RelChatUserController.updateChatUsers(
         chatId,

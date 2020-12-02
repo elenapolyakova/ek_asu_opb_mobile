@@ -59,7 +59,7 @@ class ChatMessage extends Models {
       'odoo_id': odooId,
       'parent_id': parentId,
       'msg': message,
-      'create_date': dateTimeToString(createDate),
+      'create_date': dateTimeToString(createDate, true),
       'create_uid': userId,
     };
     if (omitId) {

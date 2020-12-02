@@ -77,8 +77,10 @@ class ChatMessageController extends Controllers {
     if (datetime != null) {
       domain.add(['write_date', '>', datetime]);
     }
-    chat.lastUpdate = DateTime.now();
-    ChatController.update(chat);
+    await DBProvider.db.update('chat',
+        {'id': chat.id, 'last_update': dateTimeToString(DateTime.now(), true)});
+    // chat.lastUpdate = DateTime.now();
+    // ChatController.update(chat);
     var json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName],
         'search_count',
@@ -101,11 +103,15 @@ class ChatMessageController extends Controllers {
       whereArgs: [chat.id, userId],
     );
     if (chat.lastRead != null) {
-      queryRes = queryRes.where((element) =>
-          stringToDateTime(element['create_date']).isAfter(chat.lastRead));
+      queryRes = queryRes
+          .where((element) =>
+              stringToDateTime(element['create_date']).isAfter(chat.lastRead))
+          .toList();
     }
-    chat.lastRead = DateTime.now();
-    await ChatController.update(chat);
+    await DBProvider.db.update('chat',
+        {'id': chat.id, 'last_read': dateTimeToString(DateTime.now(), true)});
+    // chat.lastRead = DateTime.now();
+    // await ChatController.update(chat);
     return queryRes.length;
   }
 
@@ -119,13 +125,14 @@ class ChatMessageController extends Controllers {
     if (chat == null || chat.id == null) return null;
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
-      columns: ['id'] + (dateTime != null ? ['create_date'] : []),
-      where: "parent_id = ? and create_uid != ?",
-      whereArgs: [chat.id, userId],
+      where: "parent_id = ?" + (count ? ' and create_uid != ?' : ''),
+      whereArgs: [chat.id] + (count ? [userId] : []),
     );
     if (dateTime != null) {
-      queryRes = queryRes.where((element) =>
-          stringToDateTime(element['create_date']).isAfter(dateTime));
+      queryRes = queryRes
+          .where((element) =>
+              stringToDateTime(element['create_date']).isAfter(dateTime))
+          .toList();
     }
     // chat.lastRead = DateTime.now();
     // await ChatController.update(chat);
@@ -160,19 +167,22 @@ class ChatMessageController extends Controllers {
       'context': {'create_or_update': true}
     });
     var result = await Future.forEach(json, (e) async {
-      int chatMessageId = await selectOdooId(e['id']);
-      int parentId =
-          await ChatController.selectOdooId(unpackListId(e['parent_id'])['id']);
+      int chatMessageId = (await selectByOdooId(e['id']))?.id;
+      int parentId = (await ChatController.selectByOdooId(
+              unpackListId(e['parent_id'])['id']))
+          ?.id;
       Map<String, dynamic> res = {
         ...e,
         'parent_id': parentId,
       };
       if (chatMessageId != null) {
         res['id'] = chatMessageId;
-        await DBProvider.db.update(_tableName, res);
+        await DBProvider.db
+            .update(_tableName, ChatMessage.fromJson(res).toJson());
       } else {
         res['odoo_id'] = e['id'];
-        await DBProvider.db.insert(_tableName, res);
+        await DBProvider.db
+            .insert(_tableName, ChatMessage.fromJson(res).toJson());
       }
     });
     print('loaded ${json.length} records of $_tableName');

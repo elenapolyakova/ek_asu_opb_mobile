@@ -231,10 +231,9 @@ class SynController extends Controllers {
       await CheckListItemController.loadChangesFromOdoo(true);
       await FaultController.loadChangesFromOdoo(true);
       await FaultItemController.loadChangesFromOdoo(true);
-
-      await ChatController.loadFromOdoo();
-      await ChatMessageController.loadFromOdoo();
     }
+    await ChatController.loadFromOdoo(clean: lastDateDomain.length == 1);
+    await ChatMessageController.loadFromOdoo(clean: lastDateDomain.length == 1);
     await PlanController.finishSync(dateTime);
     await PlanItemController.finishSync(dateTime);
     await CheckPlanController.finishSync(dateTime);

@@ -119,12 +119,11 @@ class _MessengerScreen extends State<MessengerScreen> {
           chatItems.where((chat) => chat.item.type == 1).toList();
 
       await Future.forEach(personalChats, (personalChat) async {
-        await Future.forEach(personalChat.item.reciverUserIds,
-            (reciverId) async {
-          if (reciverId != _myUid) {
-            personalChat.item.name =
-                (await UserController.selectById(reciverId)).display_name;
-            _myReciver.add(reciverId);
+        var users = await personalChat.item.users;
+        await Future.forEach(users, (User reciverUser) async {
+          if (reciverUser.id != _myUid) {
+            personalChat.item.name = reciverUser.display_name;
+            _myReciver.add(reciverUser.id);
           }
         });
       });
@@ -180,7 +179,7 @@ class _MessengerScreen extends State<MessengerScreen> {
         parentId: _selectedChat.item.id,
         message: _msg,
         createDate: DateTime.now(),
-        userId: _myUid); 
+        userId: _myUid);
     bool hasErorr = false;
 
     try {
@@ -256,8 +255,7 @@ class _MessengerScreen extends State<MessengerScreen> {
       List<ChatMessage> newMessageItems =
           await Messenger.messenger.getMessages(selectedChat, allMsg, _myUid);
 
-      _selectedChat.dtLastLoadMessage =
-            getLastMessageDate(newMessageItems); 
+      _selectedChat.dtLastLoadMessage = getLastMessageDate(newMessageItems);
 
       if (allMsg)
         _messageItems = [];
@@ -395,7 +393,7 @@ class _MessengerScreen extends State<MessengerScreen> {
                                         int id = _chatItems[i].item.id;
                                         return MyChatContainer(
                                             _chatItems[i].item.id,
-                                            _chatItems[i].name ?? "",
+                                            _chatItems[i].item.name ?? "",
                                             _chatItems[i].countMessage,
                                             _selectedChat != null &&
                                                 _chatItems[i].item.id ==

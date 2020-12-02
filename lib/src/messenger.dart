@@ -93,19 +93,20 @@ class Messenger {
     chatItems = chatItems ?? [];
 
     for (var i = 0; i < chatItems.length; i++) {
+      String name;
+      if (chatItems[i].groupId != null)
+        name = (await chatItems[i].group).groupNum;
+
+      MyChat item = MyChat(chatItems[i], name);
+
+      int countNew = 0;
       try {
-        String name;
-        if (chatItems[i].groupId != null)
-          name = (await chatItems[i].group).groupNum;
-
-        MyChat item = MyChat(chatItems[i], name);
-
-        int countNew = await chatItems[i].getNewMessagesCount(userId);
-        item.countMessage = countNew;
-        myChatItems.add(item);
+        countNew = await chatItems[i].getNewMessagesCount(userId);
       } catch (e) {
         print('get count for chat id  error: $e');
       }
+      item.countMessage = countNew;
+      myChatItems.add(item);
     }
 
     return myChatItems;

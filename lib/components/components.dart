@@ -1618,14 +1618,20 @@ class _MyAppBar extends State<MyAppBar> {
                               : "",
                           margin: 0,
                           onTap: () async {
-                            await SynController.loadFromOdoo(
-                                forceFirstLoad: true);
-                            // await DBProvider.db.deleteAll('plan');
+                            // await SynController.loadFromOdoo(
+                            //     forceFirstLoad: true);
+                            // await DBProvider.db.deleteAll('rel_chat_user');
                             // await DBProvider.db.deleteAll('plan_item');
-                            // await DBProvider.db.deleteAll('plan_item_check');
+                            // await DBProvider.db.deleteAll('chat_message');
                             // await DBProvider.db
                             //     .deleteAll('plan_item_check_item');
-                            // (await DBProvider.db.selectAll('plan_item_check'))
+                            // print(1);
+                            // (await DBProvider.db.selectAll('rel_chat_user'))
+                            //     .forEach((element) {
+                            //   print(element);
+                            // });
+                            // ChatController.loadFromOdoo(clean: true);
+                            // (await DBProvider.db.selectAll('chat_message'))
                             //     .forEach((element) {
                             //   print(element);
                             // });
