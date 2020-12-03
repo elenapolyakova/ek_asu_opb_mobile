@@ -147,8 +147,8 @@ class SynController extends Controllers {
     if (toSyn.length != 0 &&
         (toSyn[0]['method'] == 'create' && odooId == null ||
             toSyn[0]['method'] == 'write' && odooId != null))
-      //sync record 'create' exists and local record does not have odooId => check for 'write'
-      //sync record 'write' exists and local record has odooId => wasn't uploaded
+      //syn record's method is 'create' and local record has no odooId OR
+      //syn record's method is 'write' and local record has odooId => wasn't uploaded
       return null;
     int res = await DBProvider.db.insert(_tableName, {
       'record_id': resId,
@@ -482,7 +482,6 @@ class SynController extends Controllers {
       while (!await ping()) {
         await Future.delayed(Duration(seconds: 12));
       }
-      if (!noLoadFromOdoo) await SynController.loadFromOdoo();
       while (true) {
         // Load a syn record
         List<Map<String, dynamic>> toSyn = await DBProvider.db.select(
@@ -491,6 +490,7 @@ class SynController extends Controllers {
             orderBy: 'id',
             where: "error IS NULL");
         if (toSyn.length == 0) {
+          if (!noLoadFromOdoo) await SynController.loadFromOdoo();
           //Синхронизация завершена
           //TODO: вывести уведомление
           print('Finished synchronization');
