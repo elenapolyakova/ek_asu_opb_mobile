@@ -67,9 +67,14 @@ class ChatMessageController extends Controllers {
   ///This will update chat's lastUpdate.
   ///Chat can be either int or Chat.
   ///Returns message count or null.
-  static Future<int> newMessagesFromOdooCount(dynamic chat) async {
+  static Future<int> newMessagesFromOdooCount([dynamic chat]) async {
     if (chat is int) chat = await ChatController.selectById(chat);
-    if (chat == null || chat.id == null) return null;
+    if (chat == null || chat.id == null) {
+      var json = await getDataWithAttemp(
+          SynController.localRemoteTableNameMap[_tableName],
+          'search_count', [], {});
+      return int.tryParse(json.toString());
+    }
     List domain = [
       ['parent_id', '=', chat.id],
     ];
@@ -148,14 +153,14 @@ class ChatMessageController extends Controllers {
       'msg',
       'create_date',
       'create_uid',
+      'write_date',
     ];
     List domain;
     if (clean) {
       domain = [];
       await DBProvider.db.deleteAll(_tableName);
     } else {
-      domain = await getLastSyncDateDomain(_tableName);
-      domain.removeLast();
+      domain = await getLastSyncDateDomain(_tableName, excludeActive: true);
     }
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
@@ -186,8 +191,7 @@ class ChatMessageController extends Controllers {
       }
     });
     print('loaded ${json.length} records of $_tableName');
-    await setLastSyncDateForDomain(_tableName, DateTime.now());
-    return result;
+    await setLatestWriteDate(_tableName, json);
   }
 
   static Future<Map<String, dynamic>> insert(ChatMessage chatMessage,

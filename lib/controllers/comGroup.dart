@@ -57,7 +57,7 @@ class ComGroupController extends Controllers {
     List<String> fields;
     List<List> domain = [];
     if (loadRelated) {
-      fields = ['parent_id', 'com_user_ids'];
+      fields = ['write_date', 'parent_id', 'com_user_ids'];
 
       // List<Map<String, dynamic>> queryRes =
       //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
@@ -93,7 +93,7 @@ class ComGroupController extends Controllers {
       'limit': limit,
       'context': {'create_or_update': true}
     });
-    var result = await Future.forEach(json, (e) async {
+    await Future.forEach(json, (e) async {
       if (loadRelated) {
         CheckPlan checkPlan = await CheckPlanController.selectByOdooId(
             unpackListId(e['parent_id'])['id']);
@@ -121,13 +121,13 @@ class ComGroupController extends Controllers {
     });
     print(
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
-    return result;
+    if (loadRelated) await setLatestWriteDate(_tableName, json);
   }
 
   static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
     List<String> fields;
     if (loadRelated)
-      fields = ['parent_id', 'com_user_ids'];
+      fields = ['write_date', 'parent_id', 'com_user_ids'];
     else
       fields = [
         'head_id',
@@ -144,7 +144,7 @@ class ComGroupController extends Controllers {
       'limit': limit,
       'context': {'create_or_update': true}
     });
-    var result = await Future.forEach(json, (e) async {
+    await Future.forEach(json, (e) async {
       ComGroup comGroup = await selectByOdooId(e['id']);
       if (loadRelated) {
         CheckPlan checkPlan = await CheckPlanController.selectByOdooId(
@@ -181,7 +181,7 @@ class ComGroupController extends Controllers {
     });
     print(
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
-    return result;
+    if (loadRelated) await setLatestWriteDate(_tableName, json);
   }
 
   static Future finishSync(dateTime) {

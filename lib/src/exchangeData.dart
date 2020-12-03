@@ -384,39 +384,40 @@ Future<void> setLastUpdate(modelName) async {
   await _storage.write(key: 'lastDateUpdate', value: json.encode(lastUpdate));
 }
 
-Future<List> getLastSyncDateDomain(modelName) async {
+Future<List> getLastSyncDateDomain(modelName,
+    {bool excludeActive: false}) async {
   String sLastUpdate = await _storage.read(key: 'lastDateUpdate');
-  if (sLastUpdate == null)
-    return [
-      [
-        'active',
-        'in',
-        [true, false]
-      ]
-    ];
-  Map<String, dynamic> lastUpdate = json.decode(sLastUpdate);
-  if (lastUpdate[modelName] == null)
-    return [
-      [
-        'active',
-        'in',
-        [true, false]
-      ]
-    ];
-  DateTime datetime = stringToDateTime(lastUpdate[modelName]);
-  datetime = toServerTime(datetime);
-  return [
-    [
-      'write_date',
-      '>',
-      dateTimeToString(datetime, true),
-    ],
-    [
+  List res = [];
+  if (!excludeActive)
+    res.add([
       'active',
       'in',
       [true, false]
-    ]
-  ];
+    ]);
+  if (sLastUpdate == null) return res;
+  Map<String, dynamic> lastUpdate = json.decode(sLastUpdate);
+  if (lastUpdate[modelName] == null) return res;
+  DateTime datetime = stringToDateTime(lastUpdate[modelName]);
+  datetime = toServerTime(datetime);
+  res.insert(0, [
+    'write_date',
+    '>',
+    dateTimeToString(datetime, true),
+  ]);
+  return res;
+}
+
+Future<void> setLastSyncDateStrForDomain(modelName, String dateTime) async {
+  String sLastUpdate = await _storage.read(key: 'lastDateUpdate');
+  Map<String, dynamic> lastUpdate;
+  if (sLastUpdate == null)
+    lastUpdate = {modelName: dateTime};
+  else {
+    lastUpdate = json.decode(sLastUpdate);
+    lastUpdate[modelName] = dateTime;
+  }
+
+  await _storage.write(key: 'lastDateUpdate', value: json.encode(lastUpdate));
 }
 
 Future<void> setLastSyncDateForDomain(modelName, DateTime dateTime) async {
@@ -443,4 +444,12 @@ Future<void> removeLastSyncDate(modelName) async {
   }
 
   await _storage.write(key: 'lastDateUpdate', value: json.encode(lastUpdate));
+}
+
+setLatestWriteDate(tableName, List json) async {
+  var dates = json.map((e) => e['write_date']).toList();
+  if (dates.isEmpty) return;
+  dates.sort();
+  print((await getLastSyncDateDomain(tableName))[0]);
+  await setLastSyncDateStrForDomain(tableName, dates.last);
 }

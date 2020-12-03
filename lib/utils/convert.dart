@@ -106,9 +106,10 @@ String emailValidator(String value) {
 }
 
 /// Convert user time to server time.
-/// :param date can be either String or DateTime
+///
+/// :param: `date` can be either String or DateTime
 DateTime toServerTime(date) {
   if (date is String) date = stringToDateTime(date);
   if (date == null) return null;
-  return date.subtract(Duration(hours: 3));
+  return date;
 }

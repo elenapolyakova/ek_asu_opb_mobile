@@ -131,7 +131,7 @@ class FaultItemController extends Controllers {
     List<String> fields;
     List<List> domain = [];
     if (loadRelated) {
-      fields = ['parent_id'];
+      fields = ['write_date', 'parent_id'];
       // List<Map<String, dynamic>> queryRes =
       //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
       // domain = [
@@ -172,7 +172,7 @@ class FaultItemController extends Controllers {
       'context': {'create_or_update': true}
     });
 
-    var result = await Future.forEach(json, (e) async {
+    await Future.forEach(json, (e) async {
       if (loadRelated) {
         FaultItem faultItem = await selectByOdooId(e['id']);
         Map<String, dynamic> res = {};
@@ -210,13 +210,14 @@ class FaultItemController extends Controllers {
     });
     print(
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
-    return result;
+
+    if (loadRelated) await setLatestWriteDate(_tableName, json);
   }
 
   static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
     List<String> fields;
     if (loadRelated)
-      fields = ['parent_id'];
+      fields = ['write_date', 'parent_id'];
     else
       fields = [
         'name',
@@ -227,10 +228,7 @@ class FaultItemController extends Controllers {
         'coord_e',
       ];
 
-    List domain = await getLastSyncDateDomain(_tableName);
-    // Delete condition 'active' in [true, false]
-    // as mob.document has no active!
-    domain.removeAt(1);
+    List domain = await getLastSyncDateDomain(_tableName, excludeActive: true);
     // Get only photos for fault! By this
     domain.add(['parent2_id', '=', null]);
 
@@ -246,7 +244,7 @@ class FaultItemController extends Controllers {
     print("FaultItem, Load changes from odoo! $json");
     print("Domain $domain");
 
-    var result = await Future.forEach(json, (e) async {
+    await Future.forEach(json, (e) async {
       FaultItem faultItem = await selectByOdooId(e['id']);
       if (loadRelated) {
         Map<String, dynamic> res = {};
@@ -286,7 +284,8 @@ class FaultItemController extends Controllers {
     });
     print(
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
-    return result;
+
+    if (loadRelated) await setLatestWriteDate(_tableName, json);
   }
 
   static Future finishSync(dateTime) {

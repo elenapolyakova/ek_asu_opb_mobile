@@ -343,7 +343,7 @@ class CheckListController extends Controllers {
     List<String> fields;
     List<List> domain = [];
     if (loadRelated) {
-      fields = ['parent_id'];
+      fields = ['write_date', 'parent_id'];
       // List<Map<String, dynamic>> queryRes =
       //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
       // domain = [
@@ -387,7 +387,7 @@ class CheckListController extends Controllers {
       'context': {'create_or_update': true}
     });
 
-    var result = await Future.forEach(json, (e) async {
+    await Future.forEach(json, (e) async {
       // base_id from odoo is like [3, _unknown, 3]
       if (e['base_id'] is List) {
         e['base_id'] = e['base_id'][0];
@@ -422,13 +422,14 @@ class CheckListController extends Controllers {
     });
     print(
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
-    return result;
+
+    if (loadRelated) await setLatestWriteDate(_tableName, json);
   }
 
   static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
     List<String> fields;
     if (loadRelated)
-      fields = ['parent_id'];
+      fields = ['write_date', 'parent_id'];
     else
       fields = [
         'is_base',
@@ -454,7 +455,7 @@ class CheckListController extends Controllers {
 
     print("CheckList. Load changes from odoo! $json");
 
-    var result = await Future.forEach(json, (e) async {
+    await Future.forEach(json, (e) async {
       if (e['base_id'] is List) {
         e['base_id'] = e['base_id'][0];
       }
@@ -495,7 +496,8 @@ class CheckListController extends Controllers {
     });
     print(
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
-    return result;
+
+    if (loadRelated) await setLatestWriteDate(_tableName, json);
   }
 
   static Future finishSync(dateTime) {

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/syn.dart';
+import 'package:ek_asu_opb_mobile/src/exchangeData.dart';
 import 'package:ek_asu_opb_mobile/src/messenger.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
@@ -1618,24 +1619,45 @@ class _MyAppBar extends State<MyAppBar> {
                               : "",
                           margin: 0,
                           onTap: () async {
-                            // await SynController.loadFromOdoo(
-                           //      forceFirstLoad: true);
+                            await SynController.loadFromOdoo(
+                                forceFirstLoad: true);
                             // await DBProvider.db.deleteAll('rel_chat_user');
                             // await DBProvider.db.deleteAll('plan_item');
                             //await DBProvider.db.deleteAll('chat');
                             // await DBProvider.db
                             //     .deleteAll('plan_item_check_item');
                             // print(1);
-                            // (await DBProvider.db.selectAll('rel_chat_user'))
+                            await SynController.syncTask();
+                            (await DBProvider.db
+                                    .selectAll('plan_item_check_item'))
+                                .forEach((element) {
+                              print(element);
+                            });
+                            // ChatController.loadFromOdoo(clean: true);
+                            // ChatMessageController.loadFromOdoo(clean: true);
+                            // (await DBProvider.db.selectAll('chat_message'))
                             //     .forEach((element) {
                             //   print(element);
                             // });
-                            // ChatController.loadFromOdoo(clean: true);
-                            // ChatMessageController.loadFromOdoo(clean: true);
-                             (await DBProvider.db.selectAll('chat_message'))
-                                 .forEach((element) {
-                               print(element);
-                             });
+
+                            List<dynamic> json = await getDataWithAttemp(
+                                SynController.localRemoteTableNameMap[
+                                    'plan_item_check_item'],
+                                'search_read',
+                                [
+                                  [
+                                    ['id', '=', 317],
+                                  ],
+                                  [
+                                    'write_date',
+                                    'name',
+                                  ]
+                                ],
+                                {});
+                            json.forEach((element) {
+                              print(element);
+                            });
+                            print(DateTime.now());
                           },
                           color: Theme.of(context).primaryColorLight,
                           fontSize: 20,

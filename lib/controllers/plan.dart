@@ -41,41 +41,14 @@ class PlanController extends Controllers {
     return queryRes[0]['odoo_id'];
   }
 
-  static firstLoadFromOdoo([int limit]) async {
-    await DBProvider.db.deleteAll(_tableName);
-    List<dynamic> json = await getDataWithAttemp(
-        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-      [],
-      [
-        'type',
-        'name',
-        'rw_id',
-        'year',
-        'date_set',
-        'signer_name',
-        'signer_post',
-        'num_set',
-        'state',
-      ]
-    ], {
-      'limit': limit,
-      'context': {'create_or_update': true}
-    });
-    var result = await Future.forEach(json, (e) async {
-      Map<String, dynamic> res = {
-        ...e,
-        'id': null,
-        'odoo_id': e['id'],
-        'active': 'true',
-      };
-      return insert(Plan.fromJson(res), true);
-    });
-    print('loaded ${json.length} unrelated records of $_tableName');
-    return result;
-  }
-
-  static Future loadChangesFromOdoo([int limit]) async {
-    List domain = await getLastSyncDateDomain(_tableName);
+  static Future loadFromOdoo({bool clean: false, int limit, int offset}) async {
+    List domain;
+    if (clean) {
+      domain = [];
+      await DBProvider.db.deleteAll(_tableName);
+    } else {
+      domain = await getLastSyncDateDomain(_tableName, excludeActive: true);
+    }
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
       domain,
@@ -90,12 +63,14 @@ class PlanController extends Controllers {
         'num_set',
         'state',
         'active',
+        'write_date',
       ]
     ], {
       'limit': limit,
+      'offset': offset,
       'context': {'create_or_update': true}
     });
-    var result = await Future.forEach(json, (e) async {
+    await Future.forEach(json, (e) async {
       Plan plan = await selectByOdooId(e['id']);
       if (plan == null) {
         Map<String, dynamic> res = Plan.fromJson({
@@ -114,7 +89,7 @@ class PlanController extends Controllers {
       return DBProvider.db.update(_tableName, res);
     });
     print('loaded ${json.length} unrelated records of $_tableName');
-    return result;
+    await setLatestWriteDate(_tableName, json);
   }
 
   static Future finishSync(dateTime) {
