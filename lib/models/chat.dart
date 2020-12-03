@@ -48,28 +48,12 @@ class Chat extends Models {
 
   ///Сообщения
   Future<List<ChatMessage>> get messages {
-    return ChatMessageController.select(id);
+    return ChatMessageController.select(this);
   }
 
-  ///Количество новых сообщений с сервера
-  Future<int> get newMessagesFromOdooCount {
-    return ChatMessageController.newMessagesFromOdooCount(this);
-  }
-
-  ///Количество новых сообщений
-  Future<int> getNewMessagesCount(int userId) {
-    return ChatMessageController.newMessagesCount(this, userId);
-  }
-
-  ///Количество новых сообщений, начиная с даты
-  Future<int> newMessagesCountFromDate(int userId, DateTime dateTime) {
-    return ChatMessageController.newMessagesFromDate(this, userId, dateTime,
-        count: true);
-  }
-
-  ///Количество новых сообщений, начиная с даты
-  Future<int> newMessagesFromDate(int userId, DateTime dateTime) {
-    return ChatMessageController.newMessagesFromDate(this, userId, dateTime);
+  ///Новые сообщения
+  Future<List<ChatMessage>> getNewMessages(int userId) {
+    return ChatMessageController.select(this, fromLastRead: true);
   }
 
   Chat({

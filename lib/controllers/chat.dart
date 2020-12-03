@@ -107,10 +107,30 @@ class ChatController extends Controllers {
     await setLatestWriteDate(_tableName, json);
   }
 
+  ///Download **new** `Chat`s and `Message`s.
+  ///
+  ///Return Map of **every** Chat and its **new** messages' count,
+  ///excluding specified user's messages.
+  static Future<Map<Chat, int>> getNewMessages(int userId) async {
+    await loadFromOdoo();
+    await ChatMessageController.loadFromOdoo();
+    List<Chat> chats = await select();
+    Map<Chat, int> res = {};
+    await Future.forEach(chats, (Chat chat) async {
+      res[chat] = await ChatMessageController.getNewMessagesCount(
+        chat.id,
+        userId,
+        chat.lastRead,
+      );
+    });
+    return res;
+  }
+
   /// Select all records by provided parameters.
   /// Without any parameters return all records.
   /// Returns a List of records.
   static Future<List<Chat>> select({int groupId, int id}) async {
+    // if (chat is int) chat = await ChatController.selectById(chat);
     if (groupId != null && id != null) {
       throw 'Need to specify at most one parameter';
     }
