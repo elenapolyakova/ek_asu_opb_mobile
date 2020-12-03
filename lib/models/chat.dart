@@ -52,7 +52,7 @@ class Chat extends Models {
   }
 
   ///Новые сообщения
-  Future<List<ChatMessage>> getNewMessages(int userId) {
+  Future<List<ChatMessage>> get getNewMessages {
     return ChatMessageController.select(this, fromLastRead: true);
   }
 
