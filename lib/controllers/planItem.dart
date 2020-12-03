@@ -247,10 +247,10 @@ class PlanItemController extends Controllers {
     Future<int> odooId = selectOdooId(planItem.id);
     await DBProvider.db
         .update(_tableName, planItem.toJson())
-        .then((resId) async {
+        .then((rowsAffected) async {
       res['code'] = 1;
-      res['id'] = resId;
-      return SynController.edit(_tableName, resId, await odooId)
+      res['id'] = rowsAffected;
+      return SynController.edit(_tableName, planItem.id, await odooId)
           .catchError((err) {
         res['code'] = -2;
         res['message'] = 'Error updating syn';

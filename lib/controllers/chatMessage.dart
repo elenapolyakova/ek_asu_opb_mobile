@@ -224,7 +224,7 @@ class ChatMessageController extends Controllers {
     Future<int> odooId = selectOdooId(chatMessage.id);
     await DBProvider.db
         .update(_tableName, chatMessage.toJson())
-        .then((resId) async {
+        .then((rowsAffected) async {
       res['code'] = 1;
       res['id'] = chatMessage.id;
       return SynController.edit(_tableName, chatMessage.id, await odooId)
