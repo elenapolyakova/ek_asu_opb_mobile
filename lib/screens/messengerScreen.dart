@@ -19,7 +19,6 @@ class MessengerScreen extends StatefulWidget {
 
   @override
   MessengerScreen({this.context, this.stop}) {
-    Messenger.messenger.resetCount();
     createState();
   }
 
@@ -104,18 +103,6 @@ class _MessengerScreen extends State<MessengerScreen> {
       List<MyChat> chatItems =
           await Messenger.messenger.getChatsAndMessageForTimer(_myUid);
 
-      if (chatItems != null) {
-        chatItems.forEach((newChat) {
-          MyChat oldChat = _chatItems.firstWhere(
-              (chat) => chat.item.id == newChat.item.id,
-              orElse: () => null);
-          if (oldChat != null) {
-            newChat.countMessage =
-                (newChat.countMessage ?? 0) + oldChat.countMessage;
-            newChat.dtLastLoadMessage = oldChat.dtLastLoadMessage;
-          }
-        });
-      }
 
       _chatItems = chatItems ?? [];
 
@@ -267,24 +254,24 @@ class _MessengerScreen extends State<MessengerScreen> {
 
   Future<void> getMessagesForChat(MyChat selectedChat, bool allMsg) async {
     if (selectedChat == null) return;
-    // DateTime now = DateTime.now();
-    DateTime lastLoadMessage = selectedChat.dtLastLoadMessage;
+  
 
     try {
+      DateTime lastReadMessage =
+          await Messenger.messenger.getLastReadDate(selectedChat.item);
+          
       List<ChatMessage> newMessageItems =
-          await Messenger.messenger.getMessages(selectedChat, allMsg, _myUid);
+          await Messenger.messenger.getMessages(selectedChat.item, allMsg);
 
-      _selectedChat.dtLastLoadMessage = getLastMessageDate(newMessageItems) ??
-          _selectedChat.dtLastLoadMessage;
-
+     
       if (allMsg)
         _messageItems = [];
       else {
         //now;
         _messageItems.removeWhere((oldMessage) {
-          if (lastLoadMessage == null || oldMessage.createDate == null)
+          if (lastReadMessage == null || oldMessage.createDate == null)
             return true;
-          if (oldMessage.createDate.isAfter(lastLoadMessage)) return true;
+          if (oldMessage.createDate.isAfter(lastReadMessage)) return true;
           return false;
         });
       }
@@ -298,16 +285,6 @@ class _MessengerScreen extends State<MessengerScreen> {
     }
   }
 
-  DateTime getLastMessageDate(List<ChatMessage> messageItems) {
-    DateTime maxDt;
-    if (messageItems != null && messageItems.length > 0) {
-      maxDt = messageItems[0].createDate;
-      messageItems.forEach((msg) {
-        if (msg.createDate.isAfter(maxDt)) maxDt = msg.createDate;
-      });
-    }
-    return maxDt;
-  }
 
   @override
   Widget build(BuildContext context) {

@@ -11,9 +11,8 @@ class MyChat {
   Chat item;
   String name;
   int countMessage;
-  DateTime dtLastLoadMessage;
 
-  MyChat(this.item, this.name, {this.countMessage = 0, this.dtLastLoadMessage});
+  MyChat(this.item, this.name, {this.countMessage = 0});
 }
 
 /*class MyMessage {
@@ -65,47 +64,22 @@ class Messenger {
   ];*/
 
   Future<List<MyChat>> getChatsAndMessageForTimer(int userId) async {
-    List<Chat> chatItems = [];
+    Map<Chat, int> chatMap = {};
     List<MyChat> myChatItems = [];
 
     try {
       //загружаем с одоо в бд все новые чаты
-      await ChatController.loadFromOdoo();
+      chatMap = await ChatController.getNewMessages(userId);
     } catch (e) {
-      print('get new Chats from odoo error: $e');
+      print('ChatController.getNewMessages error: $e');
     }
-
-    try {
-      //загружаем с одоо в бд все новые сообщения
-      await ChatMessageController.loadFromOdoo();
-    } catch (e) {
-      print('get new Messages from odoo error: $e');
-    }
-
-    //получаем из базы все чаты (без учета времени)
-
-    try {
-      chatItems = await ChatController.select();
-    } catch (e) {
-      print('get chat from DB error: $e');
-    }
-
-    chatItems = chatItems ?? [];
-
-    for (var i = 0; i < chatItems.length; i++) {
+    for (var chatItem in chatMap.entries) {
       String name;
-      if (chatItems[i].groupId != null)
-        name = (await chatItems[i].group).groupNum;
+      if (chatItem.key.groupId != null)
+        name = (await chatItem.key.group).groupNum;
 
-      MyChat item = MyChat(chatItems[i], name);
-
-      int countNew = 0;
-      try {
-        countNew = await chatItems[i].getNewMessagesCount(userId);
-      } catch (e) {
-        print('get count for chat id  error: $e');
-      }
-      item.countMessage = countNew;
+      MyChat item =
+          MyChat(chatItem.key, name, countMessage: chatItem.value ?? 0);
       myChatItems.add(item);
     }
 
@@ -128,17 +102,15 @@ class Messenger {
     }
   }
 
-  Future<List<ChatMessage>> getMessages(
-      MyChat selectedChat, bool allMsg, int userId) async {
+  Future<List<ChatMessage>> getMessages(Chat selectedChat, bool allMsg) async {
     //получаем все свежие сообщения чата из БД
     //select chatItems[i].id + > lastDate || lastDate is NULL
     List<ChatMessage> messageItems = [];
-
     try {
-      messageItems = await ChatMessageController.newMessagesFromDate(
-          selectedChat.item,
-          userId,
-          allMsg ? null : selectedChat.dtLastLoadMessage);
+      if (allMsg) {
+        messageItems = await selectedChat.messages;
+      } else
+        messageItems = await selectedChat.getNewMessages;
     } catch (e) {
       print('getMessages from db error $e');
     }
@@ -146,29 +118,21 @@ class Messenger {
     return messageItems;
   }
 
+  Future<DateTime> getLastReadDate(Chat chat) async {
+    return chat.lastRead;
+  }
+
   Future<int> getCountMessage(int userId) async {
     int countNew = 0;
     try {
-      await ChatController.loadFromOdoo();
-      List<Chat> chatItems = await ChatController.select();
-      chatItems = chatItems ?? [];
-      Future.forEach(chatItems, (Chat chat) async {
-        countNew += await chat.newMessagesFromOdooCount ?? 0;
-      });
+      Map<Chat, int> chatMap = await ChatController.getNewMessages(userId);
+      for (var chatItem in chatMap.entries) {
+        countNew += chatItem.value;
+      }
     } catch (e) {
       print('Error get total count messages from odoo: $e');
     }
 
-    // var domain = lastDate != null ? ['write_date', '>', lastDate] : [];
-    //int countNew =
-    //await getDataWithAttemp('mob.chat.msg', 'search_count', domain, {});
-
-    _countMessage += countNew;
-
-    return _countMessage;
-  }
-
-  void resetCount() {
-    _countMessage = 0;
+    return countNew;
   }
 }
