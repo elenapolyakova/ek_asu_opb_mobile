@@ -69,7 +69,7 @@ class ChatMessageController extends Controllers {
   ///
   /// Update `last_read` of specified `chat` to `now`.
   static Future<List<ChatMessage>> select(dynamic chat,
-      {bool fromLastRead}) async {
+      {bool fromLastRead = false}) async {
     if (chat is int) chat = ChatController.selectById(chat);
     if (chat == null || chat.id) {
       return [];
