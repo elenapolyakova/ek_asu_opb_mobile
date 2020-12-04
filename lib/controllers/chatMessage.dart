@@ -107,13 +107,14 @@ class ChatMessageController extends Controllers {
       'offset': offset,
       'context': {'create_or_update': true}
     });
-    var result = await Future.forEach(json, (e) async {
+    await Future.forEach(json, (e) async {
       int chatMessageId = (await selectByOdooId(e['id']))?.id;
       int parentId = (await ChatController.selectByOdooId(
               unpackListId(e['parent_id'])['id']))
           ?.id;
       Map<String, dynamic> res = {
         ...e,
+        'odoo_id': e['id'],
         'parent_id': parentId,
       };
       if (chatMessageId != null) {

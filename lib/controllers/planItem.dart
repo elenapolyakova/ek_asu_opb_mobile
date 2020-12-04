@@ -76,6 +76,7 @@ class PlanItemController extends Controllers {
           ?.id;
       Map<String, dynamic> res = {
         ...e,
+        'odoo_id': e['id'],
         'parent_id': parentId,
         'active': e['active'] ? 'true' : 'false',
       };

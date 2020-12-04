@@ -93,13 +93,13 @@ class ChatController extends Controllers {
       List userIds = e.remove('user_ids');
       Map<String, dynamic> res = {
         ...e,
+        'odoo_id': e['id'],
         'group_id': groupId,
       };
       if (chatId != null) {
         res['id'] = chatId;
         await DBProvider.db.update(_tableName, Chat.fromJson(res).toJson());
       } else {
-        res['odoo_id'] = e['id'];
         chatId =
             await DBProvider.db.insert(_tableName, Chat.fromJson(res).toJson());
       }
