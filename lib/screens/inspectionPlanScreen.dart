@@ -199,7 +199,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       int eventId, int departmentId, String eventName) async {
     if (departmentId != null)
       return (await DepartmentController.selectById(departmentId)).name;
-    return eventName ?? "";
+    return eventName ?? (eventId != null ? CheckPlanItem.typeSelection[eventId] : "");
   }
 
   @override
@@ -1145,7 +1145,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       if (!hasTimeEnd) inspectionItem.dtTo = null;
 
       CheckPlanItem inspectionItemCopy =
-          CheckPlanItem.fromJson(inspectionItem.fomJson());
+          CheckPlanItem.fromJson(inspectionItem.toJson());
       inspectionItemCopy.date = inspectionItemCopy.date?.toUtc();
       inspectionItemCopy.dtFrom = inspectionItemCopy.dtFrom?.toUtc();
       inspectionItemCopy.dtTo = inspectionItemCopy.dtTo?.toUtc();
