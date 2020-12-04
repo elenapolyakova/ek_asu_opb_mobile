@@ -81,12 +81,10 @@ class PlanItemController extends Controllers {
       };
       if (planItemId != null) {
         res['id'] = planItemId;
-        await DBProvider.db
-            .update(_tableName, ChatMessage.fromJson(res).toJson());
+        await DBProvider.db.update(_tableName, PlanItem.fromJson(res).toJson());
       } else {
         res['odoo_id'] = e['id'];
-        await DBProvider.db
-            .insert(_tableName, ChatMessage.fromJson(res).toJson());
+        await DBProvider.db.insert(_tableName, PlanItem.fromJson(res).toJson());
       }
     });
     print('loaded ${json.length} records of $_tableName');
