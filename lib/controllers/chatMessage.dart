@@ -82,8 +82,10 @@ class ChatMessageController extends Controllers {
     );
     if (queryRes == null || queryRes.length == 0) return [];
     if (chat.lastRead != null && fromLastRead) {
-      queryRes = queryRes.where((element) =>
-          stringToDateTime(element['create_date']).isAfter(chat.lastRead));
+      queryRes = queryRes
+          .where((element) =>
+              stringToDateTime(element['create_date']).isAfter(chat.lastRead))
+          .toList();
     }
     List<ChatMessage> chatMessages =
         queryRes.map((e) => ChatMessage.fromJson(e)).toList();
