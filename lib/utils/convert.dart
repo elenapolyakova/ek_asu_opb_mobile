@@ -88,9 +88,9 @@ bool isDateEqual(DateTime dt1, DateTime dt2) {
 DateTime stringToDateTime(dynamic date, {bool forceUtc: true}) {
   if (date == null || date is bool && !date) return null;
   if (forceUtc && date[date.length - 1] == 'Z')
-    return DateTime.tryParse("${date}Z");
-  else
     return DateTime.tryParse(date);
+  else
+    return DateTime.tryParse("${date}Z");
 }
 
 String dateTimeToString(DateTime date, [bool includeTime = false]) {
