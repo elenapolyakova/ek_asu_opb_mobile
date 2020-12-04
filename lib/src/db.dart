@@ -65,21 +65,32 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS isp_document(id INTEGER PRIMARY KEY, parent2_id INTEGER, name TEXT, date TEXT, number TEXT, description TEXT, file_name TEXT, file_path TEXT, type INTEGER, is_new TEXT)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS chat(id INTEGER PRIMARY KEY, odoo_id INTEGER, name TEXT, type INTEGER, group_id INTEGER)");
+            "CREATE TABLE IF NOT EXISTS chat(id INTEGER PRIMARY KEY, odoo_id INTEGER, name TEXT, type INTEGER, group_id INTEGER, last_update TEXT, last_read TEXT)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS chat_message(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, msg TEXT, create_date TEXT)");
+            "CREATE TABLE IF NOT EXISTS chat_message(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, msg TEXT, create_date TEXT, create_uid INTEGER)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS rel_chat_user(id INTEGER PRIMARY KEY, group_id INTEGER, user_id INTEGER)");
+            "CREATE TABLE IF NOT EXISTS rel_chat_user(id INTEGER PRIMARY KEY, chat_id INTEGER, user_id INTEGER)");
       },
       onUpgrade: (db, oldVersion, version) async {
         switch (oldVersion) {
-          case 0:
           case 1:
-          // case 2:
-          //   await db.execute(
-          //       "CREATE TABLE IF NOT EXISTS koap(id INTEGER PRIMARY KEY, article TEXT, paragraph TEXT, text TEXT, man_fine_from INTEGER, man_fine_to INTEGER, firm_fine_from INTEGER, firm_fine_to INTEGER, firm_stop INTEGER, desc TEXT, search_field TEXT)");
-          //   continue v2;
-          // v2:
+          case 2:
+            await db.transaction((txn) async {
+              await txn.execute(
+                  'ALTER TABLE chat_message ADD COLUMN create_uid INTEGER');
+              await txn.execute('ALTER TABLE chat ADD COLUMN last_update TEXT');
+              await txn.execute('ALTER TABLE chat ADD COLUMN last_read TEXT');
+              // Переименование колонки group_id в chat_id
+              await txn.execute(
+                  "CREATE TABLE new_rel_chat_user(id INTEGER PRIMARY KEY, chat_id INTEGER, user_id INTEGER)");
+              await txn.execute(
+                  "INSERT INTO new_rel_chat_user(id, chat_id, user_id) SELECT id, group_id, user_id FROM rel_chat_user");
+              await txn.execute("DROP TABLE rel_chat_user");
+              await txn.execute(
+                  "ALTER TABLE new_rel_chat_user RENAME TO rel_chat_user");
+            });
+            continue v2;
+          v2:
           default:
         }
       },
@@ -94,7 +105,7 @@ class DBProvider {
 
       // Set the version. This executes the onCreate function and provides a
       // path to perform database upgrades and downgrades.
-      version: 1,
+      version: 2,
     );
   }
 

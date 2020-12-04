@@ -48,7 +48,7 @@ class CheckPlanController extends Controllers {
     List<String> fields;
     List<List> domain = [];
     if (loadRelated) {
-      fields = ['parent_id', 'main_com_group_id'];
+      fields = ['write_date', 'parent_id', 'main_com_group_id'];
       // List<Map<String, dynamic>> queryRes =
       //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
       // domain = [
@@ -91,7 +91,7 @@ class CheckPlanController extends Controllers {
       'limit': limit,
       'context': {'create_or_update': true}
     });
-    var result = await Future.forEach(json, (e) async {
+    await Future.forEach(json, (e) async {
       if (loadRelated) {
         Map<String, dynamic> res = {};
         CheckPlan checkPlan = await selectByOdooId(e['id']);
@@ -128,13 +128,13 @@ class CheckPlanController extends Controllers {
     });
     print(
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
-    return result;
+    if (loadRelated) await setLatestWriteDate(_tableName, json);
   }
 
   static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
     List<String> fields;
     if (loadRelated)
-      fields = ['parent_id', 'main_com_group_id'];
+      fields = ['write_date', 'parent_id', 'main_com_group_id'];
     else
       fields = [
         'name',
@@ -160,7 +160,7 @@ class CheckPlanController extends Controllers {
         'context': {'create_or_update': true}
       },
     );
-    var result = await Future.forEach(json, (e) async {
+    await Future.forEach(json, (e) async {
       CheckPlan checkPlan = await selectByOdooId(e['id']);
       if (loadRelated) {
         Map<String, dynamic> res = {};
@@ -205,7 +205,7 @@ class CheckPlanController extends Controllers {
     });
     print(
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
-    return result;
+    if (loadRelated) await setLatestWriteDate(_tableName, json);
   }
 
   static Future finishSync(dateTime) {
@@ -283,10 +283,10 @@ class CheckPlanController extends Controllers {
     Future<int> odooId = selectOdooId(checkPlan.id);
     await DBProvider.db
         .update(_tableName, checkPlan.toJson())
-        .then((resId) async {
+        .then((rowsAffected) async {
       res['code'] = 1;
-      res['id'] = resId;
-      return SynController.edit(_tableName, resId, await odooId)
+      res['id'] = checkPlan.id;
+      return SynController.edit(_tableName, checkPlan.id, await odooId)
           .catchError((err) {
         res['code'] = -2;
         res['message'] = 'Error updating syn';

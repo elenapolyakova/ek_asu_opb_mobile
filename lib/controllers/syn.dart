@@ -101,7 +101,7 @@ class SynController extends Controllers {
         'to_has_odoo_id': false,
         'to': 'user',
         'through': 'rel_chat_user',
-        'my_field': 'group_id',
+        'my_field': 'chat_id',
         'other_field': 'user_id',
       },
     ]
@@ -147,8 +147,8 @@ class SynController extends Controllers {
     if (toSyn.length != 0 &&
         (toSyn[0]['method'] == 'create' && odooId == null ||
             toSyn[0]['method'] == 'write' && odooId != null))
-      //sync record 'create' exists and local record does not have odooId => check for 'write'
-      //sync record 'write' exists and local record has odooId => wasn't uploaded
+      //syn record's method is 'create' and local record has no odooId OR
+      //syn record's method is 'write' and local record has odooId => wasn't uploaded
       return null;
     int res = await DBProvider.db.insert(_tableName, {
       'record_id': resId,
@@ -187,11 +187,11 @@ class SynController extends Controllers {
       await removeLastSyncDate(_tableName);
       print('removed last sync date');
     }
-    List lastDateDomain = await getLastSyncDateDomain(_tableName);
-    DateTime dateTime = DateTime.now();
-    if (lastDateDomain.length == 1) {
-      await PlanController.firstLoadFromOdoo();
-      await PlanItemController.firstLoadFromOdoo();
+    List lastDateDomain =
+        await getLastSyncDateDomain(_tableName, excludeActive: true);
+    if (lastDateDomain.isEmpty) {
+      await PlanController.loadFromOdoo(clean: true);
+      await PlanItemController.loadFromOdoo(clean: true);
       await ComGroupController.firstLoadFromOdoo();
       await CheckPlanController.firstLoadFromOdoo();
       await CheckPlanItemController.firstLoadFromOdoo();
@@ -201,7 +201,6 @@ class SynController extends Controllers {
       await FaultController.firstLoadFromOdoo();
       await FaultItemController.firstLoadFromOdoo();
 
-      await PlanItemController.firstLoadFromOdoo(true);
       await CheckPlanController.firstLoadFromOdoo(true);
       await ComGroupController.firstLoadFromOdoo(true);
       await CheckPlanItemController.firstLoadFromOdoo(true);
@@ -209,9 +208,12 @@ class SynController extends Controllers {
       await CheckListItemController.firstLoadFromOdoo(true);
       await FaultController.firstLoadFromOdoo(true);
       await FaultItemController.firstLoadFromOdoo(true);
+
+      await ChatController.loadFromOdoo(clean: true);
+      await ChatMessageController.loadFromOdoo(clean: true);
     } else {
-      await PlanController.loadChangesFromOdoo();
-      await PlanItemController.loadChangesFromOdoo();
+      await PlanController.loadFromOdoo();
+      await PlanItemController.loadFromOdoo();
       await ComGroupController.loadChangesFromOdoo();
       await CheckPlanController.loadChangesFromOdoo();
       await CheckPlanItemController.loadChangesFromOdoo();
@@ -220,25 +222,17 @@ class SynController extends Controllers {
       await FaultController.loadChangesFromOdoo();
       await FaultItemController.loadChangesFromOdoo();
 
-      await PlanItemController.loadChangesFromOdoo(true);
       await CheckPlanController.loadChangesFromOdoo(true);
       await CheckPlanItemController.loadChangesFromOdoo(true);
-      await ComGroupController.loadChangesFromOdoo(true);
+      await ComGroupController.loadChangesFromOdoo(loadRelated: true);
       await CheckListController.loadChangesFromOdoo(true);
       await CheckListItemController.loadChangesFromOdoo(true);
       await FaultController.loadChangesFromOdoo(true);
       await FaultItemController.loadChangesFromOdoo(true);
     }
-    await PlanController.finishSync(dateTime);
-    await PlanItemController.finishSync(dateTime);
-    await CheckPlanController.finishSync(dateTime);
-    await CheckPlanItemController.finishSync(dateTime);
-    await ComGroupController.finishSync(dateTime);
-    await CheckListController.finishSync(dateTime);
-    await CheckListItemController.finishSync(dateTime);
-    await FaultController.finishSync(dateTime);
-    await FaultItemController.finishSync(dateTime);
-    await setLastSyncDateForDomain(_tableName, dateTime);
+    await ChatController.loadFromOdoo(clean: lastDateDomain.isEmpty);
+    await ChatMessageController.loadFromOdoo(clean: lastDateDomain.isEmpty);
+    await setLastSyncDateForDomain(_tableName, DateTime.now().toUtc());
   }
 
   /// Perform a synchronization of a syn record with backend.
@@ -440,6 +434,10 @@ class SynController extends Controllers {
     }
 
     // Upload to backend
+    record.remove('create_uid');
+    record.remove('write_uid');
+    record.remove('create_date');
+    record.remove('write_date');
     print("Uploading $record");
     return await getDataWithAttemp(
             localRemoteTableNameMap[syn.localTableName], syn.method, args, {})
@@ -473,7 +471,7 @@ class SynController extends Controllers {
       while (!await ping()) {
         await Future.delayed(Duration(seconds: 12));
       }
-      if (!noLoadFromOdoo) await SynController.loadFromOdoo();
+      Map lastUploadedTableRecordId = {};
       while (true) {
         // Load a syn record
         List<Map<String, dynamic>> toSyn = await DBProvider.db.select(
@@ -482,6 +480,7 @@ class SynController extends Controllers {
             orderBy: 'id',
             where: "error IS NULL");
         if (toSyn.length == 0) {
+          if (!noLoadFromOdoo) await SynController.loadFromOdoo();
           //Синхронизация завершена
           //TODO: вывести уведомление
           print('Finished synchronization');
@@ -494,6 +493,7 @@ class SynController extends Controllers {
         Syn syn = Syn.fromJson(toSyn[0]);
         print('Synchronizing $syn');
         bool result = await SynController.doSync(syn);
+        lastUploadedTableRecordId[syn.localTableName] = syn.recordId;
         if (!result) {
           //Синхронизация не прошла
           //TODO: вывести уведомление

@@ -104,3 +104,12 @@ String emailValidator(String value) {
       ? "Неверный e-mail"
       : null;
 }
+
+/// Convert user time to server time.
+///
+/// :param: `date` can be either String or DateTime
+DateTime toServerTime(date) {
+  if (date is String) date = stringToDateTime(date);
+  if (date == null) return null;
+  return date;
+}

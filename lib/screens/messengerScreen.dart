@@ -9,6 +9,7 @@ import 'package:search_widget/search_widget.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:ek_asu_opb_mobile/src/messenger.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/services.dart';
 
 final _storage = FlutterSecureStorage();
 
@@ -18,7 +19,6 @@ class MessengerScreen extends StatefulWidget {
 
   @override
   MessengerScreen({this.context, this.stop}) {
-    Messenger.messenger.resetCount();
     createState();
   }
 
@@ -42,7 +42,9 @@ class _MessengerScreen extends State<MessengerScreen> {
   String _msg;
   bool _stop;
   ScrollController _controller;
+  TextEditingController _textController;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final formMsgKey = new GlobalKey<FormState>();
 
   _MessengerScreen(bool stop) {
     _stop = stop;
@@ -68,6 +70,7 @@ class _MessengerScreen extends State<MessengerScreen> {
     showLoading = true;
     //  WidgetsFlutterBinding.ensureInitialized();
     _controller = ScrollController();
+    _textController = new TextEditingController();
 
     auth.checkLoginStatus(context).then((isLogin) {
       if (isLogin) {
@@ -100,34 +103,21 @@ class _MessengerScreen extends State<MessengerScreen> {
       List<MyChat> chatItems =
           await Messenger.messenger.getChatsAndMessageForTimer(_myUid);
 
-      if (chatItems != null) {
-        chatItems.forEach((newChat) {
-          MyChat oldChat = _chatItems.firstWhere(
-              (chat) => chat.item.id == newChat.item.id,
-              orElse: () => null);
-          if (oldChat != null) {
-            newChat.countMessage =
-                (newChat.countMessage ?? 0) + oldChat.countMessage;
-            newChat.dtLastLoadMessage = oldChat.dtLastLoadMessage;
-          }
-        });
-      }
-
       _chatItems = chatItems ?? [];
 
       List<MyChat> personalChats =
           chatItems.where((chat) => chat.item.type == 1).toList();
 
       await Future.forEach(personalChats, (personalChat) async {
-        await Future.forEach(personalChat.item.reciverUserIds,
-            (reciverId) async {
-          if (reciverId != _myUid) {
-            personalChat.item.name =
-                (await UserController.selectById(reciverId)).display_name;
-            _myReciver.add(reciverId);
+        var users = await personalChat.item.users;
+        await Future.forEach(users, (User reciverUser) async {
+          if (reciverUser.id != _myUid) {
+            personalChat.name = reciverUser.display_name;
+            _myReciver.add(reciverUser.id);
           }
         });
       });
+      _availableUser = [];
 
       for (var i = 0; i < allUsers.length; i++) {
         if (!_myReciver.contains(allUsers[i].id))
@@ -172,72 +162,92 @@ class _MessengerScreen extends State<MessengerScreen> {
     loadChat();
   }
 
+  void hideKeyboard() {
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
+  }
+
   void sendMessage() async {
-    //Пытаемся сохранить, если успех - добавляем ?
-    ChatMessage msg = ChatMessage(
-        id: null,
-        odooId: null,
-        parentId: _selectedChat.item.id,
-        message: _msg,
-        createDate: DateTime.now()); //, _myUid); ????????
-    bool hasErorr = false;
+    final form = formMsgKey.currentState;
+    hideKeyboard();
+    if (form.validate()) {
+      form.save();
+      DateTime userDT = DateTime.now();
 
-    try {
-      Map<String, dynamic> result = await Messenger.messenger.addMessage(msg);
-      hasErorr = result["code"] < 0;
+      if (_msg != null && _msg.length > 0) {
+        //Пытаемся сохранить, если успех - добавляем ?
+        ChatMessage msg = ChatMessage(
+            id: null,
+            odooId: null,
+            parentId: _selectedChat.item.id,
+            message: _msg,
+            createDate: userDT.toUtc(),
+            userId: _myUid);
+        bool hasErorr = false;
 
-      if (hasErorr) {
-        _scaffoldKey.currentState.showSnackBar(
-            errorSnackBar(text: 'Произошла ошибка при отправке сообщения'));
-        return;
+        try {
+          Map<String, dynamic> result =
+              await Messenger.messenger.addMessage(msg);
+          hasErorr = result["code"] < 0;
+
+          if (hasErorr) {
+            _scaffoldKey.currentState.showSnackBar(
+                errorSnackBar(text: 'Произошла ошибка при отправке сообщения'));
+            return;
+          }
+          msg.id = result["id"];
+          msg.createDate = userDT;
+
+          setState(() {
+            _messageItems.add(msg);
+            _msg = '';
+            _textController.text = '';
+          });
+        } catch (e) {
+          _scaffoldKey.currentState.showSnackBar(errorSnackBar(
+              text: 'Произошла ошибка при при отправке сообщения'));
+        }
       }
-      msg.id = result["id"];
-      _msg = '';
-
-      setState(() {
-        _messageItems.add(msg);
-      });
-    } catch (e) {
-      _scaffoldKey.currentState.showSnackBar(
-          errorSnackBar(text: 'Произошла ошибка при при отправке сообщения'));
     }
   }
 
   addChat(User reciver) async {
     Chat chat = Chat(id: null, odooId: null, groupId: null, type: 1);
-  
+
     bool hasErorr = false;
 
     try {
-      Map<String, dynamic> result = await Messenger.messenger.addChat(chat, [_myUid, reciver.id]);
+      Map<String, dynamic> result =
+          await Messenger.messenger.addChat(chat, [_myUid, reciver.id]);
       hasErorr = result["code"] < 0;
 
       if (hasErorr) {
         _scaffoldKey.currentState.showSnackBar(
-            errorSnackBar(text: 'Произошла ошибка при отправке сообщения'));
+            errorSnackBar(text: 'Произошла ошибка при добавлении нового чата'));
         return;
       }
       chat.id = result["id"];
-      String name = (await UserController.selectById(reciver.id)).display_name;
+      String name = reciver.display_name;
       MyChat newChat = MyChat(chat, name);
       _chatItems.add(newChat);
-      _selectedChat.dtLastLoadMessage = null;
+      // _selectedChat.dtLastLoadMessage = null;
       _selectedChat = newChat;
       _availableUser.removeWhere((user) => user.id == reciver.id);
       _messageItems = [];
       setState(() {});
     } catch (e) {
       _scaffoldKey.currentState.showSnackBar(
-          errorSnackBar(text: 'Произошла ошибка при отправке сообщения'));
+          errorSnackBar(text: 'Произошла ошибка при добавлении нового чата'));
     }
   }
 
   Future<void> onChatTap(int chatId) async {
-    bool allMsg = _selectedChat != null && _selectedChat.item.id != chatId;
+    bool allMsg = _selectedChat != null && _selectedChat.item.id != chatId ||
+        _selectedChat == null;
     //_selectedChat.dtLastLoadMessage = null;
 
     MyChat selectedChat = _chatItems
         .firstWhere((chat) => chat.item.id == chatId, orElse: () => null);
+    if (selectedChat == null) return;
     selectedChat.countMessage = 0;
 
     _selectedChat = selectedChat;
@@ -247,21 +257,23 @@ class _MessengerScreen extends State<MessengerScreen> {
 
   Future<void> getMessagesForChat(MyChat selectedChat, bool allMsg) async {
     if (selectedChat == null) return;
-    // DateTime now = DateTime.now();
-    DateTime lastLoadMessage = selectedChat.dtLastLoadMessage;
 
     try {
-      List<ChatMessage> newMessageItems =
-          await Messenger.messenger.getMessages(selectedChat, allMsg);
+      //   DateTime lastReadMessage =
+      //       await Messenger.messenger.getLastReadDate(selectedChat.item);
 
-      _selectedChat.dtLastLoadMessage =
-          getLastMessageDate(newMessageItems); //now;
-      _messageItems.removeWhere((oldMessage) {
-        if (lastLoadMessage == null || oldMessage.createDate == null)
-          return true;
-        if (oldMessage.createDate.isAfter(lastLoadMessage)) return true;
-        return false;
-      });
+      List<ChatMessage> newMessageItems =
+          await Messenger.messenger.getMessages(selectedChat.item, allMsg);
+
+      if (allMsg)
+        _messageItems = [];
+      else {
+        //now;
+        newMessageItems.forEach((newMsg) {
+          _messageItems.removeWhere((oldMsg) => newMsg.id == oldMsg.id);
+        });
+      }
+
       _messageItems = _messageItems ?? [];
 
       setState(() {
@@ -270,17 +282,6 @@ class _MessengerScreen extends State<MessengerScreen> {
     } catch (e) {
       print(e);
     }
-  }
-
-  DateTime getLastMessageDate(List<ChatMessage> messageItems) {
-    DateTime maxDt;
-    if (messageItems != null) {
-      maxDt = messageItems[0].createDate;
-      messageItems.forEach((msg) {
-        if (msg.createDate.isAfter(maxDt)) maxDt = msg.createDate;
-      });
-    }
-    return maxDt;
   }
 
   @override
@@ -433,66 +434,60 @@ class _MessengerScreen extends State<MessengerScreen> {
                                                           SingleChildScrollView(
                                                               scrollDirection:
                                                                   Axis.vertical,
-                                                              child:
-                                                                  GestureDetector(
-                                                                      onTap:
-                                                                          () {
-                                                                        showEdit(
-                                                                          _msg,
-                                                                          'Сообщение',
-                                                                          context,
-                                                                        ).then((newValue) =>
-                                                                            setState(() {
-                                                                              _msg = newValue ?? "";
-                                                                            }));
-                                                                      },
-                                                                      child:
-                                                                          AbsorbPointer(
-                                                                        child:
-                                                                            TextField(
-                                                                          readOnly:
-                                                                              true,
+                                                              child: Form(
+                                                                key: formMsgKey,
+                                                                child:
+                                                                    TextFormField(
+                                                                  // readOnly:
+                                                                  //     true,
 
-                                                                          controller:
-                                                                              TextEditingController.fromValue(TextEditingValue(text: _msg != null ? _msg.toString() : "")),
-                                                                          decoration: new InputDecoration(
-                                                                              hintText: 'Введите сообщение...',
-                                                                              border: OutlineInputBorder(borderSide: BorderSide.none),
-                                                                              contentPadding: EdgeInsets.all(5.0)),
+                                                                  // controller:
+                                                                  //     TextEditingController.fromValue(TextEditingValue(text: _msg != null ? _msg.toString() : "")),
+                                                                  decoration: new InputDecoration(
+                                                                      hintText:
+                                                                          'Введите сообщение...',
+                                                                      border: OutlineInputBorder(
+                                                                          borderSide: BorderSide
+                                                                              .none),
+                                                                      contentPadding:
+                                                                          EdgeInsets.all(
+                                                                              5.0)),
 
-                                                                          maxLines:
-                                                                              null,
-                                                                          // maxLength: 256,
-                                                                        ),
-                                                                      ))))),
-                                              _msg != null && _msg.length > 0
-                                                  ? Container(
-                                                      margin: EdgeInsets.all(5),
-                                                      height: 40,
-                                                      width: 40,
-                                                      alignment:
-                                                          Alignment.center,
-                                                      decoration: BoxDecoration(
-                                                        borderRadius:
-                                                            BorderRadius.all(
-                                                                Radius.circular(
-                                                                    12)),
-                                                        color: Theme.of(context)
-                                                            .primaryColor,
-                                                      ),
-                                                      child: IconButton(
-                                                        icon: Icon(Icons.send),
-                                                        iconSize: 24,
-                                                        onPressed: _msg !=
-                                                                    null &&
-                                                                _msg.length > 0
-                                                            ? () =>
-                                                                sendMessage()
-                                                            : null,
-                                                        color: Theme.of(context)
-                                                            .primaryColorLight,
-                                                      ))
-                                                  : Text('')
+                                                                  maxLines:
+                                                                      null,
+                                                                  // initialValue:
+                                                                  //     _msg ??
+                                                                  //         '',
+                                                                  controller:
+                                                                      _textController,
+                                                                  onSaved:
+                                                                      (val) =>
+                                                                          _msg =
+                                                                              val,
+
+                                                                  // maxLength: 256,
+                                                                ),
+                                                              )))),
+                                              Container(
+                                                  margin: EdgeInsets.all(5),
+                                                  height: 40,
+                                                  width: 40,
+                                                  alignment: Alignment.center,
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                            Radius.circular(
+                                                                12)),
+                                                    color: Theme.of(context)
+                                                        .primaryColor,
+                                                  ),
+                                                  child: IconButton(
+                                                    icon: Icon(Icons.send),
+                                                    iconSize: 24,
+                                                    onPressed: sendMessage,
+                                                    color: Theme.of(context)
+                                                        .primaryColorLight,
+                                                  ))
                                             ])))
                                 ]),
                               )),

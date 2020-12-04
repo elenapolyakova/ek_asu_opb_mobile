@@ -6,12 +6,21 @@ class Chat extends Models {
   int id;
   int odooId;
 
+  ///Наименование
+  String name;
+
+  ///Тип
+  int type;
+
   ///Id рабочей группы
   int groupId;
   ComGroup _group;
 
-  ///Тип
-  int type;
+  ///Дата последнего чтения количества сообщений
+  DateTime lastUpdate;
+
+  ///Дата последнего чтения сообщений
+  DateTime lastRead;
 
   ///Варианты выбора для типа
   static Map<int, String> typeSelection = {
@@ -37,24 +46,60 @@ class Chat extends Models {
     return _group;
   }
 
-  ///Сообщения
+  ///Все сообщения
+  ///
+  ///Обновит `lastRead` на текущее время
   Future<List<ChatMessage>> get messages async {
-    return ChatMessageController.select(id);
+    DateTime now = DateTime.now().toUtc();
+    Duration timeZoneOffset = now.timeZoneOffset;
+    List<ChatMessage> res = await ChatMessageController.select(this);
+    await DBProvider.db
+        .update('chat', {'id': id, 'last_read': dateTimeToString(now, true)});
+    return res.map((e) {
+      e.createDate = e.createDate.add(timeZoneOffset);
+      return e;
+    }).toList();
+  }
+
+  ///Новые сообщения после `lastRead`
+  ///
+  ///Обновит `lastRead` на текущее время
+  Future<List<ChatMessage>> get getNewMessages async {
+    DateTime now = DateTime.now().toUtc();
+    Duration timeZoneOffset = now.timeZoneOffset;
+    List<ChatMessage> res = await ChatMessageController.select(this);
+    if (lastRead != null) {
+      res = res
+          .where((ChatMessage element) => element.createDate.isAfter(lastRead))
+          .toList();
+    }
+    await DBProvider.db
+        .update('chat', {'id': id, 'last_read': dateTimeToString(now, true)});
+    return res.map((e) {
+      e.createDate = e.createDate.add(timeZoneOffset);
+      return e;
+    }).toList();
   }
 
   Chat({
     this.id,
     this.odooId,
+    this.name,
     this.groupId,
     this.type,
+    this.lastUpdate,
+    this.lastRead,
   });
 
   factory Chat.fromJson(Map<String, dynamic> json) {
     Chat res = new Chat(
       id: json["id"],
       odooId: json["odoo_id"],
+      name: getObj(json["name"]),
       groupId: unpackListId(json["group_id"])['id'],
       type: getObj(json["type"]),
+      lastUpdate: stringToDateTime(json["last_update"]),
+      lastRead: stringToDateTime(json["last_read"]),
     );
     return res;
   }
@@ -63,8 +108,11 @@ class Chat extends Models {
     Map<String, dynamic> res = {
       'id': id,
       'odoo_id': odooId,
+      'name': name,
       'group_id': groupId,
       'type': type,
+      'last_update': dateTimeToString(lastUpdate, true),
+      'last_read': dateTimeToString(lastRead, true),
     };
     if (omitId) {
       res.remove('id');

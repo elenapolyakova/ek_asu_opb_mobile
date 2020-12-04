@@ -82,7 +82,11 @@ Future<List<Map<String, dynamic>>> getDictionaries(
         case 'department':
           List<dynamic> domain = new List<dynamic>();
           if (lastUpdate != null) domain.add(lastUpdate);
-          domain.add(['id', 'in', [32229,32230,22886,21818]]);
+          domain.add([
+            'id',
+            'in',
+            [32229, 32230, 22886, 21818]
+          ]);
           data =
               await getDataWithAttemp('eco.department', 'search_read', null, {
             'domain': domain,
@@ -367,8 +371,8 @@ Future<void> setLastUpdate(modelName) async {
   String sLastUpdate = await _storage.read(key: 'lastDateUpdate');
   Map<String, dynamic> lastUpdate;
 
-  DateTime dateTime = DateTime.now();
-  dateTime = dateTime.subtract(new Duration(hours: 3));
+  DateTime dateTime = DateTime.now().toUtc();
+  dateTime = toServerTime(dateTime);
   print("Datetime SetLastUpdate $dateTime");
   if (sLastUpdate == null)
     lastUpdate = {modelName: dateTime.toString()};
@@ -380,39 +384,40 @@ Future<void> setLastUpdate(modelName) async {
   await _storage.write(key: 'lastDateUpdate', value: json.encode(lastUpdate));
 }
 
-Future<List> getLastSyncDateDomain(modelName) async {
+Future<List> getLastSyncDateDomain(modelName,
+    {bool excludeActive: false}) async {
   String sLastUpdate = await _storage.read(key: 'lastDateUpdate');
-  if (sLastUpdate == null)
-    return [
-      [
-        'active',
-        'in',
-        [true, false]
-      ]
-    ];
-  Map<String, dynamic> lastUpdate = json.decode(sLastUpdate);
-  if (lastUpdate[modelName] == null)
-    return [
-      [
-        'active',
-        'in',
-        [true, false]
-      ]
-    ];
-  DateTime datetime = stringToDateTime(lastUpdate[modelName]);
-  datetime = datetime.subtract(Duration(hours: 3));
-  return [
-    [
-      'write_date',
-      '>',
-      dateTimeToString(datetime, true),
-    ],
-    [
+  List res = [];
+  if (!excludeActive)
+    res.add([
       'active',
       'in',
       [true, false]
-    ]
-  ];
+    ]);
+  if (sLastUpdate == null) return res;
+  Map<String, dynamic> lastUpdate = json.decode(sLastUpdate);
+  if (lastUpdate[modelName] == null) return res;
+  DateTime datetime = stringToDateTime(lastUpdate[modelName]);
+  datetime = toServerTime(datetime);
+  res.insert(0, [
+    'write_date',
+    '>',
+    dateTimeToString(datetime, true),
+  ]);
+  return res;
+}
+
+Future<void> setLastSyncDateStrForDomain(modelName, String dateTime) async {
+  String sLastUpdate = await _storage.read(key: 'lastDateUpdate');
+  Map<String, dynamic> lastUpdate;
+  if (sLastUpdate == null)
+    lastUpdate = {modelName: dateTime};
+  else {
+    lastUpdate = json.decode(sLastUpdate);
+    lastUpdate[modelName] = dateTime;
+  }
+
+  await _storage.write(key: 'lastDateUpdate', value: json.encode(lastUpdate));
 }
 
 Future<void> setLastSyncDateForDomain(modelName, DateTime dateTime) async {
@@ -439,4 +444,12 @@ Future<void> removeLastSyncDate(modelName) async {
   }
 
   await _storage.write(key: 'lastDateUpdate', value: json.encode(lastUpdate));
+}
+
+setLatestWriteDate(tableName, List json) async {
+  var dates = json.map((e) => e['write_date']).toList();
+  if (dates.isEmpty) return;
+  dates.sort();
+  print((await getLastSyncDateDomain(tableName))[0]);
+  await setLastSyncDateStrForDomain(tableName, dates.last);
 }

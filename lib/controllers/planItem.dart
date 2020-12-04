@@ -42,39 +42,24 @@ class PlanItemController extends Controllers {
     return queryRes[0]['odoo_id'];
   }
 
-  static firstLoadFromOdoo([bool loadRelated = false, int limit]) async {
-    List<String> fields;
-    List<List> domain = [];
-    if (loadRelated) {
-      fields = ['parent_id'];
-      // List<Map<String, dynamic>> queryRes =
-      //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
-      // domain = [
-      //   ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
-      // ];
-    } else {
+  static Future loadFromOdoo({bool clean: false, int limit, int offset}) async {
+    List<String> fields = [
+      'name',
+      'department_txt',
+      'check_type',
+      'period',
+      'responsible',
+      'check_result',
+      'parent_id',
+      'active',
+      'write_date',
+    ];
+    List domain;
+    if (clean) {
+      domain = [];
       await DBProvider.db.deleteAll(_tableName);
-      // List<List> toAdd = [];
-      // await Future.forEach(
-      //     SynController.tableMany2oneFieldsMap[_tableName].entries,
-      //     (element) async {
-      //   List<Map<String, dynamic>> queryRes =
-      //       await DBProvider.db.select(element.value, columns: ['odoo_id']);
-      //   toAdd.add([
-      //     element.key,
-      //     'in',
-      //     queryRes.map((e) => e['odoo_id'] as int).toList()
-      //   ]);
-      // });
-      // domain += toAdd;
-      fields = [
-        'name',
-        'department_txt',
-        'check_type',
-        'period',
-        'responsible',
-        'check_result',
-      ];
+    } else {
+      domain = await getLastSyncDateDomain(_tableName, excludeActive: true);
     }
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
@@ -84,91 +69,27 @@ class PlanItemController extends Controllers {
       'limit': limit,
       'context': {'create_or_update': true}
     });
-    var result = await Future.forEach(json, (e) async {
-      if (loadRelated) {
-        if (e['parent_id'] is bool && !e['parent_id']) return null;
-        Plan plan = await PlanController.selectByOdooId(
-            unpackListId(e['parent_id'])['id']);
-        if (plan == null) return null;
-        // assert(plan != null, "Model plan has to be loaded before $_tableName");
-        PlanItem planItem = await selectByOdooId(e['id']);
-        Map<String, dynamic> res = {
-          'id': planItem.id,
-          'parent_id': plan.id,
-        };
-        return await DBProvider.db.update(_tableName, res);
+    await Future.forEach(json, (e) async {
+      int planItemId = (await selectByOdooId(e['id']))?.id;
+      int parentId = (await PlanController.selectByOdooId(
+              unpackListId(e['parent_id'])['id']))
+          ?.id;
+      Map<String, dynamic> res = {
+        ...e,
+        'odoo_id': e['id'],
+        'parent_id': parentId,
+        'active': e['active'] ? 'true' : 'false',
+      };
+      if (planItemId != null) {
+        res['id'] = planItemId;
+        await DBProvider.db.update(_tableName, PlanItem.fromJson(res).toJson());
       } else {
-        Map<String, dynamic> res = {
-          ...e,
-          'id': null,
-          'odoo_id': e['id'],
-          'active': 'true',
-        };
-        return await insert(PlanItem.fromJson(res), true);
+        res['odoo_id'] = e['id'];
+        await DBProvider.db.insert(_tableName, PlanItem.fromJson(res).toJson());
       }
     });
-    print(
-        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
-    return result;
-  }
-
-  static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
-    List<String> fields;
-    if (loadRelated)
-      fields = ['parent_id'];
-    else
-      fields = [
-        'name',
-        'department_txt',
-        'check_type',
-        'period',
-        'responsible',
-        'check_result',
-        'active',
-      ];
-    List domain = await getLastSyncDateDomain(_tableName);
-    List<dynamic> json = await getDataWithAttemp(
-        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-      domain,
-      fields
-    ], {
-      'limit': limit,
-      'context': {'create_or_update': true}
-    });
-    var result = await Future.forEach(json, (e) async {
-      PlanItem planItem = await selectByOdooId(e['id']);
-      if (loadRelated) {
-        if (e['parent_id'] is bool && !e['parent_id']) return null;
-        Plan plan = await PlanController.selectByOdooId(
-            unpackListId(e['parent_id'])['id']);
-        if (plan == null) return null;
-        // assert(plan != null, "Model plan has to be loaded before $_tableName");
-        Map<String, dynamic> res = {
-          'id': planItem.id,
-          'parent_id': plan.id,
-        };
-        return DBProvider.db.update(_tableName, res);
-      } else {
-        if (planItem == null) {
-          Map<String, dynamic> res = PlanItem.fromJson({
-            ...e,
-            'active': e['active'] ? 'true' : 'false',
-          }).toJson(true);
-          res['odoo_id'] = e['id'];
-          return DBProvider.db.insert(_tableName, res);
-        }
-        Map<String, dynamic> res = PlanItem.fromJson({
-          ...e,
-          'id': planItem.id,
-          'odoo_id': planItem.odooId,
-          'active': e['active'] ? 'true' : 'false',
-        }).toJson();
-        return DBProvider.db.update(_tableName, res);
-      }
-    });
-    print(
-        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
-    return result;
+    print('loaded ${json.length} records of $_tableName');
+    await setLatestWriteDate(_tableName, json);
   }
 
   static Future finishSync(dateTime) {
@@ -247,10 +168,10 @@ class PlanItemController extends Controllers {
     Future<int> odooId = selectOdooId(planItem.id);
     await DBProvider.db
         .update(_tableName, planItem.toJson())
-        .then((resId) async {
+        .then((rowsAffected) async {
       res['code'] = 1;
-      res['id'] = resId;
-      return SynController.edit(_tableName, resId, await odooId)
+      res['id'] = rowsAffected;
+      return SynController.edit(_tableName, planItem.id, await odooId)
           .catchError((err) {
         res['code'] = -2;
         res['message'] = 'Error updating syn';

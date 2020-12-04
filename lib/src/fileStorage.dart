@@ -58,7 +58,7 @@ Future<File> loadFileFromBytes(ByteData bytes, String path) async {
 
 Future<String> getPath() async {
   String appPath = (await getApplicationDocumentsDirectory()).path;
-  return '$appPath/file_${DateTime.now().millisecondsSinceEpoch}';
+  return '$appPath/file_${DateTime.now().toUtc().millisecondsSinceEpoch}';
 }
 
 String fileToBase64(String path) {
@@ -73,8 +73,5 @@ Future<File> base64ToFile(String img64, {String path}) async {
   File file = File(_path);
   file.writeAsBytesSync(decodedBytes);
 
-
   return file;
 }
-
-

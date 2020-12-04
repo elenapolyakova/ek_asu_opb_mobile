@@ -180,7 +180,9 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
             'value': group.isMain ? 'Все члены комиссии' : group.groupNum
           });
         });
-      } catch (e) {}
+      } catch (e) {
+        print('allComGroup error: $e');
+      }
 
       if (_inspection.mainComGroupId != null)
         groupList.add({

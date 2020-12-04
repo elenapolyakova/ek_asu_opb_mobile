@@ -62,10 +62,10 @@ class DepartmentDocumentController extends Controllers {
       Map<String, dynamic> record = await downloadDocument(document);
       String appPath = (await getApplicationDocumentsDirectory()).path;
       String newPath =
-          "$appPath/depDocs/${DateTime.now().millisecondsSinceEpoch}/${record['file_name']}";
+          "$appPath/depDocs/${DateTime.now().toUtc().millisecondsSinceEpoch}/${record['file_name']}";
       while (await File(newPath).exists()) {
         newPath =
-            "$appPath/depDocs/${DateTime.now().millisecondsSinceEpoch}/${record['file_name']}";
+            "$appPath/depDocs/${DateTime.now().toUtc().millisecondsSinceEpoch}/${record['file_name']}";
       }
       path = newPath;
       await DBProvider.db
