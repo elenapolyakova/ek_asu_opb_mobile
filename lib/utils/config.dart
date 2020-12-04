@@ -13,7 +13,7 @@ Map<String, Object> _config = {
   "attemptCount": 50,
   "limitRecord": 80,
   "sessionExpire": 10*60, //через какое время запрашиваем ПИН-код, секунд
-  "refreshMessenger": 60, //как часто обновляем сообщения в мессенджере, секунд
+  "refreshMessenger": 10, //как часто обновляем сообщения в мессенджере, секунд
   "refreshCountMessenger": 60, //как часто обновляем количество сообщений в иконке чат, секунд
 };
 
