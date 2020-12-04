@@ -103,7 +103,6 @@ class _MessengerScreen extends State<MessengerScreen> {
       List<MyChat> chatItems =
           await Messenger.messenger.getChatsAndMessageForTimer(_myUid);
 
-
       _chatItems = chatItems ?? [];
 
       List<MyChat> personalChats =
@@ -239,7 +238,8 @@ class _MessengerScreen extends State<MessengerScreen> {
   }
 
   Future<void> onChatTap(int chatId) async {
-    bool allMsg = _selectedChat != null && _selectedChat.item.id != chatId;
+    bool allMsg = _selectedChat != null && _selectedChat.item.id != chatId ||
+        _selectedChat == null;
     //_selectedChat.dtLastLoadMessage = null;
 
     MyChat selectedChat = _chatItems
@@ -254,27 +254,23 @@ class _MessengerScreen extends State<MessengerScreen> {
 
   Future<void> getMessagesForChat(MyChat selectedChat, bool allMsg) async {
     if (selectedChat == null) return;
-  
 
     try {
-      DateTime lastReadMessage =
-          await Messenger.messenger.getLastReadDate(selectedChat.item);
-          
+   //   DateTime lastReadMessage =
+   //       await Messenger.messenger.getLastReadDate(selectedChat.item);
+
       List<ChatMessage> newMessageItems =
           await Messenger.messenger.getMessages(selectedChat.item, allMsg);
 
-     
       if (allMsg)
         _messageItems = [];
       else {
         //now;
-        _messageItems.removeWhere((oldMessage) {
-          if (lastReadMessage == null || oldMessage.createDate == null)
-            return true;
-          if (oldMessage.createDate.isAfter(lastReadMessage)) return true;
-          return false;
+        newMessageItems.forEach((newMsg) {
+          _messageItems.removeWhere((oldMsg) => newMsg.id == oldMsg.id);
         });
       }
+      
       _messageItems = _messageItems ?? [];
 
       setState(() {
@@ -284,7 +280,6 @@ class _MessengerScreen extends State<MessengerScreen> {
       print(e);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
