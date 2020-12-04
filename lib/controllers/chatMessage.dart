@@ -72,7 +72,7 @@ class ChatMessageController extends Controllers {
   static Future<List<ChatMessage>> select(dynamic chat,
       {bool fromLastRead = false}) async {
     if (chat is int) chat = ChatController.selectById(chat);
-    if (chat == null || chat.id) {
+    if (chat == null || chat.id == null) {
       return [];
     }
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
