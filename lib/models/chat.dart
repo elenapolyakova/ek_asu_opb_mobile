@@ -73,8 +73,12 @@ class Chat extends Models {
           .where((ChatMessage element) => element.createDate.isAfter(lastRead))
           .toList();
     }
-    await DBProvider.db.update(
-        'chat', {'id': id, 'last_read': dateTimeToString(now.toUtc(), true)});
+    List<DateTime> dates = res.map((ChatMessage e) => e.createDate).toList();
+    if (dates.isNotEmpty) {
+      dates.sort();
+      await DBProvider.db.update('chat',
+          {'id': id, 'last_read': dateTimeToString(dates.last.toUtc(), true)});
+    }
     return res.map((e) {
       e.createDate = e.createDate.add(timeZoneOffset);
       return e;
