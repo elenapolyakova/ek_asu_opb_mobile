@@ -20,10 +20,11 @@ class ChatMessageController extends Controllers {
   static Future<int> getNewMessagesCount(
       dynamic chat, int userId, DateTime lastRead) async {
     if (chat is Chat) chat = chat.id;
+    if (chat == null) return null;
     List queryRes = await DBProvider.db.select(
       _tableName,
       columns: ['id'],
-      where: 'chat_id = ? and create_uid != ?',
+      where: 'parent_id = ? and create_uid != ?',
       whereArgs: [chat, userId],
     );
     if (lastRead != null) {
