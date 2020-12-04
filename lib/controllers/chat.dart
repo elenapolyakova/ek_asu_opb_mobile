@@ -86,7 +86,7 @@ class ChatController extends Controllers {
       'context': {'create_or_update': true}
     });
     await Future.forEach(json, (e) async {
-      int chatId = (await selectByOdooId(e['id']))?.id;
+      Chat chat = await selectByOdooId(e['id']);
       int groupId = (await ComGroupController.selectByOdooId(
               unpackListId(e['group_id'])['id']))
           ?.id;
@@ -95,16 +95,18 @@ class ChatController extends Controllers {
         ...e,
         'odoo_id': e['id'],
         'group_id': groupId,
+        'last_read': dateTimeToString(chat.lastRead, true),
       };
-      if (chatId != null) {
-        res['id'] = chatId;
+      if (chat != null) {
+        res['id'] = chat.id;
         await DBProvider.db.update(_tableName, Chat.fromJson(res).toJson());
       } else {
-        chatId =
-            await DBProvider.db.insert(_tableName, Chat.fromJson(res).toJson());
+        chat = Chat(
+            id: await DBProvider.db
+                .insert(_tableName, Chat.fromJson(res).toJson()));
       }
       await RelChatUserController.updateChatUsers(
-        chatId,
+        chat.id,
         List<int>.from(
             userIds.map((userId) => unpackListId(userId)['id'] as int)),
       );

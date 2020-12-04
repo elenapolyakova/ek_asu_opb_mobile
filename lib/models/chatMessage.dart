@@ -14,7 +14,7 @@ class ChatMessage extends Models {
   String message;
 
   ///Дата создания
-  DateTime createDate = DateTime.now().toUtc();
+  DateTime createDate;
 
   /// Id автора сообщения
   int userId;
@@ -47,7 +47,8 @@ class ChatMessage extends Models {
       odooId: json["odoo_id"],
       parentId: unpackListId(json["parent_id"])['id'],
       message: getObj(json["msg"]),
-      createDate: stringToDateTime(json["create_date"]),
+      createDate:
+          stringToDateTime(json["create_date"]) ?? DateTime.now().toUtc(),
       userId: unpackListId(json["create_uid"])['id'],
     );
     return res;

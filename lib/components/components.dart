@@ -1621,7 +1621,7 @@ class _MyAppBar extends State<MyAppBar> {
                           onTap: () async {
                             // ChatController.loadFromOdoo(clean: true);
                             // ChatMessageController.loadFromOdoo(clean: true);
-                            (await DBProvider.db.selectAll('chat_message'))
+                            (await DBProvider.db.selectAll('chat'))
                                 .forEach((element) {
                               print(element);
                             });
