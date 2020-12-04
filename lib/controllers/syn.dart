@@ -232,7 +232,7 @@ class SynController extends Controllers {
     }
     await ChatController.loadFromOdoo(clean: lastDateDomain.isEmpty);
     await ChatMessageController.loadFromOdoo(clean: lastDateDomain.isEmpty);
-    await setLastSyncDateForDomain(_tableName, DateTime.now());
+    await setLastSyncDateForDomain(_tableName, DateTime.now().toUtc());
   }
 
   /// Perform a synchronization of a syn record with backend.

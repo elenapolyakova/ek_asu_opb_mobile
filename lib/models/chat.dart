@@ -50,7 +50,7 @@ class Chat extends Models {
   ///
   ///Обновит `lastRead` на текущее время
   Future<List<ChatMessage>> get messages async {
-    DateTime now = DateTime.now();
+    DateTime now = DateTime.now().toUtc();
     Duration timeZoneOffset = now.timeZoneOffset;
     List<ChatMessage> res = await ChatMessageController.select(this);
     await DBProvider.db
@@ -65,7 +65,7 @@ class Chat extends Models {
   ///
   ///Обновит `lastRead` на текущее время
   Future<List<ChatMessage>> get getNewMessages async {
-    DateTime now = DateTime.now();
+    DateTime now = DateTime.now().toUtc();
     Duration timeZoneOffset = now.timeZoneOffset;
     List<ChatMessage> res = await ChatMessageController.select(this);
     if (lastRead != null) {

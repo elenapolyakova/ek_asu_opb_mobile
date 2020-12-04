@@ -596,7 +596,7 @@ class _FaultScreen extends State<FaultScreen> {
   submitFault() async {
     bool hasErorr = false;
     Map<String, dynamic> result;
-    _fault.date = DateTime.now();
+    _fault.date = DateTime.now().toUtc();
     try {
       if ([-1, null].contains(_fault.id)) {
         result = await FaultController.create(_fault, _created, _deletedPath);
@@ -839,7 +839,7 @@ class _FaultScreen extends State<FaultScreen> {
                                                                   .buttonColor,
                                                           selectedDate: _fault
                                                               .plan_fix_date // ??
-                                                          //DateTime.now()
+                                                          //DateTime.now().toUtc()
                                                           ,
                                                           onChanged:
                                                               ((DateTime date) {

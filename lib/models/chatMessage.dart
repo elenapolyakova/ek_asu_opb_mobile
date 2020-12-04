@@ -14,7 +14,7 @@ class ChatMessage extends Models {
   String message;
 
   ///Дата создания
-  DateTime createDate = DateTime.now();
+  DateTime createDate = DateTime.now().toUtc();
 
   /// Id автора сообщения
   int userId;

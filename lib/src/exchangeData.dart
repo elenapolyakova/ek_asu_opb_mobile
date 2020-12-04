@@ -371,7 +371,7 @@ Future<void> setLastUpdate(modelName) async {
   String sLastUpdate = await _storage.read(key: 'lastDateUpdate');
   Map<String, dynamic> lastUpdate;
 
-  DateTime dateTime = DateTime.now();
+  DateTime dateTime = DateTime.now().toUtc();
   dateTime = toServerTime(dateTime);
   print("Datetime SetLastUpdate $dateTime");
   if (sLastUpdate == null)

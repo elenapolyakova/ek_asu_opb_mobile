@@ -82,10 +82,10 @@ class ISPDocumentController extends Controllers {
       Map<String, dynamic> record = await downloadDocument(document);
       String appPath = (await getApplicationDocumentsDirectory()).path;
       String newPath =
-          "$appPath/ispDocs/${DateTime.now().millisecondsSinceEpoch}/${record['file_name']}";
+          "$appPath/ispDocs/${DateTime.now().toUtc().millisecondsSinceEpoch}/${record['file_name']}";
       while (await File(newPath).exists()) {
         newPath =
-            "$appPath/ispDocs/${DateTime.now().millisecondsSinceEpoch}/${record['file_name']}";
+            "$appPath/ispDocs/${DateTime.now().toUtc().millisecondsSinceEpoch}/${record['file_name']}";
       }
       path = newPath;
       await DBProvider.db
