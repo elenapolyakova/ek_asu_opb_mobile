@@ -98,7 +98,7 @@ class CheckPlanItem extends Models {
       name: getObj(json["name"]),
       type: getObj(json["type"]),
       departmentId: unpackListId(json["department_id"])['id'],
-      date: stringToDateTime(json["date"]),
+      date: stringToDateTime(json["date"], forceUtc: false),
       dtFrom: stringToDateTime(json["dt_from"]),
       dtTo: stringToDateTime(json["dt_to"]),
       active: json["active"] == 'true',
