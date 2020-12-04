@@ -1756,7 +1756,7 @@ class MyMessageContainer extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(12)),
-            color: _isMy ? Color(0xAAF465C0B) : Color(0xFFEFF0D7),
+            color: _isMy ? Color(0xAAF465C0B) : Color(0xAAEFF0D7),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
