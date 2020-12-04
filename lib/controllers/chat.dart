@@ -95,10 +95,10 @@ class ChatController extends Controllers {
         ...e,
         'odoo_id': e['id'],
         'group_id': groupId,
-        'last_read': dateTimeToString(chat.lastRead, true),
       };
       if (chat != null) {
         res['id'] = chat.id;
+        res['last_read'] = dateTimeToString(chat.lastRead, true);
         await DBProvider.db.update(_tableName, Chat.fromJson(res).toJson());
       } else {
         chat = Chat(
