@@ -117,6 +117,7 @@ class _MessengerScreen extends State<MessengerScreen> {
           }
         });
       });
+      _availableUser = [];
 
       for (var i = 0; i < allUsers.length; i++) {
         if (!_myReciver.contains(allUsers[i].id))
@@ -170,6 +171,7 @@ class _MessengerScreen extends State<MessengerScreen> {
     hideKeyboard();
     if (form.validate()) {
       form.save();
+      DateTime userDT = DateTime.now();
 
       if (_msg != null && _msg.length > 0) {
         //Пытаемся сохранить, если успех - добавляем ?
@@ -178,7 +180,7 @@ class _MessengerScreen extends State<MessengerScreen> {
             odooId: null,
             parentId: _selectedChat.item.id,
             message: _msg,
-            createDate: DateTime.now(),
+            createDate: userDT.toUtc(),
             userId: _myUid);
         bool hasErorr = false;
 
@@ -193,6 +195,7 @@ class _MessengerScreen extends State<MessengerScreen> {
             return;
           }
           msg.id = result["id"];
+          msg.createDate = userDT;
 
           setState(() {
             _messageItems.add(msg);
@@ -256,8 +259,8 @@ class _MessengerScreen extends State<MessengerScreen> {
     if (selectedChat == null) return;
 
     try {
-   //   DateTime lastReadMessage =
-   //       await Messenger.messenger.getLastReadDate(selectedChat.item);
+      //   DateTime lastReadMessage =
+      //       await Messenger.messenger.getLastReadDate(selectedChat.item);
 
       List<ChatMessage> newMessageItems =
           await Messenger.messenger.getMessages(selectedChat.item, allMsg);
@@ -270,7 +273,7 @@ class _MessengerScreen extends State<MessengerScreen> {
           _messageItems.removeWhere((oldMsg) => newMsg.id == oldMsg.id);
         });
       }
-      
+
       _messageItems = _messageItems ?? [];
 
       setState(() {
