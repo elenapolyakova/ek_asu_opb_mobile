@@ -146,7 +146,7 @@ class _EditTextField extends State<EditTextField> {
     final color = widget.color ?? Theme.of(widget.context).buttonColor;
     final textStyle = TextStyle(fontSize: 16.0, color: color);
     return Container(
-        margin: EdgeInsets.symmetric(
+        padding: EdgeInsets.symmetric(
           horizontal: widget.margin,
           vertical: widget.margin,
         ),
@@ -159,37 +159,41 @@ class _EditTextField extends State<EditTextField> {
                     textAlign: TextAlign.left, style: textStyle)),
           Container(
               height: widget.height,
+              padding: EdgeInsets.all(0),
+              margin:  EdgeInsets.all(0),
               decoration: BoxDecoration(
                 border: Border.all(
                     color: widget.borderColor ?? Colors.white, width: 1.5),
                 borderRadius: BorderRadius.all(Radius.circular(12)),
                 color: widget.backgroundColor ?? Colors.white,
               ),
-              child: ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: widget.height),
-                  child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      child: GestureDetector(
-                          onLongPress: widget.onLongPress,
-                          onTapDown: widget.onTapDown,
-                          onTap: () {
-                            if (!widget.showEditDialog || widget.readOnly)
-                              return;
-                            showEdit(
-                              widget.value,
-                              widget.text,
-                              widget.context,
-                              textInputType: widget.textInputType,
-                              inputFormatters: widget.inputFormatters,
-                              validator: widget.validator ?? (val) => null,
-                            ).then((newValue) => setState(() {
-                                  widget.value = newValue ?? "";
-                                  if (widget.onSaved != null)
-                                    return widget.onSaved(newValue);
-                                }));
-                          },
+              child: GestureDetector(
+                  onLongPress: widget.onLongPress,
+                  onTapDown: widget.onTapDown,
+                  onTap: () {
+                    if (!widget.showEditDialog || widget.readOnly) return;
+                    showEdit(
+                      widget.value,
+                      widget.text,
+                      widget.context,
+                      textInputType: widget.textInputType,
+                      inputFormatters: widget.inputFormatters,
+                      validator: widget.validator ?? (val) => null,
+                    ).then((newValue) => setState(() {
+                          widget.value = newValue ?? "";
+                          if (widget.onSaved != null)
+                            return widget.onSaved(newValue);
+                        }));
+                  },
+                  child: ConstrainedBox(
+                      constraints: BoxConstraints(maxHeight: widget.height, minHeight:widget.height ),
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.all(0),
+                          scrollDirection: Axis.vertical,
                           child: AbsorbPointer(
                             child: TextFormField(
+                            
+                              scrollPadding: EdgeInsets.all(0),
                                 readOnly:
                                     widget.showEditDialog && !widget.readOnly,
                                 keyboardType: widget.textInputType,
@@ -201,16 +205,17 @@ class _EditTextField extends State<EditTextField> {
                                             ? widget.value.toString()
                                             : "")),
                                 decoration: new InputDecoration(
-                                    border: OutlineInputBorder(
+                                  border: OutlineInputBorder(
                                         borderSide: BorderSide.none),
-                                    contentPadding: EdgeInsets.all(5.0)),
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 5, vertical: 0)
+                                    ),
                                 // initialValue:
                                 //     _value, //widget.value != null ? widget.value.toString() : '',
 
                                 cursorColor: widget.color,
                                 style: textStyle,
                                 onSaved: widget.onSaved,
-                                minLines: widget.maxLines,
+                                //minLines: widget.maxLines,
                                 maxLines: null // widget.maxLines,
                                 // maxLength: 256,
                                 ),
@@ -890,6 +895,7 @@ class DepartmentSelect extends StatefulWidget {
   double width;
   double height;
   int maxLine;
+  double margin;
 
   DepartmentSelect(
       {this.text = "",
@@ -899,7 +905,8 @@ class DepartmentSelect extends StatefulWidget {
       this.onSaved,
       this.width = 300,
       this.height = 60,
-      this.maxLine = 2});
+      this.maxLine = 2,
+      this.margin = 13.0});
   @override
   State<DepartmentSelect> createState() =>
       _DepartmentSelect(department, railwayId);
@@ -933,7 +940,8 @@ class _DepartmentSelect extends State<DepartmentSelect> {
     final textStyle = TextStyle(fontSize: 16.0, color: color);
 
     return Container(
-        margin: EdgeInsets.symmetric(horizontal: 13, vertical: 13),
+        margin: EdgeInsets.symmetric(
+            horizontal: widget.margin, vertical: widget.margin),
         child: Column(children: <Widget>[
           Container(
               alignment: Alignment.bottomLeft,
@@ -941,13 +949,64 @@ class _DepartmentSelect extends State<DepartmentSelect> {
               child: Text(widget.text,
                   textAlign: TextAlign.left, style: textStyle)),
           Container(
-            height: widget.height,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.white, width: 1.5),
-              borderRadius: BorderRadius.all(Radius.circular(12)),
-              color: Colors.white,
-            ),
-            child: TextFormField(
+              height: widget.height,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.white, width: 1.5),
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                color: Colors.white,
+              ),
+              child: GestureDetector(
+                  onTap: () {
+                    showDepartmentSelect(_department, _railwayId, widget.text,
+                            widget.context, setState,
+                            onRailwaySelected: onRailwaySelected)
+                        .then((department) {
+                      if (department == null) return;
+                      setState(() {
+                        _department = department ?? null;
+                        return widget.onSaved(_department);
+                      });
+                    });
+                  },
+                  child: ConstrainedBox(
+                      constraints: BoxConstraints(maxHeight: widget.height),
+                      child: SingleChildScrollView(
+                          scrollDirection: Axis.vertical,
+                          child: AbsorbPointer(
+                            child: TextFormField(
+                              readOnly: true,
+                              maxLines: null,
+                              controller: TextEditingController.fromValue(
+                                  TextEditingValue(
+                                      text: _department != null
+                                          ? _department.name
+                                          : '')),
+                              decoration: new InputDecoration(
+                                  border: OutlineInputBorder(
+                                      borderSide: BorderSide.none),
+                                  contentPadding: EdgeInsets.all(5.0)),
+                              // initialValue:
+                              //     _value, //widget.value != null ? widget.value.toString() : '',
+                              /* onTap: () {
+                                  showDepartmentSelect(_department, _railwayId,
+                                          widget.text, widget.context, setState,
+                                          onRailwaySelected: onRailwaySelected)
+                                      .then((department) {
+                                    if (department == null) return;
+                                    setState(() {
+                                      _department = department ?? null;
+                                      return widget.onSaved(_department);
+                                    });
+                                  });
+                                },*/
+                              cursorColor:
+                                  Theme.of(widget.context).primaryColorDark,
+                              style: textStyle,
+                              // maxLength: 256,
+                            ),
+                          )))))
+
+          /* TextFormField(
                 readOnly: true,
                 maxLines: widget.maxLine,
                 controller: TextEditingController.fromValue(TextEditingValue(
@@ -973,7 +1032,7 @@ class _DepartmentSelect extends State<DepartmentSelect> {
                 style: textStyle
                 // maxLength: 256,
                 ),
-          )
+          )*/
         ]));
   }
 
@@ -1619,8 +1678,10 @@ class _MyAppBar extends State<MyAppBar> {
                               : "",
                           margin: 0,
                           onTap: () async {
-                            // await SynController.loadFromOdoo(
-                            //     forceFirstLoad: true);
+                            // await ChatController.loadFromOdoo(clean: true);
+                            // await ChatMessageController.loadFromOdoo();
+                            await SynController.loadFromOdoo(
+                                forceFirstLoad: true);
                             // ChatController.loadFromOdoo(clean: true);
                             // ChatMessageController.loadFromOdoo(clean: true);
                             // List queryRes = await DBProvider.db.select(
