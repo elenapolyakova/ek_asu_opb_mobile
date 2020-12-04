@@ -46,14 +46,39 @@ class Chat extends Models {
     return _group;
   }
 
-  ///Сообщения
-  Future<List<ChatMessage>> get messages {
-    return ChatMessageController.select(this);
+  ///Все сообщения
+  ///
+  ///Обновит `lastRead` на текущее время
+  Future<List<ChatMessage>> get messages async {
+    DateTime now = DateTime.now();
+    Duration timeZoneOffset = now.timeZoneOffset;
+    List<ChatMessage> res = await ChatMessageController.select(this);
+    await DBProvider.db
+        .update('chat', {'id': id, 'last_read': dateTimeToString(now, true)});
+    return res.map((e) {
+      e.createDate = e.createDate.add(timeZoneOffset);
+      return e;
+    }).toList();
   }
 
-  ///Новые сообщения
-  Future<List<ChatMessage>> get getNewMessages {
-    return ChatMessageController.select(this, fromLastRead: true);
+  ///Новые сообщения после `lastRead`
+  ///
+  ///Обновит `lastRead` на текущее время
+  Future<List<ChatMessage>> get getNewMessages async {
+    DateTime now = DateTime.now();
+    Duration timeZoneOffset = now.timeZoneOffset;
+    List<ChatMessage> res = await ChatMessageController.select(this);
+    if (lastRead != null) {
+      res = res
+          .where((ChatMessage element) => element.createDate.isAfter(lastRead))
+          .toList();
+    }
+    await DBProvider.db
+        .update('chat', {'id': id, 'last_read': dateTimeToString(now, true)});
+    return res.map((e) {
+      e.createDate = e.createDate.add(timeZoneOffset);
+      return e;
+    }).toList();
   }
 
   Chat({

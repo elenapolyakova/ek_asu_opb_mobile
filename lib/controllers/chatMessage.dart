@@ -67,10 +67,7 @@ class ChatMessageController extends Controllers {
   /// If `fromLastRead` is true,
   /// records only after `chat`'s `last_read` are returned.
   /// Else all records of specified chat are returned.
-  ///
-  /// Update `last_read` of specified `chat` to `now`.
-  static Future<List<ChatMessage>> select(dynamic chat,
-      {bool fromLastRead = false}) async {
+  static Future<List<ChatMessage>> select(dynamic chat) async {
     if (chat is int) chat = ChatController.selectById(chat);
     if (chat == null || chat.id == null) {
       return [];
@@ -81,16 +78,8 @@ class ChatMessageController extends Controllers {
       whereArgs: [chat.id],
     );
     if (queryRes == null || queryRes.length == 0) return [];
-    if (chat.lastRead != null && fromLastRead) {
-      queryRes = queryRes
-          .where((element) =>
-              stringToDateTime(element['create_date']).isAfter(chat.lastRead))
-          .toList();
-    }
     List<ChatMessage> chatMessages =
         queryRes.map((e) => ChatMessage.fromJson(e)).toList();
-    await DBProvider.db.update('chat',
-        {'id': chat.id, 'last_read': dateTimeToString(DateTime.now(), true)});
     return chatMessages;
   }
 
