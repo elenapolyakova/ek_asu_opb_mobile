@@ -1619,17 +1619,17 @@ class _MyAppBar extends State<MyAppBar> {
                               : "",
                           margin: 0,
                           onTap: () async {
-                         //   await SynController.loadFromOdoo(
-                          //      forceFirstLoad: true);
                             // await DBProvider.db.deleteAll('rel_chat_user');
                             // await DBProvider.db.deleteAll('plan_item');
                             //await DBProvider.db.deleteAll('chat');
                             // await DBProvider.db
                             //     .deleteAll('plan_item_check_item');
                             // print(1);
-                           //await SynController.syncTask();
-                            (await DBProvider.db
-                                    .selectAll('com_group'))
+                            (await DBProvider.db.select(
+                              'com_group',
+                              where: "parent_id = ? and active = 'true'",
+                              whereArgs: [8],
+                            ))
                                 .forEach((element) {
                               print(element);
                             });
@@ -1639,25 +1639,6 @@ class _MyAppBar extends State<MyAppBar> {
                             //     .forEach((element) {
                             //   print(element);
                             // });
-
-                            List<dynamic> json = await getDataWithAttemp(
-                                SynController.localRemoteTableNameMap[
-                                    'plan_item_check_item'],
-                                'search_read',
-                                [
-                                  [
-                                    ['id', '=', 317],
-                                  ],
-                                  [
-                                    'write_date',
-                                    'name',
-                                  ]
-                                ],
-                                {});
-                            json.forEach((element) {
-                              print(element);
-                            });
-                            print(DateTime.now());
                           },
                           color: Theme.of(context).primaryColorLight,
                           fontSize: 20,
