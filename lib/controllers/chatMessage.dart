@@ -28,11 +28,16 @@ class ChatMessageController extends Controllers {
       whereArgs: [chat, userId],
     );
     if (lastRead != null) {
-      queryRes = queryRes
-          .where((element) => (element['create_date'] != null)
-              ? stringToDateTime("${element['create_date']}Z").isAfter(lastRead)
-              : true)
-          .toList();
+      queryRes = queryRes.where((element) {
+        if (element['create_date'] != null) {
+          if (element['create_date'][element['create_date'].length - 1] == 'Z')
+            return stringToDateTime(element['create_date']).isAfter(lastRead);
+          else
+            return stringToDateTime("${element['create_date']}Z")
+                .isAfter(lastRead);
+        } else
+          return true;
+      }).toList();
     }
     return queryRes.length;
   }
