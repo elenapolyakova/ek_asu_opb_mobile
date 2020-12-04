@@ -185,7 +185,8 @@ class _EditTextField extends State<EditTextField> {
                             return widget.onSaved(newValue);
                         }));
                   },
-                  child: ConstrainedBox(
+                  child: 
+                    ConstrainedBox(
                       constraints: BoxConstraints(maxHeight: widget.height, minHeight:widget.height ),
                       child: SingleChildScrollView(
                         padding: EdgeInsets.all(0),
@@ -205,9 +206,10 @@ class _EditTextField extends State<EditTextField> {
                                             ? widget.value.toString()
                                             : "")),
                                 decoration: new InputDecoration(
+                                  isCollapsed: true,
                                   border: OutlineInputBorder(
                                         borderSide: BorderSide.none),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 5, vertical: 0)
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 5, vertical: 5)
                                     ),
                                 // initialValue:
                                 //     _value, //widget.value != null ? widget.value.toString() : '',
@@ -215,6 +217,7 @@ class _EditTextField extends State<EditTextField> {
                                 cursorColor: widget.color,
                                 style: textStyle,
                                 onSaved: widget.onSaved,
+                                minLines: null,
                                 //minLines: widget.maxLines,
                                 maxLines: null // widget.maxLines,
                                 // maxLength: 256,
@@ -982,6 +985,7 @@ class _DepartmentSelect extends State<DepartmentSelect> {
                                           ? _department.name
                                           : '')),
                               decoration: new InputDecoration(
+                                 isCollapsed: true,
                                   border: OutlineInputBorder(
                                       borderSide: BorderSide.none),
                                   contentPadding: EdgeInsets.all(5.0)),

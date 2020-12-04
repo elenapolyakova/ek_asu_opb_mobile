@@ -464,7 +464,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                           {inspection.name = value},
                                       context: context,
                                       height: 100,
-                                      maxLines: 5,
+                                     // maxLines: 5,
                                     ),
                                     Row(
                                         mainAxisAlignment:
@@ -658,14 +658,14 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                             FormTitle(
                                 '${inspectionItem.id == null ? 'Добавление' : 'Редактирование'} пункта плана проверок'),
                             Expanded(
-                                child: Container(
+                                child: Center(
                                     // height: heightPlan,
                                     child: SingleChildScrollView(
                                         child: Row(children: [
                               Expanded(
                                   child: Column(
                                       mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
+                                          MainAxisAlignment.spaceAround,
                                       children: [
                                     Row(
                                       children: [
@@ -725,7 +725,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                       ],
                                     ),
                                     Container(
-                                      padding: EdgeInsets.symmetric(vertical: 10),
+                                      padding: EdgeInsets.symmetric(vertical: 20),
                                         child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.end,
