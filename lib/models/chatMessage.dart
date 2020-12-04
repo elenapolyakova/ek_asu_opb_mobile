@@ -47,11 +47,7 @@ class ChatMessage extends Models {
       odooId: json["odoo_id"],
       parentId: unpackListId(json["parent_id"])['id'],
       message: getObj(json["msg"]),
-      createDate: json['create_date'] != null
-          ? (json['create_date'][json['create_date'].length - 1] != 'Z'
-              ? stringToDateTime("${json['create_date']}Z")
-              : stringToDateTime(json['create_date']))
-          : DateTime.now().toUtc(),
+      createDate: stringToDateTime(json['create_date']),
       userId: unpackListId(json["create_uid"])['id'],
     );
     return res;

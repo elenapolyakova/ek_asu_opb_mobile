@@ -30,11 +30,7 @@ class ChatMessageController extends Controllers {
     if (lastRead != null) {
       queryRes = queryRes.where((element) {
         if (element['create_date'] != null) {
-          if (element['create_date'][element['create_date'].length - 1] == 'Z')
-            return stringToDateTime(element['create_date']).isAfter(lastRead);
-          else
-            return stringToDateTime("${element['create_date']}Z")
-                .isAfter(lastRead);
+          return stringToDateTime(element['create_date']).isAfter(lastRead);
         } else
           return true;
       }).toList();

@@ -85,9 +85,12 @@ bool isDateEqual(DateTime dt1, DateTime dt2) {
   return dt1.year == dt2.year && dt1.month == dt2.month && dt1.day == dt2.day;
 }
 
-DateTime stringToDateTime(dynamic date) {
+DateTime stringToDateTime(dynamic date, {bool forceUtc: true}) {
   if (date == null || date is bool && !date) return null;
-  return DateTime.tryParse(date);
+  if (forceUtc && date[date.length - 1] == 'Z')
+    return DateTime.tryParse("${date}Z");
+  else
+    return DateTime.tryParse(date);
 }
 
 String dateTimeToString(DateTime date, [bool includeTime = false]) {
