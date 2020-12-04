@@ -224,7 +224,7 @@ class SynController extends Controllers {
 
       await CheckPlanController.loadChangesFromOdoo(true);
       await CheckPlanItemController.loadChangesFromOdoo(true);
-      await ComGroupController.loadChangesFromOdoo(true);
+      await ComGroupController.loadChangesFromOdoo(loadRelated: true);
       await CheckListController.loadChangesFromOdoo(true);
       await CheckListItemController.loadChangesFromOdoo(true);
       await FaultController.loadChangesFromOdoo(true);

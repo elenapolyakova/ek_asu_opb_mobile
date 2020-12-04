@@ -53,8 +53,9 @@ class ChatController extends Controllers {
   }
 
   static loadFromOdoo({bool clean: false, int limit, int offset}) async {
-    await ComGroupController.loadChangesFromOdoo();
-    await ComGroupController.loadChangesFromOdoo(true);
+    List<int> groupIds = (await ComGroupController.selectAll())
+        .map((e) => e['odoo_id'] as int)
+        .toList();
 
     List<String> fields = [
       'name',
@@ -70,6 +71,11 @@ class ChatController extends Controllers {
     } else {
       domain = await getLastSyncDateDomain(_tableName, excludeActive: true);
     }
+    domain += [
+      '|',
+      ['group_id', 'in', groupIds],
+      ['group_id', '=', false],
+    ];
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
       domain,

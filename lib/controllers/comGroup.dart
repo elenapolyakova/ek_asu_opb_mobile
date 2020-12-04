@@ -124,7 +124,11 @@ class ComGroupController extends Controllers {
     if (loadRelated) await setLatestWriteDate(_tableName, json);
   }
 
-  static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
+  static loadChangesFromOdoo({
+    bool loadRelated = false,
+    int limit,
+    int offset,
+  }) async {
     List<String> fields;
     if (loadRelated)
       fields = ['write_date', 'parent_id', 'com_user_ids'];
@@ -142,6 +146,7 @@ class ComGroupController extends Controllers {
       fields
     ], {
       'limit': limit,
+      'offset': offset,
       'context': {'create_or_update': true}
     });
     await Future.forEach(json, (e) async {
@@ -169,14 +174,14 @@ class ComGroupController extends Controllers {
           res['odoo_id'] = e['id'];
           return DBProvider.db.insert(_tableName, res);
         }
-        Map<String, dynamic> res = ComGroup.fromJson({
+        ComGroup res = ComGroup.fromJson({
           ...e,
           'id': comGroup.id,
           'odoo_id': comGroup.odooId,
           'is_main': e['is_main'] ? 'true' : 'false',
           'active': e['active'] ? 'true' : 'false',
-        }).toJson();
-        return DBProvider.db.update(_tableName, res);
+        });
+        return DBProvider.db.update(_tableName, res.toJson());
       }
     });
     print(
