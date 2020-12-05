@@ -82,7 +82,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
         case 'department':
           List<dynamic> domain = new List<dynamic>();
           if (lastUpdate != null) domain.add(lastUpdate);
-         /* domain.add([
+          /* domain.add([
             'id',
             'in',
             [32229, 32230, 22886, 21818]
@@ -372,7 +372,6 @@ Future<void> setLastUpdate(modelName) async {
   Map<String, dynamic> lastUpdate;
 
   DateTime dateTime = DateTime.now().toUtc();
-  dateTime = toServerTime(dateTime);
   print("Datetime SetLastUpdate $dateTime");
   if (sLastUpdate == null)
     lastUpdate = {modelName: dateTime.toString()};
@@ -398,7 +397,6 @@ Future<List> getLastSyncDateDomain(modelName,
   Map<String, dynamic> lastUpdate = json.decode(sLastUpdate);
   if (lastUpdate[modelName] == null) return res;
   DateTime datetime = stringToDateTime(lastUpdate[modelName]);
-  datetime = toServerTime(datetime);
   res.insert(0, [
     'write_date',
     '>',
