@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ek_asu_opb_mobile/controllers/railway.dart';
 import 'package:ek_asu_opb_mobile/controllers/syn.dart';
 import 'package:flutter/widgets.dart';
 import 'package:path/path.dart';
@@ -110,8 +111,13 @@ class DBProvider {
   }
 
   Future<void> reCreateDictionary() async {
-    final Database db = await database;
-    await db.execute("DROP TABLE IF EXISTS railway");
+    
+    await deleteAll("railway");
+    await deleteAll("department");
+    await deleteAll("user");
+    await deleteAll("koap");
+
+   /* await db.execute("DROP TABLE IF EXISTS railway");
     await db.execute("DROP TABLE IF EXISTS department");
     await db.execute("DROP TABLE IF EXISTS user");
     await db.execute("DROP TABLE IF EXISTS koap");
@@ -125,7 +131,7 @@ class DBProvider {
         "CREATE TABLE user(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT, search_field TEXT, user_role TEXT)");
     await db.execute(
         "CREATE TABLE IF NOT EXISTS koap(id INTEGER PRIMARY KEY, article TEXT, paragraph TEXT, text TEXT, man_fine_from INTEGER, man_fine_to INTEGER, firm_fine_from INTEGER, firm_fine_to INTEGER, firm_stop INTEGER, desc TEXT, search_field TEXT)");
-
+*/
     // await SynController.loadFromOdoo();
   }
 

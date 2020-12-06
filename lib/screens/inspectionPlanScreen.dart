@@ -9,6 +9,7 @@ import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 
 /*class InspectionItem {
   int id;
@@ -215,6 +216,12 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
           case 'add':
             addInspectionItemClicked();
             break;
+           case 'pdf':
+            exportToPdf();
+            return;
+          case 'excel':
+            exportToExcel();
+            return;
         }
       },
       icon: Icon(
@@ -261,8 +268,8 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                     ]))));
   }
 
-  List<PopupMenuItem<String>> getMenu(BuildContext context) {
-    List<PopupMenuItem<String>> result = [];
+  List<PopupMenuEntry<Object>> getMenu(BuildContext context) {
+    List<PopupMenuEntry<Object>> result = [];
     result.add(
       PopupMenuItem<String>(
           child: TextIcon(
@@ -285,6 +292,34 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
             color: Theme.of(context).primaryColorDark,
           ),
           value: 'add'),
+    );
+
+      result.add(PopupMenuDivider(
+      height: 20,
+    ));
+
+    result.add(
+      PopupMenuItem<String>(
+          child: TextIcon(
+            icon: Icon(FontAwesome5.file_pdf).icon, //Icons.edit,
+            text: "Экспорт в PDF",
+            margin: 5.0,
+            /* onTap: () */
+            color: Theme.of(context).primaryColorDark,
+          ),
+          value: 'pdf'),
+    );
+
+    result.add(
+      PopupMenuItem<String>(
+          child: TextIcon(
+            icon: Icon(FontAwesome5.file_excel).icon,
+            text: "Экспорт в Excel",
+            margin: 5.0,
+            /* onTap: () */
+            color: Theme.of(context).primaryColorDark,
+          ),
+          value: 'excel'),
     );
     return result;
   }
@@ -1262,6 +1297,21 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     bool result = await showInspectionItemDialog(inspectionItem, setState);
     if (result != null && result) {
       setState(() {});
+    }
+  }
+
+  Future<void> exportToPdf() async{
+       if (_inspection.id == null) {
+      Scaffold.of(context).showSnackBar(
+          errorSnackBar(text: 'Сначала сохраните реквизиты плана проверок'));
+      return;
+    }
+  }
+  Future<void> exportToExcel() async{
+       if (_inspection.id == null) {
+      Scaffold.of(context).showSnackBar(
+          errorSnackBar(text: 'Сначала сохраните реквизиты плана проверок'));
+      return;
     }
   }
 

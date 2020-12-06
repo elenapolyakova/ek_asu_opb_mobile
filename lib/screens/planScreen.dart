@@ -1,4 +1,3 @@
-
 import 'package:ek_asu_opb_mobile/src/exchangeData.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,7 +10,7 @@ import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'dart:async';
 import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 import 'package:ek_asu_opb_mobile/src/db.dart';
-
+import 'package:flutter_icons/flutter_icons.dart';
 
 class PlanScreen extends StatefulWidget {
   String type;
@@ -55,7 +54,6 @@ class _PlanScreen extends State<PlanScreen> {
 
   _PlanScreen(type) {
     _type = type;
-
   }
   final formPlanKey = new GlobalKey<FormState>();
   final formPlanItemKey = new GlobalKey<FormState>();
@@ -213,6 +211,12 @@ class _PlanScreen extends State<PlanScreen> {
           case 'add':
             addPlanItemClicked();
             break;
+          case 'pdf':
+            exportToPdf();
+            return;
+          case 'excel':
+            exportToExcel();
+            return;
         }
       },
       icon: Icon(
@@ -340,8 +344,8 @@ class _PlanScreen extends State<PlanScreen> {
         child: cell);
   }
 
-  List<PopupMenuItem<String>> getMenu(BuildContext context) {
-    List<PopupMenuItem<String>> result = [];
+  List<PopupMenuEntry<Object>> getMenu(BuildContext context) {
+    List<PopupMenuEntry<Object>> result = [];
     result.add(
       PopupMenuItem<String>(
           child: TextIcon(
@@ -410,6 +414,35 @@ class _PlanScreen extends State<PlanScreen> {
             value: 'railway'),
       );
     }
+
+    result.add(PopupMenuDivider(
+      height: 20,
+    ));
+
+    result.add(
+      PopupMenuItem<String>(
+          child: TextIcon(
+            icon: Icon(FontAwesome5.file_pdf).icon, //Icons.edit,
+            text: "Экспорт в PDF",
+            margin: 5.0,
+            /* onTap: () */
+            color: Theme.of(context).primaryColorDark,
+          ),
+          value: 'pdf'),
+    );
+
+    result.add(
+      PopupMenuItem<String>(
+          child: TextIcon(
+            icon: Icon(FontAwesome5.file_excel).icon,
+            text: "Экспорт в Excel",
+            margin: 5.0,
+            /* onTap: () */
+            color: Theme.of(context).primaryColorDark,
+          ),
+          value: 'excel'),
+    );
+
     return result;
   }
 
@@ -549,6 +582,30 @@ class _PlanScreen extends State<PlanScreen> {
   void _storePosition(TapDownDetails details) {
     _tapPosition = details.globalPosition;
   }
+
+
+  Future<void> exportToPdf() async{
+       if (!canEdit()) {
+      Scaffold.of(context).showSnackBar(errorSnackBar(text: errorTableName));
+      return;
+    }
+    if (_plan.id == null) {
+      Scaffold.of(context).showSnackBar(
+          errorSnackBar(text: 'Сначала сохраните реквизиты плана'));
+      return;
+    }
+  }
+   Future<void> exportToExcel() async{
+        if (!canEdit()) {
+      Scaffold.of(context).showSnackBar(errorSnackBar(text: errorTableName));
+      return;
+    }
+    if (_plan.id == null) {
+      Scaffold.of(context).showSnackBar(
+          errorSnackBar(text: 'Сначала сохраните реквизиты плана'));
+      return;
+    }
+   }
 
   Future<bool> showPlanDialog(Plan plan) {
     return showDialog<bool>(
