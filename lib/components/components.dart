@@ -18,6 +18,7 @@ import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 import 'package:ek_asu_opb_mobile/models/department.dart' as dep;
 export 'search/search.dart';
 import 'package:flutter_treeview/tree_view.dart';
+import 'package:package_info/package_info.dart';
 
 class TextIcon extends StatefulWidget {
   IconData icon;
@@ -160,7 +161,7 @@ class _EditTextField extends State<EditTextField> {
           Container(
               height: widget.height,
               padding: EdgeInsets.all(0),
-              margin:  EdgeInsets.all(0),
+              margin: EdgeInsets.all(0),
               decoration: BoxDecoration(
                 border: Border.all(
                     color: widget.borderColor ?? Colors.white, width: 1.5),
@@ -185,16 +186,15 @@ class _EditTextField extends State<EditTextField> {
                             return widget.onSaved(newValue);
                         }));
                   },
-                  child: 
-                    ConstrainedBox(
-                      constraints: BoxConstraints(maxHeight: widget.height, minHeight:widget.height ),
+                  child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                          maxHeight: widget.height, minHeight: widget.height),
                       child: SingleChildScrollView(
-                        padding: EdgeInsets.all(0),
+                          padding: EdgeInsets.all(0),
                           scrollDirection: Axis.vertical,
                           child: AbsorbPointer(
                             child: TextFormField(
-                            
-                              scrollPadding: EdgeInsets.all(0),
+                                scrollPadding: EdgeInsets.all(0),
                                 readOnly:
                                     widget.showEditDialog && !widget.readOnly,
                                 keyboardType: widget.textInputType,
@@ -206,11 +206,11 @@ class _EditTextField extends State<EditTextField> {
                                             ? widget.value.toString()
                                             : "")),
                                 decoration: new InputDecoration(
-                                  isCollapsed: true,
-                                  border: OutlineInputBorder(
+                                    isCollapsed: true,
+                                    border: OutlineInputBorder(
                                         borderSide: BorderSide.none),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 5, vertical: 5)
-                                    ),
+                                    contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 5, vertical: 5)),
                                 // initialValue:
                                 //     _value, //widget.value != null ? widget.value.toString() : '',
 
@@ -985,7 +985,7 @@ class _DepartmentSelect extends State<DepartmentSelect> {
                                           ? _department.name
                                           : '')),
                               decoration: new InputDecoration(
-                                 isCollapsed: true,
+                                  isCollapsed: true,
                                   border: OutlineInputBorder(
                                       borderSide: BorderSide.none),
                                   contentPadding: EdgeInsets.all(5.0)),
@@ -1545,6 +1545,7 @@ class _MyAppBar extends State<MyAppBar> {
   Timer _messengerTimer;
   Duration seconds;
   int refreshMessenger;
+  String version = "";
 
   @override
   void initState() {
@@ -1552,6 +1553,7 @@ class _MyAppBar extends State<MyAppBar> {
     super.initState();
     _countMessage = 0;
     if (widget.showMessenger != null && !widget.showMessenger) return;
+    getVersion();
     getCountMessages();
 
     createTimer();
@@ -1562,6 +1564,12 @@ class _MyAppBar extends State<MyAppBar> {
 
     getCountMessages();
     createTimer();
+  }
+
+  void getVersion() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    version = packageInfo.version;
+    setState(() {});
   }
 
   void getCountMessages() async {

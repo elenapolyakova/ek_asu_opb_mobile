@@ -13,10 +13,24 @@ class OdooProxy {
   static OdooClient _client;
   OdooSession _session;
   var subscription;
+  String _baseUrl = "";
+  String _db = "";
 
-  final _baseURL =
-      '${config.getItem('ServiceRootUrl')}:${config.getItem('port')}';
-  final _db = config.getItem('db');
+  String get baseURL {
+    if (_baseUrl != "") return _baseUrl;
+    _baseUrl = '${config.getItem('ServiceRootUrl')}:${config.getItem('port')}';
+    return _baseUrl;
+  }
+
+  set baseURL(String value) => _baseUrl = '$value:${config.getItem('port')}';
+
+  String get db {
+    if (_db != "") return _db;
+    _db = config.getItem('db');
+    return _db;
+  }
+
+  set db(String value) => _db = value;
 
   Future<OdooSession> get session async {
     if (_session != null) return _session;
@@ -26,21 +40,23 @@ class OdooProxy {
 
   Future<OdooClient> get client async {
     if (_client != null) return _client;
-    _client = await initClient();
+    try {
+      _client = await initClient();
+    } catch (e) {}
+
     return _client;
   }
 
   Future<OdooClient> initClient() async {
     final OdooSession odooSession = await session;
-    if (odooSession != null) return OdooClient(_baseURL, odooSession);
-    return OdooClient(_baseURL);
+    if (odooSession != null) return OdooClient(baseURL, odooSession);
+    return OdooClient(baseURL);
   }
 
   Future<void> destroySession() async {
     final OdooClient odooClient = await client;
-     subscription = null;
+    subscription = null;
     return odooClient.destroySession();
-    
   }
 
   void close() async {
@@ -58,14 +74,16 @@ class OdooProxy {
       Function(OdooSession) sessionChanged) async {
     if (subscription == null) {
       final OdooClient odooClient = await client;
-      subscription = odooClient.sessionStream.listen(sessionChanged);
+      if (odooClient != null)
+        subscription = odooClient.sessionStream.listen(sessionChanged);
     }
   }
 
   Future<OdooSession> authorize(String login, String password,
       {String dbName}) async {
-    dbName = dbName ?? _db;
+    dbName = dbName ?? db;
     final OdooClient odooClient = await client;
+    if (odooClient == null) return null;
     try {
       DBProvider.db.insert('log', {
         'date': nowStr(),

@@ -1179,17 +1179,17 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       if (!hasTimeBegin) inspectionItem.dtFrom = null;
       if (!hasTimeEnd) inspectionItem.dtTo = null;
 
-      CheckPlanItem inspectionItemCopy =
+     /* CheckPlanItem inspectionItemCopy =
           CheckPlanItem.fromJson(inspectionItem.toJson());
       inspectionItemCopy.date = inspectionItemCopy.date?.toUtc();
       inspectionItemCopy.dtFrom = inspectionItemCopy.dtFrom?.toUtc();
-      inspectionItemCopy.dtTo = inspectionItemCopy.dtTo?.toUtc();
+      inspectionItemCopy.dtTo = inspectionItemCopy.dtTo?.toUtc();*/
 
       try {
         if (inspectionItem.id == null) {
-          result = await CheckPlanItemController.insert(inspectionItemCopy);
+          result = await CheckPlanItemController.insert(inspectionItem);
         } else {
-          result = await CheckPlanItemController.update(inspectionItemCopy);
+          result = await CheckPlanItemController.update(inspectionItem);
         }
         hasErorr = result["code"] < 0;
 

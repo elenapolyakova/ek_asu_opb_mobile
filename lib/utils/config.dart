@@ -15,8 +15,16 @@ Map<String, Object> _config = {
   "sessionExpire": 10*60, //через какое время запрашиваем ПИН-код, секунд
   "refreshMessenger": 10, //как часто обновляем сообщения в мессенджере, секунд
   "refreshCountMessenger": 60, //как часто обновляем количество сообщений в иконке чат, секунд
+  "ServiceRoots": ["http://msk3tis2.vniizht.lan"]
+
+  
 };
 
 dynamic getItem(String item) {
   return _config[item] != null ?  _config[item] : "";
+}
+
+
+dynamic setItem(String key, String item) {
+  return _config[key] = item;
 }

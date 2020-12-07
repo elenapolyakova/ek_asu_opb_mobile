@@ -45,46 +45,55 @@ class _HomeScreen extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsFlutterBinding.ensureInitialized();
+    auth.getBaseUrl().then((baseUrl) {
+      auth.setBaseUrl(baseUrl).then((isSet) {
+        auth.getDB().then((db) {
+          auth.setDB(db).then((isSet) {
+            auth.checkLoginStatus(context).then((isLogin) {
+              if (isLogin) {
+                showLoadingDialog(context);
+                auth.getUserInfo().then((userInfo) {
+                  _userInfo = userInfo;
+                  _navigationMenu = getNavigationMenu(userInfo.f_user_role_txt);
+                  setState(() {});
 
-    auth.checkLoginStatus(context).then((isLogin) {
-      if (isLogin) {
-        showLoadingDialog(context);
-        auth.getUserInfo().then((userInfo) {
-          _userInfo = userInfo;
-          _navigationMenu = getNavigationMenu(userInfo.f_user_role_txt);
-          setState(() {});
+                  try {
+                    if (arguments == null || arguments['first']) {
+                      checkConnection().then((isConnect) {
+                        if (isConnect) {
+                          auth.checkSession(context).then((isSessionExist) {
+                            if (isSessionExist) {
+                              exchange
+                                  .getDictionaries(all: true)
+                                  .then((result) {
+                                SynController.loadFromOdoo().then((value) {
+                                  hideLoading();
+                                }).catchError((err) {
+                                  hideLoading();
+                                });
+                              }).catchError((err) {
+                                hideLoading();
+                              });
+                              //getDictionary
+                            } //isSessionExist = true
+                          }); //checkSession
 
-          try {
-            if (arguments == null || arguments['first']) {
-              checkConnection().then((isConnect) {
-                if (isConnect) {
-                  auth.checkSession(context).then((isSessionExist) {
-                    if (isSessionExist) {
-                      exchange.getDictionaries(all: true).then((result) {
-                        SynController.loadFromOdoo().then((value) {
-                          hideLoading();
-                        }).catchError((err) {
-                          hideLoading();
-                        });
-                      }).catchError((err) {
-                        hideLoading();
+                        } //isConnect == true
                       });
-                      //getDictionary
-                    } //isSessionExist = true
-                  }); //checkSession
+                    } else
+                      hideLoading();
+                  } catch (e) {
+                    hideLoading();
+                  } finally {}
 
-                } //isConnect == true
-              });
-            } else
-              hideLoading();
-          } catch (e) {
-            hideLoading();
-          } finally {}
-
-          //checkConnection
-        });
-      } //isLogin == true
-    }); //checkLoginStatus
+                  //checkConnection
+                });
+              } //isLogin == true
+            }); //checkLoginStatus
+          }); //setBaseUrl
+        }); //getBaseUrl
+      }); //setBaseUrl
+    }); //getBaseUrl
   }
 
   List<Map<String, dynamic>> getNavigationMenu(String role_txt) {
@@ -133,8 +142,8 @@ class _HomeScreen extends State<HomeScreen> {
 
   Widget getBodyContent(bool isSyncData) {
     String screenKey = _navigationMenu[_selectedIndex]["key"];
-    if (!isSyncData)
-      if (screenList[screenKey] != null) return screenList[screenKey];
+    if (!isSyncData) if (screenList[screenKey] != null)
+      return screenList[screenKey];
     switch (screenKey) {
       case "cbt":
         screenList[screenKey] =

@@ -110,14 +110,39 @@ class DBProvider {
     );
   }
 
+  Future<void> reCreateDB() async {
+    await deleteAll("railway");
+    await deleteAll("department");
+    await deleteAll("user");
+    await deleteAll("log");
+    await deleteAll("userInfo");
+    await deleteAll("plan");
+    await deleteAll("plan_item");
+    await deleteAll("plan_item_check");
+    await deleteAll("plan_item_check_item");
+    await deleteAll("com_group");
+    await deleteAll("rel_com_group_user");
+    await deleteAll("check_list");
+    await deleteAll("check_list_item");
+    await deleteAll("fault");
+    await deleteAll("fault_item");
+    await deleteAll("koap");
+    await deleteAll("department_document");
+    await deleteAll("document_list");
+    await deleteAll("isp_document");
+    await deleteAll("chat");
+    await deleteAll("chat_message");
+    await deleteAll("rel_chat_user");
+    await deleteAll("syn");
+ }
+
   Future<void> reCreateDictionary() async {
-    
     await deleteAll("railway");
     await deleteAll("department");
     await deleteAll("user");
     await deleteAll("koap");
 
-   /* await db.execute("DROP TABLE IF EXISTS railway");
+    /* await db.execute("DROP TABLE IF EXISTS railway");
     await db.execute("DROP TABLE IF EXISTS department");
     await db.execute("DROP TABLE IF EXISTS user");
     await db.execute("DROP TABLE IF EXISTS koap");
