@@ -198,9 +198,10 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
 
   Future<String> depOrEventName(
       int eventId, int departmentId, String eventName) async {
-    if (departmentId != null)
+    if (eventId == checkTypeId && departmentId != null)
       return (await DepartmentController.selectById(departmentId)).name;
-    return eventName ?? (eventId != null ? CheckPlanItem.typeSelection[eventId] : "");
+    return eventName ??
+        (eventId != null ? CheckPlanItem.typeSelection[eventId] : "");
   }
 
   @override
@@ -216,7 +217,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
           case 'add':
             addInspectionItemClicked();
             break;
-           case 'pdf':
+          case 'pdf':
             exportToPdf();
             return;
           case 'excel':
@@ -294,7 +295,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
           value: 'add'),
     );
 
-      result.add(PopupMenuDivider(
+    result.add(PopupMenuDivider(
       height: 20,
     ));
 
@@ -499,7 +500,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                           {inspection.name = value},
                                       context: context,
                                       height: 100,
-                                     // maxLines: 5,
+                                      // maxLines: 5,
                                     ),
                                     Row(
                                         mainAxisAlignment:
@@ -760,63 +761,65 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                       ],
                                     ),
                                     Container(
-                                      padding: EdgeInsets.symmetric(vertical: 20),
+                                        padding:
+                                            EdgeInsets.symmetric(vertical: 20),
                                         child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        if (eventId != null &&
-                                                eventId == checkTypeId ||
-                                            eventId == null)
-                                          ConstrainedBox(
-                                              constraints: BoxConstraints(
-                                                  maxWidth: widthPlan,
-                                                  minHeight: 60),
-                                              child: DepartmentSelect(
-                                                  text:
-                                                      "Структурное подразделение",
-                                                  width: widthPlan,
-                                                  height: 150,
-                                                  margin: 0,
-                                                  department: department,
-                                                  railwayId:
-                                                      planItem["railwayId"],
-                                                  context: context,
-                                                  onSaved: (newDepartment) {
-                                                    if (newDepartment == null)
-                                                      return;
-                                                    setState(() {
-                                                      inspectionItem
-                                                              .departmentId =
-                                                          newDepartment.id;
-                                                      department =
-                                                          newDepartment;
-                                                    });
-                                                  })),
-                                        if (eventId != null &&
-                                            eventId != checkTypeId)
-                                          ConstrainedBox(
-                                              constraints: BoxConstraints(
-                                                  maxWidth: widthPlan,
-                                                  minHeight: 60),
-                                              child: EditTextField(
-                                                text: 'Описание',
-                                                value: eventName,
-                                                onSaved: (value) {
-                                                  eventName = value;
-                                                  inspectionItem.name = value;
-                                                },
-                                                context: context,
-                                                height: 150,
-                                                margin: 0,
-                                              )),
-                                      ],
-                                    )),
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            if (eventId != null &&
+                                                    eventId == checkTypeId ||
+                                                eventId == null)
+                                              ConstrainedBox(
+                                                  constraints: BoxConstraints(
+                                                      maxWidth: widthPlan,
+                                                      minHeight: 60),
+                                                  child: DepartmentSelect(
+                                                      text:
+                                                          "Структурное подразделение",
+                                                      width: widthPlan,
+                                                      height: 150,
+                                                      margin: 0,
+                                                      department: department,
+                                                      railwayId:
+                                                          planItem["railwayId"],
+                                                      context: context,
+                                                      onSaved: (newDepartment) {
+                                                        if (newDepartment ==
+                                                            null) return;
+                                                        setState(() {
+                                                          inspectionItem
+                                                                  .departmentId =
+                                                              newDepartment.id;
+                                                          department =
+                                                              newDepartment;
+                                                        });
+                                                      })),
+                                            if (eventId != null &&
+                                                eventId != checkTypeId)
+                                              ConstrainedBox(
+                                                  constraints: BoxConstraints(
+                                                      maxWidth: widthPlan,
+                                                      minHeight: 60),
+                                                  child: EditTextField(
+                                                    text: 'Описание',
+                                                    value: eventName,
+                                                    onSaved: (value) {
+                                                      eventName = value;
+                                                      inspectionItem.name =
+                                                          value;
+                                                    },
+                                                    context: context,
+                                                    height: 150,
+                                                    margin: 0,
+                                                  )),
+                                          ],
+                                        )),
                                     Row(children: [
                                       Expanded(
                                           child: Container(
-                                              padding: EdgeInsets.only(
-                                                  right: 20),
+                                              padding:
+                                                  EdgeInsets.only(right: 20),
                                               child: Column(
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
@@ -911,7 +914,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                       })
                                                 ])),
                                             TimePicker(
-                                               width: double.infinity,
+                                              width: double.infinity,
                                               time: inspectionItem.dtFrom ??
                                                   DateTime.now(),
                                               enable: hasTimeBegin,
@@ -928,10 +931,10 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                     Row(children: [
                                       Expanded(
                                           child: Container(
-                                             width: double.infinity,
+                                              width: double.infinity,
                                               // width: 200,
-                                              padding: EdgeInsets.only(
-                                                  right: 20),
+                                              padding:
+                                                  EdgeInsets.only(right: 20),
                                               child: Column(
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
@@ -983,7 +986,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                         parentContext: context,
                                                         text: "",
                                                         //  width: 200,
-                                                         width: double.infinity,
+                                                        width: double.infinity,
                                                         enable: hasTimeEnd,
                                                         selectedDate:
                                                             inspectionItem
@@ -1014,7 +1017,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                       Expanded(
                                           child: Container(
                                               //  width: 200,
-                                               width: double.infinity,
+                                              width: double.infinity,
                                               padding: EdgeInsets.only(top: 15),
                                               child: Column(
                                                   crossAxisAlignment:
@@ -1063,7 +1066,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                               })
                                                         ])),
                                                     TimePicker(
-                                                       width: double.infinity,
+                                                      width: double.infinity,
                                                       time: inspectionItem.dtTo,
                                                       enable: hasTimeEnd,
                                                       minutesInterval: 1,
@@ -1179,7 +1182,9 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       if (!hasTimeBegin) inspectionItem.dtFrom = null;
       if (!hasTimeEnd) inspectionItem.dtTo = null;
 
-     /* CheckPlanItem inspectionItemCopy =
+      if (inspectionItem.type != checkTypeId)
+        inspectionItem.departmentId = null;
+      /* CheckPlanItem inspectionItemCopy =
           CheckPlanItem.fromJson(inspectionItem.toJson());
       inspectionItemCopy.date = inspectionItemCopy.date?.toUtc();
       inspectionItemCopy.dtFrom = inspectionItemCopy.dtFrom?.toUtc();
@@ -1291,6 +1296,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     CheckPlanItem inspectionItem = new CheckPlanItem(
         id: null,
         odooId: null,
+        type: checkTypeId,
         parentId: _inspection.id,
         date: DateTime.now(),
         active: true);
@@ -1300,15 +1306,16 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     }
   }
 
-  Future<void> exportToPdf() async{
-       if (_inspection.id == null) {
+  Future<void> exportToPdf() async {
+    if (_inspection.id == null) {
       Scaffold.of(context).showSnackBar(
           errorSnackBar(text: 'Сначала сохраните реквизиты плана проверок'));
       return;
     }
   }
-  Future<void> exportToExcel() async{
-       if (_inspection.id == null) {
+
+  Future<void> exportToExcel() async {
+    if (_inspection.id == null) {
       Scaffold.of(context).showSnackBar(
           errorSnackBar(text: 'Сначала сохраните реквизиты плана проверок'));
       return;

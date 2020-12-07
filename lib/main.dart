@@ -81,7 +81,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
         navigatorKey: MyApp.navKey,
         theme: ThemeData(
             primaryColor: Color(0xFFADB439), //салатовый
-            cardColor: Color(0x00ADB439), //салатовый,
+            cardColor: Color(0x00ADB439), //прозрачный,
             accentColor: Color(0xFF465C0B), //оливковый
             primaryColorLight: Color(0xFFEFF0D7), //бежевый
             primaryColorDark: Color(0xFF465C0B), //оливковый
