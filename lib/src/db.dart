@@ -4,6 +4,7 @@ import 'package:ek_asu_opb_mobile/controllers/syn.dart';
 import 'package:flutter/widgets.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'dart:io';
 
 class DBProvider {
   DBProvider._();
@@ -125,16 +126,34 @@ class DBProvider {
     await deleteAll("check_list");
     await deleteAll("check_list_item");
     await deleteAll("fault");
+
+      for (Map<String, dynamic> element in (await DBProvider.db.selectAll('fault_item'))) {
+      String filePath = element["image"];
+      if (!['', null].contains(filePath)) await File(filePath).delete();
+    }
     await deleteAll("fault_item");
+
     await deleteAll("koap");
+
+    for (Map<String, dynamic> element in (await DBProvider.db.selectAll('department_document'))) {
+      String filePath = element["file_path"];
+      if (!['', null].contains(filePath)) await File(filePath).delete();
+    }
     await deleteAll("department_document");
+
     await deleteAll("document_list");
+
+    for (Map<String, dynamic> element in (await DBProvider.db.selectAll('isp_document'))) {
+      String filePath = element["file_path"];
+      if (!['', null].contains(filePath)) await File(filePath).delete();
+    }
     await deleteAll("isp_document");
+
     await deleteAll("chat");
     await deleteAll("chat_message");
     await deleteAll("rel_chat_user");
     await deleteAll("syn");
- }
+  }
 
   Future<void> reCreateDictionary() async {
     await deleteAll("railway");
