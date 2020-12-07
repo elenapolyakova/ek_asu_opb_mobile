@@ -273,6 +273,7 @@ class SynController extends Controllers {
         tableMany2oneFieldsMap[syn.localTableName];
     // If a record contains any many2one fields
     if (many2oneFields != null && many2oneFields.length > 0) {
+      bool stopSync = false;
       print("Model ${syn.localTableName} has many2one fields");
       // For each many2one field in a record
       await Future.forEach(many2oneFields.entries, (el) async {
@@ -322,22 +323,30 @@ class SynController extends Controllers {
                 'local_table_name': localTable,
                 'method': 'create',
               });
-              synList.add({
-                'record_id': many2oneFieldId,
-                'local_table_name': localTable,
-                'method': 'create',
-                'id': id,
-              });
+              synList = [
+                {
+                  'record_id': many2oneFieldId,
+                  'local_table_name': localTable,
+                  'method': 'create',
+                  'id': id,
+                }
+              ];
             }
             await doSync(Syn.fromJson(synList[0]));
             // Try to synchronize the original record again
-            return doSync(syn);
+            await doSync(syn);
+            throw "Finished synchronizing ${el.key}=$many2oneFieldId of $syn.";
           }
           print(
               "${el.key} of ${syn.localTableName} to upload = ${many2oneRecord[0]['odoo_id']}");
           record[el.key] = many2oneRecord[0]['odoo_id'];
         }
+      }).catchError((error) {
+        stopSync = true;
       });
+      if (stopSync) {
+        return true;
+      }
     }
 
     // Add many2many records to upload
