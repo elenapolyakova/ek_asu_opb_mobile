@@ -124,13 +124,15 @@ class SynController extends Controllers {
   }
 
   /// Adds a record to create into syn table
-  static Future<int> create(String localTableName, int resId) async {
+  static Future<int> create(String localTableName, int resId,
+      {bool noImmediateSync = false, Function beforeUpload}) async {
     int res = await DBProvider.db.insert(_tableName, {
       'record_id': resId,
       'local_table_name': localTableName,
       'method': 'create',
     });
-    await syncTask(noLoadFromOdoo: true);
+    if (!noImmediateSync)
+      await syncTask(noLoadFromOdoo: true, beforeUpload: beforeUpload);
     return res;
   }
 
@@ -238,7 +240,7 @@ class SynController extends Controllers {
   /// Perform a synchronization of a syn record with backend.
   /// Remove the record from syn table if successful.
   /// Return true if successful
-  static Future<bool> doSync(Syn syn) async {
+  static Future<bool> doSync(Syn syn, {Function beforeUpload}) async {
     // Get syn's local db record
     List<Map<String, dynamic>> records = await DBProvider.db
         .select(syn.localTableName, where: 'id = ?', whereArgs: [syn.recordId]);
@@ -447,6 +449,12 @@ class SynController extends Controllers {
     record.remove('write_uid');
     record.remove('create_date');
     record.remove('write_date');
+    if (beforeUpload != null) {
+      var beforeUploadRes = beforeUpload(record);
+      if (beforeUploadRes != null) {
+        record = beforeUploadRes;
+      }
+    }
     print("Uploading $record");
     return await getDataWithAttemp(
             localRemoteTableNameMap[syn.localTableName], syn.method, args, {})
@@ -473,7 +481,8 @@ class SynController extends Controllers {
     });
   }
 
-  static Future<bool> syncTask({bool noLoadFromOdoo: false}) async {
+  static Future<bool> syncTask(
+      {bool noLoadFromOdoo: false, Function beforeUpload}) async {
     if (ongoingSync) return true;
     ongoingSync = true;
     try {
@@ -501,7 +510,8 @@ class SynController extends Controllers {
         // For each syn record:
         Syn syn = Syn.fromJson(toSyn[0]);
         print('Synchronizing $syn');
-        bool result = await SynController.doSync(syn);
+        bool result =
+            await SynController.doSync(syn, beforeUpload: beforeUpload);
         lastUploadedTableRecordId[syn.localTableName] = syn.recordId;
         if (!result) {
           //Синхронизация не прошла

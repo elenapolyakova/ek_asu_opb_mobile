@@ -29,7 +29,10 @@ class FaultItemController extends Controllers {
       res['id'] = resId;
       res['message'] = "Фото создано";
       if (!saveOdooId) {
-        return SynController.create(_tableName, resId).catchError((err) {
+        return SynController.create(_tableName, resId, beforeUpload: (record) {
+          print(record);
+          return record;
+        }).catchError((err) {
           res['code'] = -2;
           res['message'] = 'Error updating syn';
         });
