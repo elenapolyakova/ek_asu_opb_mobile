@@ -419,7 +419,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
             decoration: BoxDecoration(
                 image: DecorationImage(
                     image: AssetImage("assets/images/frameScreen.png"),
-                    fit: BoxFit.fitWidth)),
+                    fit: BoxFit.fill)),
             child: showLoading
                 ? Text("")
                 : Padding(

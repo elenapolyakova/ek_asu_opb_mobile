@@ -297,8 +297,10 @@ class MyButton extends StatelessWidget {
   Function onPress;
   double width;
   double height;
+  double margin;
+  double fontSize;
   bool disabled;
-  final _sizeTextWhite = const TextStyle(fontSize: 20.0, color: Colors.white);
+  var _sizeTextWhite =  TextStyle(fontSize: 20, color: Colors.white);
 
   MyButton(
       {this.text,
@@ -306,15 +308,18 @@ class MyButton extends StatelessWidget {
       this.onPress,
       this.width,
       this.height,
-      this.disabled = false});
+      this.disabled = false,
+      this.margin,
+      this.fontSize = 20.0});
   @override
   Widget build(BuildContext) {
+    _sizeTextWhite =  TextStyle(fontSize: fontSize, color: Colors.white);
     return Container(
         height: height ?? 40.0,
         width: width ?? 150.0,
         alignment: Alignment.center,
-        padding: new EdgeInsets.all(5.0),
-        margin: new EdgeInsets.all(5.0),
+        padding: new EdgeInsets.symmetric(horizontal: margin ?? 5, vertical: 5.0),
+        margin:new EdgeInsets.symmetric(horizontal: margin ?? 5, vertical: 5.0),
         decoration: new BoxDecoration(
           borderRadius: BorderRadius.all(Radius.circular(10)),
           color: !disabled
@@ -1554,7 +1559,7 @@ class _MyAppBar extends State<MyAppBar> {
     _countMessage = 0;
     getVersion();
     if (widget.showMessenger != null && !widget.showMessenger) return;
-    
+
     getCountMessages();
 
     createTimer();
@@ -1569,9 +1574,9 @@ class _MyAppBar extends State<MyAppBar> {
 
   void getVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
-   
+
     setState(() {
-       version = packageInfo.version;
+      version = packageInfo.version;
     });
   }
 
@@ -1694,8 +1699,7 @@ class _MyAppBar extends State<MyAppBar> {
                           margin: 0,
                           onTap: () async {
                             // await ChatController.loadFromOdoo(clean: true);
-                            await ChatMessageController.loadFromOdoo(
-                                clean: true);
+
                             // await SynController.loadFromOdoo(
                             //     forceFirstLoad: true);
                             // ChatController.loadFromOdoo(clean: true);
@@ -1710,6 +1714,15 @@ class _MyAppBar extends State<MyAppBar> {
                             //   'id': 19,
                             //   'last_read': '2020-12-04 10:12:00.387076Z'
                             // });
+
+                            (await DBProvider.db.selectAll('chat'))
+                                .forEach((element) {
+                              print(element);
+                            });
+                            (await DBProvider.db.selectAll('rel_chat_user'))
+                                .forEach((element) {
+                              print(element);
+                            });
                           },
                           color: Theme.of(context).primaryColorLight,
                           fontSize: 20,

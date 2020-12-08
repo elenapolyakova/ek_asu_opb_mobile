@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:ek_asu_opb_mobile/models/comGroup.dart';
@@ -46,7 +47,7 @@ enum TYPE_LIST { commission, group, available }
 class CommissionScreen extends StatefulWidget {
   int checkPlanId;
   BuildContext context;
-   GlobalKey key;
+  GlobalKey key;
 
   @override
   CommissionScreen(this.context, this.checkPlanId, this.key);
@@ -61,6 +62,7 @@ class _CommissionScreen extends State<CommissionScreen> {
   List<User> userList;
   List<User> _userList;
   int checkPlanId;
+  int railwayId;
   var _tapPosition;
   String commissionName;
   String emptyCommissionName;
@@ -151,8 +153,10 @@ class _CommissionScreen extends State<CommissionScreen> {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
-      _userList = await UserController.selectAll();
-      userList = await UserController.selectAll();
+      //CheckPlan checkPlan = await CheckPlanController.selectById(checkPlanId);
+     // railwayId = checkPlan.railwayId;
+      _userList = await UserController.selectByRailway(_userInfo.railway_id);
+      userList = await UserController.selectByRailway(_userInfo.railway_id);
       _userList.sort(
           (a, b) => a.display_name.trim().compareTo(b.display_name.trim()));
       userList.sort(
@@ -1186,7 +1190,7 @@ class _CommissionScreen extends State<CommissionScreen> {
             decoration: BoxDecoration(
                 image: DecorationImage(
                     image: AssetImage("assets/images/frameScreen.png"),
-                    fit: BoxFit.fitWidth)),
+                    fit: BoxFit.fill)),
             child: showLoading
                 ? Text("")
                 : Padding(

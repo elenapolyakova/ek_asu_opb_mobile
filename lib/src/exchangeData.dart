@@ -82,7 +82,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
         case 'department':
           List<dynamic> domain = new List<dynamic>();
           if (lastUpdate != null) domain.add(lastUpdate);
-          /*domain.add([
+         /* domain.add([
             'id',
             'in',
             [32229, 32230, 22886, 21818]
@@ -118,10 +118,14 @@ Future<List<Map<String, dynamic>>> getDictionaries(
           List<dynamic> domain = new List<dynamic>();
 
           if (lastUpdate != null) domain.add(lastUpdate);
-          listDepIds = await DepartmentController.selectIDs();
+          
+          //раскоментировать, если нужно будет огграничивать пользователей дорогой нцоп
+          /*listDepIds = await DepartmentController.selectIDs();
           if (listDepIds == null) continue;
           if (listDepIds.length > 0) if (userRoleTxt == ncopRole)
-            domain.add(['department_id', 'in', listDepIds]);
+            domain.add(['department_id', 'in', listDepIds]);*/
+
+
           // domain.add(['department_id.role', 'in', ['cbt', 'ncop']]);
           /* domain.add([
             'f_user_role_txt',
