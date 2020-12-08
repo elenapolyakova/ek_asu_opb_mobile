@@ -38,6 +38,9 @@ class FaultItemController extends Controllers {
       res['code'] = -3;
       res['message'] = 'Error create FaultItem into $_tableName';
     });
+
+    print("FAULT_ITEM Res $res");
+
     DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
     return res;
   }
@@ -205,6 +208,8 @@ class FaultItemController extends Controllers {
         print(file.path);
 
         json.image = file.path;
+        // Set file_data null because of issues with db
+        json.file_data = null;
         return FaultItemController.create(json, true);
       }
     });
@@ -256,8 +261,6 @@ class FaultItemController extends Controllers {
           //     "Model fault has to be loaded before $_tableName");
           res['id'] = faultItem.id;
           res['parent_id'] = parentFault.id;
-
-          print("RES faultItem $res");
         }
         if (res['id'] != null) return DBProvider.db.update(_tableName, res);
         return null;
@@ -268,6 +271,8 @@ class FaultItemController extends Controllers {
           // Set path
           e["image"] = file.path;
 
+          // set file_data = null because of issues with db
+          e["file_data"] = null;
           Map<String, dynamic> res =
               FaultItem.fromJson({...e, 'active': 'true'}).toJson(true);
           res['odoo_id'] = e['id'];
