@@ -29,8 +29,10 @@ class FaultItemController extends Controllers {
       res['id'] = resId;
       res['message'] = "Фото создано";
       if (!saveOdooId) {
+        var file = fileToBase64(json["image"]);
         return SynController.create(_tableName, resId, beforeUpload: (record) {
-          print(record);
+          record["file_data"] = file;
+          print('record $record');
           return record;
         }).catchError((err) {
           res['code'] = -2;
