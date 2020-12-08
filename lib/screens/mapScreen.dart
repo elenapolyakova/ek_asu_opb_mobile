@@ -1,11 +1,38 @@
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 ////////////////////////////////////////////////////////
 import 'package:user_location/user_location.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong/latlong.dart';
+
+Marker getMarker(double lat, double lng,
+    [IconData icon = Icons.circle,
+    Color color = Colors.blue,
+    double size = 80]) {
+  return Marker(
+    width: size,
+    height: size,
+    point: new LatLng(lat, lng),
+    builder: (ctx) => new Container(
+      child: Icon(
+        icon,
+        color: color,
+        size: size,
+        semanticLabel: 'Text to announce in accessibility modes',
+      ),
+    ),
+  );
+}
+
+List<Marker> getMarkers(List<Map<String, double>> latLngArr) {
+  return latLngArr
+      .map((e) => getMarker(e['latitude'], e['longitude']))
+      .toList();
+}
 
 class MapScreen extends StatefulWidget {
   int departmentId;
@@ -23,6 +50,10 @@ class _MapScreen extends State<MapScreen> {
   bool showLoading = true;
   int departmentId;
   int checkPlanId;
+  double lon = 0;
+  double lat = 0;
+  bool focusOnUser = false;
+  LatLng userLocation;
 
   // ADD THIS
   MapController mapController = MapController();
@@ -50,8 +81,41 @@ class _MapScreen extends State<MapScreen> {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
-      //<-----сюда вставить загрузку данных
-
+      Department dep = await DepartmentController.selectById(departmentId);
+      if (dep != null) {
+        lon = dep.f_coord_e;
+        lat = dep.f_coord_n;
+      } else {
+        CheckPlan check = await CheckPlanController.selectById(checkPlanId);
+        if (check != null) {
+          List<CheckPlanItem> items = await check.items;
+          items =
+              items.where((element) => element.departmentId != null).toList();
+          if (items.isNotEmpty) {
+            int i = 0;
+            while (true) {
+              print(items[i].name);
+              dep = await items[i].department;
+              if (i < items.length &&
+                  (dep == null || dep.f_coord_e == 0.0 && dep.f_coord_n == 0.0))
+                i++;
+              else
+                break;
+            }
+            if (dep != null &&
+                !(dep.f_coord_e == 0.0 && dep.f_coord_n == 0.0)) {
+              lon = dep.f_coord_e;
+              lat = dep.f_coord_n;
+              return;
+            }
+          }
+        }
+        focusOnUser = true;
+        if (userLocationOptions != null) {
+          userLocationOptions.zoomToCurrentLocationOnLoad = true;
+          mapController.move(userLocation, 17);
+        }
+      }
     } catch (e) {} finally {
       hideDialog(context);
       showLoading = false;
@@ -64,55 +128,61 @@ class _MapScreen extends State<MapScreen> {
     // You can use the userLocationOptions object to change the properties
     // of UserLocationOptions in runtime
     userLocationOptions = UserLocationOptions(
-      updateMapLocationOnPositionChange: false,
-      zoomToCurrentLocationOnLoad: true,
-      context: context,
-      mapController: mapController,
-      markers: markers,
-    );
+        updateMapLocationOnPositionChange: false,
+        zoomToCurrentLocationOnLoad: focusOnUser, //departmentId == null,
+        showMoveToCurrentLocationFloatingActionButton: true,
+        context: context,
+        mapController: mapController,
+        markers: markers,
+        locationUpdateIntervalMs: 10000,
+        onLocationUpdate: (LatLng latLng) {
+          userLocation = latLng;
+        });
     return showLoading
         ? Expanded(child: Text(""))
         : Expanded(
             child: Scaffold(
-                appBar: AppBar(title: Text("User Location Plugin")),
                 body: FlutterMap(
-                  options: MapOptions(
-                    center: LatLng(0, 0),
-                    zoom: 15.0,
-                    plugins: [
-                      // ADD THIS
-                      UserLocationPlugin(),
-                    ],
-                  ),
-                  layers: [
-                    /* vasvas 21nov20
-                TileLayerOptions(
-                  urlTemplate: "https://api.tiles.mapbox.com/v4/"
-                      "{id}/{z}/{x}/{y}@2x.png?access_token={accessToken}",
-                  additionalOptions: {
-                    'accessToken':
-                        'pk.eyJ1IjoidmFzdmFzIiwiYSI6ImNraHFha3FmcDFpemUzOG14Y25jYzQxdDAifQ.ZobEXR5Lq9mfXfSs28dh6A',
-                    'id': 'mapbox.streets',
-                  },
+            options: MapOptions(
+              center: LatLng(lat, lon),
+              zoom: 15.0,
+              plugins: [
+                UserLocationPlugin(),
+                MarkerClusterPlugin(),
+              ],
+            ),
+            layers: [
+              TileLayerOptions(
+                urlTemplate:
+                    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                subdomains: ['a', 'b', 'c'],
+                // urlTemplate: "http://172.22.3.173/russia/map/{z}/{x}/{y}.png",
+              ),
+              MarkerLayerOptions(markers: markers),
+              // ADD THIS
+              userLocationOptions,
+              MarkerClusterLayerOptions(
+                maxClusterRadius: 120,
+                size: Size(40, 40),
+                fitBoundsOptions: FitBoundsOptions(
+                  padding: EdgeInsets.all(50),
                 ),
-                */
-                    TileLayerOptions(
-                      urlTemplate: "https://api.mapbox.com/styles/v1/"
-                          "{id}/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}",
-                      additionalOptions: {
-                        'accessToken':
-                            'pk.eyJ1IjoidmFzdmFzIiwiYSI6ImNraHFha3FmcDFpemUzOG14Y25jYzQxdDAifQ.ZobEXR5Lq9mfXfSs28dh6A',
-                        'id': 'mapbox/streets-v8',
-                      },
-                    ),
-
-                    // ADD THIS
-                    MarkerLayerOptions(markers: markers),
-                    // ADD THIS
-                    userLocationOptions,
-                  ],
-                  // ADD THIS
-                  mapController: mapController,
-                )));
+                markers: getMarkers([
+                  {'latitude': lat, 'longitude': lon},
+                ]),
+                polygonOptions: PolygonOptions(
+                    borderColor: Colors.blueAccent,
+                    color: Colors.black12,
+                    borderStrokeWidth: 3),
+                builder: (context, markers) {
+                  return FloatingActionButton(
+                    child: Text(markers.length.toString()),
+                    onPressed: null,
+                  );
+                },
+              ),
+            ],
+            mapController: mapController,
+          )));
   }
 }

@@ -43,6 +43,7 @@ dependencies:
   search_widget: ^1.0.2
   flutter_treeview: ^0.6.0
   flutter_map: any
+  flutter_map_marker_cluster : any
   user_location:
     git:
       url: https://github.com/igaurab/user_location_plugin.git
