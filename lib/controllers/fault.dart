@@ -71,8 +71,7 @@ class FaultController extends Controllers {
             item.coord_e = fItem["coord_e"];
             item.coord_n = fItem["coord_n"];
             item.parent_id = res["id"];
-            item.file_data = '';
-            // item.file_data = fileToBase64(fItem["path"]);
+            item.file_data = null;
             item.type = 2;
             item.name = Uuid().v1();
             item.file_name = item.name + ".jpg";
@@ -188,9 +187,8 @@ class FaultController extends Controllers {
           item.coord_e = fItem["coord_e"];
           item.coord_n = fItem["coord_n"];
           item.parent_id = fault.id;
-          item.file_data = '';
+          item.file_data = null;
 
-          // item.file_data = fileToBase64(fItem["path"]);
           item.type = 2;
           item.name = Uuid().v1();
           item.file_name = item.name + ".jpg";
