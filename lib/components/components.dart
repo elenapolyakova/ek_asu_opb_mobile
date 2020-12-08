@@ -1552,8 +1552,9 @@ class _MyAppBar extends State<MyAppBar> {
     // TODO: implement initState
     super.initState();
     _countMessage = 0;
-    if (widget.showMessenger != null && !widget.showMessenger) return;
     getVersion();
+    if (widget.showMessenger != null && !widget.showMessenger) return;
+    
     getCountMessages();
 
     createTimer();
@@ -1568,8 +1569,10 @@ class _MyAppBar extends State<MyAppBar> {
 
   void getVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    version = packageInfo.version;
-    setState(() {});
+   
+    setState(() {
+       version = packageInfo.version;
+    });
   }
 
   void getCountMessages() async {
