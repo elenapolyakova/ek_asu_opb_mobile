@@ -860,6 +860,7 @@ class _FaultScreen extends State<FaultScreen> {
                                                 // EdgeInsets.only(top: 20),
                                                 child: MyButton(
                                                     text: 'принять',
+                                                    fontSize: 17, margin: 0,
                                                     parentContext: context,
                                                     onPress: () async {
                                                       await submitFault();

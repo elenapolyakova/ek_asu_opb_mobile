@@ -22,6 +22,22 @@ class UserController extends Controllers {
     return [];
   }
 
+  static Future<List<User>> selectByRailway(int railwayId) async {
+
+    List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
+      _tableName,
+      where: railwayId != null ? 'railway_id = ? ' : null,
+      whereArgs:  railwayId != null ? [railwayId] : null,
+     
+    );
+    if (queryRes.isEmpty) return [];
+    List<User> result = List.generate(
+        queryRes.length, (index) => User.fromJson(queryRes[index]));
+
+    return result;
+
+  }
+
   static Future<User> selectById(int id) async {
     if (id == null) return null;
     var json = await DBProvider.db.selectById(_tableName, id);
