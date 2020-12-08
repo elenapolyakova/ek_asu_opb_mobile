@@ -203,6 +203,16 @@ class FaultItemController extends Controllers {
           'active': 'true',
         };
 
+        if (e["coord_n"] is bool) {
+          e["coord_n"] = null;
+        }
+        if (e["coord_e"] is bool) {
+          e["coord_e"] = null;
+        }
+        if (e["file_data"] is bool) {
+          e["file_data"] = null;
+        }
+
         print("firstLoadFromOdoo() FaultItem insert! $res");
         FaultItem json = FaultItem.fromJson(res);
 
@@ -274,9 +284,20 @@ class FaultItemController extends Controllers {
           var file = await base64ToFile(e["file_data"]);
           // Set path
           e["image"] = file.path;
+          // Check if coords from odoo is bool
+          if (e["coord_n"] is bool) {
+            e["coord_n"] = null;
+          }
+          if (e["coord_e"] is bool) {
+            e["coord_e"] = null;
+          }
+
+          if (e["file_data"] is bool) {
+            e["file_data"] = null;
+          }
 
           // set file_data = null because of issues with db
-          e["file_data"] = null;
+          e["file_data"] = '';
           Map<String, dynamic> res =
               FaultItem.fromJson({...e, 'active': 'true'}).toJson(true);
           res['odoo_id'] = e['id'];
