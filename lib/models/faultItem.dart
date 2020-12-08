@@ -52,7 +52,7 @@ class FaultItem extends Models {
   factory FaultItem.fromJson(Map<String, dynamic> json) => new FaultItem(
         id: json["id"],
         odoo_id: json["odoo_id"],
-        name: json["name"],
+        name: getStr(json["name"]),
         type: json["type"],
         parent_id: json["parent_id"],
         image: getStr(json["image"]),
