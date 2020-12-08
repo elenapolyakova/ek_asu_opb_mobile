@@ -1699,29 +1699,17 @@ class _MyAppBar extends State<MyAppBar> {
                           margin: 0,
                           onTap: () async {
                             // await ChatController.loadFromOdoo(clean: true);
-
+                            // await ChatMessageController.loadFromOdoo(
+                            //     clean: true);
                             // await SynController.loadFromOdoo(
                             //     forceFirstLoad: true);
-                            // ChatController.loadFromOdoo(clean: true);
-                            // ChatMessageController.loadFromOdoo(clean: true);
-                            // List queryRes = await DBProvider.db.select(
-                            //   'chat_message',
-                            //   columns: ['id', 'create_date'],
-                            //   where: 'parent_id = ? and create_uid != ?',
-                            //   whereArgs: [19, 28824],
-                            // );
-                            // await DBProvider.db.update('chat', {
-                            //   'id': 19,
-                            //   'last_read': '2020-12-04 10:12:00.387076Z'
-                            // });
-
-                            (await DBProvider.db.selectAll('chat'))
-                                .forEach((element) {
-                              print(element);
-                            });
-                            (await DBProvider.db.selectAll('rel_chat_user'))
-                                .forEach((element) {
-                              print(element);
+                            // print((await DBProvider.db.select('department',
+                            //         where: "f_coord_n != 0.0"))
+                            //     .length);
+                            await Future.forEach(
+                                (await DBProvider.db.selectAll('fault_item')),
+                                (el) {
+                              print(el);
                             });
                           },
                           color: Theme.of(context).primaryColorLight,
