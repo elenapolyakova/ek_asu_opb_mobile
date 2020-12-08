@@ -1691,9 +1691,10 @@ class _MyAppBar extends State<MyAppBar> {
                           margin: 0,
                           onTap: () async {
                             // await ChatController.loadFromOdoo(clean: true);
-                            // await ChatMessageController.loadFromOdoo();
-                           // await SynController.loadFromOdoo(
-                           //     forceFirstLoad: true);
+                            await ChatMessageController.loadFromOdoo(
+                                clean: true);
+                            // await SynController.loadFromOdoo(
+                            //     forceFirstLoad: true);
                             // ChatController.loadFromOdoo(clean: true);
                             // ChatMessageController.loadFromOdoo(clean: true);
                             // List queryRes = await DBProvider.db.select(
@@ -1706,8 +1707,6 @@ class _MyAppBar extends State<MyAppBar> {
                             //   'id': 19,
                             //   'last_read': '2020-12-04 10:12:00.387076Z'
                             // });
-                           
-                           
                           },
                           color: Theme.of(context).primaryColorLight,
                           fontSize: 20,
@@ -1715,9 +1714,10 @@ class _MyAppBar extends State<MyAppBar> {
                         ))
                       ]),
                       Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                         Container(
-                          child: Text('Версия: $version', style: TextStyle(fontSize: 14, color: Color(0x66ADB439)))
-                        ),
+                        Container(
+                            child: Text('Версия: $version',
+                                style: TextStyle(
+                                    fontSize: 14, color: Color(0x66ADB439)))),
                         Container(
                           child: TextIcon(
                               icon: Icons.exit_to_app,
@@ -1727,7 +1727,6 @@ class _MyAppBar extends State<MyAppBar> {
                               color: Theme.of(context).primaryColorLight),
                         )
                       ]),
-
                     ],
                   )))
         ]),
