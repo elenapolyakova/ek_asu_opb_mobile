@@ -32,7 +32,6 @@ class FaultItemController extends Controllers {
         var file = fileToBase64(json["image"]);
         return SynController.create(_tableName, resId, beforeUpload: (record) {
           record["file_data"] = file;
-          print('record $record');
           return record;
         }).catchError((err) {
           res['code'] = -2;
