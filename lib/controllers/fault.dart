@@ -71,7 +71,8 @@ class FaultController extends Controllers {
             item.coord_e = fItem["coord_e"];
             item.coord_n = fItem["coord_n"];
             item.parent_id = res["id"];
-            item.file_data = fileToBase64(fItem["path"]);
+            item.file_data = '';
+            // item.file_data = fileToBase64(fItem["path"]);
             item.type = 2;
             item.name = Uuid().v1();
             item.file_name = item.name + ".jpg";
@@ -153,7 +154,7 @@ class FaultController extends Controllers {
     // Set date_done as plan fix date for uploading to odoo!
     fault.date_done = fault.plan_fix_date;
 
-    print("Update() Fault: $fault, faultItems: $faultItems, delete: $delete");
+    print("Update() FAULT faultItems: $faultItems, delete: $delete");
     var createdFaultItemsIds = [];
     var deletedFaultItemsIds = [];
 
@@ -187,12 +188,15 @@ class FaultController extends Controllers {
           item.coord_e = fItem["coord_e"];
           item.coord_n = fItem["coord_n"];
           item.parent_id = fault.id;
-          item.file_data = fileToBase64(fItem["path"]);
+          item.file_data = '';
+
+          // item.file_data = fileToBase64(fItem["path"]);
           item.type = 2;
           item.name = Uuid().v1();
           item.file_name = item.name + ".jpg";
 
           var createResp = await FaultItemController.create(item);
+          print("faultItem create resp $createResp");
           if (createResp["code"] > 0)
             createdFaultItemsIds.add(createResp["id"]);
         } catch (e) {
