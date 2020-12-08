@@ -82,9 +82,13 @@ class _MapScreen extends State<MapScreen> {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
       Department dep = await DepartmentController.selectById(departmentId);
-      if (dep != null) {
-        lon = dep.f_coord_e;
-        lat = dep.f_coord_n;
+      bool properCoordinatesFound = false;
+      if (dep != null && !(dep.f_coord_e == 0.0 && dep.f_coord_n == 0.0)) {
+        if (!(dep.f_coord_e == 0.0 && dep.f_coord_n == 0.0)) {
+          lon = dep.f_coord_e;
+          lat = dep.f_coord_n;
+          properCoordinatesFound = true;
+        }
       } else {
         CheckPlan check = await CheckPlanController.selectById(checkPlanId);
         if (check != null) {
@@ -106,13 +110,17 @@ class _MapScreen extends State<MapScreen> {
                 !(dep.f_coord_e == 0.0 && dep.f_coord_n == 0.0)) {
               lon = dep.f_coord_e;
               lat = dep.f_coord_n;
-              return;
+              properCoordinatesFound = true;
             }
           }
         }
+      }
+      if (!properCoordinatesFound) {
         focusOnUser = true;
         if (userLocationOptions != null) {
           userLocationOptions.zoomToCurrentLocationOnLoad = true;
+        }
+        if (mapController != null) {
           mapController.move(userLocation, 17);
         }
       }
