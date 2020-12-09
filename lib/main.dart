@@ -300,7 +300,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
                               color: Theme.of(context).buttonColor,
                             ),
                             child: new MaterialButton(
-                              onPressed: pinConfirm,
+                              onPressed:  (!_showLoading) ? pinConfirm : null,
                               child: (!_showLoading) ? new Text(
                                 "OK",
                                 style: _sizeTextWhite,

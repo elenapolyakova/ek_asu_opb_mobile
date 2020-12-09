@@ -853,19 +853,58 @@ class _FaultScreen extends State<FaultScreen> {
                                           Expanded(
                                               flex: 1,
                                               child: Container(
-                                                alignment:
-                                                    Alignment.bottomCenter,
-                                                margin:
-                                                    EdgeInsets.only(bottom: 0),
-                                                // EdgeInsets.only(top: 20),
-                                                child: MyButton(
+                                                  alignment:
+                                                      Alignment.bottomCenter,
+                                                  margin: EdgeInsets.only(
+                                                      bottom: 5),
+                                                  // EdgeInsets.only(top: 20),
+                                                  child: new Container(
+                                                    width: 150,
+                                                    height: 40.0,
+                                                    padding:
+                                                        new EdgeInsets.all(0),
+                                                    margin:
+                                                        new EdgeInsets.all(0),
+                                                    decoration:
+                                                        new BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.all(
+                                                              Radius.circular(
+                                                                  10)),
+                                                      color: Theme.of(context)
+                                                          .buttonColor,
+                                                    ),
+                                                    child: new MaterialButton(
+                                                      onPressed: () async {
+                                                        if (!showLoadingImage)
+                                                          return await submitFault();
+                                                      },
+                                                      child: (!showLoadingImage)
+                                                          ? new Text(
+                                                              "принять",
+                                                              style: TextStyle(
+                                                                  fontSize:
+                                                                      17.0,
+                                                                  color: Colors
+                                                                      .white),
+                                                            )
+                                                          : CircularProgressIndicator(
+                                                              valueColor: AlwaysStoppedAnimation<
+                                                                  Color>(Theme.of(
+                                                                      context)
+                                                                  .primaryColorLight),
+                                                            ),
+                                                    ),
+                                                  )
+
+                                                  /*MyButton(
                                                     text: 'принять',
                                                     fontSize: 17, margin: 0,
                                                     parentContext: context,
                                                     onPress: () async {
                                                       await submitFault();
-                                                    }),
-                                              ))
+                                                    }),*/
+                                                  ))
                                         ]),
                                   ])))),
                   Expanded(
@@ -890,7 +929,7 @@ class _FaultScreen extends State<FaultScreen> {
                                                       AlwaysStoppedAnimation<
                                                           Color>(Theme.of(
                                                               context)
-                                                          .primaryColorLight),
+                                                          .primaryColor),
                                                 ),
                                               ])
                                         : _image == null

@@ -256,10 +256,9 @@ class _FaultFixScreen extends State<FaultFixScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                     Container(
-                       width: 400,
+                        width: 400,
                         child: SingleChildScrollView(
                             child: Container(
-                             
                                 padding: EdgeInsets.symmetric(horizontal: 20),
                                 child: Column(
                                     mainAxisAlignment: MainAxisAlignment.start,
@@ -324,7 +323,6 @@ class _FaultFixScreen extends State<FaultFixScreen> {
                                               child: Column(children: [
                                                 GestureDetector(
                                                   child: Container(
-                                                   
                                                     height: 30,
                                                     child: Row(
                                                         crossAxisAlignment:
@@ -349,7 +347,6 @@ class _FaultFixScreen extends State<FaultFixScreen> {
                                                                           .primaryColor))),
                                                         ]),
                                                   ),
-                                                  
                                                   onTap:
                                                       _onGalleryButtonPressed,
                                                 ),
@@ -368,7 +365,7 @@ class _FaultFixScreen extends State<FaultFixScreen> {
                                           borderColor: Theme.of(context)
                                               .primaryColorDark,
                                           height: 270,
-                                         // maxLines: 13,
+                                          // maxLines: 13,
                                           margin: 0,
                                         ),
                                       ),
@@ -400,12 +397,51 @@ class _FaultFixScreen extends State<FaultFixScreen> {
                                           Expanded(
                                               flex: 1,
                                               child: Container(
-                                                alignment:
-                                                    Alignment.bottomCenter,
-                                                margin:
-                                                    EdgeInsets.only(bottom: 0),
-                                                // EdgeInsets.only(top: 20),
-                                                child: MyButton(
+                                                  alignment:
+                                                      Alignment.bottomCenter,
+                                                  margin: EdgeInsets.only(
+                                                      bottom: 5),
+                                                  // EdgeInsets.only(top: 20),
+                                                  child: new Container(
+                                                    width: 150,
+                                                    height: 40.0,
+                                                    padding:
+                                                        new EdgeInsets.all(0),
+                                                    margin:
+                                                        new EdgeInsets.all(0),
+                                                    decoration:
+                                                        new BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.all(
+                                                              Radius.circular(
+                                                                  10)),
+                                                      color: Theme.of(context)
+                                                          .buttonColor,
+                                                    ),
+                                                    child: new MaterialButton(
+                                                      onPressed: () async {
+                                                        if (!showLoadingImage)
+                                                          return await submitFaultFix();
+                                                      },
+                                                      child: (!showLoadingImage)
+                                                          ? new Text(
+                                                              "принять",
+                                                              style: TextStyle(
+                                                                  fontSize:
+                                                                      17.0,
+                                                                  color: Colors
+                                                                      .white),
+                                                            )
+                                                          : CircularProgressIndicator(
+                                                              valueColor: AlwaysStoppedAnimation<
+                                                                  Color>(Theme.of(
+                                                                      context)
+                                                                  .primaryColorLight),
+                                                            ),
+                                                    ),
+                                                  )
+
+                                              /* child: MyButton(
                                                     text: 'принять',
                                                     fontSize: 17,
                                                     margin: 0,
@@ -413,116 +449,107 @@ class _FaultFixScreen extends State<FaultFixScreen> {
                                                     onPress: () async {
                                                       await submitFaultFix();
                                                     }),
+                                              )*/
                                               ))
                                         ],
                                       )
                                     ])))),
                     Expanded(
-                        
                         child: Container(
-                          padding: EdgeInsets.only(bottom: 10),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                  flex: 5,
-                                  child: Container(
-                                      padding: EdgeInsets.only(bottom: 10),
-                                      child: showLoadingImage
-                                          ? Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                  CircularProgressIndicator(
-                                                    valueColor:
-                                                        AlwaysStoppedAnimation<
-                                                            Color>(Theme.of(
-                                                                context)
-                                                            .primaryColorLight),
-                                                  ),
-                                                ])
-                                          : _image == null
-                                              ? GestureDetector(
-                                                  child: Column(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
-                                                      children: [
-                                                        Icon(
-                                                          Icons.add_a_photo,
-                                                          color:
-                                                              Theme.of(context)
-                                                                  .primaryColor,
-                                                          size: 120,
-                                                        ),
-                                                        Text('Добавить фото',
-                                                            style: TextStyle(
-                                                                color: Theme.of(
-                                                                        context)
-                                                                    .primaryColor,
-                                                                fontSize: 20))
-                                                      ]),
-                                                  /* onTapDown: (details) {
+                      padding: EdgeInsets.only(bottom: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Expanded(
+                              flex: 5,
+                              child: Container(
+                                  padding: EdgeInsets.only(bottom: 10),
+                                  child: showLoadingImage
+                                      ? Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                              CircularProgressIndicator(
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                            Color>(
+                                                        Theme.of(context)
+                                                            .primaryColor),
+                                              ),
+                                            ])
+                                      : _image == null
+                                          ? GestureDetector(
+                                              child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.add_a_photo,
+                                                      color: Theme.of(context)
+                                                          .primaryColor,
+                                                      size: 120,
+                                                    ),
+                                                    Text('Добавить фото',
+                                                        style: TextStyle(
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .primaryColor,
+                                                            fontSize: 20))
+                                                  ]),
+                                              /* onTapDown: (details) {
                                               _storePosition(details);
                                               _showPhotoMenu();
                                             },*/
-                                                  onTap:
-                                                      _onGalleryButtonPressed,
-                                                )
-                                              : GestureDetector(
-                                                  onLongPress: () =>
-                                                      deleteImage(_imageIndex),
-                                                  child: Image.file(
-                                                    _image,
-                                                    fit: BoxFit.cover,
-                                                  )),
-                                      constraints: BoxConstraints.expand())),
-                              _imageList.length > 0
-                                  ? Expanded(
-                                      flex: 1,
-                                      child: Container(
-                                        child: SingleChildScrollView(
-                                            scrollDirection: Axis.horizontal,
-                                            child: Row(
-                                                children: List.generate(
-                                              _imageList.length,
-                                              (i) => GestureDetector(
-                                                // onLongPress: () => deleteImage(i),
-                                                onTap: () => setState(() {
-                                                  _image =
-                                                      File(_imageList[i].image);
-                                                  _imageIndex = i;
-                                                }),
-                                                child: Container(
-                                                    constraints:
-                                                        BoxConstraints.tight(
-                                                            Size(95, 80)),
-                                                    padding: i == 0
+                                              onTap: _onGalleryButtonPressed,
+                                            )
+                                          : GestureDetector(
+                                              onLongPress: () =>
+                                                  deleteImage(_imageIndex),
+                                              child: Image.file(
+                                                _image,
+                                                fit: BoxFit.cover,
+                                              )),
+                                  constraints: BoxConstraints.expand())),
+                          _imageList.length > 0
+                              ? Expanded(
+                                  flex: 1,
+                                  child: Container(
+                                    child: SingleChildScrollView(
+                                        scrollDirection: Axis.horizontal,
+                                        child: Row(
+                                            children: List.generate(
+                                          _imageList.length,
+                                          (i) => GestureDetector(
+                                            // onLongPress: () => deleteImage(i),
+                                            onTap: () => setState(() {
+                                              _image =
+                                                  File(_imageList[i].image);
+                                              _imageIndex = i;
+                                            }),
+                                            child: Container(
+                                                constraints:
+                                                    BoxConstraints.tight(
+                                                        Size(95, 80)),
+                                                padding: i == 0
+                                                    ? EdgeInsets.only(right: 5)
+                                                    : i == _imageList.length - 1
                                                         ? EdgeInsets.only(
-                                                            right: 5)
-                                                        : i ==
-                                                                _imageList
-                                                                        .length -
-                                                                    1
-                                                            ? EdgeInsets.only(
-                                                                left: 5)
-                                                            : EdgeInsets
-                                                                .symmetric(
-                                                                    horizontal:
-                                                                        5),
-                                                    child: Image.file(
-                                                      File(_imageList[i].image),
-                                                      fit: BoxFit.cover,
-                                                    )),
-                                              ),
-                                            ))),
-                                        constraints: BoxConstraints.expand(),
-                                      ))
-                                  : Text(''),
-                            ],
-                          ),
-                        )),
+                                                            left: 5)
+                                                        : EdgeInsets.symmetric(
+                                                            horizontal: 5),
+                                                child: Image.file(
+                                                  File(_imageList[i].image),
+                                                  fit: BoxFit.cover,
+                                                )),
+                                          ),
+                                        ))),
+                                    constraints: BoxConstraints.expand(),
+                                  ))
+                              : Text(''),
+                        ],
+                      ),
+                    )),
                   ]))
             ]));
   }
