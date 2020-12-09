@@ -50,6 +50,18 @@ class FaultFix extends Models {
     return res;
   }
 
+  // Make json suitable for update() in local DB;
+  // Set only params that can be updated
+  // Params can be extended!
+  Map<String, dynamic> prepareForUpdate() {
+    return {
+      'id': id,
+      'desc': desc,
+      'date': dateTimeToString(date),
+      'is_finished': (is_finished == null || !is_finished) ? 'false' : 'true',
+    };
+  }
+
   @override
   String toString() {
     return 'FaultFix {id: $id, odooId: $odoo_id, parent_id: $parent_id, active: $active }';
