@@ -1379,11 +1379,12 @@ class MyCheckbox extends StatelessWidget {
   Function(bool) onChanged;
   bool value;
   String text;
-  MyCheckbox(this.value, this.text, this.onChanged);
+  Color color;
+  MyCheckbox(this.value, this.text, this.onChanged, {this.color});
 
   @override
   Widget build(BuildContext context) {
-    Color color = Theme.of(context).primaryColor;
+    Color checkColor = color ?? Theme.of(context).primaryColor;
     TextStyle textStyle =
         TextStyle(fontSize: 16, color: Theme.of(context).primaryColorDark);
     return GestureDetector(
@@ -1392,7 +1393,7 @@ class MyCheckbox extends StatelessWidget {
             Checkbox(
               value: value,
               onChanged: onChanged,
-              checkColor: color,
+              checkColor: checkColor,
             ),
             Text(text, style: textStyle)
           ],
