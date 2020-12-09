@@ -5,6 +5,8 @@ import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import 'package:ek_asu_opb_mobile/controllers/departmentDocument.dart';
 import 'package:ek_asu_opb_mobile/controllers/fault.dart';
+import 'package:ek_asu_opb_mobile/controllers/faultFix.dart';
+import 'package:ek_asu_opb_mobile/controllers/faultFixItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/faultItem.dart';
 import "package:ek_asu_opb_mobile/models/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
@@ -208,6 +210,8 @@ class SynController extends Controllers {
       await CheckListItemController.firstLoadFromOdoo();
       await FaultController.firstLoadFromOdoo();
       await FaultItemController.firstLoadFromOdoo();
+      await FaultFixController.firstLoadFromOdoo();
+      await FaultFixItemController.firstLoadFromOdoo();
 
       await CheckPlanController.firstLoadFromOdoo(true);
       await ComGroupController.firstLoadFromOdoo(true);
@@ -216,6 +220,8 @@ class SynController extends Controllers {
       await CheckListItemController.firstLoadFromOdoo(true);
       await FaultController.firstLoadFromOdoo(true);
       await FaultItemController.firstLoadFromOdoo(true);
+      await FaultFixController.firstLoadFromOdoo(true);
+      await FaultFixItemController.firstLoadFromOdoo(true);
 
       await ChatController.loadFromOdoo(clean: true);
       await ChatMessageController.loadFromOdoo(clean: true);
@@ -229,6 +235,8 @@ class SynController extends Controllers {
       await CheckListItemController.loadChangesFromOdoo();
       await FaultController.loadChangesFromOdoo();
       await FaultItemController.loadChangesFromOdoo();
+      await FaultFixController.loadChangesFromOdoo();
+      await FaultFixItemController.loadChangesFromOdoo();
 
       await CheckPlanController.loadChangesFromOdoo(true);
       await CheckPlanItemController.loadChangesFromOdoo(true);
@@ -237,6 +245,9 @@ class SynController extends Controllers {
       await CheckListItemController.loadChangesFromOdoo(true);
       await FaultController.loadChangesFromOdoo(true);
       await FaultItemController.loadChangesFromOdoo(true);
+
+      await FaultFixController.loadChangesFromOdoo(true);
+      await FaultFixItemController.loadChangesFromOdoo(true);
     }
     await ChatController.loadFromOdoo(clean: lastDateDomain.isEmpty);
     await ChatMessageController.loadFromOdoo(clean: lastDateDomain.isEmpty);
