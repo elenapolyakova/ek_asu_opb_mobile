@@ -1,9 +1,10 @@
+import 'package:ek_asu_opb_mobile/controllers/report.dart';
 import 'package:ek_asu_opb_mobile/src/exchangeData.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
-import 'package:ek_asu_opb_mobile/controllers/controllers.dart' as controllers;
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:flutter/rendering.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
@@ -11,6 +12,8 @@ import 'dart:async';
 import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 import 'package:ek_asu_opb_mobile/src/db.dart';
 import 'package:flutter_icons/flutter_icons.dart';
+import 'dart:io';
+import 'package:open_file/open_file.dart';
 
 class PlanScreen extends StatefulWidget {
   String type;
@@ -170,8 +173,7 @@ class _PlanScreen extends State<PlanScreen> {
 
   Future<void> reloadPlan() async {
     try {
-      _plan =
-          await controllers.PlanController.select(_year, _type, _railway_id);
+      _plan = await PlanController.select(_year, _type, _railway_id);
     } catch (e) {
       _plan = null;
     }
@@ -545,7 +547,7 @@ class _PlanScreen extends State<PlanScreen> {
       bool hasErorr = false;
       Map<String, dynamic> result;
       try {
-        result = await controllers.PlanItemController.delete(planItemId);
+        result = await PlanItemController.delete(planItemId);
         hasErorr = result["code"] < 0;
 
         if (hasErorr) {
@@ -583,20 +585,30 @@ class _PlanScreen extends State<PlanScreen> {
     _tapPosition = details.globalPosition;
   }
 
+  Future<void> exportToPdf() async {
+    if (!canEdit()) {
+      Scaffold.of(context).showSnackBar(errorSnackBar(text: errorTableName));
+      return;
+    }
+    if (_plan.id == null) {
+      Scaffold.of(context).showSnackBar(
+          errorSnackBar(text: 'Сначала сохраните реквизиты плана'));
+      return;
+    }
+    try {
+      int odooId = await PlanController.selectOdooId(_plan.id);
+      dynamic report = await ReportController.downloadReport(odooId,
+           PlanController.pdfReportXmlId);
+      if (report is File) {
+        File file = report as File;
+         OpenFile.open(file.path);
 
-  Future<void> exportToPdf() async{
-       if (!canEdit()) {
-      Scaffold.of(context).showSnackBar(errorSnackBar(text: errorTableName));
-      return;
-    }
-    if (_plan.id == null) {
-      Scaffold.of(context).showSnackBar(
-          errorSnackBar(text: 'Сначала сохраните реквизиты плана'));
-      return;
-    }
+      }
+    } catch (e) {}
   }
-   Future<void> exportToExcel() async{
-        if (!canEdit()) {
+
+  Future<void> exportToExcel() async {
+    if (!canEdit()) {
       Scaffold.of(context).showSnackBar(errorSnackBar(text: errorTableName));
       return;
     }
@@ -605,7 +617,19 @@ class _PlanScreen extends State<PlanScreen> {
           errorSnackBar(text: 'Сначала сохраните реквизиты плана'));
       return;
     }
-   }
+
+      try {
+           int odooId = await PlanController.selectOdooId(_plan.id);
+      dynamic report = await ReportController.downloadReport(
+         odooId,
+           PlanController.xlsReportXmlId);
+      if (report is File) {
+        File file = report as File;
+         OpenFile.open(file.path);
+
+      }
+    } catch (e) {}
+  }
 
   Future<bool> showPlanDialog(Plan plan) {
     return showDialog<bool>(
@@ -965,9 +989,9 @@ class _PlanScreen extends State<PlanScreen> {
       Map<String, dynamic> result;
       try {
         if (planCopy.id == null) {
-          result = await controllers.PlanController.insert(planCopy);
+          result = await PlanController.insert(planCopy);
         } else {
-          result = await controllers.PlanController.update(planCopy);
+          result = await PlanController.update(planCopy);
         }
         hasErorr = result["code"] < 0;
 
@@ -1021,9 +1045,9 @@ class _PlanScreen extends State<PlanScreen> {
       Map<String, dynamic> result;
       try {
         if (planItem.id == null) {
-          result = await controllers.PlanItemController.insert(planItem);
+          result = await PlanItemController.insert(planItem);
         } else {
-          result = await controllers.PlanItemController.update(planItem);
+          result = await PlanItemController.update(planItem);
         }
         hasErorr = result["code"] < 0;
 
