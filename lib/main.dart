@@ -63,6 +63,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
   bool _showErrorPin = false;
   bool _isPinDialogShow = false;
   bool _isTimeExpire = false;
+  bool _showLoading = false;
   final _sizeTextBlack =
       const TextStyle(fontSize: 20.0, color: Color(0xFF252A0E));
   final _sizeTextWhite = const TextStyle(fontSize: 20.0, color: Colors.white);
@@ -187,6 +188,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
         setState(() {
           _isPinDialogShow = false;
           _showErrorPin = false;
+          _showLoading = true;
         });
         try {
           checkConnection().then((isConnect) {
@@ -196,16 +198,23 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
                   exchange
                       .getDictionaries(all: true, isLastUpdate: true)
                       .then((result) {
-                    SynController.loadFromOdoo();
+                    SynController.loadFromOdoo().then((value) {
+                      setState(() {
+                        _showLoading = false;
+                      });
+                      Navigator.pop(context, true);
+                    });
                     //?
                   }); //getDictionary
                 } //isSessionExist = true
               }); //checkSession
             } //isConnect == true
           });
-        } catch (e) {}
+        } catch (e) {
+          Navigator.pop(context, true);
+        }
 //checkConnection
-        Navigator.pop(context, true);
+
       }
     }
   }
@@ -292,10 +301,14 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
                             ),
                             child: new MaterialButton(
                               onPressed: pinConfirm,
-                              child: new Text(
+                              child: (!_showLoading) ? new Text(
                                 "OK",
                                 style: _sizeTextWhite,
-                              ),
+                              ):  CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Theme.of(context).primaryColorLight),
+                                  ),
+
                             ),
                           )
                         ]))),

@@ -55,6 +55,11 @@ class _CheckScreen extends State<CheckScreen> {
       'label': 'Чек-листы',
       'icon': Icon(Icons.fact_check)
     });
+      result.add({
+      'key': 'history',
+      'label': 'Нарушения',
+      'icon': Icon(Icons.history)
+    });
     result.add({
       'key': 'documents',
       'label': 'Документы',
@@ -110,6 +115,9 @@ class _CheckScreen extends State<CheckScreen> {
         break;
       case "documents":
         screenList[screenKey] = screens.DepartmentDocumentScreen(_departmentId, GlobalKey());
+        break;
+      case "history":
+        screenList[screenKey] = screens.FaultHistoryScreen(_departmentId, isSyncData);
         break;
       default:
         return Text("");
