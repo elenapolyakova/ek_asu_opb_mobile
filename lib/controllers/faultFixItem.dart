@@ -1,8 +1,8 @@
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import 'package:ek_asu_opb_mobile/controllers/faultFix.dart';
 import 'package:ek_asu_opb_mobile/models/faultFixItem.dart';
-import 'package:ek_asu_opb_mobile/models/fault.dart';
-import 'package:ek_asu_opb_mobile/screens/faultFixListScreen.dart';
+import 'package:ek_asu_opb_mobile/models/faultFix.dart';
+// import 'package:ek_asu_opb_mobile/screens/faultFixListScreen.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import "package:ek_asu_opb_mobile/controllers/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
@@ -184,7 +184,7 @@ class FaultFixItemController extends Controllers {
         FaultFixItem faultFixItem = await selectByOdooId(e['id']);
         Map<String, dynamic> res = {};
         if (e['parent3_id'] is List) {
-          Fault parentFaultFix = await FaultFixController.selectByOdooId(
+          FaultFix parentFaultFix = await FaultFixController.selectByOdooId(
               unpackListId(e['parent_id'])['id']);
           if (parentFaultFix == null) return null;
           // assert(parentFault != null,
