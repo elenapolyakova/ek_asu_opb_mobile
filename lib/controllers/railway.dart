@@ -3,7 +3,7 @@ import "package:ek_asu_opb_mobile/models/models.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 
 class RailwayController extends Controllers {
-  static String _tableName = "railway";
+  static const String _tableName = "railway";
 
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     Railway railway = Railway.fromJson(json);

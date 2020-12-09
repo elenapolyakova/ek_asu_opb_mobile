@@ -3,7 +3,7 @@ import "package:ek_asu_opb_mobile/models/models.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 
 class UserController extends Controllers {
-  static String _tableName = "user";
+  static const String _tableName = "user";
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     User user = User.fromJson(json);
     return await DBProvider.db.insert(_tableName, user.toJson());
@@ -23,19 +23,16 @@ class UserController extends Controllers {
   }
 
   static Future<List<User>> selectByRailway(int railwayId) async {
-
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       where: railwayId != null ? 'railway_id = ? ' : null,
-      whereArgs:  railwayId != null ? [railwayId] : null,
-     
+      whereArgs: railwayId != null ? [railwayId] : null,
     );
     if (queryRes.isEmpty) return [];
     List<User> result = List.generate(
         queryRes.length, (index) => User.fromJson(queryRes[index]));
 
     return result;
-
   }
 
   static Future<User> selectById(int id) async {

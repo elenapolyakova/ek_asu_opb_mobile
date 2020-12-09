@@ -120,7 +120,7 @@ class _MapScreen extends State<MapScreen> {
         if (userLocationOptions != null) {
           userLocationOptions.zoomToCurrentLocationOnLoad = true;
         }
-        if (mapController != null) {
+        if (mapController != null && userLocation != null) {
           mapController.move(userLocation, 17);
         }
       }

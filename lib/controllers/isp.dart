@@ -2,7 +2,7 @@ import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import 'package:ek_asu_opb_mobile/models/isp.dart';
 
 class DocumentListController extends Controllers {
-  static String _tableName = "document_list";
+  static const String _tableName = "document_list";
 
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     DocumentList documentList = DocumentList.fromJson(json);

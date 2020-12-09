@@ -8,7 +8,9 @@ import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class CheckPlanController extends Controllers {
-  static String _tableName = "plan_item_check";
+  static const String _tableName = "plan_item_check";
+  static const String xlsReportXmlId = 'report_mob_check_plan_xls';
+  static const String pdfReportXmlId = 'report_mob_check_plan_pdf';
 
   static Future<List<int>> selectIDs() async {
     List<Map<String, dynamic>> maps =

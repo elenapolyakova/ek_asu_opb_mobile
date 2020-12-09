@@ -6,7 +6,7 @@ import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class ChatMessageController extends Controllers {
-  static String _tableName = "chat_message";
+  static const String _tableName = "chat_message";
 
   static Future<List<int>> selectIDs() async {
     List<Map<String, dynamic>> maps =

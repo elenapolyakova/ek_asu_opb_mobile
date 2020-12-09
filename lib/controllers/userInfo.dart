@@ -3,7 +3,7 @@ import "package:ek_asu_opb_mobile/models/models.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 
 class UserInfoController extends Controllers {
-  static String _tableName = "userInfo";
+  static const String _tableName = "userInfo";
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     UserInfo user = UserInfo.fromJson(json);
     return await DBProvider.db.insert(_tableName, user.toJson());
