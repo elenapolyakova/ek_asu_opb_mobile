@@ -185,7 +185,7 @@ class FaultFixItemController extends Controllers {
         Map<String, dynamic> res = {};
         if (e['parent3_id'] is List) {
           FaultFix parentFaultFix = await FaultFixController.selectByOdooId(
-              unpackListId(e['parent_id'])['id']);
+              unpackListId(e['parent3_id'])['id']);
           if (parentFaultFix == null) return null;
           // assert(parentFault != null,
           //     "Model fault has to be loaded before $_tableName");
@@ -270,7 +270,7 @@ class FaultFixItemController extends Controllers {
       FaultFixItem faultFixItem = await selectByOdooId(e['id']);
       if (loadRelated) {
         Map<String, dynamic> res = {};
-        if (e['parent_id'] is List) {
+        if (e['parent3_id'] is List) {
           FaultFix parentFaultFix = await FaultFixController.selectByOdooId(
               unpackListId(e['parent3_id'])['id']);
           if (parentFaultFix == null) return null;

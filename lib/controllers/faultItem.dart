@@ -169,6 +169,7 @@ class FaultItemController extends Controllers {
       ];
     }
     domain.add(['parent2_id', '=', null]);
+    domain.add(['parent3_id', '=', null]);
 
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
@@ -251,6 +252,7 @@ class FaultItemController extends Controllers {
     List domain = await getLastSyncDateDomain(_tableName, excludeActive: true);
     // Get only photos for fault! By this
     domain.add(['parent2_id', '=', null]);
+    domain.add(['parent3_id', '=', null]);
 
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [

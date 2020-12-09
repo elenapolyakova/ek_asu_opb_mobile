@@ -1,8 +1,6 @@
-import 'package:ek_asu_opb_mobile/controllers/checkListItem.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import 'package:ek_asu_opb_mobile/controllers/fault.dart';
 import 'package:ek_asu_opb_mobile/controllers/faultFixItem.dart';
-import 'package:ek_asu_opb_mobile/models/checkListItem.dart';
 import 'package:ek_asu_opb_mobile/models/faultFix.dart';
 import 'package:ek_asu_opb_mobile/models/faultFixItem.dart';
 import 'package:ek_asu_opb_mobile/models/fault.dart';
@@ -140,7 +138,7 @@ class FaultFixController extends Controllers {
     return faultFixs;
   }
 
-  // Update faultFix also allows to add or delete photos for 1 Fault
+  // Update faultFix also allows to add or delete photos
   // faultFixItems - list with data as photoPath coord_e coord_n and etc.
   // delete - list ids of photos(faultFixItems) to delete
   static Future<Map<String, dynamic>> update(FaultFix faultFix,
@@ -158,7 +156,7 @@ class FaultFixController extends Controllers {
     // Get odooId
     Future<int> odooId = selectOdooId(faultFix.id);
 
-    // Mainly update fault record
+    // Mainly update faultFix record
     await DBProvider.db
         .update(_tableName, faultFix.prepareForUpdate())
         .then((resId) async {
@@ -376,9 +374,6 @@ class FaultFixController extends Controllers {
         e['date'] = null;
       }
 
-      // Set plan_fix_date as it's name in odoo date_done
-      e['plan_fix_date'] = e['date_done'];
-
       if (loadRelated) {
         FaultFix fault = await selectByOdooId(e['id']);
         Map<String, dynamic> res = {};
@@ -440,7 +435,7 @@ class FaultFixController extends Controllers {
       'context': {'create_or_update': true}
     });
 
-    print("Fault, Load changes from odoo! $json");
+    print("FaultFix, Load changes from odoo! $json");
 
     await Future.forEach(json, (e) async {
       if (e['date'] is bool) {
