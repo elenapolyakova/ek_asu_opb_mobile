@@ -32,7 +32,7 @@ class ReportController extends Controllers {
       }
       await File(newPath).create(recursive: true);
       File file = await base64ToFile(
-        reportData['file_data'],
+        reportData['file_data'].replaceAll("\n", ''),
         path: newPath,
       );
       return file;
