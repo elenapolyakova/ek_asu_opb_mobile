@@ -255,9 +255,11 @@ class _FaultFixScreen extends State<FaultFixScreen> {
                   child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    Expanded(
+                    Container(
+                       width: 400,
                         child: SingleChildScrollView(
-                            child: Padding(
+                            child: Container(
+                             
                                 padding: EdgeInsets.symmetric(horizontal: 20),
                                 child: Column(
                                     mainAxisAlignment: MainAxisAlignment.start,
@@ -416,7 +418,7 @@ class _FaultFixScreen extends State<FaultFixScreen> {
                                       )
                                     ])))),
                     Expanded(
-                        flex: 2,
+                        
                         child: Container(
                           padding: EdgeInsets.only(bottom: 10),
                           child: Column(
