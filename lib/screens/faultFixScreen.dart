@@ -9,7 +9,11 @@ import 'package:multi_image_picker/multi_image_picker.dart';
 import 'dart:typed_data';
 import 'package:ek_asu_opb_mobile/src/fileStorage.dart';
 import 'package:ek_asu_opb_mobile/src/GPS.dart';
-import 'package:ek_asu_opb_mobile/screens/FaultFixListScreen.dart';
+import 'package:ek_asu_opb_mobile/models/faultFix.dart';
+import 'package:ek_asu_opb_mobile/controllers/faultFix.dart';
+import 'package:ek_asu_opb_mobile/models/faultFixItem.dart';
+import 'package:ek_asu_opb_mobile/controllers/faultFixItem.dart';
+
 
 class FaultFixScreen extends StatefulWidget {
   int faultId;
@@ -40,7 +44,7 @@ class _FaultFixScreen extends State<FaultFixScreen> {
 
   File _image;
   int _imageIndex;
-  List<FaultItem> _imageList = [];
+  List<FaultFixItem> _imageList = [];
 
   List<Asset> _assetList = List<Asset>();
 
@@ -99,15 +103,15 @@ class _FaultFixScreen extends State<FaultFixScreen> {
             'coord_e': geoPoint.longitude,
             'coord_n': geoPoint.latitude
           });
-          //todo !!!!!!!!!!
-          FaultItem faultItems = FaultItem(
+          
+          FaultFixItem faultFixItem = FaultFixItem(
               id: null,
-              parent_id: widget.faultFixId,
+              parent3_id: widget.faultFixId,
               image: path,
               active: true,
               coord_e: geoPoint.longitude,
               coord_n: geoPoint.latitude);
-          _imageList.insert(i, faultItems);
+          _imageList.insert(i, faultFixItem);
         }
         _image = File(_imageList[0].image);
         _imageIndex = 0;
@@ -136,7 +140,7 @@ class _FaultFixScreen extends State<FaultFixScreen> {
     if (result != null && result) {
       bool hasErorr = false;
       Map<String, dynamic> result;
-      FaultItem deletedFile = _imageList[index];
+      FaultFixItem deletedFile = _imageList[index];
 
       try {
         //  result = await ComGroupController.delete(groupId);
@@ -188,8 +192,7 @@ class _FaultFixScreen extends State<FaultFixScreen> {
 
   Future<void> loadFaultFix() async {
     if (![null, -1].contains(_faultFixId))
-      _faultFix =
-          null; //await FaultFixController.selectById(_faultFixId); ///todo!!!!!
+      _faultFix = await FaultFixController.selectById(_faultFixId); 
     if (_faultFix == null) {
       _faultFix = new FaultFix(id: null, parent_id: _faultId, active: true);
     }
@@ -197,9 +200,7 @@ class _FaultFixScreen extends State<FaultFixScreen> {
 
   Future<void> loadImages() async {
     _imageList = [];
-    // _imageList =
-    //     _faultFix.id != null ? await FaultFixItemController.select(_faultFix.id) : []; //todo!!!!
-
+     _imageList = _faultFix.id != null ? await FaultFixItemController.select(_faultFix.id) : [];
     if (_imageList.length > 0) {
       _image = File(_imageList[0].image);
       _imageIndex = 0;
@@ -212,11 +213,11 @@ class _FaultFixScreen extends State<FaultFixScreen> {
 
     try {
       if ([-1, null].contains(_faultFix.id)) {
-        //todo !!!!!!!!!!!
-        //result = await FaultFixController.create(_faultFix, _created, _deletedPath);
+       
+        result = await FaultFixController.create(_faultFix, _created, _deletedPath);
       } else {
-        //todo !!!!!!!!!!!
-        // result = await FaultFixController.update(_faultFix, _created, _deletedPath);
+       
+         result = await FaultFixController.update(_faultFix, _created, _deletedPath);
       }
       hasErorr = result["code"] < 0;
 

@@ -7,14 +7,15 @@ import 'dart:collection';
 class FaultHistoryScreen extends StatefulWidget {
   int departmentId;
   bool isSyncData;
+  int checkPlanItemId;
 
-  FaultHistoryScreen(this.departmentId, this.isSyncData) {
+  FaultHistoryScreen(this.departmentId, this.checkPlanItemId, this.isSyncData) {
     createState();
   }
 
   @override
   _FaultHistoryScreen createState() =>
-      _FaultHistoryScreen(departmentId, this.isSyncData);
+      _FaultHistoryScreen(departmentId, checkPlanItemId, this.isSyncData);
 }
 
 class _FaultHistoryScreen extends State<FaultHistoryScreen> {
@@ -22,6 +23,7 @@ class _FaultHistoryScreen extends State<FaultHistoryScreen> {
   bool showLoading = true;
 
   int departmentId;
+  int checkPlanItemId;
   int faultId;
   int faultFixId;
   dynamic _args;
@@ -30,7 +32,8 @@ class _FaultHistoryScreen extends State<FaultHistoryScreen> {
   bool _isSyncData;
   String _selectedPage = '';
 
-  _FaultHistoryScreen(this.departmentId, this._isSyncData) {
+  _FaultHistoryScreen(
+      this.departmentId, this.checkPlanItemId, this._isSyncData) {
     //checkPlanItemId = parCheckPlanItemId;
     //Manager.manager.checkPlanItemId = parCheckPlanItemId;
   }
@@ -79,6 +82,7 @@ class _FaultHistoryScreen extends State<FaultHistoryScreen> {
     switch (_selectedPage) {
       case "faultList":
         _screenList[_selectedPage] = screens.FaultListScreen(
+          
           departmentId: departmentId,
           push: push,
           pop: pop,

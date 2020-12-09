@@ -50,6 +50,7 @@ class FaultListScreen extends StatefulWidget {
   Map<String, String> Function() pop;
   String checkListItemName;
   int departmentId;
+  int checkPlanItemId;
   GlobalKey key;
 
   @override
@@ -59,7 +60,8 @@ class FaultListScreen extends StatefulWidget {
       this.pop,
       this.key,
       this.checkListItemName,
-      this.departmentId});
+      this.departmentId,
+      this.checkPlanItemId});
   @override
   State<FaultListScreen> createState() => _FaultListScreen();
 }
@@ -69,7 +71,10 @@ class _FaultListScreen extends State<FaultListScreen> {
   bool showLoading = true;
   var _tapPosition;
   int checkListItemId;
-  String checkListItemName;
+
+  bool isHistory =
+      false; //форма загружена из истории нарушений или вопроса чек-листа
+  bool allFaultByDepartment = false; //все нарушения предприятия или проверки
 
   int departmentId;
   List<MyFault> _items;
@@ -108,9 +113,12 @@ class _FaultListScreen extends State<FaultListScreen> {
         auth.getUserInfo().then((userInfo) {
           _userInfo = userInfo;
           checkListItemId = widget.checkListItemId;
-          checkListItemName = checkListItemId != null
-              ? widget.checkListItemName
-              : 'Список всех нарушений предприятия';
+          if (checkListItemId != null) {
+            isHistory = false;
+          } else {
+            isHistory = true;
+          }
+
           departmentId = widget.departmentId;
           loadData();
         });
@@ -130,6 +138,14 @@ class _FaultListScreen extends State<FaultListScreen> {
     }
   }
 
+  String getTitle() {
+    if (isHistory == false) return widget.checkListItemName;
+
+    if (allFaultByDepartment) return 'Список всех нарушений предприятия';
+
+    return 'Список всех нарушений проверки';
+  }
+
   Future<void> loadFaultItems() async {
     _items = [];
     List<Fault> items = [];
@@ -137,7 +153,12 @@ class _FaultListScreen extends State<FaultListScreen> {
       items = await FaultController.select(checkListItemId);
     else if (departmentId != null)
     //todo!!!!!!!!!!!!!!!
-      items =  await FaultController.select(8); //await FaultController.selectByDepartment(checkListItemId);
+    if (allFaultByDepartment)
+      items = await FaultController.select(
+          8); //await FaultController.selectByDepartment(departmentId, null);
+    else
+      items = await FaultController.select(
+          8); //await FaultController.selectByDepartment(null, checkListItemId);
 
     if (items != null)
       for (int i = 0; i < items.length; i++) {
@@ -180,8 +201,10 @@ class _FaultListScreen extends State<FaultListScreen> {
                   : Colors.white)),
           children: [
             getRowCell(row.desc, row.id, 0),
-            getRowCell(dateDMY(row.plan_fix_date), row.id, 1, textAlign: TextAlign.center),
-            getRowCell(row.fine != null ? row.fine.toString() : '', row.id, 2, textAlign: TextAlign.center),
+            getRowCell(dateDMY(row.plan_fix_date), row.id, 1,
+                textAlign: TextAlign.center),
+            getRowCell(row.fine != null ? row.fine.toString() : '', row.id, 2,
+                textAlign: TextAlign.center),
             getRowCell(row.fine_desc, row.id, 3),
             getRowCell(fault.fineName, row.id, 4),
           ]);
@@ -290,6 +313,17 @@ class _FaultListScreen extends State<FaultListScreen> {
     }
   }
 
+  Future<void> toggleFault() async {
+    showLoadingDialog(context);
+
+    setState(() {
+      allFaultByDepartment = !allFaultByDepartment;
+    });
+    await loadFaultItems();
+    setState(() {});
+    hideDialog(context);
+  }
+
   Future<void> addFaultClicked(StateSetter setState) async {
     return widget.push({
       "pathTo": 'fault',
@@ -344,7 +378,7 @@ class _FaultListScreen extends State<FaultListScreen> {
 
     return showLoading
         ? Text("")
-        : (checkListItemId != null && departmentId == null)
+        : (isHistory == false)
             ? Padding(
                 padding: EdgeInsets.symmetric(horizontal: 40, vertical: 5),
                 child: Column(children: [
@@ -353,7 +387,7 @@ class _FaultListScreen extends State<FaultListScreen> {
                       child: ListTile(
                           trailing: menu,
                           contentPadding: EdgeInsets.all(0),
-                          title: FormTitle(checkListItemName ?? ''),
+                          title: FormTitle(getTitle() ?? ''),
                           onTap: () {}),
                     ),
                   ]),
@@ -373,7 +407,23 @@ class _FaultListScreen extends State<FaultListScreen> {
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      FormTitle(checkListItemName ?? ''),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextIcon(
+                            iconSize: 45,
+                            icon: allFaultByDepartment
+                                ? Icons.toggle_on
+                                : Icons.toggle_off,
+                            text: 'Все нарушения по предприятию',
+                            onTap: toggleFault,
+                            color: allFaultByDepartment
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey,
+                          )
+                        ],
+                      ),
+                      FormTitle(getTitle() ?? ''),
                       Expanded(
                           child: ListView(
                               padding: EdgeInsets.only(

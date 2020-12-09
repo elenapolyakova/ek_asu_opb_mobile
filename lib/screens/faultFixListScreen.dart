@@ -5,24 +5,9 @@ import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import 'package:ek_asu_opb_mobile/models/faultFix.dart';
+import 'package:ek_asu_opb_mobile/controllers/faultFix.dart';
 
-class FaultFix {
-  int id;
-  int odooId;
-  int parent_id; //faultId
-  String desc;
-  DateTime date;
-  bool is_finished;
-  bool active;
-  FaultFix(
-      {this.id,
-      this.odooId,
-      this.parent_id,
-      this.desc,
-      this.date,
-      this.is_finished,
-      this.active});
-}
 
 class FaultFixListScreen extends StatefulWidget {
   int faultId;
@@ -75,12 +60,7 @@ class _FaultFixListScreen extends State<FaultFixListScreen> {
       setState(() => {showLoading = true});
 
       _fault = await FaultController.selectById(widget.faultId);
-      List<FaultFix> items = [
-        FaultFix(id: 1, date: DateTime.now(), desc: 'test'),
-        FaultFix(id: 2, date: DateTime.now(), desc: 'test2'),
-        FaultFix(id: 3, date: DateTime.now(), desc: 'test3')
-      ];
-      //await FaultFixController.select(widget.faultId);
+      List<FaultFix> items = await FaultFixController.select(widget.faultId);
 
       _items = items ?? [];
     } catch (e) {} finally {

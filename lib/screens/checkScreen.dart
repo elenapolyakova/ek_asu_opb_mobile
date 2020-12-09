@@ -117,7 +117,7 @@ class _CheckScreen extends State<CheckScreen> {
         screenList[screenKey] = screens.DepartmentDocumentScreen(_departmentId, GlobalKey());
         break;
       case "history":
-        screenList[screenKey] = screens.FaultHistoryScreen(_departmentId, isSyncData);
+        screenList[screenKey] = screens.FaultHistoryScreen(_departmentId, _checkPlanItemId, isSyncData);
         break;
       default:
         return Text("");

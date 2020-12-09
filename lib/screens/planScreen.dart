@@ -596,15 +596,18 @@ class _PlanScreen extends State<PlanScreen> {
       return;
     }
     try {
+      showLoadingDialog(context);
       int odooId = await PlanController.selectOdooId(_plan.id);
-      dynamic report = await ReportController.downloadReport(odooId,
-           PlanController.pdfReportXmlId);
+      dynamic report = await ReportController.downloadReport(
+          odooId, PlanController.pdfReportXmlId);
+      hideDialog(context);
       if (report is File) {
         File file = report as File;
-         OpenFile.open(file.path);
-
+        OpenFile.open(file.path);
       }
-    } catch (e) {}
+    } catch (e) {
+      hideDialog(context);
+    }
   }
 
   Future<void> exportToExcel() async {
@@ -618,17 +621,20 @@ class _PlanScreen extends State<PlanScreen> {
       return;
     }
 
-      try {
-           int odooId = await PlanController.selectOdooId(_plan.id);
+    try {
+      showLoadingDialog(context);
+      int odooId = await PlanController.selectOdooId(_plan.id);
       dynamic report = await ReportController.downloadReport(
-         odooId,
-           PlanController.xlsReportXmlId);
+          odooId, PlanController.xlsReportXmlId);
+      hideDialog(context);
       if (report is File) {
         File file = report as File;
-         OpenFile.open(file.path);
 
+        OpenFile.open(file.path);
       }
-    } catch (e) {}
+    } catch (e) {
+      hideDialog(context);
+    }
   }
 
   Future<bool> showPlanDialog(Plan plan) {
