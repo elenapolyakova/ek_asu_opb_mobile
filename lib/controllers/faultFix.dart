@@ -1,8 +1,6 @@
-import 'package:ek_asu_opb_mobile/controllers/checkListItem.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import 'package:ek_asu_opb_mobile/controllers/fault.dart';
 import 'package:ek_asu_opb_mobile/controllers/faultFixItem.dart';
-import 'package:ek_asu_opb_mobile/models/checkListItem.dart';
 import 'package:ek_asu_opb_mobile/models/faultFix.dart';
 import 'package:ek_asu_opb_mobile/models/faultFixItem.dart';
 import 'package:ek_asu_opb_mobile/models/fault.dart';
