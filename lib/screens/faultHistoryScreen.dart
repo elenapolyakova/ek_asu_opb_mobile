@@ -4,44 +4,37 @@ import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/screens/screens.dart' as screens;
 import 'dart:collection';
 
-class CheckListManagerScreen extends StatefulWidget {
-  int checkPlanItemId;
+class FaultHistoryScreen extends StatefulWidget {
+  int departmentId;
   bool isSyncData;
 
-  CheckListManagerScreen(this.checkPlanItemId, this.isSyncData) {
+  FaultHistoryScreen(this.departmentId, this.isSyncData) {
     createState();
   }
 
   @override
-  _CheckListManagerScreen createState() =>
-      _CheckListManagerScreen(checkPlanItemId, this.isSyncData);
+  _FaultHistoryScreen createState() =>
+      _FaultHistoryScreen(departmentId, this.isSyncData);
 }
 
-class _CheckListManagerScreen extends State<CheckListManagerScreen> {
+class _FaultHistoryScreen extends State<FaultHistoryScreen> {
   UserInfo _userInfo;
   bool showLoading = true;
-  int checkPlanItemId;
-  int checkListId;
-  int checkListItemId;
+
+  int departmentId;
   int faultId;
   int faultFixId;
   dynamic _args;
-  String checkListName;
-  String checkListItemName;
+
   Map<String, dynamic> _screenList = {};
   bool _isSyncData;
   String _selectedPage = '';
 
-  _CheckListManagerScreen(this.checkPlanItemId, this._isSyncData) {
-    print('$_isSyncData====================');
+  _FaultHistoryScreen(this.departmentId, this._isSyncData) {
     //checkPlanItemId = parCheckPlanItemId;
     //Manager.manager.checkPlanItemId = parCheckPlanItemId;
   }
   Queue<Map<String, String>> _navigation = Queue<Map<String, String>>();
-
-  // List<Map<String, Object>> typeCheckListList;
-  List<Map<String, Object>> typeCheckListListAll;
-  int _selectedType = 0;
 
   @override
   void initState() {
@@ -50,7 +43,7 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
 
     setState(() {
       showLoading = false;
-      _selectedPage = 'checkList';
+      _selectedPage = 'faultList';
     });
   }
 
@@ -61,11 +54,8 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
 
       if (args != null) {
         _args = args;
-        checkListId = args['checkListId'] ?? checkListId;
-        checkListItemId = args['checkListItemId'] ?? checkListItemId;
+
         faultId = args['faultId'] ?? faultId;
-        checkListName = args['checkListName'] ?? checkListName;
-        checkListItemName = args['checkListItemName'] ?? checkListItemName;
         faultFixId = args['faultFixId'] ?? faultFixId;
       }
     });
@@ -87,33 +77,18 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
     //if (_screenList[_selectedPage] != null) return _screenList[_selectedPage];
 
     switch (_selectedPage) {
-      case 'checkList':
-        _screenList[_selectedPage] =
-            screens.CheckListScreen(checkPlanItemId, push, pop, GlobalKey());
-
-        break;
-      case "checkListItem":
-        _screenList[_selectedPage] = screens.CheckListItemScreen(
-          checkListId,
-          push,
-          pop,
-          GlobalKey(),
-          checkListName: checkListName,
-        );
-
-        break;
       case "faultList":
         _screenList[_selectedPage] = screens.FaultListScreen(
-            checkListItemId: checkListItemId,
-            push: push,
-            pop: pop,
-            key: GlobalKey(),
-            checkListItemName: checkListItemName);
+          departmentId: departmentId,
+          push: push,
+          pop: pop,
+          key: GlobalKey(),
+        );
         break;
 
       case "fault":
-        _screenList[_selectedPage] = screens.FaultScreen(
-            faultId, checkListItemId, push, pop, GlobalKey());
+        _screenList[_selectedPage] =
+            screens.FaultScreen(faultId, null, push, pop, GlobalKey());
 
         break;
       case "faultFixList":

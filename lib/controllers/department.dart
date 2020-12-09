@@ -5,7 +5,7 @@ import "package:ek_asu_opb_mobile/utils/convert.dart";
 import "package:ek_asu_opb_mobile/controllers/syn.dart";
 
 class DepartmentController extends Controllers {
-  static String _tableName = "department";
+  static const String _tableName = "department";
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     Department department = Department.fromJson(json);
     //нужно, чтобы преобразовать одоо rel в id

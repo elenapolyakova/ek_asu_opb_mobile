@@ -7,7 +7,7 @@ import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class ComGroupController extends Controllers {
-  static String _tableName = "com_group";
+  static const String _tableName = "com_group";
 
   static Future<List<int>> selectIDs() async {
     List<Map<String, dynamic>> maps =

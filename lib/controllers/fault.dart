@@ -12,7 +12,7 @@ import 'package:uuid/uuid.dart';
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 
 class FaultController extends Controllers {
-  static String _tableName = "fault";
+  static const String _tableName = "fault";
 
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     Fault fault = Fault.fromJson(json);

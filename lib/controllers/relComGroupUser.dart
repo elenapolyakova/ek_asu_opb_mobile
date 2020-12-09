@@ -4,7 +4,7 @@ import 'package:ek_asu_opb_mobile/models/comGroup.dart';
 import 'package:ek_asu_opb_mobile/models/models.dart';
 
 class RelComGroupUserController extends Controllers {
-  static String _tableName = "rel_com_group_user";
+  static const String _tableName = "rel_com_group_user";
 
   static Future<List<int>> selectIDs() async {
     List<Map<String, dynamic>> maps =

@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
-import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
-import 'package:ek_asu_opb_mobile/controllers/syn.dart';
-import 'package:ek_asu_opb_mobile/src/exchangeData.dart';
+import 'package:ek_asu_opb_mobile/controllers/report.dart';
 import 'package:ek_asu_opb_mobile/src/messenger.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
@@ -300,7 +298,7 @@ class MyButton extends StatelessWidget {
   double margin;
   double fontSize;
   bool disabled;
-  var _sizeTextWhite =  TextStyle(fontSize: 20, color: Colors.white);
+  var _sizeTextWhite = TextStyle(fontSize: 20, color: Colors.white);
 
   MyButton(
       {this.text,
@@ -313,13 +311,15 @@ class MyButton extends StatelessWidget {
       this.fontSize = 20.0});
   @override
   Widget build(BuildContext) {
-    _sizeTextWhite =  TextStyle(fontSize: fontSize, color: Colors.white);
+    _sizeTextWhite = TextStyle(fontSize: fontSize, color: Colors.white);
     return Container(
         height: height ?? 40.0,
         width: width ?? 150.0,
         alignment: Alignment.center,
-        padding: new EdgeInsets.symmetric(horizontal: margin ?? 5, vertical: 5.0),
-        margin:new EdgeInsets.symmetric(horizontal: margin ?? 5, vertical: 5.0),
+        padding:
+            new EdgeInsets.symmetric(horizontal: margin ?? 5, vertical: 5.0),
+        margin:
+            new EdgeInsets.symmetric(horizontal: margin ?? 5, vertical: 5.0),
         decoration: new BoxDecoration(
           borderRadius: BorderRadius.all(Radius.circular(10)),
           color: !disabled
@@ -1703,14 +1703,15 @@ class _MyAppBar extends State<MyAppBar> {
                             //     clean: true);
                             // await SynController.loadFromOdoo(
                             //     forceFirstLoad: true);
-                            // print((await DBProvider.db.select('department',
-                            //         where: "f_coord_n != 0.0"))
-                            //     .length);
-                            await Future.forEach(
-                                (await DBProvider.db.selectAll('fault_item')),
-                                (el) {
-                              print(el);
-                            });
+                            // print(
+                            //     (await DBProvider.db.selectAll('user')).length);
+                            // await Future.forEach(
+                            //     (await DBProvider.db.select('user',
+                            //         where: "id = 28824")), (el) {
+                            //   print(el);
+                            // });
+                            print((await ReportController.downloadReport(
+                                26, 'report_mob_main_plan_xls')));
                           },
                           color: Theme.of(context).primaryColorLight,
                           fontSize: 20,

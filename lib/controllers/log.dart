@@ -2,7 +2,7 @@ import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class LogController extends Controllers {
-  static String _tableName = "log";
+  static const String _tableName = "log";
   static Future<dynamic> insert(String message) async {
     DBProvider.db.insert(_tableName, {'date': nowStr(), 'message': message});
   }

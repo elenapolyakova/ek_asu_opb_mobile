@@ -9,7 +9,7 @@ import "package:ek_asu_opb_mobile/controllers/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 
 class CheckListController extends Controllers {
-  static String _tableName = "check_list";
+  static const String _tableName = "check_list";
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     CheckListWork checkList = CheckListWork.fromJson(json);
 

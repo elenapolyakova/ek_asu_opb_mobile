@@ -8,7 +8,7 @@ import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 import "package:ek_asu_opb_mobile/src/fileStorage.dart";
 
 class FaultItemController extends Controllers {
-  static String _tableName = "fault_item";
+  static const String _tableName = "fault_item";
 
   static Future<Map<String, dynamic>> create(FaultItem faultItem,
       [bool saveOdooId = false]) async {

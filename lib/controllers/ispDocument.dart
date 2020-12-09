@@ -8,7 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:ek_asu_opb_mobile/src/fileStorage.dart';
 
 class ISPDocumentController extends Controllers {
-  static String _tableName = "isp_document";
+  static const String _tableName = "isp_document";
 
   static final String baseURL =
       '${config.getItem('ServiceRootUrl')}:${config.getItem('port')}';
