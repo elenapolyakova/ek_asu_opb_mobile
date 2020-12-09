@@ -57,8 +57,8 @@ class FaultItem extends Models {
         parent_id: json["parent_id"],
         image: getStr(json["image"]),
         active: (json["active"].toString() == 'true'),
-        file_data: json["file_data"],
-        file_name: json["file_name"],
+        file_data: getStr(json["file_data"]),
+        file_name: getStr(json["file_name"]),
         coord_e: json["coord_e"],
         coord_n: json["coord_n"],
       );
