@@ -9,11 +9,19 @@ import 'package:ek_asu_opb_mobile/utils/convert.dart';
 class FaultFix {
   int id;
   int odooId;
-  bool active;
   int parent_id; //faultId
   String desc;
   DateTime date;
   bool is_finished;
+  bool active;
+  FaultFix(
+      {this.id,
+      this.odooId,
+      this.parent_id,
+      this.desc,
+      this.date,
+      this.is_finished,
+      this.active});
 }
 
 class FaultFixListScreen extends StatefulWidget {
@@ -37,9 +45,9 @@ class _FaultFixListScreen extends State<FaultFixListScreen> {
   var _tapPosition;
 
   List<Map<String, dynamic>> faultFixListHeader = [
-    {'text': 'Дата устранения', 'flex': 3.0},
-    {'text': 'Описание устранения', 'flex': 8.0},
-    {'text': 'Проверено', 'flex': 2.0},
+    {'text': 'Дата устранения', 'flex': 2.0},
+    {'text': 'Описание устранения', 'flex': 9.0},
+    {'text': 'Проверено', 'flex': 1},
   ];
 
   List<Map<String, dynamic>> choices = [
@@ -67,7 +75,11 @@ class _FaultFixListScreen extends State<FaultFixListScreen> {
       setState(() => {showLoading = true});
 
       _fault = await FaultController.selectById(widget.faultId);
-      List<FaultFix> items = [];
+      List<FaultFix> items = [
+        FaultFix(id: 1, date: DateTime.now(), desc: 'test'),
+        FaultFix(id: 2, date: DateTime.now(), desc: 'test2'),
+        FaultFix(id: 3, date: DateTime.now(), desc: 'test3')
+      ];
       //await FaultFixController.select(widget.faultId);
 
       _items = items ?? [];
@@ -94,7 +106,7 @@ class _FaultFixListScreen extends State<FaultFixListScreen> {
       "pathFrom": 'faultFixList',
       'text': 'Назад к списку устранений'
     }, {
-      'faultId': faultFixId
+      'faultFixId': faultFixId
     });
   }
 
@@ -191,9 +203,11 @@ class _FaultFixListScreen extends State<FaultFixListScreen> {
                   ? Theme.of(context).shadowColor
                   : Colors.white)),
           children: [
-            getRowCell(dateDMY(row.date), row.id, 0),
+            getRowCell(dateDMY(row.date), row.id, 0,
+                textAlign: TextAlign.center),
             getRowCell(row.desc, row.id, 1),
-            getRowCell((row.is_finished == true).toString(), row.id, 2),
+            getRowCell((row.is_finished == true).toString(), row.id, 2,
+                textAlign: TextAlign.center),
           ]);
       tableRows.add(tableRow);
     });
@@ -204,20 +218,24 @@ class _FaultFixListScreen extends State<FaultFixListScreen> {
         children: tableRows);
   }
 
-  Widget getRowCell(String text, int faultId, int index,
+  Widget getRowCell(String text, int faultFixId, int index,
       {TextAlign textAlign = TextAlign.left}) {
     Widget cell = Container(
-      padding: EdgeInsets.all(10.0),
-      child: Text(
-        text ?? '',
-        textAlign: textAlign,
-      ),
+      padding: EdgeInsets.all(index != 2 ? 10.0: 0.0),
+      child: (index != 2)
+          ? Text(
+              text ?? '',
+              textAlign: textAlign,
+            )
+          : Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+              children:  [MyCheckbox(text == 'true', '', null)]),
     );
 
     return GestureDetector(
         onTapDown: _storePosition,
         onLongPress: () {
-          _showCustomMenu(faultId, index);
+          _showCustomMenu(faultFixId, index);
         },
         child: cell);
   }
@@ -268,7 +286,7 @@ class _FaultFixListScreen extends State<FaultFixListScreen> {
                       trailing: menu,
                       contentPadding: EdgeInsets.all(0),
                       title: FormTitle(
-                          "Контроль устранения нарушения '${_fault.name}'" ??
+                          "Контроль устранения нарушения '${_fault.name ?? ''}'" ??
                               ''),
                       onTap: () {}),
                 ),

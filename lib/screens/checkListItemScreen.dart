@@ -9,6 +9,7 @@ import 'package:ek_asu_opb_mobile/models/checkListItem.dart';
 class MyCheckListItem {
   CheckListItem item;
   int faultCount;
+ 
 
   MyCheckListItem(this.item, this.faultCount);
 }
@@ -46,7 +47,7 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
     {'text': 'Вопрос', 'flex': 10.0},
     {'text': 'Результат', 'flex': 6.0},
     {'text': 'Комментарий', 'flex': 12.0},
-    {'text': 'Количество нарушений', 'flex': 3.0},
+    {'text': 'Количество нарушений всего', 'flex': 3.0}
   ];
 
   List<Map<String, dynamic>> choices = [
@@ -148,6 +149,8 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
           checkListItem != null ? checkListItem.item.question : ''
     });
   }
+
+  
 
   @override
   void initState() {
@@ -399,7 +402,8 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
             getRowCell(
                 item.faultCount != null ? item.faultCount.toString() : '',
                 row.id,
-                3),
+                3, textAlign: TextAlign.center),
+           
           ]);
       tableRows.add(tableRow);
     });

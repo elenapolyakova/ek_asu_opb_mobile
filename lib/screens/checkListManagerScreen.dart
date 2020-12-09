@@ -24,6 +24,7 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
   int checkListId;
   int checkListItemId;
   int faultId;
+  int faultFixId;
   dynamic _args;
   String checkListName;
   String checkListItemName;
@@ -52,7 +53,6 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
       _selectedPage = 'checkList';
     });
   }
- 
 
   void push(Map<String, String> route, dynamic args) {
     setState(() {
@@ -66,6 +66,7 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
         faultId = args['faultId'] ?? faultId;
         checkListName = args['checkListName'] ?? checkListName;
         checkListItemName = args['checkListItemName'] ?? checkListItemName;
+        faultFixId = args['faultFixId'] ?? faultFixId;
       }
     });
   }
@@ -95,20 +96,35 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
         _screenList[_selectedPage] = screens.CheckListItemScreen(
           checkListId,
           push,
-          pop, GlobalKey(),
+          pop,
+          GlobalKey(),
           checkListName: checkListName,
         );
 
         break;
       case "faultList":
         _screenList[_selectedPage] = screens.FaultListScreen(
-            checkListItemId, push, pop,  GlobalKey(),
+            checkListItemId: checkListItemId,
+            push: push,
+            pop: pop,
+            key: GlobalKey(),
             checkListItemName: checkListItemName);
         break;
 
       case "fault":
+        _screenList[_selectedPage] = screens.FaultScreen(
+            faultId, checkListItemId, push, pop, GlobalKey());
+
+        break;
+      case "faultFixList":
         _screenList[_selectedPage] =
-            screens.FaultScreen(faultId, checkListItemId, push, pop, GlobalKey());
+            screens.FaultFixListScreen(faultId, push, pop, GlobalKey());
+
+        break;
+
+      case "faultFix":
+        _screenList[_selectedPage] =
+            screens.FaultFixScreen(faultFixId, faultId, push, pop, GlobalKey());
 
         break;
 
@@ -128,7 +144,7 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
             decoration: BoxDecoration(
                 image: DecorationImage(
                     image: AssetImage("assets/images/frameScreen.png"),
-                    fit: BoxFit.fitWidth)),
+                    fit: BoxFit.fill)),
             child: showLoading
                 ? Text("")
                 : Column(children: [

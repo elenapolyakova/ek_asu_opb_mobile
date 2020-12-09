@@ -49,11 +49,17 @@ class FaultListScreen extends StatefulWidget {
   Function(Map<String, String>, dynamic arg) push;
   Map<String, String> Function() pop;
   String checkListItemName;
+  int departmentId;
   GlobalKey key;
 
   @override
-  FaultListScreen(this.checkListItemId, this.push, this.pop, this.key,
-      {this.checkListItemName});
+  FaultListScreen(
+      {this.checkListItemId,
+      this.push,
+      this.pop,
+      this.key,
+      this.checkListItemName,
+      this.departmentId});
   @override
   State<FaultListScreen> createState() => _FaultListScreen();
 }
@@ -64,12 +70,14 @@ class _FaultListScreen extends State<FaultListScreen> {
   var _tapPosition;
   int checkListItemId;
   String checkListItemName;
+
+  int departmentId;
   List<MyFault> _items;
   final formFaultKey = new GlobalKey<FormState>();
 
   List<Map<String, dynamic>> faultListHeader = [
     {'text': 'Описание нарушения', 'flex': 5.0},
-    {'text': 'Дата фиксации', 'flex': 2.0},
+    {'text': 'Плановая дата устранения', 'flex': 2.0},
     {'text': 'Штраф в денежном выражении, руб.', 'flex': 3.0},
     {'text': 'Описание штрафа', 'flex': 6.0},
     {'text': 'Статья КОАП', 'flex': 2.0},
@@ -77,7 +85,12 @@ class _FaultListScreen extends State<FaultListScreen> {
 
   List<Map<String, dynamic>> choices = [
     {'title': 'Удалить нарушение', 'icon': Icons.delete, 'key': 'delete'},
-    {'title': 'Редактировать нарушение', 'icon': Icons.edit, 'key': 'edit'}
+    {'title': 'Редактировать нарушение', 'icon': Icons.edit, 'key': 'edit'},
+    {
+      'title': 'Перейти к устранению',
+      'icon': Icons.assignment_turned_in,
+      'key': 'fix'
+    }
   ];
 
   Future<String> getFineName(int koapId) async {
@@ -95,7 +108,10 @@ class _FaultListScreen extends State<FaultListScreen> {
         auth.getUserInfo().then((userInfo) {
           _userInfo = userInfo;
           checkListItemId = widget.checkListItemId;
-          checkListItemName = widget.checkListItemName;
+          checkListItemName = checkListItemId != null
+              ? widget.checkListItemName
+              : 'Список всех нарушений предприятия';
+          departmentId = widget.departmentId;
           loadData();
         });
       } //isLogin == true
@@ -116,7 +132,13 @@ class _FaultListScreen extends State<FaultListScreen> {
 
   Future<void> loadFaultItems() async {
     _items = [];
-    List<Fault> items = await FaultController.select(checkListItemId);
+    List<Fault> items = [];
+    if (checkListItemId != null)
+      items = await FaultController.select(checkListItemId);
+    else if (departmentId != null)
+    //todo!!!!!!!!!!!!!!!
+      items =  await FaultController.select(8); //await FaultController.selectByDepartment(checkListItemId);
+
     if (items != null)
       for (int i = 0; i < items.length; i++) {
         String fineName = await getFineName(items[i].koap_id);
@@ -158,8 +180,8 @@ class _FaultListScreen extends State<FaultListScreen> {
                   : Colors.white)),
           children: [
             getRowCell(row.desc, row.id, 0),
-            getRowCell(dateDMY(row.date), row.id, 1),
-            getRowCell(row.fine != null ? row.fine.toString() : '', row.id, 2),
+            getRowCell(dateDMY(row.plan_fix_date), row.id, 1, textAlign: TextAlign.center),
+            getRowCell(row.fine != null ? row.fine.toString() : '', row.id, 2, textAlign: TextAlign.center),
             getRowCell(row.fine_desc, row.id, 3),
             getRowCell(fault.fineName, row.id, 4),
           ]);
@@ -216,6 +238,9 @@ class _FaultListScreen extends State<FaultListScreen> {
           break;
         case 'delete':
           deleteFaultClicked(faultId);
+          break;
+        case 'fix':
+          fixFaultClicked(faultId);
           break;
       }
     });
@@ -285,6 +310,16 @@ class _FaultListScreen extends State<FaultListScreen> {
     });
   }
 
+  Future<void> fixFaultClicked(int faultId) async {
+    return widget.push({
+      "pathTo": 'faultFixList',
+      "pathFrom": 'faultList',
+      'text': 'Назад к нарушениям'
+    }, {
+      'faultId': faultId
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final menu = PopupMenuButton(
@@ -309,28 +344,47 @@ class _FaultListScreen extends State<FaultListScreen> {
 
     return showLoading
         ? Text("")
-        : Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40, vertical: 5),
-            child: Column(children: [
-              Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-                Expanded(
-                  child: ListTile(
-                      trailing: menu,
-                      contentPadding: EdgeInsets.all(0),
-                      title: FormTitle(checkListItemName ?? ''),
-                      onTap: () {}),
-                ),
-              ]),
-              Expanded(
-                  child: ListView(
-                      padding: EdgeInsets.only(
-                        top: 10,
-                      ),
-                      children: [
-                    Column(children: [
-                      generateFaultTable(context, faultListHeader, _items)
-                    ])
-                  ]))
-            ]));
+        : (checkListItemId != null && departmentId == null)
+            ? Padding(
+                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 5),
+                child: Column(children: [
+                  Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+                    Expanded(
+                      child: ListTile(
+                          trailing: menu,
+                          contentPadding: EdgeInsets.all(0),
+                          title: FormTitle(checkListItemName ?? ''),
+                          onTap: () {}),
+                    ),
+                  ]),
+                  Expanded(
+                      child: ListView(
+                          padding: EdgeInsets.only(
+                            top: 10,
+                          ),
+                          children: [
+                        Column(children: [
+                          generateFaultTable(context, faultListHeader, _items)
+                        ])
+                      ]))
+                ]))
+            : Padding(
+                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 5),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FormTitle(checkListItemName ?? ''),
+                      Expanded(
+                          child: ListView(
+                              padding: EdgeInsets.only(
+                                top: 10,
+                              ),
+                              children: [
+                            Column(children: [
+                              generateFaultTable(
+                                  context, faultListHeader, _items)
+                            ])
+                          ]))
+                    ]));
   }
 }
