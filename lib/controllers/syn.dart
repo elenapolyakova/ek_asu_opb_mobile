@@ -27,6 +27,8 @@ class SynController extends Controllers {
     'fault_item': 'mob.document',
     'chat': 'mob.chat',
     'chat_message': 'mob.chat.msg',
+    'fault_fix': 'mob.check.list.item.fault_control',
+    'fault_fix_item': 'mob.document',
   };
   static Map<String, List<String>> tableBooleanFieldsMap = {
     'plan': ['active'],
@@ -37,7 +39,9 @@ class SynController extends Controllers {
     'check_list': ['active', 'is_active', 'is_base'],
     'check_list_item': ['active'],
     'fault': ['active'],
-    'fault_item': ['active'],
+    'fault_item': [],
+    'fault_fix': ['active', 'is_finished'],
+    'fault_fix_item': [],
     'chat': [],
     'chat_message': [],
   };
@@ -76,6 +80,8 @@ class SynController extends Controllers {
     'chat_message': {
       'parent_id': 'chat',
     },
+    'fault_fix': {'parent_id': 'fault'},
+    'fault_fix_item': {'parent3_id': 'fault_fix'}
   };
   static Map<String, List<Map<String, dynamic>>> tableMany2ManyFieldsMap = {
     'com_group': [
