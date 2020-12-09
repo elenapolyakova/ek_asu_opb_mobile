@@ -4,15 +4,14 @@ import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
-////////////////////////////////////////////////////////
-import 'package:user_location/user_location.dart';
+import 'package:ek_asu_opb_mobile/components/user_location/user_location.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong/latlong.dart';
 
 Marker getMarker(double lat, double lng,
     [IconData icon = Icons.circle,
     Color color = Colors.blue,
-    double size = 80]) {
+    double size = 40]) {
   return Marker(
     width: size,
     height: size,
@@ -35,8 +34,8 @@ List<Marker> getMarkers(List<Map<String, double>> latLngArr) {
 }
 
 class MapScreen extends StatefulWidget {
-  int departmentId;
-  int checkPlanId;
+  final int departmentId;
+  final int checkPlanId;
 
   @override
   MapScreen({this.departmentId, this.checkPlanId});
@@ -46,7 +45,7 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreen extends State<MapScreen> {
-  UserInfo _userInfo;
+  // UserInfo _userInfo;
   bool showLoading = true;
   int departmentId;
   int checkPlanId;
@@ -55,10 +54,8 @@ class _MapScreen extends State<MapScreen> {
   bool focusOnUser = false;
   LatLng userLocation;
 
-  // ADD THIS
   MapController mapController = MapController();
   UserLocationOptions userLocationOptions;
-  // ADD THIS
   List<Marker> markers = [];
 
   @override
@@ -68,7 +65,7 @@ class _MapScreen extends State<MapScreen> {
     auth.checkLoginStatus(context).then((isLogin) {
       if (isLogin) {
         auth.getUserInfo().then((userInfo) {
-          _userInfo = userInfo;
+          // _userInfo = userInfo;
           departmentId = widget.departmentId;
           checkPlanId = widget.checkPlanId;
           loadData();
@@ -80,7 +77,7 @@ class _MapScreen extends State<MapScreen> {
   Future<void> loadData() async {
     try {
       showLoadingDialog(context);
-      setState(() => {showLoading = true});
+      setState(() => {});
       Department dep = await DepartmentController.selectById(departmentId);
       bool properCoordinatesFound = false;
       if (dep != null && !(dep.f_coord_e == 0.0 && dep.f_coord_n == 0.0)) {
@@ -98,7 +95,6 @@ class _MapScreen extends State<MapScreen> {
           if (items.isNotEmpty) {
             int i = 0;
             while (true) {
-              print(items[i].name);
               dep = await items[i].department;
               if (i < items.length &&
                   (dep == null || dep.f_coord_e == 0.0 && dep.f_coord_n == 0.0))
@@ -124,6 +120,7 @@ class _MapScreen extends State<MapScreen> {
           mapController.move(userLocation, 17);
         }
       }
+      showLoading = true;
     } catch (e) {} finally {
       hideDialog(context);
       showLoading = false;
@@ -167,7 +164,6 @@ class _MapScreen extends State<MapScreen> {
                 // urlTemplate: "http://172.22.3.173/russia/map/{z}/{x}/{y}.png",
               ),
               MarkerLayerOptions(markers: markers),
-              // ADD THIS
               userLocationOptions,
               MarkerClusterLayerOptions(
                 maxClusterRadius: 120,

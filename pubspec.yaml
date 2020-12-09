@@ -44,9 +44,8 @@ dependencies:
   flutter_treeview: ^0.6.0
   flutter_map: any
   flutter_map_marker_cluster : any
-  user_location:
-    git:
-      url: https://github.com/igaurab/user_location_plugin.git
+  flutter_compass: ^0.4.1
+  location: ^3.0.0
   image_picker: ^0.6.7
   multi_image_picker: ^4.7.14
   permission_handler: ^5.0.1
