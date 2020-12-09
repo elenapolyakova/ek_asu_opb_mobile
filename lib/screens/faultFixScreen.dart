@@ -14,7 +14,6 @@ import 'package:ek_asu_opb_mobile/controllers/faultFix.dart';
 import 'package:ek_asu_opb_mobile/models/faultFixItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/faultFixItem.dart';
 
-
 class FaultFixScreen extends StatefulWidget {
   int faultId;
   int faultFixId;
@@ -103,7 +102,7 @@ class _FaultFixScreen extends State<FaultFixScreen> {
             'coord_e': geoPoint.longitude,
             'coord_n': geoPoint.latitude
           });
-          
+
           FaultFixItem faultFixItem = FaultFixItem(
               id: null,
               parent3_id: widget.faultFixId,
@@ -192,7 +191,7 @@ class _FaultFixScreen extends State<FaultFixScreen> {
 
   Future<void> loadFaultFix() async {
     if (![null, -1].contains(_faultFixId))
-      _faultFix = await FaultFixController.selectById(_faultFixId); 
+      _faultFix = await FaultFixController.selectById(_faultFixId);
     if (_faultFix == null) {
       _faultFix = new FaultFix(id: null, parent_id: _faultId, active: true);
     }
@@ -200,7 +199,9 @@ class _FaultFixScreen extends State<FaultFixScreen> {
 
   Future<void> loadImages() async {
     _imageList = [];
-     _imageList = _faultFix.id != null ? await FaultFixItemController.select(_faultFix.id) : [];
+    _imageList = _faultFix.id != null
+        ? await FaultFixItemController.select(_faultFix.id)
+        : [];
     if (_imageList.length > 0) {
       _image = File(_imageList[0].image);
       _imageIndex = 0;
@@ -213,11 +214,11 @@ class _FaultFixScreen extends State<FaultFixScreen> {
 
     try {
       if ([-1, null].contains(_faultFix.id)) {
-       
-        result = await FaultFixController.create(_faultFix, _created, _deletedPath);
+        result =
+            await FaultFixController.create(_faultFix, _created, _deletedPath);
       } else {
-       
-         result = await FaultFixController.update(_faultFix, _created, _deletedPath);
+        result =
+            await FaultFixController.update(_faultFix, _created, _deletedPath);
       }
       hasErorr = result["code"] < 0;
 
@@ -314,6 +315,45 @@ class _FaultFixScreen extends State<FaultFixScreen> {
                                               ),
                                             )),
                                       ]),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                              flex: 1,
+                                              child: Column(children: [
+                                                GestureDetector(
+                                                  child: Container(
+                                                   
+                                                    height: 30,
+                                                    child: Row(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .end,
+                                                        children: [
+                                                          Icon(
+                                                              Icons.add_a_photo,
+                                                              size: 30,
+                                                              color: Theme.of(
+                                                                      context)
+                                                                  .primaryColor),
+                                                          Padding(
+                                                              padding: EdgeInsets
+                                                                  .only(
+                                                                      left: 10),
+                                                              child: Text(
+                                                                  'Добавить фото',
+                                                                  style: TextStyle(
+                                                                      color: Theme.of(
+                                                                              context)
+                                                                          .primaryColor))),
+                                                        ]),
+                                                  ),
+                                                  
+                                                  onTap:
+                                                      _onGalleryButtonPressed,
+                                                ),
+                                              ]))
+                                        ],
+                                      ),
                                       Container(
                                         margin:
                                             EdgeInsets.symmetric(vertical: 10),
@@ -325,18 +365,17 @@ class _FaultFixScreen extends State<FaultFixScreen> {
                                           context: context,
                                           borderColor: Theme.of(context)
                                               .primaryColorDark,
-                                          height: 300,
-                                          maxLines: 15,
+                                          height: 270,
+                                         // maxLines: 13,
                                           margin: 0,
                                         ),
                                       ),
                                       Row(
-                                           crossAxisAlignment:
+                                        crossAxisAlignment:
                                             CrossAxisAlignment.end,
                                         children: [
                                           Expanded(
-                                            child:
-                                          Container(
+                                              child: Container(
                                             margin: EdgeInsets.only(
                                                 bottom: 5, right: 20),
                                             child: DatePicker(
@@ -344,7 +383,6 @@ class _FaultFixScreen extends State<FaultFixScreen> {
                                                 text: "Дата устранения",
                                                 width: 200,
                                                 height: 40,
-                                                
                                                 borderColor: Theme.of(context)
                                                     .buttonColor,
                                                 selectedDate:

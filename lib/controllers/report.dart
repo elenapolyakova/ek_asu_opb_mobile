@@ -16,7 +16,7 @@ class ReportController extends Controllers {
   ///
   /// `reportXmlId`: Строка `XXXXController.XXXReportXmlId`
   static Future downloadReport(int recordOdooId, String reportXmlId) async {
-    String appPath = (await getApplicationDocumentsDirectory()).path;
+    String appPath = (await getTemporaryDirectory()).path;
     final response = await getData(
         SynController.localRemoteTableNameMap['plan'], 'download_report', [
       [recordOdooId],

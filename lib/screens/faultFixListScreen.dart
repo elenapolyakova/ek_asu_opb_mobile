@@ -8,7 +8,6 @@ import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'package:ek_asu_opb_mobile/models/faultFix.dart';
 import 'package:ek_asu_opb_mobile/controllers/faultFix.dart';
 
-
 class FaultFixListScreen extends StatefulWidget {
   int faultId;
   Function(Map<String, String>, dynamic arg) push;
@@ -134,8 +133,8 @@ class _FaultFixListScreen extends State<FaultFixListScreen> {
       bool hasErorr = false;
       Map<String, dynamic> result;
       try {
-        // result = await FaultFixController.delete(faultFixId);
-        // hasErorr = result["code"] < 0;
+         result = await FaultFixController.delete(faultFixId);
+         hasErorr = result["code"] < 0;
 
         if (hasErorr) {
           Scaffold.of(context).showSnackBar(
@@ -201,15 +200,16 @@ class _FaultFixListScreen extends State<FaultFixListScreen> {
   Widget getRowCell(String text, int faultFixId, int index,
       {TextAlign textAlign = TextAlign.left}) {
     Widget cell = Container(
-      padding: EdgeInsets.all(index != 2 ? 10.0: 0.0),
+      padding: EdgeInsets.all(index != 2 ? 10.0 : 0.0),
       child: (index != 2)
           ? Text(
               text ?? '',
               textAlign: textAlign,
             )
-          : Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-              children:  [MyCheckbox(text == 'true', '', null)]),
+          : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              MyCheckbox(text == 'true', '',  (val) {},
+                  color: Theme.of(context).primaryColorLight)
+            ]),
     );
 
     return GestureDetector(

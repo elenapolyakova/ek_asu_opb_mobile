@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
+import 'package:ek_asu_opb_mobile/controllers/report.dart';
 import 'package:ek_asu_opb_mobile/models/comGroup.dart';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
@@ -10,6 +11,7 @@ import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'package:flutter_icons/flutter_icons.dart';
+import 'package:open_file/open_file.dart';
 
 /*class InspectionItem {
   int id;
@@ -1312,6 +1314,20 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
           errorSnackBar(text: 'Сначала сохраните реквизиты плана проверок'));
       return;
     }
+     try {
+      showLoadingDialog(context);
+      int odooId = await CheckPlanController.selectOdooId(_inspection.id);
+      dynamic report = await ReportController.downloadReport(
+          odooId, CheckPlanController.pdfReportXmlId);
+      hideDialog(context);
+      if (report is File) {
+        File file = report as File;
+
+        OpenFile.open(file.path);
+      }
+    } catch (e) {
+      hideDialog(context);
+    }
   }
 
   Future<void> exportToExcel() async {
@@ -1319,6 +1335,20 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       Scaffold.of(context).showSnackBar(
           errorSnackBar(text: 'Сначала сохраните реквизиты плана проверок'));
       return;
+    }
+     try {
+      showLoadingDialog(context);
+      int odooId = await CheckPlanController.selectOdooId(_inspection.id);
+      dynamic report = await ReportController.downloadReport(
+          odooId, CheckPlanController.xlsReportXmlId);
+      hideDialog(context);
+      if (report is File) {
+        File file = report as File;
+
+        OpenFile.open(file.path);
+      }
+    } catch (e) {
+      hideDialog(context);
     }
   }
 
