@@ -202,29 +202,30 @@ class FaultItemController extends Controllers {
           'odoo_id': e['id'],
           'active': 'true',
         };
-
-        if (e["coord_n"] is bool) {
-          e["coord_n"] = null;
-        }
-        if (e["coord_e"] is bool) {
-          e["coord_e"] = null;
-        }
+        // Skip records where file_data is false from odoo as
+        // Data for this records is not defined!
         if (e["file_data"] is bool) {
-          e["file_data"] = null;
+        } else {
+          if (e["coord_n"] is bool) {
+            e["coord_n"] = null;
+          }
+          if (e["coord_e"] is bool) {
+            e["coord_e"] = null;
+          }
+
+          print("firstLoadFromOdoo() FaultItem insert! $res");
+          FaultItem json = FaultItem.fromJson(res);
+
+          // Create local file
+          var file = await base64ToFile(json.file_data);
+          print("Path ");
+          print(file.path);
+
+          json.image = file.path;
+          // Set file_data null because of issues with db
+          json.file_data = null;
+          return FaultItemController.create(json, true);
         }
-
-        print("firstLoadFromOdoo() FaultItem insert! $res");
-        FaultItem json = FaultItem.fromJson(res);
-
-        // Create local file
-        var file = await base64ToFile(json.file_data);
-        print("Path ");
-        print(file.path);
-
-        json.image = file.path;
-        // Set file_data null because of issues with db
-        json.file_data = null;
-        return FaultItemController.create(json, true);
       }
     });
     print(
@@ -280,28 +281,28 @@ class FaultItemController extends Controllers {
         return null;
       } else {
         if (faultItem == null) {
-          // Firstly create file!
-          var file = await base64ToFile(e["file_data"]);
-          // Set path
-          e["image"] = file.path;
-          // Check if coords from odoo is bool
-          if (e["coord_n"] is bool) {
-            e["coord_n"] = null;
-          }
-          if (e["coord_e"] is bool) {
-            e["coord_e"] = null;
-          }
-
+          // Skip records where file_data is false from odoo!
           if (e["file_data"] is bool) {
-            e["file_data"] = null;
-          }
+          } else {
+            // Firstly create file!
+            var file = await base64ToFile(e["file_data"]);
+            // Set path
+            e["image"] = file.path;
+            // Check if coords from odoo is bool
+            if (e["coord_n"] is bool) {
+              e["coord_n"] = null;
+            }
+            if (e["coord_e"] is bool) {
+              e["coord_e"] = null;
+            }
 
-          // set file_data = null because of issues with db
-          e["file_data"] = '';
-          Map<String, dynamic> res =
-              FaultItem.fromJson({...e, 'active': 'true'}).toJson(true);
-          res['odoo_id'] = e['id'];
-          return DBProvider.db.insert(_tableName, res);
+            // set file_data = null because of issues with db
+            e["file_data"] = null;
+            Map<String, dynamic> res =
+                FaultItem.fromJson({...e, 'active': 'true'}).toJson(true);
+            res['odoo_id'] = e['id'];
+            return DBProvider.db.insert(_tableName, res);
+          }
         }
         // Map<String, dynamic> res = FaultItem.fromJson({
         //   ...e,
