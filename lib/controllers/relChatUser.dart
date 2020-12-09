@@ -2,7 +2,7 @@ import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import 'package:ek_asu_opb_mobile/models/models.dart';
 
 class RelChatUserController extends Controllers {
-  static String _tableName = "rel_chat_user";
+  static const String _tableName = "rel_chat_user";
 
   static Future<List<int>> selectIDs() async {
     List<Map<String, dynamic>> maps =

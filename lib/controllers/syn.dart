@@ -13,7 +13,7 @@ import 'package:ek_asu_opb_mobile/utils/network.dart';
 
 class SynController extends Controllers {
   static bool ongoingSync = false;
-  static String _tableName = "syn";
+  static const String _tableName = "syn";
   static Map<String, String> localRemoteTableNameMap = {
     'plan': 'mob.main.plan',
     'plan_item': 'mob.main.plan.item',
