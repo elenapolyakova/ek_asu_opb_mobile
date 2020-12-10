@@ -13,7 +13,8 @@ import 'package:ek_asu_opb_mobile/utils/convert.dart';
 class MyFault {
   Fault fault;
   String fineName;
-  MyFault(this.fault, this.fineName);
+  DateTime fixDate;
+  MyFault(this.fault, this.fineName, this.fixDate);
 }
 
 class FaultListScreen extends StatefulWidget {
@@ -56,6 +57,7 @@ class _FaultListScreen extends State<FaultListScreen> {
   List<Map<String, dynamic>> faultListHeader = [
     {'text': 'Описание нарушения', 'flex': 5.0},
     {'text': 'Плановая дата устранения', 'flex': 2.0},
+    {'text': 'Факт. дата устранения', 'flex': 2.0},
     {'text': 'Штраф в денежном выражении, руб.', 'flex': 3.0},
     {'text': 'Описание штрафа', 'flex': 6.0},
     {'text': 'Статья КОАП', 'flex': 2.0},
@@ -124,8 +126,7 @@ class _FaultListScreen extends State<FaultListScreen> {
     List<Fault> items = [];
     if (checkListItemId != null)
       items = await FaultController.select(checkListItemId);
-    else if (departmentId != null)
-    if (allFaultByDepartment)
+    else if (departmentId != null) if (allFaultByDepartment)
       items = await FaultController.getFaultsByDepartment(departmentId);
     else
       items = await FaultController.getFaultsByCheckPlanId(checkPlanItemId);
@@ -133,7 +134,8 @@ class _FaultListScreen extends State<FaultListScreen> {
     if (items != null)
       for (int i = 0; i < items.length; i++) {
         String fineName = await getFineName(items[i].koap_id);
-        _items.add(MyFault(items[i], fineName));
+        DateTime fixDate = await items[i].getLastFixDate;
+        _items.add(MyFault(items[i], fineName, fixDate));
       }
   }
 
@@ -172,6 +174,8 @@ class _FaultListScreen extends State<FaultListScreen> {
           children: [
             getRowCell(row.desc, row.id, 0),
             getRowCell(dateDMY(row.plan_fix_date), row.id, 1,
+                textAlign: TextAlign.center),
+            getRowCell(dateDMY(fault.fixDate), row.id, 1,
                 textAlign: TextAlign.center),
             getRowCell(row.fine != null ? row.fine.toString() : '', row.id, 2,
                 textAlign: TextAlign.center),

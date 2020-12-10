@@ -12,8 +12,8 @@ import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 
 final attemptCount = config.getItem('attemptCount') ?? 5;
 final limitRecord = config.getItem('limitRecord') ?? 80;
-final cbtRole = config.getItem('cbtRole') ?? 'cbt';
-final ncopRole = config.getItem('ncopRole') ?? 'ncop';
+final cbtRole = config.getItem('cbtRole') ?? 'ЦБТ';
+final ncopRole = config.getItem('ncopRole') ?? 'НЦОП';
 final _storage = FlutterSecureStorage();
 final List<String> _dict = [
   'railway',
