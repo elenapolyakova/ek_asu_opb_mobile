@@ -138,6 +138,16 @@ class DBProvider {
     }
     await deleteAll("fault_item");
 
+
+      await deleteAll("fault_fix");
+
+    for (Map<String, dynamic> element
+        in (await DBProvider.db.selectAll('fault_fix_item'))) {
+      String filePath = element["image"];
+      if (!['', null].contains(filePath)) await File(filePath).delete();
+    }
+    await deleteAll("fault_fix_item");
+
     await deleteAll("koap");
 
     for (Map<String, dynamic> element
