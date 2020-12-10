@@ -139,26 +139,8 @@ class FaultItemController extends Controllers {
     List<List> domain = [];
     if (loadRelated) {
       fields = ['write_date', 'parent_id'];
-      // List<Map<String, dynamic>> queryRes =
-      //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
-      // domain = [
-      //   ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
-      // ];
     } else {
       await DBProvider.db.deleteAll(_tableName);
-      // List<List> toAdd = [];
-      // await Future.forEach(
-      //     SynController.tableMany2oneFieldsMap[_tableName].entries,
-      //     (element) async {
-      //   List<Map<String, dynamic>> queryRes =
-      //       await DBProvider.db.select(element.value, columns: ['odoo_id']);
-      //   toAdd.add([
-      //     element.key,
-      //     'in',
-      //     queryRes.map((e) => e['odoo_id'] as int).toList()
-      //   ]);
-      // });
-      // domain += toAdd;
       fields = [
         'name',
         'type',
@@ -188,8 +170,6 @@ class FaultItemController extends Controllers {
           Fault parentFault = await FaultController.selectByOdooId(
               unpackListId(e['parent_id'])['id']);
           if (parentFault == null) return null;
-          // assert(parentFault != null,
-          //     "Model fault has to be loaded before $_tableName");
           res['id'] = faultItem.id;
           res['parent_id'] = parentFault.id;
         }
@@ -274,8 +254,6 @@ class FaultItemController extends Controllers {
           Fault parentFault = await FaultController.selectByOdooId(
               unpackListId(e['parent_id'])['id']);
           if (parentFault == null) return null;
-          // assert(parentFault != null,
-          //     "Model fault has to be loaded before $_tableName");
           res['id'] = faultItem.id;
           res['parent_id'] = parentFault.id;
         }
@@ -319,9 +297,5 @@ class FaultItemController extends Controllers {
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
 
     if (loadRelated) await setLatestWriteDate(_tableName, json);
-  }
-
-  static Future finishSync(dateTime) {
-    return setLastSyncDateForDomain(_tableName, dateTime);
   }
 }

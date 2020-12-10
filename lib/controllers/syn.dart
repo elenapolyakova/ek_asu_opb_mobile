@@ -208,20 +208,21 @@ class SynController extends Controllers {
       await DepartmentDocumentController.firstLoadFromOdoo();
       await CheckListController.firstLoadFromOdoo();
       await CheckListItemController.firstLoadFromOdoo();
-      await FaultController.firstLoadFromOdoo();
-      await FaultItemController.firstLoadFromOdoo();
-      await FaultFixController.firstLoadFromOdoo();
-      await FaultFixItemController.firstLoadFromOdoo();
+      FaultController.firstLoadFromOdoo().then((value) async {
+        await FaultItemController.firstLoadFromOdoo();
+        await FaultFixController.firstLoadFromOdoo();
+        await FaultFixItemController.firstLoadFromOdoo();
+        await FaultController.firstLoadFromOdoo(true);
+        await FaultItemController.firstLoadFromOdoo(true);
+        await FaultFixController.firstLoadFromOdoo(true);
+        await FaultFixItemController.firstLoadFromOdoo(true);
+      });
 
       await CheckPlanController.firstLoadFromOdoo(true);
       await ComGroupController.firstLoadFromOdoo(true);
       await CheckPlanItemController.firstLoadFromOdoo(true);
       await CheckListController.firstLoadFromOdoo(true);
       await CheckListItemController.firstLoadFromOdoo(true);
-      await FaultController.firstLoadFromOdoo(true);
-      await FaultItemController.firstLoadFromOdoo(true);
-      await FaultFixController.firstLoadFromOdoo(true);
-      await FaultFixItemController.firstLoadFromOdoo(true);
 
       await ChatController.loadFromOdoo(clean: true);
       await ChatMessageController.loadFromOdoo(clean: true);
@@ -233,21 +234,21 @@ class SynController extends Controllers {
       await CheckPlanItemController.loadChangesFromOdoo();
       await CheckListController.loadChangesFromOdoo();
       await CheckListItemController.loadChangesFromOdoo();
-      await FaultController.loadChangesFromOdoo();
-      await FaultItemController.loadChangesFromOdoo();
-      await FaultFixController.loadChangesFromOdoo();
-      await FaultFixItemController.loadChangesFromOdoo();
+      FaultController.loadChangesFromOdoo().then((value) async {
+        await FaultItemController.loadChangesFromOdoo();
+        await FaultFixController.loadChangesFromOdoo();
+        await FaultFixItemController.loadChangesFromOdoo();
+        await FaultController.loadChangesFromOdoo(true);
+        await FaultItemController.loadChangesFromOdoo(true);
+        await FaultFixController.loadChangesFromOdoo(true);
+        await FaultFixItemController.loadChangesFromOdoo(true);
+      });
 
       await CheckPlanController.loadChangesFromOdoo(true);
       await CheckPlanItemController.loadChangesFromOdoo(true);
       await ComGroupController.loadChangesFromOdoo(loadRelated: true);
       await CheckListController.loadChangesFromOdoo(true);
       await CheckListItemController.loadChangesFromOdoo(true);
-      await FaultController.loadChangesFromOdoo(true);
-      await FaultItemController.loadChangesFromOdoo(true);
-
-      await FaultFixController.loadChangesFromOdoo(true);
-      await FaultFixItemController.loadChangesFromOdoo(true);
     }
     await ChatController.loadFromOdoo(clean: lastDateDomain.isEmpty);
     await ChatMessageController.loadFromOdoo(clean: lastDateDomain.isEmpty);

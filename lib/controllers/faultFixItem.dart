@@ -138,26 +138,8 @@ class FaultFixItemController extends Controllers {
     List<List> domain = [];
     if (loadRelated) {
       fields = ['write_date', 'parent3_id'];
-      // List<Map<String, dynamic>> queryRes =
-      //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
-      // domain = [
-      //   ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
-      // ];
     } else {
       await DBProvider.db.deleteAll(_tableName);
-      // List<List> toAdd = [];
-      // await Future.forEach(
-      //     SynController.tableMany2oneFieldsMap[_tableName].entries,
-      //     (element) async {
-      //   List<Map<String, dynamic>> queryRes =
-      //       await DBProvider.db.select(element.value, columns: ['odoo_id']);
-      //   toAdd.add([
-      //     element.key,
-      //     'in',
-      //     queryRes.map((e) => e['odoo_id'] as int).toList()
-      //   ]);
-      // });
-      // domain += toAdd;
       fields = [
         'name',
         'type',
@@ -187,8 +169,6 @@ class FaultFixItemController extends Controllers {
           FaultFix parentFaultFix = await FaultFixController.selectByOdooId(
               unpackListId(e['parent3_id'])['id']);
           if (parentFaultFix == null) return null;
-          // assert(parentFault != null,
-          //     "Model fault has to be loaded before $_tableName");
           res['id'] = faultFixItem.id;
           res['parent3_id'] = parentFaultFix.id;
         }
@@ -274,8 +254,6 @@ class FaultFixItemController extends Controllers {
           FaultFix parentFaultFix = await FaultFixController.selectByOdooId(
               unpackListId(e['parent3_id'])['id']);
           if (parentFaultFix == null) return null;
-          // assert(parentFault != null,
-          //     "Model fault has to be loaded before $_tableName");
           res['id'] = faultFixItem.id;
           res['parent3_id'] = parentFaultFix.id;
         }
