@@ -483,7 +483,7 @@ class SynController extends Controllers {
     record.remove('create_date');
     record.remove('write_date');
     // When "deleting", remove fields that should not be removed from server
-    if (!record['active']) {
+    if (record['active'] != null && !record['active']) {
       final List<String> fieldsToPersistOnServer =
           tableFieldsToPersistOnServerMap[syn.localTableName];
       // If a record contains any fields that should not be changed on server
