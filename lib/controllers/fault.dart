@@ -139,6 +139,102 @@ class FaultController extends Controllers {
     return faults;
   }
 
+  // Get all faults by ID плана проверки
+  static Future<List<Fault>> getFaultsByCheckPlanId(int planId) async {
+    if (planId == null) return [];
+
+    try {
+      var checkListIdsResp = await DBProvider.db.executeQuery(
+          "SELECT id from check_list where parent_id=$planId and active='true' and is_active='true' and is_base='false'");
+
+      // We not found checkLists assigned to plan, return []
+      if (checkListIdsResp.length == 0) return [];
+      var ids = [];
+      checkListIdsResp.forEach((e) {
+        ids.add(e["id"]);
+      });
+
+      var checkListItemResp = await DBProvider.db.executeQuery(
+          "SELECT id from check_list_item where parent_id IN (${ids.join(',')}) and active='true'");
+      // Not found assigned questions to checkList, faults are []
+      if (checkListItemResp.length == 0) return [];
+
+      // print('check list  item resp $checkListItemResp');
+      var checkListItemIds = [];
+      // Coupling ids from db resp
+      checkListItemResp.forEach((e) {
+        checkListItemIds.add(e["id"]);
+      });
+
+      var faults = await DBProvider.db.executeQuery(
+          "SELECT * FROM fault WHERE parent_id IN (${checkListItemIds.join(', ')}) and active='true'");
+
+      if (faults.length == 0) return [];
+
+      List<Fault> faultsByPlanId =
+          faults.map((e) => Fault.fromJson(e)).toList();
+
+      return faultsByPlanId;
+    } catch (e) {
+      print("getFaultsByCheckPlanId(), Error while getting faults: $e");
+      return [];
+    }
+  }
+
+  // Get all faults by department_id
+  static Future<List<Fault>> getFaultsByDepartment(int depId) async {
+    if (depId == null) return [];
+
+    try {
+      // Планы проверки по предприятию, id
+      var checkPlanItemResp = await DBProvider.db.executeQuery(
+          "SELECT id from plan_item_check_item WHERE department_id=$depId and active='true'");
+      // checkPlanItems not found return []
+      if (checkPlanItemResp.length == 0) return [];
+
+      var checkPlanIds = [];
+      // coupling ids
+      checkPlanItemResp.forEach((e) {
+        checkPlanIds.add(e["id"]);
+      });
+
+      var checkListIdsResp = await DBProvider.db.executeQuery(
+          "SELECT id from check_list where parent_id IN (${checkPlanIds.join(', ')}) and active='true' and is_active='true' and is_base='false'");
+
+      // We not found checkLists assigned to plan, return []
+      if (checkListIdsResp.length == 0) return [];
+      var ids = [];
+      checkListIdsResp.forEach((e) {
+        ids.add(e["id"]);
+      });
+
+      var checkListItemResp = await DBProvider.db.executeQuery(
+          "SELECT id from check_list_item where parent_id IN (${ids.join(',')}) and active='true'");
+      // Not found assigned questions to checkList, faults are []
+      if (checkListItemResp.length == 0) return [];
+
+      // print('check list  item resp $checkListItemResp');
+      var checkListItemIds = [];
+      // Coupling ids from db resp
+      checkListItemResp.forEach((e) {
+        checkListItemIds.add(e["id"]);
+      });
+
+      var faults = await DBProvider.db.executeQuery(
+          "SELECT * FROM fault WHERE parent_id IN (${checkListItemIds.join(', ')}) and active='true'");
+
+      if (faults.length == 0) return [];
+
+      List<Fault> faultsByPlanId =
+          faults.map((e) => Fault.fromJson(e)).toList();
+
+      return faultsByPlanId;
+    } catch (e) {
+      print("getFaultsByDepartment(), Error while getting faults: $e");
+      return [];
+    }
+  }
+
   // Update fault also allows to add or delete photos for 1 Fault
   // faultItems - list with data as photoPath coord_e coord_n and etc.
   // delete - list ids of photos(faultItems) to delete
