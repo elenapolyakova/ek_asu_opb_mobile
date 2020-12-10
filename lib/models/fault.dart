@@ -1,3 +1,4 @@
+import 'package:ek_asu_opb_mobile/controllers/faultFix.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
@@ -39,6 +40,13 @@ class Fault extends Models {
     // this.lon,
     this.plan_fix_date,
   });
+
+  Future<DateTime> get getLastFixDate async {
+    if (id != null) {
+      return FaultFixController.getMaxFixDate(id);
+    }
+    return null;
+  }
 
   factory Fault.fromJson(Map<String, dynamic> json) => new Fault(
         id: json["id"],
