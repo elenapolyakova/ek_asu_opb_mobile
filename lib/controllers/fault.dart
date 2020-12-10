@@ -7,7 +7,6 @@ import 'package:ek_asu_opb_mobile/models/faultItem.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import "package:ek_asu_opb_mobile/controllers/syn.dart";
 import 'dart:io';
-import 'package:ek_asu_opb_mobile/src/fileStorage.dart';
 import 'package:uuid/uuid.dart';
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 
