@@ -245,7 +245,7 @@ class _LoginPage extends State<LoginPage> {
             return AlertDialog(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(12.0))),
-             // title: Text("Настройки подключения"),
+              // title: Text("Настройки подключения"),
               backgroundColor: Theme.of(context).primaryColor,
               contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 0),
               content: new Form(
@@ -433,10 +433,15 @@ class _LoginPage extends State<LoginPage> {
       return;
     }
 
-    await DBProvider.db.reCreateDB();
-    await auth.resetAllStorageData();
-    await auth.setBaseUrl(_ip);
-    await auth.setDB(_db);
+    String lastUrl = await auth.getBaseUrl();
+    String lastDB = await auth.getDB();
+
+    if (_ip != lastUrl || _db != lastDB) {
+      await DBProvider.db.reCreateDB();
+      await auth.resetAllStorageData();
+      await auth.setBaseUrl(_ip);
+      await auth.setDB(_db);
+    }
     //OdooClient client = await OdooProxy.odooClient.client;
     // if (client != null) client.close();
 
