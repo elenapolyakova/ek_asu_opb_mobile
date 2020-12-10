@@ -176,8 +176,7 @@ class FaultController extends Controllers {
 
       return faultsByPlanId;
     } catch (e) {
-      print(
-          "getFaultsByCheckPlanId(), Error while getting faults by checkPlanItemID: $e");
+      print("getFaultsByCheckPlanId(), Error while getting faults: $e");
       return [];
     }
   }
@@ -231,8 +230,7 @@ class FaultController extends Controllers {
 
       return faultsByPlanId;
     } catch (e) {
-      print(
-          "getFaultsByCheckPlanId(), Error while getting faults by checkPlanItemID: $e");
+      print("getFaultsByDepartment(), Error while getting faults: $e");
       return [];
     }
   }
