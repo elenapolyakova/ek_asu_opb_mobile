@@ -87,6 +87,7 @@ class _FaultHistoryScreen extends State<FaultHistoryScreen> {
           push: push,
           pop: pop,
           key: GlobalKey(),
+          checkPlanItemId: checkPlanItemId
         );
         break;
 

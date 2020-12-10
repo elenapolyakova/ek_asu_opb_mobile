@@ -10,34 +10,6 @@ import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
-/*class Fault {
-  int id;
-  int odooId;
-  int parent_id; //checkListItem.id
-  String name; //Наименование
-  String desc; //Описание
-  DateTime date; //Дата фиксации
-  String fine_desc; //Штраф. Описание
-  int fine; //Штраф. Сумма
-  int koap_id; //cтатья КОАП
-  DateTime date_done; //дата устранения
-  String desc_done; //описание к устранению
-  bool active;
-  Fault(
-      {this.id,
-      this.odooId,
-      this.parent_id,
-      this.name,
-      this.desc,
-      this.date,
-      this.fine,
-      this.fine_desc,
-      this.koap_id,
-      this.date_done,
-      this.desc_done,
-      this.active}); //Статья КОАП
-}*/
-
 class MyFault {
   Fault fault;
   String fineName;
@@ -71,6 +43,7 @@ class _FaultListScreen extends State<FaultListScreen> {
   bool showLoading = true;
   var _tapPosition;
   int checkListItemId;
+  int checkPlanItemId;
 
   bool isHistory =
       false; //форма загружена из истории нарушений или вопроса чек-листа
@@ -118,7 +91,7 @@ class _FaultListScreen extends State<FaultListScreen> {
           } else {
             isHistory = true;
           }
-
+          checkPlanItemId = widget.checkPlanItemId;
           departmentId = widget.departmentId;
           loadData();
         });
@@ -152,13 +125,10 @@ class _FaultListScreen extends State<FaultListScreen> {
     if (checkListItemId != null)
       items = await FaultController.select(checkListItemId);
     else if (departmentId != null)
-    //todo!!!!!!!!!!!!!!!
     if (allFaultByDepartment)
-      items = await FaultController.select(
-          8); //await FaultController.selectByDepartment(departmentId, null);
+      items = await FaultController.getFaultsByDepartment(departmentId);
     else
-      items = await FaultController.select(
-          8); //await FaultController.selectByDepartment(null, checkListItemId);
+      items = await FaultController.getFaultsByCheckPlanId(checkPlanItemId);
 
     if (items != null)
       for (int i = 0; i < items.length; i++) {
