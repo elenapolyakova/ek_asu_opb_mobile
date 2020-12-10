@@ -310,6 +310,18 @@ class FaultFixController extends Controllers {
     return count;
   }
 
+  static Future<DateTime> getMaxFixDate(int parentId) async {
+    if (parentId == null) return null;
+
+    var queryRes = await DBProvider.db.executeQuery(
+        "SELECT MAX(date) as date from $_tableName where parent_id=$parentId");
+    if (queryRes.length == 0) return null;
+
+    DateTime date = stringToDateTime(queryRes[0]["date"], forceUtc: false);
+
+    return date;
+  }
+
   // Get odooId by db id
   static Future<int> selectOdooId(int id) async {
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(_tableName,
@@ -373,7 +385,6 @@ class FaultFixController extends Controllers {
       if (e['date'] is bool) {
         e['date'] = null;
       }
-
       if (loadRelated) {
         FaultFix fault = await selectByOdooId(e['id']);
         Map<String, dynamic> res = {};
@@ -386,7 +397,6 @@ class FaultFixController extends Controllers {
           res['id'] = fault.id;
           res['parent_id'] = parentFault.id;
         }
-
         if (res['id'] != null) return DBProvider.db.update(_tableName, res);
         return null;
       } else {
@@ -465,7 +475,7 @@ class FaultFixController extends Controllers {
           res['odoo_id'] = e['id'];
           return DBProvider.db.insert(_tableName, res);
         }
-        Map<String, dynamic> res = Fault.fromJson({
+        Map<String, dynamic> res = FaultFix.fromJson({
           ...e,
           'id': faultFix.id,
           'odoo_id': faultFix.odoo_id,
