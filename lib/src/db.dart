@@ -80,7 +80,6 @@ class DBProvider {
       onUpgrade: (db, oldVersion, version) async {
         switch (oldVersion) {
           case 1:
-          case 2:
             await db.transaction((txn) async {
               await txn.execute(
                   'ALTER TABLE chat_message ADD COLUMN create_uid INTEGER');
@@ -97,6 +96,15 @@ class DBProvider {
             });
             continue v2;
           v2:
+          case 2:
+          case 3:
+            await db.execute(
+                "CREATE TABLE IF NOT EXISTS fault_fix(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, desc TEXT, date TEXT, active TEXT, is_finished TEXT)");
+            await db.execute(
+                "CREATE TABLE IF NOT EXISTS fault_fix_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, name TEXT, type INTEGER, parent3_id INTEGER, image TEXT, active TEXT, file_name TEXT, file_data TEXT, coord_n REAL, coord_e REAL)");
+            continue v3;
+          v3:
+          case 4:
           default:
         }
       },
@@ -111,7 +119,7 @@ class DBProvider {
 
       // Set the version. This executes the onCreate function and provides a
       // path to perform database upgrades and downgrades.
-      version: 2,
+      version: 4,
     );
   }
 
@@ -138,8 +146,7 @@ class DBProvider {
     }
     await deleteAll("fault_item");
 
-
-      await deleteAll("fault_fix");
+    await deleteAll("fault_fix");
 
     for (Map<String, dynamic> element
         in (await DBProvider.db.selectAll('fault_fix_item'))) {

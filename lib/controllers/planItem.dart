@@ -92,10 +92,6 @@ class PlanItemController extends Controllers {
     await setLatestWriteDate(_tableName, json);
   }
 
-  static Future finishSync(dateTime) {
-    return setLastSyncDateForDomain(_tableName, dateTime);
-  }
-
   /// Select all records with matching parentId
   /// Returns found records or null.
   static Future<List<PlanItem>> select(int parentId) async {
