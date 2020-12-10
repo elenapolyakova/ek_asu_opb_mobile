@@ -16,7 +16,7 @@ import 'package:ek_asu_opb_mobile/utils/network.dart';
 class SynController extends Controllers {
   static bool ongoingSync = false;
   static const String _tableName = "syn";
-  static Map<String, String> localRemoteTableNameMap = {
+  static const Map<String, String> localRemoteTableNameMap = {
     'plan': 'mob.main.plan',
     'plan_item': 'mob.main.plan.item',
     'plan_item_check': 'mob.check.plan',
@@ -32,7 +32,7 @@ class SynController extends Controllers {
     'fault_fix': 'mob.check.list.item.fault_control',
     'fault_fix_item': 'mob.document',
   };
-  static Map<String, List<String>> tableBooleanFieldsMap = {
+  static const Map<String, List<String>> tableBooleanFieldsMap = {
     'plan': ['active'],
     'plan_item': ['active'],
     'plan_item_check': ['active'],
@@ -47,7 +47,7 @@ class SynController extends Controllers {
     'chat': [],
     'chat_message': [],
   };
-  static Map<String, Map<String, String>> tableMany2oneFieldsMap = {
+  static const Map<String, Map<String, String>> tableMany2oneFieldsMap = {
     'plan': {},
     'plan_item': {
       'parent_id': 'plan',
@@ -85,7 +85,8 @@ class SynController extends Controllers {
     'fault_fix': {'parent_id': 'fault'},
     'fault_fix_item': {'parent3_id': 'fault_fix'}
   };
-  static Map<String, List<Map<String, dynamic>>> tableMany2ManyFieldsMap = {
+  static const Map<String, List<Map<String, dynamic>>> tableMany2ManyFieldsMap =
+      {
     'com_group': [
       {
         // поле, в котором хранится отношение many2many на сервере
@@ -113,6 +114,21 @@ class SynController extends Controllers {
         'other_field': 'user_id',
       },
     ]
+  };
+  static const Map<String, List<String>> tableFieldsToPersistOnServerMap = {
+    'plan': [],
+    'plan_item': [],
+    'plan_item_check': [],
+    'plan_item_check_item': [],
+    'com_group': [],
+    'check_list': [],
+    'check_list_item': [],
+    'fault': [],
+    'fault_item': ['file_data'],
+    'fault_fix': [],
+    'fault_fix_item': ['file_data'],
+    'chat': [],
+    'chat_message': [],
   };
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     Syn syn = Syn.fromJson(json); //нужно, чтобы преобразовать одоо rel в id
@@ -462,11 +478,26 @@ class SynController extends Controllers {
       }
     }
 
-    // Upload to backend
     record.remove('create_uid');
     record.remove('write_uid');
     record.remove('create_date');
     record.remove('write_date');
+    // When "deleting", remove fields that should not be removed from server
+    if (!record['active']) {
+      final List<String> fieldsToPersistOnServer =
+          tableFieldsToPersistOnServerMap[syn.localTableName];
+      // If a record contains any fields that should not be changed on server
+      if (fieldsToPersistOnServer != null &&
+          fieldsToPersistOnServer.length > 0) {
+        print("Removing $fieldsToPersistOnServer from record.");
+        // For each field to persist on server in a record
+        await Future.forEach(fieldsToPersistOnServer, (el) async {
+          record.remove(el);
+        });
+      }
+    }
+
+    // Upload to backend
     if (beforeUpload != null) {
       var beforeUploadRes = beforeUpload(record);
       if (beforeUploadRes != null) {

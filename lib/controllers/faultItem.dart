@@ -94,7 +94,7 @@ class FaultItemController extends Controllers {
       'id': null,
     };
 
-    // Future<int> odooId = selectOdooId(faultItemId);
+    Future<int> odooId = selectOdooId(faultItemId);
     print("Delete() FaultItem");
     // Set file_data = null for removing base64 photo data
     await DBProvider.db.update(_tableName, {
@@ -105,11 +105,12 @@ class FaultItemController extends Controllers {
       res['code'] = 1;
       res['id'] = value;
       // Commented because of documents not deleted in odoo!
-      // await SynController.delete(_tableName, faultItemId, await odooId)
-      //     .catchError((err) {
-      //   res['code'] = -2;
-      //   res['message'] = 'Error updating syn';
-      // });
+      // Uncommented since file_data is no longer uploaded to inactive record
+      await SynController.delete(_tableName, faultItemId, await odooId)
+          .catchError((err) {
+        res['code'] = -2;
+        res['message'] = 'Error updating syn';
+      });
     }).catchError((err) {
       res['code'] = -3;
       res['message'] = 'Error deleting from $_tableName';
