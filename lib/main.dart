@@ -11,8 +11,9 @@ import 'package:ek_asu_opb_mobile/screens/screens.dart';
 import 'package:ek_asu_opb_mobile/src/exchangeData.dart' as exchange;
 import 'utils/authenticate.dart' as auth;
 import 'utils/config.dart' as config;
-import 'utils/network.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:ek_asu_opb_mobile/components/components.dart';
 
 void callbackDispatcher() {
   WM.Workmanager.executeTask((task, inputData) async {
@@ -22,6 +23,8 @@ void callbackDispatcher() {
     return false;
   });
 }
+
+final _storage = FlutterSecureStorage();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -138,13 +141,17 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.resumed:
-        if (_lastScreen == '/login' || _isPinDialogShow) return;
-        if (_isTimeExpire) {
-          setState(() {
-            _isTimeExpire = false;
-            showPasswordDialog();
-          });
-        } else if (_pinTimer != null) _pinTimer.cancel();
+        _storage.read(key: 'isHomePinDialogShow').then((_isHomePinDialogShow) {
+          if (_lastScreen == '/login' ||
+              _isPinDialogShow ||
+              _isHomePinDialogShow == 'true') return;
+          if (_isTimeExpire) {
+            setState(() {
+              _isTimeExpire = false;
+              showPasswordDialog();
+            });
+          } else if (_pinTimer != null) _pinTimer.cancel();
+        });
 
         //user returned to our app
         break;
@@ -188,9 +195,9 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
         setState(() {
           _isPinDialogShow = false;
           _showErrorPin = false;
-          _showLoading = true;
+          //_showLoading = true;
         });
-        try {
+        /* try {
           checkConnection().then((isConnect) {
             if (isConnect) {
               auth.checkSession(context).then((isSessionExist) {
@@ -212,9 +219,9 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
           });
         } catch (e) {
           Navigator.pop(context, true);
-        }
+        }*/
 //checkConnection
-
+        Navigator.pop(context, true);
       }
     }
   }
@@ -292,7 +299,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
                                   ))),
                           new Container(
                             width: 200,
-                            height: 50.0,
+                            height: 40.0,
                             margin: new EdgeInsets.only(top: 15.0),
                             decoration: new BoxDecoration(
                               borderRadius:
@@ -300,17 +307,29 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
                               color: Theme.of(context).buttonColor,
                             ),
                             child: new MaterialButton(
-                              onPressed:  (!_showLoading) ? pinConfirm : null,
-                              child: (!_showLoading) ? new Text(
-                                "OK",
-                                style: _sizeTextWhite,
-                              ):  CircularProgressIndicator(
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        Theme.of(context).primaryColorLight),
-                                  ),
-
+                              onPressed: (!_showLoading) ? pinConfirm : null,
+                              child: (!_showLoading)
+                                  ? new Text(
+                                      "OK",
+                                      style: _sizeTextWhite,
+                                    )
+                                  : CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Theme.of(context).primaryColorLight),
+                                    ),
                             ),
-                          )
+                          ),
+                          Container(
+                              padding: EdgeInsets.only(top: 10),
+                              child: GestureDetector(
+                                  onTap: () => showAlertDialog(context),
+                                  child: Text(
+                                    'Войти с помощью логина и пароля',
+                                    style: TextStyle(
+                                        color:
+                                            Theme.of(context).primaryColorDark,
+                                        decoration: TextDecoration.underline),
+                                  )))
                         ]))),
           );
         });

@@ -287,7 +287,7 @@ class _FaultFixScreen extends State<FaultFixScreen> {
                                                 });
                                               },
                                               child: new Text(
-                                                'Проверено',
+                                                'Устранено',
                                                 style: _sizeTextBlack,
                                               ),
                                             )),
