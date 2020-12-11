@@ -164,7 +164,8 @@ class SynController extends Controllers {
 
   /// If a record wasn't uploaded yet, do nothing.
   /// Else adds a record to edit into syn table
-  static Future<int> edit(String localTableName, int resId, int odooId) async {
+  static Future<int> edit(String localTableName, int resId, int odooId,
+      {bool noImmediateSync = false}) async {
     List toSyn = await DBProvider.db.select(
       _tableName,
       columns: ['method'],
@@ -183,7 +184,7 @@ class SynController extends Controllers {
       'local_table_name': localTableName,
       'method': 'write',
     });
-    await syncTask(noLoadFromOdoo: true);
+    if (!noImmediateSync) await syncTask(noLoadFromOdoo: true);
     return res;
   }
 

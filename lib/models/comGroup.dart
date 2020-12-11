@@ -44,10 +44,9 @@ class ComGroup extends Models {
     return _head;
   }
 
-  // set comUsers(Future<List<User>> users) {
-  //   //mob.check.plan.com_group
-  //   return null;
-  // }
+  Future<Chat> get chat async {
+    return (await ChatController.select(groupId: id))[0];
+  }
 
   ComGroup({
     this.id,

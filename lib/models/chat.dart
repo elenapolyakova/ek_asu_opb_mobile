@@ -88,6 +88,14 @@ class Chat extends Models {
     }).toList();
   }
 
+  Future<Map<String, dynamic>> setInactive() {
+    return ChatController.setActive(this, false);
+  }
+
+  Future<Map<String, dynamic>> setActive() {
+    return ChatController.setActive(this, true);
+  }
+
   Chat({
     this.id,
     this.odooId,

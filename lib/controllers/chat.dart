@@ -136,6 +136,37 @@ class ChatController extends Controllers {
     return res;
   }
 
+  static Future<Map<String, dynamic>> setActive(Chat chat, bool active) async {
+    Map<String, dynamic> res = {
+      'code': null,
+      'message': null,
+      'id': null,
+    };
+    if (chat == null || active == null)
+      return {
+        'code': -4,
+        'message': 'Bad parameters',
+      };
+    await DBProvider.db.update(_tableName, {
+      'id': chat.id,
+      'active': active ? 'true' : 'false',
+    }).then((resId) async {
+      res['code'] = 1;
+      res['id'] = chat.id;
+      return SynController.edit(_tableName, chat.id, chat.odooId,
+              noImmediateSync: true)
+          .catchError((err) {
+        res['code'] = -2;
+        res['message'] = 'Error updating syn';
+      });
+    }).catchError((err) {
+      res['code'] = -3;
+      res['message'] = 'Error updating $_tableName';
+    });
+    DBProvider.db.insert('log', {'date': nowStr(), 'message': res.toString()});
+    return res;
+  }
+
   /// Select all records by provided parameters.
   /// If [id] is provided, [active] and [groupId] are ignored.
   /// If [active] is not specified (is null), [active] is ignored.
