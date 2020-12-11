@@ -1,12 +1,9 @@
 import 'dart:ui';
 
-import 'package:ek_asu_opb_mobile/components/components.dart';
-import 'package:ek_asu_opb_mobile/controllers/department.dart';
-import 'package:ek_asu_opb_mobile/src/odooClient.dart';
+
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:odoo_rpc/odoo_rpc.dart';
 import '../utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:package_info/package_info.dart';
@@ -32,7 +29,8 @@ class _LoginPage extends State<LoginPage> {
   String _pin;
   //bool _showErrorUser = false;
   String _errorMessage = "";
-  bool _showErrorPin = false;
+  bool _showErrorSetPin = false;
+
   bool isLoginProccess = false;
   final settingFormKey = new GlobalKey<FormState>();
   String _ip = "";
@@ -40,6 +38,7 @@ class _LoginPage extends State<LoginPage> {
   String _passwordAdmin = "";
   String version = "";
   String _settingError = "";
+  bool _showLoading = false;
 
   final _sizeTextBlack =
       const TextStyle(fontSize: 20.0, color: Color(0xFF252A0E));
@@ -488,15 +487,15 @@ class _LoginPage extends State<LoginPage> {
     }
   }
 
-  pinConfirm(setState) async {
+  pinSet(setState) async {
     final form = pinFormKey.currentState;
 
     form.save();
 
     setState(() {
-      _showErrorPin = _pin.length != 5;
+      _showErrorSetPin = _pin.length != 5;
     });
-    if (_showErrorPin) return;
+    if (_showErrorSetPin) return;
 
     await auth.setPinCode(_pin);
     Navigator.pop(context, true); //для скрытия диалога с установкой ПИН-кода
@@ -506,8 +505,10 @@ class _LoginPage extends State<LoginPage> {
       //возможно нужно будет сохранять state куда-то, чтобы восстановить последние введенные данные пользователя
       Navigator.pop(context);
     } else
-      Navigator.pushNamed(context, "/home");
+      Navigator.pushNamed(context, "/home", arguments: {'showPin': false, 'load': true});
   }
+
+  
 
   showSetPinDialog() {
     showDialog(
@@ -562,14 +563,14 @@ class _LoginPage extends State<LoginPage> {
                                   obscureText: true,
                                   onSaved: (val) => _pin = val,
                                   onTap: () => setState(() {
-                                    _showErrorPin = false;
+                                    _showErrorSetPin = false;
                                   }),
                                 )),
                             new Expanded(
                                 child: new Container(
                                     padding: new EdgeInsets.all(5.0),
                                     child: new Text(
-                                      _showErrorPin
+                                      _showErrorSetPin
                                           ? "ПИН-код должен содержать 5 цифр"
                                           : '',
                                       style: TextStyle(
@@ -587,7 +588,7 @@ class _LoginPage extends State<LoginPage> {
                                 color: Theme.of(context).buttonColor,
                               ),
                               child: new MaterialButton(
-                                onPressed: () => pinConfirm(setState),
+                                onPressed: () => pinSet(setState),
                                 child: new Text(
                                   "OK",
                                   style: _sizeTextWhite,

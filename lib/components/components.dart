@@ -1299,17 +1299,24 @@ class _SearchBox extends State<SearchBox> {
                                                 _selectedId
                                             ? Theme.of(context).primaryColorDark
                                             : null,
-                                        child: Text(
-                                          result[index]["value"] ?? "",
-                                          style: TextStyle(
-                                              color: result[index]
-                                                          ["id"] ==
-                                                      _selectedId
-                                                  ? Theme.of(context)
-                                                      .primaryColorLight
-                                                  : Theme.of(context)
-                                                      .buttonColor),
-                                        )),
+                                        child: result[index]["widget"] != null
+                                            ? (result[index]["id"] ==
+                                                    _selectedId
+                                                ? result[index]
+                                                        ["widgetSelected"] ??
+                                                    result[index]["widget"]
+                                                : result[index]["widget"])
+                                            : Text(
+                                                result[index]["value"] ?? "",
+                                                style: TextStyle(
+                                                    color: result[index]
+                                                                ["id"] ==
+                                                            _selectedId
+                                                        ? Theme.of(context)
+                                                            .primaryColorLight
+                                                        : Theme.of(context)
+                                                            .buttonColor),
+                                              )),
                                   )
                                 ]));
                           }))
@@ -1375,6 +1382,41 @@ class MyRichText extends StatelessWidget {
   }
 }
 
+class MyArticleItem extends StatelessWidget {
+  String title;
+  String value;
+  Color color;
+  Color colorTitle;
+
+  @override
+  MyArticleItem(this.title, this.value, {this.color, this.colorTitle});
+
+  @override
+  Widget build(BuildContext context) {
+    TextStyle textStyleTitle = TextStyle(
+        fontWeight: FontWeight.w800,
+        fontSize: 20,
+        color: colorTitle ?? Theme.of(context).buttonColor);
+
+    TextStyle textStyleValue = TextStyle(
+        fontStyle: FontStyle.normal,
+        // fontStyle: FontStyle.normal,
+        fontSize: 17,
+        color: color ?? Theme.of(context).primaryColorDark);
+
+    return Container(
+        padding: EdgeInsets.all(5),
+        child: RichText(
+          text: TextSpan(
+              text: title,
+              style: textStyleTitle,
+              children: <TextSpan>[
+                TextSpan(text: value, style: textStyleValue)
+              ]),
+        ));
+  }
+}
+
 class MyCheckbox extends StatelessWidget {
   Function(bool) onChanged;
   bool value;
@@ -1412,7 +1454,8 @@ class HomeIcon extends StatelessWidget {
     TextStyle textStyle = TextStyle(fontSize: 16, color: color);
 
     goHome() {
-      Navigator.pushNamed(context, '/home', arguments: {'first': false});
+      Navigator.pushNamed(context, '/home',
+          arguments: {'load': false, 'showPin': false});
     }
 
     return GestureDetector(
@@ -1883,5 +1926,206 @@ class MyMessageContainer extends StatelessWidget {
             ))
           : Text(''),
     ]));
+  }
+}
+
+class MyPinDialog extends StatefulWidget {
+  BuildContext context;
+  GlobalKey formKey;
+  Function(String) onSaved;
+  Function onTap;
+  Function pinConfirm;
+  Function getErrorText;
+
+  MyPinDialog(
+      {this.context,
+      this.formKey,
+      this.onSaved,
+      this.onTap,
+      this.pinConfirm,
+      this.getErrorText}) {
+    createState();
+  }
+
+  @override
+  State<MyPinDialog> createState() => _MyPinDialog();
+}
+
+class _MyPinDialog extends State<MyPinDialog> {
+  BuildContext context;
+/*Future<bool> showPinDialog(
+
+    BuildContext context,
+    GlobalKey formKey,
+    Function(String) onSaved,
+    Function onTap,
+    Function pinConfirm,
+    String errorText,
+    StateSetter setState) {*/
+  final _sizeTextWhite = const TextStyle(fontSize: 20.0, color: Colors.white);
+  final _sizeTextBlack =
+      const TextStyle(fontSize: 20.0, color: Color(0xFF252A0E));
+
+  /*return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Color(0x88E6E6E6),
+      builder: (BuildContext context) {*/
+  @override
+  Widget build(BuildContext context) {
+    context = widget.context;
+    return StatefulBuilder(builder: (context, StateSetter setState) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12.0))),
+        title: Text("Введите ПИН-код"),
+        backgroundColor: Theme.of(context).primaryColor,
+        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        content: new Form(
+            key: widget.formKey,
+            child: new Container(
+                height: 150,
+                child: new Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      new Container(
+                        decoration: new BoxDecoration(
+                          border: Border.all(
+                              color: Theme.of(context).primaryColorLight,
+                              width: 1.5),
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                          color: Colors.white,
+                        ),
+                        height: 56,
+                        child: new TextFormField(
+                            decoration: new InputDecoration(
+                              prefixIcon: Icon(Icons.vpn_key,
+                                  color: Theme.of(context).primaryColorLight),
+                              border: OutlineInputBorder(
+                                  borderSide: BorderSide.none),
+                            ),
+                            // inputFormatters: [widget._amountValidator],
+                            inputFormatters: <TextInputFormatter>[
+                              FilteringTextInputFormatter.digitsOnly
+                            ], // Only numbers can be entered
+                            keyboardType:
+                                TextInputType.numberWithOptions(decimal: true),
+                            maxLines: 1,
+                            maxLength: 5,
+                            obscureText: true,
+                            cursorColor: Theme.of(context).cursorColor,
+                            style: _sizeTextBlack,
+                            onSaved: widget.onSaved,
+                            onTap: widget.onTap
+                            /*validator: (val) => val.length < 5
+                                ? "ПИН-код должен состоять из 5 цифр"
+                                : null*/
+                            ),
+                      ),
+                      new Expanded(
+                          child: new Container(
+                              padding: new EdgeInsets.all(5.0),
+                              child: new Text(
+                                widget.getErrorText(),
+                                style: TextStyle(
+                                    color: Colors.redAccent, fontSize: 15),
+                                textAlign: TextAlign.left,
+                              ))),
+                      new Container(
+                        width: 200,
+                        height: 50.0,
+                        margin: new EdgeInsets.only(top: 15.0),
+                        decoration: new BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                          color: Theme.of(context).buttonColor,
+                        ),
+                        child: new MaterialButton(
+                            onPressed: () => widget.pinConfirm(setState),
+                            child: new Text(
+                              "OK",
+                              style: _sizeTextWhite,
+                            )),
+                      )
+                    ]))),
+      );
+    });
+  }
+  //  });
+}
+
+showAlertDialog(BuildContext context) {
+  //}, VoidCallback continueCallBack) {
+  // set up the buttons
+
+  // set up the AlertDialog
+  AlertDialog alert = AlertDialog(
+      backgroundColor: Theme.of(context).primaryColor,
+      title: Text("Вы уверены, что хотите выйти?"),
+      content: SizedBox(
+          height: 100,
+          child: Column(children: [
+            Container(
+              padding: EdgeInsets.all(10),
+              child: Text(
+                  "Все несохраненные данные текущего пользователя будут утеряны"),
+            ),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              MyButton(
+                  text: 'Продолжить',
+                  width: 200,
+                  parentContext: context,
+                  onPress: () {
+                    Navigator.of(context).pop();
+                    LogOut(context);
+                  }),
+              MyButton(
+                  text: 'Отменить',
+                  parentContext: context,
+                  onPress: () {
+                    Navigator.of(context).pop();
+                  })
+            ])
+          ])));
+  // show the dialog
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    barrierColor: Color(0x88E6E6E6),
+    builder: (BuildContext context) {
+      return alert;
+    },
+  );
+}
+
+class CustomToolTip extends PopupMenuEntry<Map<String, dynamic>> {
+  BuildContext context;
+  Widget content;
+  Color color;
+  CustomToolTip({this.context, this.content, this.color});
+
+  @override
+  double height = 1; //100;
+
+  @override
+  bool represents(Map<String, dynamic> n) => false;
+
+  @override
+  State<CustomToolTip> createState() => _CustomToolTip();
+}
+
+class _CustomToolTip extends State<CustomToolTip> {
+  
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        decoration: BoxDecoration(
+            color: widget.color ?? Theme.of(widget.context).primaryColor,
+            borderRadius: BorderRadius.all(Radius.circular(12.0))),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [widget.content]
+        ));
   }
 }

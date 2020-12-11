@@ -31,6 +31,8 @@ void LogOut(BuildContext context) async {
   }
 
   await _storage.delete(key: 'session');
+  await _storage.delete(key: 'isHomePinDialogShow');
+  
   // удалим при повторной авторизации, если вошел новый пользователь
   // await _storage.delete(key: 'pin');
   // await _storage.delete(key: 'lastDateUpdate');

@@ -211,7 +211,13 @@ class _FaultScreen extends State<FaultScreen> {
       String fineName = await getFineName(list[i].id);
       result.add({
         'id': list[i].id,
-        'value': '${list[i].text} ' + (fineName != null ? ' ($fineName)' : '')
+        'value': '${list[i].text} ' + (fineName != null ? ' ($fineName)' : ''),
+        'widget':
+            MyArticleItem(fineName != null ? ' $fineName  ' : '', list[i].text),
+        'widgetSelected': MyArticleItem(
+            fineName != null ? ' $fineName  ' : '', list[i].text,
+            color: Theme.of(context).primaryColorLight,
+            colorTitle: Theme.of(context).primaryColor)
       });
     }
     return result;
