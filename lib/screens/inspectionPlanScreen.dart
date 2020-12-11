@@ -369,7 +369,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                 textAlign: TextAlign.center),
             getRowCell(getGroupById(item.comGroupId), item.id, 4, item.type,
                 item.departmentId,
-                textAlign: TextAlign.center),
+                textAlign: TextAlign.center, groupId: item.comGroupId),
           ]);
       tableRows.add(tableRow);
     });
@@ -382,7 +382,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
 
   Widget getRowCell(String text, int inspectionItemId, int index, int eventId,
       int departmentId,
-      {TextAlign textAlign = TextAlign.left}) {
+      {TextAlign textAlign = TextAlign.left, int groupId}) {
     Widget cell = Container(
       padding: EdgeInsets.all(10.0),
       child: Text(
@@ -393,10 +393,51 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
 
     return GestureDetector(
         onTapDown: _storePosition,
+        onTap: () async {
+          if (index == 4) return showGroupInfo(groupId);
+        },
         onLongPress: () {
           _showCustomMenu(inspectionItemId, index, eventId, departmentId);
         },
         child: cell);
+  }
+
+  Future<void> showGroupInfo(int groupId) async {
+    ComGroup group = await ComGroupController.selectById(groupId);
+    List<User> users = await group.comUsers;
+    User head = await group.head;
+    int headId = group.headId;
+
+    List<User> userToDisplay = [];
+    if (head != null) userToDisplay.add(head);
+    userToDisplay.addAll(users.where((user) => user.id != headId));
+
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject();
+    showMenu(
+        context: context,
+        position: RelativeRect.fromRect(
+            _tapPosition & const Size(1, 1), Offset.zero & overlay.size),
+        items: <PopupMenuEntry<Object>>[
+          CustomToolTip(
+            context: context,
+            content: Container(
+              width: 250,
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: userToDisplay
+                    .map((User user) => (user.id == head.id)
+                        ? Row(children: [
+                            Icon(Icons.star),
+                            Text(user.display_name)
+                          ])
+                        : Text(user.display_name))
+                    .toList(),
+              ),
+            ),
+          )
+        ]);
   }
 
   String getTimePeriod(DateTime dtBegin, DateTime dtEnd) {
@@ -1314,7 +1355,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
           errorSnackBar(text: 'Сначала сохраните реквизиты плана проверок'));
       return;
     }
-     try {
+    try {
       showLoadingDialog(context);
       int odooId = await CheckPlanController.selectOdooId(_inspection.id);
       dynamic report = await ReportController.downloadReport(
@@ -1336,7 +1377,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
           errorSnackBar(text: 'Сначала сохраните реквизиты плана проверок'));
       return;
     }
-     try {
+    try {
       showLoadingDialog(context);
       int odooId = await CheckPlanController.selectOdooId(_inspection.id);
       dynamic report = await ReportController.downloadReport(
