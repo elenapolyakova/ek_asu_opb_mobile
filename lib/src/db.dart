@@ -105,7 +105,7 @@ class DBProvider {
             continue v3;
           v3:
           case 4:
-            await db.execute('ALTER TABLE chat_message ADD COLUMN active TEXT');
+            await db.execute('ALTER TABLE chat ADD COLUMN active TEXT');
             // Так же удалена колонка last_update, но удалять её здесь смысла нет
             continue v4;
           v4:
