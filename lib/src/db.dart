@@ -57,7 +57,7 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS fault(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, desc TEXT, fine_desc TEXT, fine INTEGER, koap_id INTEGER, date TEXT, date_done TEXT, desc_done TEXT, active TEXT, plan_fix_date TEXT)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS fault_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, name TEXT, type INTEGER, parent_id INTEGER, image TEXT, active TEXT, file_name TEXT, file_data TEXT, coord_n REAL, coord_e REAL)");
+            "CREATE TABLE IF NOT EXISTS fault_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, name TEXT, type INTEGER, parent_id INTEGER, active TEXT, file_name TEXT, file_data TEXT, coord_n REAL, coord_e REAL)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS koap(id INTEGER PRIMARY KEY, article TEXT, paragraph TEXT, text TEXT, man_fine_from INTEGER, man_fine_to INTEGER, firm_fine_from INTEGER, firm_fine_to INTEGER, firm_stop INTEGER, desc TEXT, search_field TEXT)");
         await db.execute(
@@ -75,7 +75,7 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS fault_fix(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, desc TEXT, date TEXT, active TEXT, is_finished TEXT)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS fault_fix_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, name TEXT, type INTEGER, parent3_id INTEGER, image TEXT, active TEXT, file_name TEXT, file_data TEXT, coord_n REAL, coord_e REAL)");
+            "CREATE TABLE IF NOT EXISTS fault_fix_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, name TEXT, type INTEGER, parent3_id INTEGER, active TEXT, file_name TEXT, file_data TEXT, coord_n REAL, coord_e REAL)");
       },
       onUpgrade: (db, oldVersion, version) async {
         switch (oldVersion) {
@@ -107,6 +107,8 @@ class DBProvider {
           case 4:
             await db.execute('ALTER TABLE chat ADD COLUMN active TEXT');
             // Так же удалена колонка last_update, но удалять её здесь смысла нет
+            // Так же удалена колонка fault_item.image, но удалять её здесь смысла нет
+            // Так же удалена колонка fault_fix_item.image, но удалять её здесь смысла нет
             continue v4;
           v4:
           case 5:
@@ -146,7 +148,7 @@ class DBProvider {
 
     for (Map<String, dynamic> element
         in (await DBProvider.db.selectAll('fault_item'))) {
-      String filePath = element["image"];
+      String filePath = element["file_data"];
       if (!['', null].contains(filePath)) await File(filePath).delete();
     }
     await deleteAll("fault_item");
@@ -155,7 +157,7 @@ class DBProvider {
 
     for (Map<String, dynamic> element
         in (await DBProvider.db.selectAll('fault_fix_item'))) {
-      String filePath = element["image"];
+      String filePath = element["file_data"];
       if (!['', null].contains(filePath)) await File(filePath).delete();
     }
     await deleteAll("fault_fix_item");

@@ -30,11 +30,7 @@ class FaultFixItemController extends Controllers {
       res['id'] = resId;
       res['message'] = "Фото создано";
       if (!saveOdooId) {
-        var file = fileToBase64(json["image"]);
-        return SynController.create(_tableName, resId, beforeUpload: (record) {
-          record["file_data"] = file;
-          return record;
-        }).catchError((err) {
+        return SynController.create(_tableName, resId).catchError((err) {
           res['code'] = -2;
           res['message'] = 'Error updating syn';
         });
@@ -153,62 +149,67 @@ class FaultFixItemController extends Controllers {
     domain.add(['parent_id', '=', null]);
     domain.add(['parent2_id', '=', null]);
 
-    List<dynamic> json = await getDataWithAttemp(
-        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-      domain,
-      fields
-    ], {
-      'limit': limit,
-      'context': {'create_or_update': true}
-    });
+    List<dynamic> json;
+    int page = 0;
+    do {
+      json = await getDataWithAttemp(
+          SynController.localRemoteTableNameMap[_tableName], 'search_read', [
+        domain,
+        fields
+      ], {
+        'limit': 1,
+        'offset': 1 * page++,
+        'context': {'create_or_update': true}
+      });
 
-    await Future.forEach(json, (e) async {
-      if (loadRelated) {
-        FaultFixItem faultFixItem = await selectByOdooId(e['id']);
-        Map<String, dynamic> res = {};
-        if (e['parent3_id'] is List) {
-          FaultFix parentFaultFix = await FaultFixController.selectByOdooId(
-              unpackListId(e['parent3_id'])['id']);
-          if (parentFaultFix == null) return null;
-          res['id'] = faultFixItem.id;
-          res['parent3_id'] = parentFaultFix.id;
-        }
+      await Future.forEach(json, (e) async {
+        if (loadRelated) {
+          FaultFixItem faultFixItem = await selectByOdooId(e['id']);
+          if (faultFixItem == null) return null;
+          Map<String, dynamic> res = {};
+          if (e['parent3_id'] is List) {
+            FaultFix parentFaultFix = await FaultFixController.selectByOdooId(
+                unpackListId(e['parent3_id'])['id']);
+            if (parentFaultFix == null) return null;
+            res['id'] = faultFixItem.id;
+            res['parent3_id'] = parentFaultFix.id;
+          }
 
-        if (res['id'] != null) return DBProvider.db.update(_tableName, res);
-        return null;
-      } else {
-        Map<String, dynamic> res = {
-          ...e,
-          'id': null,
-          'odoo_id': e['id'],
-          'active': 'true',
-        };
-        // Skip records where file_data is false from odoo as
-        // Data for this records is not defined!
-        if (e["file_data"] is bool) {
+          if (res['id'] != null) return DBProvider.db.update(_tableName, res);
+          return null;
         } else {
-          if (e["coord_n"] is bool) {
-            e["coord_n"] = null;
+          Map<String, dynamic> res = {
+            ...e,
+            'id': null,
+            'odoo_id': e['id'],
+            'active': 'true',
+          };
+          // Skip records where file_data is false from odoo as
+          // Data for this records is not defined!
+          if (e["file_data"] is bool) {
+          } else {
+            if (e["coord_n"] is bool) {
+              e["coord_n"] = null;
+            }
+            if (e["coord_e"] is bool) {
+              e["coord_e"] = null;
+            }
+
+            print("firstLoadFromOdoo() FaultFixItem insert! $res");
+            FaultFixItem json = FaultFixItem.fromJson(res);
+
+            // Create local file
+            var file = await base64ToFile(json.file_data);
+            print("Path ");
+            print(file.path);
+
+            json.file_data = file.path;
+            // Set file_data null because of issues with db
+            return FaultFixItemController.create(json, true);
           }
-          if (e["coord_e"] is bool) {
-            e["coord_e"] = null;
-          }
-
-          print("firstLoadFromOdoo() FaultFixItem insert! $res");
-          FaultFixItem json = FaultFixItem.fromJson(res);
-
-          // Create local file
-          var file = await base64ToFile(json.file_data);
-          print("Path ");
-          print(file.path);
-
-          json.image = file.path;
-          // Set file_data null because of issues with db
-          json.file_data = null;
-          return FaultFixItemController.create(json, true);
         }
-      }
-    });
+      });
+    } while (json is List && json.length == 1);
     print(
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
 
@@ -235,65 +236,70 @@ class FaultFixItemController extends Controllers {
     domain.add(['parent2_id', '=', null]);
     domain.add(['parent_id', '=', null]);
 
-    List<dynamic> json = await getDataWithAttemp(
-        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-      domain,
-      fields
-    ], {
-      'limit': limit,
-      'context': {'create_or_update': true}
-    });
+    List<dynamic> json;
+    int page = 0;
+    do {
+      json = await getDataWithAttemp(
+          SynController.localRemoteTableNameMap[_tableName], 'search_read', [
+        domain,
+        fields
+      ], {
+        'limit': 1,
+        'offset': 1 * page++,
+        'context': {'create_or_update': true}
+      });
 
-    print("FaultFixItem, Load changes from odoo! $json");
-    print("Domain $domain");
+      print("FaultFixItem, Load changes from odoo! $json");
+      print("Domain $domain");
 
-    await Future.forEach(json, (e) async {
-      FaultFixItem faultFixItem = await selectByOdooId(e['id']);
-      if (loadRelated) {
-        Map<String, dynamic> res = {};
-        if (e['parent3_id'] is List) {
-          FaultFix parentFaultFix = await FaultFixController.selectByOdooId(
-              unpackListId(e['parent3_id'])['id']);
-          if (parentFaultFix == null) return null;
-          res['id'] = faultFixItem.id;
-          res['parent3_id'] = parentFaultFix.id;
-        }
-        if (res['id'] != null) return DBProvider.db.update(_tableName, res);
-        return null;
-      } else {
-        if (FaultFixItem == null) {
-          // Skip records where file_data is false from odoo!
-          if (e["file_data"] is bool) {
-          } else {
-            // Firstly create file!
-            var file = await base64ToFile(e["file_data"]);
-            // Set path
-            e["image"] = file.path;
-            // Check if coords from odoo is bool
-            if (e["coord_n"] is bool) {
-              e["coord_n"] = null;
-            }
-            if (e["coord_e"] is bool) {
-              e["coord_e"] = null;
-            }
-
-            // set file_data = null because of issues with db
-            e["file_data"] = null;
-            Map<String, dynamic> res =
-                FaultFixItem.fromJson({...e, 'active': 'true'}).toJson(true);
-            res['odoo_id'] = e['id'];
-            return DBProvider.db.insert(_tableName, res);
+      await Future.forEach(json, (e) async {
+        FaultFixItem faultFixItem = await selectByOdooId(e['id']);
+        if (faultFixItem == null) return null;
+        if (loadRelated) {
+          Map<String, dynamic> res = {};
+          if (e['parent3_id'] is List) {
+            FaultFix parentFaultFix = await FaultFixController.selectByOdooId(
+                unpackListId(e['parent3_id'])['id']);
+            if (parentFaultFix == null) return null;
+            res['id'] = faultFixItem.id;
+            res['parent3_id'] = parentFaultFix.id;
           }
+          if (res['id'] != null) return DBProvider.db.update(_tableName, res);
+          return null;
+        } else {
+          if (FaultFixItem == null) {
+            // Skip records where file_data is false from odoo!
+            if (e["file_data"] is bool) {
+            } else {
+              // Firstly create file!
+              var file = await base64ToFile(e["file_data"]);
+              // Set path
+              // Check if coords from odoo is bool
+              if (e["coord_n"] is bool) {
+                e["coord_n"] = null;
+              }
+              if (e["coord_e"] is bool) {
+                e["coord_e"] = null;
+              }
+
+              // set file_data = null because of issues with db
+              e["file_data"] = file.path;
+              Map<String, dynamic> res =
+                  FaultFixItem.fromJson({...e, 'active': 'true'}).toJson(true);
+              res['odoo_id'] = e['id'];
+              return DBProvider.db.insert(_tableName, res);
+            }
+          }
+          // Map<String, dynamic> res = FaultItem.fromJson({
+          //   ...e,
+          //   'id': faultItem.id,
+          //   'odoo_id': faultItem.odoo_id,
+          //   'active': 'true',
+          // }).toJson();
+          // return DBProvider.db.update(_tableName, res);
         }
-        // Map<String, dynamic> res = FaultItem.fromJson({
-        //   ...e,
-        //   'id': faultItem.id,
-        //   'odoo_id': faultItem.odoo_id,
-        //   'active': 'true',
-        // }).toJson();
-        // return DBProvider.db.update(_tableName, res);
-      }
-    });
+      });
+    } while (json is List && json.length == 1);
     print(
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
 

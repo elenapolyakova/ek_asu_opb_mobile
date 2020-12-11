@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:ek_asu_opb_mobile/controllers/checkList.dart';
 import 'package:ek_asu_opb_mobile/controllers/checkListItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
@@ -10,6 +12,7 @@ import 'package:ek_asu_opb_mobile/controllers/faultFixItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/faultItem.dart';
 import "package:ek_asu_opb_mobile/models/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
+import 'package:ek_asu_opb_mobile/src/fileStorage.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'package:ek_asu_opb_mobile/utils/network.dart';
 
@@ -115,7 +118,7 @@ class SynController extends Controllers {
       },
     ]
   };
-  static const Map<String, List<String>> tableFieldsToPersistOnServerMap = {
+  static const Map<String, List<String>> tableFileFieldsMap = {
     'plan': [],
     'plan_item': [],
     'plan_item_check': [],
@@ -149,14 +152,13 @@ class SynController extends Controllers {
 
   /// Adds a record to create into syn table
   static Future<int> create(String localTableName, int resId,
-      {bool noImmediateSync = false, Function beforeUpload}) async {
+      {bool noImmediateSync = false}) async {
     int res = await DBProvider.db.insert(_tableName, {
       'record_id': resId,
       'local_table_name': localTableName,
       'method': 'create',
     });
-    if (!noImmediateSync)
-      await syncTask(noLoadFromOdoo: true, beforeUpload: beforeUpload);
+    if (!noImmediateSync) await syncTask(noLoadFromOdoo: true);
     return res;
   }
 
@@ -274,7 +276,7 @@ class SynController extends Controllers {
   /// Perform a synchronization of a syn record with backend.
   /// Remove the record from syn table if successful.
   /// Return true if successful
-  static Future<bool> doSync(Syn syn, {Function beforeUpload}) async {
+  static Future<bool> doSync(Syn syn) async {
     // Get syn's local db record
     List<Map<String, dynamic>> records = await DBProvider.db
         .select(syn.localTableName, where: 'id = ?', whereArgs: [syn.recordId]);
@@ -482,27 +484,16 @@ class SynController extends Controllers {
     record.remove('write_uid');
     record.remove('create_date');
     record.remove('write_date');
-    // When "deleting", remove fields that should not be removed from server
-    if (record['active'] != null && !record['active']) {
-      final List<String> fieldsToPersistOnServer =
-          tableFieldsToPersistOnServerMap[syn.localTableName];
-      // If a record contains any fields that should not be changed on server
-      if (fieldsToPersistOnServer != null &&
-          fieldsToPersistOnServer.length > 0) {
-        print("Removing $fieldsToPersistOnServer from record.");
-        // For each field to persist on server in a record
-        await Future.forEach(fieldsToPersistOnServer, (el) async {
-          record.remove(el);
-        });
-      }
-    }
-
-    // Upload to backend
-    if (beforeUpload != null) {
-      var beforeUploadRes = beforeUpload(record);
-      if (beforeUploadRes != null) {
-        record = beforeUploadRes;
-      }
+    final List<String> fileFields = tableFileFieldsMap[syn.localTableName];
+    if (fileFields != null && fileFields.length > 0) {
+      print("Getting files of $fileFields from record.");
+      await Future.forEach(fileFields, (el) async {
+        // while (!File(record[el]).existsSync()) {
+        //   print("${record[el]} does not exist. Waiting 1 second...");
+        //   await Future.delayed(Duration(seconds: 1));
+        // }
+        record[el] = fileToBase64(record[el]);
+      });
     }
     print("Uploading $record");
     return await getDataWithAttemp(
@@ -530,8 +521,7 @@ class SynController extends Controllers {
     });
   }
 
-  static Future<bool> syncTask(
-      {bool noLoadFromOdoo: false, Function beforeUpload}) async {
+  static Future<bool> syncTask({bool noLoadFromOdoo: false}) async {
     if (ongoingSync) return true;
     ongoingSync = true;
     try {
@@ -559,8 +549,7 @@ class SynController extends Controllers {
         // For each syn record:
         Syn syn = Syn.fromJson(toSyn[0]);
         print('Synchronizing $syn');
-        bool result =
-            await SynController.doSync(syn, beforeUpload: beforeUpload);
+        bool result = await SynController.doSync(syn);
         lastUploadedTableRecordId[syn.localTableName] = syn.recordId;
         if (!result) {
           //Синхронизация не прошла

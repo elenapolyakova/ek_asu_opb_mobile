@@ -150,7 +150,7 @@ class _FaultScreen extends State<FaultScreen> {
         _fault.id != null ? await FaultItemController.select(_fault.id) : [];
 
     if (_imageList.length > 0) {
-      _image = File(_imageList[0].image);
+      _image = File(_imageList[0].file_data);
       _imageIndex = 0;
     }
   }
@@ -258,13 +258,13 @@ class _FaultScreen extends State<FaultScreen> {
           FaultItem faultItems = FaultItem(
               id: null,
               parent_id: _fault.id,
-              image: path,
+              file_data: path,
               active: true,
               coord_e: geoPoint.longitude,
               coord_n: geoPoint.latitude);
           _imageList.insert(i, faultItems);
         }
-        _image = File(_imageList[0].image);
+        _image = File(_imageList[0].file_data);
         _imageIndex = 0;
         setState(() {
           showLoadingImage = false;
@@ -646,17 +646,18 @@ class _FaultScreen extends State<FaultScreen> {
         //   }
 
         if (deletedFile.id == null) {
-          _created.removeWhere((image) => image['path'] == deletedFile.image);
-          //await File(deletedFile.image).delete();
+          _created
+              .removeWhere((image) => image['path'] == deletedFile.file_data);
+          //await File(deletedFile.file_data).delete();
         } //если файл добавили, в бд не сохранили и тут же удалили - не передаём его в _createdPath
 
-        _deletedPath.add(deletedFile.image);
+        _deletedPath.add(deletedFile.file_data);
 
         _imageList.removeAt(index);
         if (index <= _imageIndex && _imageIndex != 0) _imageIndex--;
 
         if (_imageList.length > 0)
-          _image = File(_imageList[_imageIndex].image);
+          _image = File(_imageList[_imageIndex].file_data);
         else
           _image = null;
 
@@ -927,9 +928,9 @@ class _FaultScreen extends State<FaultScreen> {
                                                 CircularProgressIndicator(
                                                   valueColor:
                                                       AlwaysStoppedAnimation<
-                                                          Color>(Theme.of(
-                                                              context)
-                                                          .primaryColor),
+                                                              Color>(
+                                                          Theme.of(context)
+                                                              .primaryColor),
                                                 ),
                                               ])
                                         : _image == null
@@ -978,8 +979,8 @@ class _FaultScreen extends State<FaultScreen> {
                                             (i) => GestureDetector(
                                               // onLongPress: () => deleteImage(i),
                                               onTap: () => setState(() {
-                                                _image =
-                                                    File(_imageList[i].image);
+                                                _image = File(
+                                                    _imageList[i].file_data);
                                                 _imageIndex = i;
                                               }),
                                               child: Container(
@@ -1000,7 +1001,8 @@ class _FaultScreen extends State<FaultScreen> {
                                                                   horizontal:
                                                                       5),
                                                   child: Image.file(
-                                                    File(_imageList[i].image),
+                                                    File(_imageList[i]
+                                                        .file_data),
                                                     fit: BoxFit.cover,
                                                   )),
                                             ),

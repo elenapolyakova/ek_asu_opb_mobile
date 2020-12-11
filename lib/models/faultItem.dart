@@ -10,8 +10,6 @@ class FaultItem extends Models {
   int odoo_id;
   // id of Fault
   int parent_id;
-  // Will paths to file in internal device memory
-  String image;
   bool active;
   // File name in odoo
   String file_name;
@@ -28,7 +26,6 @@ class FaultItem extends Models {
     this.name,
     this.type,
     this.parent_id,
-    this.image,
     this.active,
     this.file_data,
     this.file_name,
@@ -55,7 +52,6 @@ class FaultItem extends Models {
         name: getStr(json["name"]),
         type: json["type"],
         parent_id: json["parent_id"],
-        image: getStr(json["image"]),
         active: (json["active"].toString() == 'true'),
         file_data: getStr(json["file_data"]),
         file_name: getStr(json["file_name"]),
@@ -70,7 +66,6 @@ class FaultItem extends Models {
       'name': name,
       'type': type,
       'parent_id': parent_id,
-      'image': image,
       'active': (active == null || !active) ? 'false' : 'true',
       'file_data': file_data,
       'file_name': file_name,
@@ -86,6 +81,6 @@ class FaultItem extends Models {
 
   @override
   String toString() {
-    return 'FaultItem {id: $id, odooId: $odoo_id, name: $name, type: $type, parent_id: $parent_id, image: $image, active: $active, file_data: $file_data, file_name: $file_name, coord_n: $coord_n, coord_e: $coord_e}';
+    return 'FaultItem {id: $id, odooId: $odoo_id, name: $name, type: $type, parent_id: $parent_id, active: $active, file_data: $file_data, file_name: $file_name, coord_n: $coord_n, coord_e: $coord_e}';
   }
 }

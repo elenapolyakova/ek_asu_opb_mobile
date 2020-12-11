@@ -106,13 +106,13 @@ class _FaultFixScreen extends State<FaultFixScreen> {
           FaultFixItem faultFixItem = FaultFixItem(
               id: null,
               parent3_id: widget.faultFixId,
-              image: path,
+              file_data: path,
               active: true,
               coord_e: geoPoint.longitude,
               coord_n: geoPoint.latitude);
           _imageList.insert(i, faultFixItem);
         }
-        _image = File(_imageList[0].image);
+        _image = File(_imageList[0].file_data);
         _imageIndex = 0;
         setState(() {
           showLoadingImage = false;
@@ -152,17 +152,18 @@ class _FaultFixScreen extends State<FaultFixScreen> {
         //   }
 
         if (deletedFile.id == null) {
-          _created.removeWhere((image) => image['path'] == deletedFile.image);
-          //await File(deletedFile.image).delete();
+          _created
+              .removeWhere((image) => image['path'] == deletedFile.file_data);
+          //await File(deletedFile.file_data).delete();
         } //если файл добавили, в бд не сохранили и тут же удалили - не передаём его в _createdPath
 
-        _deletedPath.add(deletedFile.image);
+        _deletedPath.add(deletedFile.file_data);
 
         _imageList.removeAt(index);
         if (index <= _imageIndex && _imageIndex != 0) _imageIndex--;
 
         if (_imageList.length > 0)
-          _image = File(_imageList[_imageIndex].image);
+          _image = File(_imageList[_imageIndex].file_data);
         else
           _image = null;
 
@@ -203,7 +204,7 @@ class _FaultFixScreen extends State<FaultFixScreen> {
         ? await FaultFixItemController.select(_faultFix.id)
         : [];
     if (_imageList.length > 0) {
-      _image = File(_imageList[0].image);
+      _image = File(_imageList[0].file_data);
       _imageIndex = 0;
     }
   }
@@ -441,7 +442,7 @@ class _FaultFixScreen extends State<FaultFixScreen> {
                                                     ),
                                                   )
 
-                                              /* child: MyButton(
+                                                  /* child: MyButton(
                                                     text: 'принять',
                                                     fontSize: 17,
                                                     margin: 0,
@@ -450,7 +451,7 @@ class _FaultFixScreen extends State<FaultFixScreen> {
                                                       await submitFaultFix();
                                                     }),
                                               )*/
-                                              ))
+                                                  ))
                                         ],
                                       )
                                     ])))),
@@ -524,7 +525,7 @@ class _FaultFixScreen extends State<FaultFixScreen> {
                                             // onLongPress: () => deleteImage(i),
                                             onTap: () => setState(() {
                                               _image =
-                                                  File(_imageList[i].image);
+                                                  File(_imageList[i].file_data);
                                               _imageIndex = i;
                                             }),
                                             child: Container(
@@ -539,7 +540,7 @@ class _FaultFixScreen extends State<FaultFixScreen> {
                                                         : EdgeInsets.symmetric(
                                                             horizontal: 5),
                                                 child: Image.file(
-                                                  File(_imageList[i].image),
+                                                  File(_imageList[i].file_data),
                                                   fit: BoxFit.cover,
                                                 )),
                                           ),

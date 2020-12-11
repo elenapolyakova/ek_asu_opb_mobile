@@ -12,6 +12,10 @@ export 'package:ek_asu_opb_mobile/controllers/chat.dart';
 export 'package:ek_asu_opb_mobile/controllers/chatMessage.dart';
 export 'package:ek_asu_opb_mobile/controllers/relChatUser.dart';
 export 'package:ek_asu_opb_mobile/controllers/relComGroupUser.dart';
+export 'package:ek_asu_opb_mobile/controllers/fault.dart';
+export 'package:ek_asu_opb_mobile/controllers/faultItem.dart';
+export 'package:ek_asu_opb_mobile/controllers/faultFix.dart';
+export 'package:ek_asu_opb_mobile/controllers/faultFixItem.dart';
 export 'package:ek_asu_opb_mobile/src/db.dart';
 
 abstract class Controllers {

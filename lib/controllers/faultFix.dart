@@ -64,11 +64,10 @@ class FaultFixController extends Controllers {
             FaultFixItem item = new FaultFixItem();
             // Set properties
             item.active = true;
-            item.image = fItem["path"];
             item.coord_e = fItem["coord_e"];
             item.coord_n = fItem["coord_n"];
             item.parent3_id = res["id"];
-            item.file_data = null;
+            item.file_data = fItem["path"];
             item.type = 2;
             item.name = Uuid().v1();
             item.file_name = item.name + ".jpg";
@@ -101,7 +100,7 @@ class FaultFixController extends Controllers {
               print("print delete resp $deleteResp");
               if (deleteResp["code"] > 0) {
                 deletedFaultItemsIds.add(deleteResp["id"]);
-                await File(item.image).delete();
+                await File(item.file_data).delete();
               }
             }
           }
@@ -179,11 +178,10 @@ class FaultFixController extends Controllers {
           FaultFixItem item = new FaultFixItem();
           // Set properties
           item.active = true;
-          item.image = fItem["path"];
           item.coord_e = fItem["coord_e"];
           item.coord_n = fItem["coord_n"];
           item.parent3_id = faultFix.id;
-          item.file_data = null;
+          item.file_data = fItem["path"];
 
           item.type = 2;
           item.name = Uuid().v1();
@@ -217,7 +215,7 @@ class FaultFixController extends Controllers {
               print("print delete resp $deleteResp");
               if (deleteResp["code"] > 0) {
                 deletedFaultItemsIds.add(deleteResp["id"]);
-                await File(item.image).delete();
+                await File(item.file_data).delete();
               }
             }
           }
@@ -276,7 +274,7 @@ class FaultFixController extends Controllers {
           var itemId = json["id"];
 
           await FaultFixItemController.delete(itemId);
-          await File(fItem.image).delete();
+          await File(fItem.file_data).delete();
           deletedFotosIds.add(itemId);
         }
       } catch (e) {
