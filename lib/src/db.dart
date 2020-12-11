@@ -67,7 +67,7 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS isp_document(id INTEGER PRIMARY KEY, parent2_id INTEGER, name TEXT, date TEXT, number TEXT, description TEXT, file_name TEXT, file_path TEXT, type INTEGER, is_new TEXT)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS chat(id INTEGER PRIMARY KEY, odoo_id INTEGER, name TEXT, type INTEGER, group_id INTEGER, last_update TEXT, last_read TEXT)");
+            "CREATE TABLE IF NOT EXISTS chat(id INTEGER PRIMARY KEY, odoo_id INTEGER, name TEXT, type INTEGER, group_id INTEGER, last_read TEXT, active TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS chat_message(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, msg TEXT, create_date TEXT, create_uid INTEGER)");
         await db.execute(
@@ -105,6 +105,11 @@ class DBProvider {
             continue v3;
           v3:
           case 4:
+            await db.execute('ALTER TABLE chat ADD COLUMN active TEXT');
+            // Так же удалена колонка last_update, но удалять её здесь смысла нет
+            continue v4;
+          v4:
+          case 5:
           default:
         }
       },
@@ -119,7 +124,7 @@ class DBProvider {
 
       // Set the version. This executes the onCreate function and provides a
       // path to perform database upgrades and downgrades.
-      version: 4,
+      version: 5,
     );
   }
 

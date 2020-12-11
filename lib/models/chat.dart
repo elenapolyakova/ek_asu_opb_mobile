@@ -22,6 +22,9 @@ class Chat extends Models {
   ///Дата последнего чтения сообщений
   DateTime lastRead;
 
+  ///Не архивирован
+  bool active;
+
   ///Варианты выбора для типа
   static Map<int, String> typeSelection = {
     1: 'С работником',
@@ -91,7 +94,7 @@ class Chat extends Models {
     this.name,
     this.groupId,
     this.type,
-    this.lastUpdate,
+    this.active = true,
     this.lastRead,
   });
 
@@ -102,7 +105,7 @@ class Chat extends Models {
       name: getObj(json["name"]),
       groupId: unpackListId(json["group_id"])['id'],
       type: getObj(json["type"]),
-      lastUpdate: stringToDateTime(json["last_update"]),
+      active: json["active"] == 'true',
       lastRead: stringToDateTime(json["last_read"]),
     );
     return res;
@@ -115,7 +118,7 @@ class Chat extends Models {
       'name': name,
       'group_id': groupId,
       'type': type,
-      'last_update': dateTimeToString(lastUpdate, true),
+      'active': (active == null || !active) ? 'false' : 'true',
       'last_read': dateTimeToString(lastRead, true),
     };
     if (omitId) {

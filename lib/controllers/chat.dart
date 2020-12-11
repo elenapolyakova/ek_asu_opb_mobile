@@ -63,13 +63,14 @@ class ChatController extends Controllers {
       'type',
       'user_ids',
       'write_date',
+      'active',
     ];
     List domain;
     if (clean) {
       domain = [];
       await DBProvider.db.deleteAll(_tableName);
     } else {
-      domain = await getLastSyncDateDomain(_tableName, excludeActive: true);
+      domain = await getLastSyncDateDomain(_tableName);
     }
     domain += [
       '|',
@@ -95,6 +96,7 @@ class ChatController extends Controllers {
         ...e,
         'odoo_id': e['id'],
         'group_id': groupId,
+        'active': e['active'] ? 'true' : 'false',
       };
       if (chat != null) {
         res['id'] = chat.id;
@@ -135,14 +137,36 @@ class ChatController extends Controllers {
   }
 
   /// Select all records by provided parameters.
+  /// If [id] is provided, [active] and [groupId] are ignored.
+  /// If [active] is not specified (is null), [active] is ignored.
   /// Without any parameters return all records.
-  /// Returns a List of records.
-  static Future<List<Chat>> select({int groupId, int id}) async {
-    // if (chat is int) chat = await ChatController.selectById(chat);
-    if (groupId != null && id != null) {
-      throw 'Need to specify at most one parameter';
+  /// Returns a List of [Chat].
+  static Future<List<Chat>> select({int groupId, int id, bool active}) async {
+    if (id != null) {
+      return [await selectById(id)];
+    } else if (groupId != null) {
+      List<Map<String, dynamic>> queryRes;
+      queryRes = await DBProvider.db.select(
+        _tableName,
+        where: "group_id = ?" + (active != null ? ' and active = ?' : ''),
+        whereArgs: [groupId, if (active != null) active ? 'true' : 'false'],
+      );
+      if (queryRes == null || queryRes.length == 0) return [];
+      List<Chat> chats = queryRes.map((e) => Chat.fromJson(e)).toList();
+      return chats;
+    } else {
+      List<Map<String, dynamic>> queryRes = await selectAll();
+      List<Chat> chats = queryRes
+          .map((e) => Chat.fromJson(e))
+          .where((e) => e.active == active)
+          .toList();
+      return chats;
     }
-    if (groupId == null && id == null) {
+    /*
+    if (groupId != null && id != null) {
+      throw 'Need to specify either id or groupId';
+    }
+    if (groupId == null && id == null && active == null) {
       List<Map<String, dynamic>> queryRes = await selectAll();
       List<Chat> chats = queryRes.map((e) => Chat.fromJson(e)).toList();
       return chats;
@@ -158,7 +182,7 @@ class ChatController extends Controllers {
       return chats;
     } else {
       return [await selectById(id)];
-    }
+    }*/
   }
 
   static Future<Map<String, dynamic>> insert(Chat chat,
