@@ -49,7 +49,7 @@ class PlanController extends Controllers {
       domain = [];
       await DBProvider.db.deleteAll(_tableName);
     } else {
-      domain = await getLastSyncDateDomain(_tableName, excludeActive: true);
+      domain = await getLastSyncDateDomain(_tableName);
     }
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
