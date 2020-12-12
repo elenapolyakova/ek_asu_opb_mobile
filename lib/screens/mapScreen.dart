@@ -150,18 +150,20 @@ class _MapScreen extends State<MapScreen> {
                 body: FlutterMap(
             options: MapOptions(
               center: LatLng(lat, lon),
-              zoom: 15.0,
+              zoom: 10,
               plugins: [
                 UserLocationPlugin(),
                 MarkerClusterPlugin(),
               ],
+              maxZoom: 10,
+              // minZoom: 8,
             ),
             layers: [
               TileLayerOptions(
-                urlTemplate:
-                    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                subdomains: ['a', 'b', 'c'],
-                // urlTemplate: "http://172.22.3.173/russia/map/{z}/{x}/{y}.png",
+                // urlTemplate:
+                // "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                // subdomains: ['a', 'b', 'c'],
+                urlTemplate: "http://172.22.3.173/russia/map/{z}/{x}/{y}.png",
               ),
               MarkerLayerOptions(markers: markers),
               userLocationOptions,
