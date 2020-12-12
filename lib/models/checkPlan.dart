@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:ek_asu_opb_mobile/controllers/checkPlan.dart';
 import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import 'package:ek_asu_opb_mobile/controllers/planItem.dart';
@@ -118,6 +121,16 @@ class CheckPlan extends Models {
     if (_parent == null)
       _parent = await PlanItemController.selectById(parentId);
     return _parent;
+  }
+
+  Future<File> get pdfReport {
+    if (odooId == null) return null;
+    return CheckPlanController.downloadPdfReport(odooId);
+  }
+
+  Future<File> get xlsReport {
+    if (odooId == null) return null;
+    return CheckPlanController.downloadXlsReport(odooId);
   }
 
   CheckPlan({

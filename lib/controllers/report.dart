@@ -15,14 +15,15 @@ class ReportController extends Controllers {
   /// Можно использовать `XXXXController.selectOdooId(localDbId)`.
   ///
   /// `reportXmlId`: Строка `XXXXController.XXXReportXmlId`
-  static Future downloadReport(int recordOdooId, String reportXmlId) async {
+  static Future<File> downloadReport(
+      String tableName, int recordOdooId, String reportXmlId) async {
     String appPath = (await getTemporaryDirectory()).path;
-    final response = await getDataWithAttemp(
-        SynController.localRemoteTableNameMap['plan'], 'download_report', [
+    final response = await getDataWithAttemp(tableName, 'download_report', [
       [recordOdooId],
       reportXmlId,
     ], {});
     try {
+      if (response == null) return null;
       Map reportData = response['report_data'];
       String newPath =
           "$appPath/reports/${DateTime.now().toUtc().millisecondsSinceEpoch}/${reportData['file_name']}";

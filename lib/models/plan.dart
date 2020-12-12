@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:ek_asu_opb_mobile/controllers/planItem.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
@@ -74,6 +76,16 @@ class Plan extends Models {
     if (_railway == null)
       _railway = await RailwayController.selectById(railwayId);
     return _railway;
+  }
+
+  Future<File> get pdfReport {
+    if (odooId == null) return null;
+    return PlanController.downloadPdfReport(odooId);
+  }
+
+  Future<File> get xlsReport {
+    if (odooId == null) return null;
+    return PlanController.downloadXlsReport(odooId);
   }
 
   Plan({

@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:ek_asu_opb_mobile/controllers/checkPlan.dart';
 import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
+import 'package:ek_asu_opb_mobile/controllers/report.dart';
 import 'package:ek_asu_opb_mobile/models/comGroup.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
 import "package:ek_asu_opb_mobile/controllers/syn.dart";
@@ -10,6 +13,8 @@ import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class CheckPlanItemController extends Controllers {
   static const String _tableName = "plan_item_check_item";
+  static const String xlsReportXmlId = 'report_mob_check_plan_item_xls';
+  static const String pdfReportXmlId = 'report_mob_check_plan_item_pdf';
 
   static Future<List<int>> selectIDs() async {
     List<Map<String, dynamic>> maps =
@@ -284,5 +289,19 @@ class CheckPlanItemController extends Controllers {
       res['message'] = 'Error deleting from $_tableName';
     });
     return res;
+  }
+
+  static Future<File> downloadPdfReport(int odooId) async {
+    return ReportController.downloadReport(
+        SynController.localRemoteTableNameMap[_tableName],
+        odooId,
+        pdfReportXmlId);
+  }
+
+  static Future<File> downloadXlsReport(int odooId) async {
+    return ReportController.downloadReport(
+        SynController.localRemoteTableNameMap[_tableName],
+        odooId,
+        xlsReportXmlId);
   }
 }
