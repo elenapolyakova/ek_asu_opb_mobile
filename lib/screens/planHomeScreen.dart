@@ -1,5 +1,3 @@
-import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
-import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
@@ -7,29 +5,34 @@ import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/screens/screens.dart' as screens;
 import 'package:ek_asu_opb_mobile/controllers/syn.dart';
 import 'dart:async';
+import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 
-class CheckScreen extends StatefulWidget {
+class PlanHomeScreen extends StatefulWidget {
   BuildContext context;
   bool stop;
 
   @override
-  CheckScreen({this.context, this.stop});
+  PlanHomeScreen({this.context, this.stop});
   @override
-  State<CheckScreen> createState() => _CheckScreen();
+  State<PlanHomeScreen> createState() => _PlanHomeScreen();
 }
 
-class _CheckScreen extends State<CheckScreen> {
+class _PlanHomeScreen extends State<PlanHomeScreen> {
   UserInfo _userInfo;
   List<Map<String, dynamic>> _navigationMenu;
   int _selectedIndex = 0;
   bool showLoading = true;
   final sizeTextBlack = TextStyle(fontSize: 17.0, color: Color(0xFF252A0E));
-  Map<String, dynamic> arguments;
-  int _checkPlanItemId;
-  int _departmentId;
+  Map<String, dynamic> planItem;
+  Map<String, dynamic> argumrnts;
+  String errorText;
   bool isSyncData = false;
 
   Map<String, dynamic> screenList = {};
+
+//SpinKitFadingCircle(color: Color(0xFFADB439));
+
+  List<dynamic> logRows = []; // = ['test', 'test2'];
 
   @override
   void initState() {
@@ -37,64 +40,34 @@ class _CheckScreen extends State<CheckScreen> {
     WidgetsFlutterBinding.ensureInitialized();
     auth.getUserInfo().then((userInfo) {
       _userInfo = userInfo;
-
-      loadParams().then((hasParam) {
-        if (hasParam)
-          _navigationMenu = getNavigationMenu();
-        showLoading = false;
-        setState(() {});
+      _navigationMenu = getNavigationMenu(userInfo.f_user_role_txt);
+      setState(() {
+        argumrnts = ModalRoute.of(context).settings.arguments;
+        if (argumrnts != null) {
+          if (argumrnts["type"] == 'cbt')
+            _selectedIndex = 0;
+          else if (argumrnts["type"] == 'ncop') _selectedIndex = 1;
+        }
       });
+
+      errorText = '';
+      loadData();
     });
   }
 
-  Future<bool> loadParams() async {
-    arguments = ModalRoute.of(context).settings.arguments;
-    if (arguments != null) {
-      _checkPlanItemId = arguments["id"];
-      _departmentId = arguments["department_id"];
-    }
-
-    if (_checkPlanItemId != null) {
-      auth.setCheckPlanId(_checkPlanItemId);
-    } else {
-      _checkPlanItemId = await auth.getCheckPlanId();
-      if (_checkPlanItemId != null)
-        _departmentId =
-            (await CheckPlanItemController.selectById(_checkPlanItemId))
-                .departmentId;
-    }
-
-    return _checkPlanItemId != null;
+  loadData() {
+    showLoading = false;
+    setState(() {});
   }
 
-  int getReportIndex() {
-    return _navigationMenu.indexWhere((element) => element["key"] == "report");
-  }
-
-  List<Map<String, dynamic>> getNavigationMenu() {
+  List<Map<String, dynamic>> getNavigationMenu(String role_txt) {
     List<Map<String, dynamic>> result = [];
-
-    result.add({'key': 'info', 'label': 'Общее', 'icon': Icon(Icons.info)});
-    result.add({
-      'key': 'checkList',
-      'label': 'Чек-листы',
-      'icon': Icon(Icons.fact_check)
-    });
+    if (role_txt == config.getItem('cbtRole')) {
+      result.add(
+          {'key': 'cbt', 'label': 'План ЦБТ', 'icon': Icon(Icons.description)});
+    }
     result.add(
-        {'key': 'history', 'label': 'Нарушения', 'icon': Icon(Icons.history)});
-    result.add({
-      'key': 'documents',
-      'label': 'Документы',
-      'icon': Icon(Icons.folder_special)
-    });
-    result
-        .add({'key': 'map', 'label': 'Карта', 'icon': Icon(Icons.location_on)});
-
-    result.add({
-      'key': 'report',
-      'label': 'Отчеты',
-      'icon': Icon(Icons.insert_drive_file)
-    });
+        {'key': 'ncop', 'label': 'План НЦОП', 'icon': Icon(Icons.description)});
 
     return result;
   }
@@ -117,33 +90,20 @@ class _CheckScreen extends State<CheckScreen> {
     });
   }
 
-  Widget getBodyContent(isSyncData) {
+  Widget getBodyContent(bool isSyncData) {
     String screenKey = _navigationMenu[_selectedIndex]["key"];
     if (!isSyncData) if (screenList[screenKey] != null)
       return screenList[screenKey];
     switch (screenKey) {
-      case 'info':
+      case "cbt":
         screenList[screenKey] =
-            screens.InfoCheckScreen(context, _departmentId, GlobalKey());
+            screens.PlanScreen(type: screenKey, key: GlobalKey());
         break;
-      case "map":
-        screenList[screenKey] = screens.MapScreen(departmentId: _departmentId);
-        break;
-      case "report":
-        screenList[screenKey] = screens.ReportScreen();
-        break;
-      case "checkList":
+      case "ncop":
         screenList[screenKey] =
-            screens.CheckListManagerScreen(_checkPlanItemId, isSyncData);
+            screens.PlanScreen(type: screenKey, key: GlobalKey());
         break;
-      case "documents":
-        screenList[screenKey] =
-            screens.DepartmentDocumentScreen(_departmentId, GlobalKey());
-        break;
-      case "history":
-        screenList[screenKey] = screens.FaultHistoryScreen(
-            _departmentId, _checkPlanItemId, isSyncData);
-        break;
+
       default:
         return Text("");
     }
@@ -152,6 +112,7 @@ class _CheckScreen extends State<CheckScreen> {
 
   @override
   Widget build(BuildContext context) {
+    //, controller: _controller);
     return showLoading
         ? new ConstrainedBox(
             child:
@@ -163,14 +124,21 @@ class _CheckScreen extends State<CheckScreen> {
             appBar: PreferredSize(
                 preferredSize: Size.fromHeight(100),
                 child: MyAppBar(
-                  userInfo: _userInfo,
-                  syncTask: syncTask,
-                  parentScreen: 'checkScreen',
-                  stop: widget.stop,
-                )),
+                    userInfo: _userInfo,
+                    syncTask: syncTask,
+                    parentScreen: 'planHomeScreen',
+                    stop: widget.stop)),
             body: Column(children: [
               getBodyContent(isSyncData),
               //  if (errorText != '')
+              Container(
+                  height: 20,
+                  width: double.infinity,
+                  color:
+                      (errorText != "") ? Color(0xAAE57373) : Color(0x00E57373),
+                  child: Text('$errorText',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Color(0xFF252A0E))))
             ]),
             bottomNavigationBar: BottomNavigationBar(
                 type: BottomNavigationBarType.fixed,
@@ -180,10 +148,8 @@ class _CheckScreen extends State<CheckScreen> {
                 selectedFontSize: 14,
                 unselectedFontSize: 14,
                 onTap: (value) {
-                  if (getReportIndex() == value) return;
                   setState(() {
                     _selectedIndex = value;
-
                     // selectedMenu = _navigationMenu[value]["key"];
                   });
                 },
@@ -193,9 +159,8 @@ class _CheckScreen extends State<CheckScreen> {
                     : List.generate(
                         _navigationMenu.length,
                         (i) => BottomNavigationBarItem(
-                              label: _navigationMenu[i]["label"],
-                              icon: _navigationMenu[i]["icon"],
-                            ))),
+                            label: _navigationMenu[i]["label"],
+                            icon: _navigationMenu[i]["icon"]))),
           );
   }
 }

@@ -128,8 +128,7 @@ class _PlanScreen extends State<PlanScreen> {
     super.initState();
     auth.getUserInfo().then((userInfo) {
       _userInfo = userInfo;
-      _year = DateTime.now().year;
-      _railway_id = _userInfo.railway_id;
+
       saveError = "";
       emptyTableName =
           "ПЛАН\nпроведения комплексных аудитов и целевых проверок организации работы по экологической безопасности"; // на ${_year.toString()} год";
@@ -157,6 +156,10 @@ class _PlanScreen extends State<PlanScreen> {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
+
+      _year = await auth.getYear();
+      _railway_id = await auth.getRailway();
+
       yearList = getYearList(_year);
       railwayList = await getRailwayList();
       stateList = makeListFromJson(Plan.stateSelection);
@@ -173,7 +176,7 @@ class _PlanScreen extends State<PlanScreen> {
 
   Future<void> reloadPlan() async {
     try {
-      _plan = await PlanController.select(_year, _type, _railway_id);
+      _plan = await PlanController.select(_year, _type, _type == 'cbt' ? null :_railway_id);
     } catch (e) {
       _plan = null;
     }
@@ -239,7 +242,8 @@ class _PlanScreen extends State<PlanScreen> {
         tableName = '${_plan.name}';
     }
 
-    return new Container(
+    return Expanded(
+        child: new Container(
         decoration: BoxDecoration(
             image: DecorationImage(
                 image: AssetImage("assets/images/frameScreen.png"),
@@ -269,7 +273,7 @@ class _PlanScreen extends State<PlanScreen> {
                           text: 'test',
                           parentContext: context,
                           onPress: testClicked))*/
-                ])));
+                ]))));
   }
 
   Widget generateTableData(BuildContext context,
@@ -380,11 +384,12 @@ class _PlanScreen extends State<PlanScreen> {
               width: double.infinity,
               dropdownValue: _year.toString(),
               items: yearList,
-              onChange: (value) {
+              onChange: (value) async {
                 setState(() {
                   _year = int.parse(value);
                   reloadPlan();
                 });
+                await auth.setYear(_year);
               },
               parentContext: context,
             ),
@@ -404,11 +409,12 @@ class _PlanScreen extends State<PlanScreen> {
                 dropdownValue:
                     _railway_id != null ? _railway_id.toString() : null, //"0",
                 items: railwayList,
-                onChange: (value) {
+                onChange: (value) async {
                   setState(() {
                     _railway_id = int.parse(value);
                     reloadPlan();
                   });
+                  await auth.setRailway(_railway_id);
                 },
                 parentContext: context,
               ),

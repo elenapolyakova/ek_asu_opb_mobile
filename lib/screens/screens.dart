@@ -18,4 +18,5 @@ export 'package:ek_asu_opb_mobile/screens/messengerScreen.dart';
 export "package:ek_asu_opb_mobile/screens/faultHistoryScreen.dart";
 export "package:ek_asu_opb_mobile/screens/faultFixScreen.dart";
 export "package:ek_asu_opb_mobile/screens/faultFixListScreen.dart";
+export "package:ek_asu_opb_mobile/screens/planHomeScreen.dart";
 

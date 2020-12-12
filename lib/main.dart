@@ -115,6 +115,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
           // child: CheckScreen(context: context)),
           '/messenger': (context) =>
               RouteAwareWidget('/messenger', context: context),
+           '/plan': (context) => RouteAwareWidget('/plan', context: context), //
           //  child: MessengerScreen(/*context: context*/)),
 
           /* '/planCbt': (context) =>
@@ -410,6 +411,10 @@ class _RouteAwareWidget extends State<RouteAwareWidget> with RouteAware {
       case '/ISP':
         return ISPScreen(
             context: context, stop: stop != null ? stop[name] : null);
+      case '/plan':
+       return PlanHomeScreen(
+            context: context, stop: stop != null ? stop[name] : null);
+
       case '/inspection':
         return InspectionScreen(
             context: context, stop: stop != null ? stop[name] : null);

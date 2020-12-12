@@ -1725,7 +1725,9 @@ class _MyAppBar extends State<MyAppBar> {
                     ),
             ]),
           ),
-          Container(child: Center(child: HomeIcon())),
+          widget.parentScreen != 'homeScreen'
+              ? Container(child: Center(child: HomeIcon()))
+              : Text(''),
           Expanded(
               child: Container(
                   alignment: Alignment.centerRight,
@@ -1754,8 +1756,12 @@ class _MyAppBar extends State<MyAppBar> {
                             //         where: "id = 28824")), (el) {
                             //   print(el);
                             // });
-                            print((await ReportController.downloadReport(
-                                26, 'report_mob_main_plan_xls')));
+                            (await DBProvider.db.select('plan'))
+                                .forEach((element) {
+                              print(element);
+                            });
+                            /*print((await ReportController.downloadReport(
+                                26, 'report_mob_main_plan_xls')));*/
                           },
                           color: Theme.of(context).primaryColorLight,
                           fontSize: 20,
@@ -2114,8 +2120,6 @@ class CustomToolTip extends PopupMenuEntry<Map<String, dynamic>> {
 }
 
 class _CustomToolTip extends State<CustomToolTip> {
-  
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -2123,9 +2127,61 @@ class _CustomToolTip extends State<CustomToolTip> {
             color: widget.color ?? Theme.of(widget.context).primaryColor,
             borderRadius: BorderRadius.all(Radius.circular(12.0))),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [widget.content]
-        ));
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [widget.content]));
+  }
+}
+
+class MyTile extends StatelessWidget {
+  String text;
+  Function onTap;
+  Color color;
+  double width;
+  double height;
+  bool disabled;
+
+  MyTile(this.text, this.onTap,
+      {this.color, this.width = 300, this.height = 80, this.disabled = false});
+  @override
+  Widget build(BuildContext context) {
+    TextStyle style = TextStyle(
+      color: color ?? Theme.of(context).primaryColorLight,
+      fontSize: 20,
+    );
+
+    return GestureDetector(
+        onTap:  !(disabled) ? onTap : null,
+        child: Container(
+            width: width,
+            height: height,
+            margin: EdgeInsets.symmetric(vertical: 10),
+            child: Stack(children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  disabled
+                      ? "assets/images/app_small_disabled.jpg"
+                      : "assets/images/app_small.jpg",
+                  fit: BoxFit.fill,
+                  height: height,
+                  width: width,
+                ),
+              ),
+              Container(
+                  width: width,
+                  height: height,
+                  color: Colors.transparent,
+                  /*child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: Form(*/
+                  child: Center(
+                      child: Text(
+                    text,
+                    style: style,
+                    textAlign: TextAlign.center,
+                  )))
+              //))
+            ])));
   }
 }

@@ -427,7 +427,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: userToDisplay
-                    .map((User user) => (user.id == head.id)
+                    .map((User user) => (user.id == headId)
                         ? Row(children: [
                             Icon(Icons.star),
                             Text(user.display_name)

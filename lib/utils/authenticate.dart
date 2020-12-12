@@ -32,7 +32,10 @@ void LogOut(BuildContext context) async {
 
   await _storage.delete(key: 'session');
   await _storage.delete(key: 'isHomePinDialogShow');
-  
+  await _storage.delete(key: 'railwayId');
+  await _storage.delete(key: 'year');
+  await _storage.delete(key: 'checkPlanId');
+
   // удалим при повторной авторизации, если вошел новый пользователь
   // await _storage.delete(key: 'pin');
   // await _storage.delete(key: 'lastDateUpdate');
@@ -178,6 +181,9 @@ Future<bool> resetAllStorageData() async {
   try {
     await _storage.delete(key: 'pin');
     await _storage.delete(key: 'lastDateUpdate');
+    await _storage.delete(key: 'railwayId');
+    await _storage.delete(key: 'year');
+    await _storage.delete(key: 'checkPlanId');
     await _storage.delete(key: 'session');
     String sessionString = await _storage.read(key: 'session');
     if (sessionString != null) _storage.write(key: "session", value: null);
@@ -231,7 +237,6 @@ Future<bool> setBaseUrl(String baseUrl) async {
   return true;
 }
 
-
 Future<String> getBaseUrl() async {
   String baseUrl = await _storage.read(key: "ServiceRootUrl");
   if ([null, ''].contains(baseUrl)) baseUrl = config.getItem('ServiceRootUrl');
@@ -245,6 +250,7 @@ Future<String> getDB() async {
   if ([null, ''].contains(db)) db = "ecodb_2020-07-01";
   return db;
 }
+
 Future<bool> setDB(String db) async {
   try {
     await _storage.write(key: 'db', value: db);
@@ -269,4 +275,59 @@ Future<bool> isPinValid(String pin) async {
   var _hashPin = Digest(hex.decode(_pin));
 
   return hashPin == _hashPin;
+}
+
+Future<bool> setRailway(int railwayId) async {
+  if (railwayId != null)
+    try {
+      await _storage.write(key: 'railwayId', value: railwayId.toString());
+    } catch (e) {
+      return false;
+    }
+  return true;
+}
+
+Future<int> getRailway() async {
+  String railwayId = await _storage.read(key: "railwayId");
+  if ([null, ''].contains(railwayId)) {
+    UserInfo userinfo = await getUserInfo();
+    await setRailway(userinfo.railway_id);
+    return userinfo.railway_id;
+  } else
+    return railwayId != null ? int.parse(railwayId) : null;
+}
+
+Future<bool> setYear(int year) async {
+  if (year != null)
+    try {
+      await _storage.write(key: 'year', value: year.toString());
+    } catch (e) {
+      return false;
+    }
+  return true;
+}
+
+Future<int> getYear() async {
+  String year = await _storage.read(key: "year");
+  if ([null, ''].contains(year)) {
+    await setYear(DateTime.now().year);
+    return DateTime.now().year;
+  } else
+    return year != null ? int.parse(year) : null;
+}
+
+Future<bool> setCheckPlanId(int checkPlanId) async {
+  if (checkPlanId != null)
+    try {
+      await _storage.write(key: 'checkPlanId', value: checkPlanId.toString());
+    } catch (e) {
+      return false;
+    }
+  return true;
+}
+
+Future<int> getCheckPlanId() async {
+  String checkPlanId = await _storage.read(key: "checkPlanId");
+  if ([null, ''].contains(checkPlanId)) return null;
+  return int.parse(checkPlanId);
 }

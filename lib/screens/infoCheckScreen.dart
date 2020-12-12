@@ -447,7 +447,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
                                             margin: EdgeInsets.symmetric(
                                                 vertical: 10),
                                             child: MyRichText(
-                                              'Наименование структурного подразделения: ',
+                                              'Наименование структурного подразделения: \n ',
                                               _department.name,
                                             ),
                                           ),
