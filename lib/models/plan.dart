@@ -33,10 +33,10 @@ class Plan extends Models {
   String numSet;
 
   ///Действует
-  bool active = true;
+  bool active;
 
   ///Ключ состояния
-  String state = 'draft';
+  String state;
 
   ///Варианты выбора для принадлежности
   static Map<String, String> typeSelection = {
@@ -87,8 +87,8 @@ class Plan extends Models {
     this.signerName,
     this.signerPost,
     this.numSet,
-    this.active,
-    this.state,
+    this.active = true,
+    this.state = 'draft',
   });
 
   factory Plan.fromJson(Map<String, dynamic> json) {
@@ -99,12 +99,11 @@ class Plan extends Models {
       name: getObj(json["name"]),
       railwayId: unpackListId(json["rw_id"])['id'],
       year: getObj(json["year"]),
-      dateSet:
-          json["date_set"] == null ? null : DateTime.parse(json["date_set"]),
+      dateSet: stringToDateTime(json["date_set"], forceUtc: false),
       signerName: getObj(json["signer_name"]),
       signerPost: getObj(json["signer_post"]),
       numSet: getObj(json["num_set"]),
-      active: json["active"] == 'true',
+      active: json["active"].toString() == 'true',
       state: getObj(json["state"]),
     );
     return res;

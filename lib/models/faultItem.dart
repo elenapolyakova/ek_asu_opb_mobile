@@ -50,13 +50,13 @@ class FaultItem extends Models {
         id: json["id"],
         odoo_id: json["odoo_id"],
         name: getStr(json["name"]),
-        type: json["type"],
-        parent_id: json["parent_id"],
-        active: (json["active"].toString() == 'true'),
+        type: getObj(json["type"]),
+        parent_id: unpackListId(json["parent_id"])['id'],
+        active: json["active"].toString() == 'true',
         file_data: getStr(json["file_data"]),
         file_name: getStr(json["file_name"]),
-        coord_e: json["coord_e"],
-        coord_n: json["coord_n"],
+        coord_e: getObj(json["coord_e"]),
+        coord_n: getObj(json["coord_n"]),
       );
 
   Map<String, dynamic> toJson([omitId = false]) {

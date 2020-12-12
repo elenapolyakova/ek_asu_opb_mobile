@@ -51,7 +51,7 @@ class CheckPlan extends Models {
   String numSet;
 
   ///Действует
-  bool active = true;
+  bool active;
 
   ///Id комиссии
   int mainComGroupId;
@@ -135,7 +135,7 @@ class CheckPlan extends Models {
     this.appName,
     this.appPost,
     this.numSet,
-    this.active,
+    this.active = true,
   });
 
   factory CheckPlan.fromJson(Map<String, dynamic> json) {
@@ -154,7 +154,7 @@ class CheckPlan extends Models {
       appName: getObj(json["app_name"]),
       appPost: getObj(json["app_post"]),
       numSet: getObj(json["num_set"]),
-      active: json["active"] == 'true',
+      active: json["active"].toString() == 'true',
     );
     return res;
   }

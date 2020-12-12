@@ -25,13 +25,14 @@ class FaultFix extends Models {
   });
 
   factory FaultFix.fromJson(Map<String, dynamic> json) => new FaultFix(
-      id: json["id"],
-      odoo_id: json["odoo_id"],
-      parent_id: json["parent_id"],
-      active: (json["active"].toString() == 'true'),
-      is_finished: (json["is_finished"].toString() == 'true'),
-      date: json["date"] == null ? null : DateTime.parse(json["date"]),
-      desc: json["desc"]);
+        id: json["id"],
+        odoo_id: json["odoo_id"],
+        parent_id: unpackListId(json["parent_id"])['id'],
+        active: json["active"].toString() == 'true',
+        is_finished: json["is_finished"].toString() == 'true',
+        date: stringToDateTime(json["date"], forceUtc: false),
+        desc: getObj(json["desc"]),
+      );
 
   Map<String, dynamic> toJson([omitId = false]) {
     Map<String, dynamic> res = {

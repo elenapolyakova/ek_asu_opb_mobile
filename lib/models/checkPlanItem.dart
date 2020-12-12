@@ -34,7 +34,7 @@ class CheckPlanItem extends Models {
   DateTime dtTo;
 
   ///Действует
-  bool active = true;
+  bool active;
 
   ///ID рабочей группы
   int comGroupId;
@@ -86,7 +86,7 @@ class CheckPlanItem extends Models {
     this.date,
     this.dtFrom,
     this.dtTo,
-    this.active,
+    this.active = true,
     this.comGroupId,
   });
 
@@ -101,7 +101,7 @@ class CheckPlanItem extends Models {
       date: stringToDateTime(json["date"], forceUtc: false),
       dtFrom: stringToDateTime(json["dt_from"], forceUtc: false),
       dtTo: stringToDateTime(json["dt_to"], forceUtc: false),
-      active: json["active"] == 'true',
+      active: json["active"].toString() == 'true',
       comGroupId: unpackListId(json["com_group_id"])['id'],
     );
     return res;

@@ -14,7 +14,7 @@ class CheckListItem extends Models {
   String question;
   String result;
   String description;
-  bool active = true;
+  bool active;
 
   CheckListItem({
     this.id,
@@ -25,7 +25,7 @@ class CheckListItem extends Models {
     this.question,
     this.result,
     this.description,
-    this.active,
+    this.active = true,
   });
 
   Future<int> get getFaultsCounts async {
@@ -39,11 +39,11 @@ class CheckListItem extends Models {
       new CheckListItem(
           id: json["id"],
           odoo_id: json["odoo_id"],
-          parent_id: json["parent_id"],
-          base_id: getObj(json["base_id"]),
+          parent_id: unpackListId(json["parent_id"])['id'],
+          base_id: unpackListId(json["base_id"])['id'],
           name: getStr(json["name"]),
           question: getStr(json["question"]),
-          active: (json["active"].toString() == 'true'),
+          active: json["active"].toString() == 'true',
           result: getStr(json["result"]),
           description: getStr(json["description"]));
 
