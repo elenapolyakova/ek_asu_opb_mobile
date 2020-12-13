@@ -15,6 +15,15 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 
+SYNC_STATUS syncStatus  = SYNC_STATUS.INIT;
+
+enum SYNC_STATUS {
+ INIT,
+ IN_PROGRESS,
+ SUCCESS,
+ ERROR
+}
+
 void callbackDispatcher() {
   WM.Workmanager.executeTask((task, inputData) async {
     if (task == 'syn') {
@@ -115,7 +124,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
           // child: CheckScreen(context: context)),
           '/messenger': (context) =>
               RouteAwareWidget('/messenger', context: context),
-           '/plan': (context) => RouteAwareWidget('/plan', context: context), //
+          '/plan': (context) => RouteAwareWidget('/plan', context: context), //
           //  child: MessengerScreen(/*context: context*/)),
 
           /* '/planCbt': (context) =>
@@ -412,7 +421,7 @@ class _RouteAwareWidget extends State<RouteAwareWidget> with RouteAware {
         return ISPScreen(
             context: context, stop: stop != null ? stop[name] : null);
       case '/plan':
-       return PlanHomeScreen(
+        return PlanHomeScreen(
             context: context, stop: stop != null ? stop[name] : null);
 
       case '/inspection':

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:ek_asu_opb_mobile/main.dart';
 import 'package:ek_asu_opb_mobile/controllers/report.dart';
 import 'package:ek_asu_opb_mobile/src/messenger.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
@@ -59,6 +60,95 @@ class _TextIcon extends State<TextIcon> {
                     TextStyle(color: widget.color, fontSize: widget.fontSize),
               )
             ])));
+  }
+}
+
+class SyncIcon extends StatefulWidget {
+  Function onTap;
+  Color color;
+  double margin;
+  double fontSize;
+  double iconSize;
+  SYNC_STATUS status;
+
+  SyncIcon(
+      {this.onTap,
+      this.color,
+      this.margin = 13.0,
+      this.status = SYNC_STATUS.INIT});
+  @override
+  State<SyncIcon> createState() => _SyncIcon();
+}
+
+class _SyncIcon extends State<SyncIcon> {
+  @override
+  Widget build(BuildContext context) {
+    //IconData icon =IconData(Icon)
+    Color color = Colors.transparent;
+    IconData icon;
+
+    switch (widget.status) {
+      case SYNC_STATUS.INIT:
+        color = Colors.transparent;
+        icon = null;
+        break;
+      case SYNC_STATUS.IN_PROGRESS:
+        color = Colors.yellow[300]; //.withOpacity(.6);
+        icon = Icons.hourglass_bottom;
+        break;
+      case SYNC_STATUS.ERROR:
+        color = Colors.redAccent; //.withOpacity(.6);
+        icon = Icons.close;
+        break;
+      case SYNC_STATUS.SUCCESS:
+        color =
+            Theme.of(context).primaryColor; //Colors.green;//.withOpacity(.6);
+        icon = Icons.done;
+        break;
+    }
+
+    return Container(
+      // width: 30,
+      //  height: 30,
+      child: Stack(
+        children: [
+          TextIcon(
+              icon: Icons.cached,
+              text: 'Синхронизация',
+              onTap: widget.onTap,
+              margin: widget.margin,
+              color: widget.color),
+          if (icon != null)
+            Container(
+              width: 30,
+              height: 30,
+              alignment: Alignment.bottomRight,
+              margin: EdgeInsets.only(top: 10, left: 20),
+              child: Container(
+                  width: 15,
+                  height: 15,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color:
+                         color,
+                      border: Border.all(
+                          color: Theme.of(context).primaryColorLight.withOpacity(.5),
+                          width: 0.5)),
+                  child: //Text('')
+                  Icon(icon, size: 13, color: Theme.of(context).primaryColorDark, )
+
+                  /*Container(
+                  width: 10,
+                  height: 10,
+                  alignment: Alignment.center,
+                  // margin: EdgeInsets.only(top: 4),
+                  child: Text('')),*/
+                  ),
+            ),
+        ],
+      ),
+    );
   }
 }
 
@@ -1592,9 +1682,12 @@ class MyAppBar extends StatefulWidget {
 class _MyAppBar extends State<MyAppBar> {
   int _countMessage;
   Timer _messengerTimer;
+  Timer _statusTimer;
+  Duration statusDuration = new Duration(seconds: 3);
   Duration seconds;
   int refreshMessenger;
   String version = "";
+  SYNC_STATUS curSyncStatus = syncStatus;
 
   @override
   void initState() {
@@ -1607,6 +1700,8 @@ class _MyAppBar extends State<MyAppBar> {
     getCountMessages();
 
     createTimer();
+
+    createStatusTimer();
   }
 
   void timerTick() {
@@ -1649,9 +1744,29 @@ class _MyAppBar extends State<MyAppBar> {
     _messengerTimer = Timer(seconds, timerTick);
   }
 
+  createStatusTimer() async {
+    if (curSyncStatus != syncStatus)
+      setState(() {
+        curSyncStatus = syncStatus;
+      });
+
+    //syncStatus = SYNC_STATUS.ERROR;
+
+    _statusTimer = Timer(statusDuration, timerStatusTick);
+  }
+
+  timerStatusTick() {
+    if (widget.stop) return;
+
+    createStatusTimer();
+  }
+
   void cancelTimer() {
     if (_messengerTimer != null) _messengerTimer.cancel();
     _messengerTimer = null;
+
+    if (_statusTimer != null) _statusTimer.cancel();
+    _statusTimer = null;
     //setState(() { });
   }
 
@@ -1660,9 +1775,14 @@ class _MyAppBar extends State<MyAppBar> {
     if (widget.showMessenger == null || widget.showMessenger) {
       if (widget.stop)
         cancelTimer();
-      else if (_messengerTimer == null) {
-        getCountMessages();
-        createTimer();
+      else {
+        if (_messengerTimer == null) {
+          getCountMessages();
+          createTimer();
+        }
+        if (_statusTimer == null) {
+          createStatusTimer();
+        }
       }
     }
     //print('for ${widget.parentScreen} stop is ${widget.stop}');
@@ -1703,12 +1823,17 @@ class _MyAppBar extends State<MyAppBar> {
                 Container(
                     child: Center(
                   child: widget.syncTask != null
-                      ? TextIcon(
+                      ? SyncIcon(
+                          onTap: widget.syncTask,
+                          status: curSyncStatus,
+                          margin: 10,
+                          color: Theme.of(context).primaryColorLight)
+                      /*   TextIcon(
                           icon: Icons.cached,
                           text: 'Синхронизировать',
                           onTap: widget.syncTask,
                           margin: 10,
-                          color: Theme.of(context).primaryColorLight)
+                          color: Theme.of(context).primaryColorLight)*/
                       : Text(''),
                 )),
               ]),
@@ -2151,7 +2276,7 @@ class MyTile extends StatelessWidget {
     );
 
     return GestureDetector(
-        onTap:  !(disabled) ? onTap : null,
+        onTap: !(disabled) ? onTap : null,
         child: Container(
             width: width,
             height: height,

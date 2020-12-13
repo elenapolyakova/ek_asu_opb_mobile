@@ -90,11 +90,11 @@ class _CheckScreen extends State<CheckScreen> {
     result
         .add({'key': 'map', 'label': 'Карта', 'icon': Icon(Icons.location_on)});
 
-    result.add({
+  /*  result.add({
       'key': 'report',
       'label': 'Отчеты',
       'icon': Icon(Icons.insert_drive_file)
-    });
+    });*/
 
     return result;
   }
@@ -124,7 +124,7 @@ class _CheckScreen extends State<CheckScreen> {
     switch (screenKey) {
       case 'info':
         screenList[screenKey] =
-            screens.InfoCheckScreen(context, _departmentId, GlobalKey());
+            screens.InfoCheckScreen(context, _departmentId, _checkPlanItemId, GlobalKey());
         break;
       case "map":
         screenList[screenKey] = screens.MapScreen(departmentId: _departmentId);

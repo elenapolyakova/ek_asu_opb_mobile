@@ -1357,13 +1357,10 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     }
     try {
       showLoadingDialog(context);
-      int odooId = await CheckPlanController.selectOdooId(_inspection.id);
-      dynamic report = await ReportController.downloadReport(
-          odooId, CheckPlanController.pdfReportXmlId);
-      hideDialog(context);
-      if (report is File) {
-        File file = report as File;
 
+      File file = await _inspection.pdfReport;
+      hideDialog(context);
+      if (file != null) {
         OpenFile.open(file.path);
       }
     } catch (e) {
@@ -1379,13 +1376,9 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     }
     try {
       showLoadingDialog(context);
-      int odooId = await CheckPlanController.selectOdooId(_inspection.id);
-      dynamic report = await ReportController.downloadReport(
-          odooId, CheckPlanController.xlsReportXmlId);
+      File file = await _inspection.xlsReport;
       hideDialog(context);
-      if (report is File) {
-        File file = report as File;
-
+      if (file != null) {
         OpenFile.open(file.path);
       }
     } catch (e) {

@@ -176,7 +176,8 @@ class _PlanScreen extends State<PlanScreen> {
 
   Future<void> reloadPlan() async {
     try {
-      _plan = await PlanController.select(_year, _type, _type == 'cbt' ? null :_railway_id);
+      _plan = await PlanController.select(
+          _year, _type, _type == 'cbt' ? null : _railway_id);
     } catch (e) {
       _plan = null;
     }
@@ -244,36 +245,36 @@ class _PlanScreen extends State<PlanScreen> {
 
     return Expanded(
         child: new Container(
-        decoration: BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage("assets/images/frameScreen.png"),
-                fit: BoxFit.fill)),
-        child: showLoading
-            ? Text("")
-            : Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: Column(children: [
-                  ListTile(
-                      trailing: menu,
-                      contentPadding: EdgeInsets.all(0),
-                      title: Text(tableName, textAlign: TextAlign.center),
-                      onTap: () {}),
-                  Expanded(
-                      child: ListView(
-                          padding: const EdgeInsets.all(16),
-                          children: [
-                        if (_plan.id != null)
-                          Column(children: [
-                            generateTableData(
-                                context, planItemHeader, planItems)
-                          ])
-                      ])),
-                  /* Container(
+            decoration: BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage("assets/images/frameScreen.png"),
+                    fit: BoxFit.fill)),
+            child: showLoading
+                ? Text("")
+                : Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    child: Column(children: [
+                      ListTile(
+                          trailing: menu,
+                          contentPadding: EdgeInsets.all(0),
+                          title: Text(tableName, textAlign: TextAlign.center),
+                          onTap: () {}),
+                      Expanded(
+                          child: ListView(
+                              padding: const EdgeInsets.all(16),
+                              children: [
+                            if (_plan.id != null)
+                              Column(children: [
+                                generateTableData(
+                                    context, planItemHeader, planItems)
+                              ])
+                          ])),
+                      /* Container(
                       child: MyButton(
                           text: 'test',
                           parentContext: context,
                           onPress: testClicked))*/
-                ]))));
+                    ]))));
   }
 
   Widget generateTableData(BuildContext context,
@@ -603,12 +604,9 @@ class _PlanScreen extends State<PlanScreen> {
     }
     try {
       showLoadingDialog(context);
-      int odooId = await PlanController.selectOdooId(_plan.id);
-      dynamic report = await ReportController.downloadReport(
-          odooId, PlanController.pdfReportXmlId);
+      File file = await _plan.pdfReport;
       hideDialog(context);
-      if (report is File) {
-        File file = report as File;
+      if (file != null) {
         OpenFile.open(file.path);
       }
     } catch (e) {
@@ -629,13 +627,9 @@ class _PlanScreen extends State<PlanScreen> {
 
     try {
       showLoadingDialog(context);
-      int odooId = await PlanController.selectOdooId(_plan.id);
-      dynamic report = await ReportController.downloadReport(
-          odooId, PlanController.xlsReportXmlId);
+      File file = await _plan.xlsReport;
       hideDialog(context);
-      if (report is File) {
-        File file = report as File;
-
+      if (file != null) {
         OpenFile.open(file.path);
       }
     } catch (e) {
