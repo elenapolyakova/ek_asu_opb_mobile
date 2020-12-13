@@ -37,15 +37,15 @@ class ISPDocument extends Models {
 
   factory ISPDocument.fromJson(Map<String, dynamic> json) => new ISPDocument(
         id: json["id"],
-        parent2_id: json["parent2_id"],
+        parent2_id: unpackListId(json["parent2_id"])['id'],
         name: getObj(json["name"]),
-        date: json["date"] == null ? null : DateTime.parse(json["date"]),
+        date: stringToDateTime(json["date"], forceUtc: false),
         number: getObj(json["number"]),
         description: getObj(json["description"]),
         file_name: getObj(json["file_name"]),
         // file_data: getObj(json["file_data"]),
         type: getObj(json["type"]),
-        is_new: (json["is_new"].toString() == 'true'),
+        is_new: json["is_new"].toString() == 'true',
         file_path: getObj(json["file_path"]),
       );
 

@@ -24,7 +24,7 @@ class User extends Models {
       this.email,
       this.phone,
       this.active,
-      this.function, 
+      this.function,
       this.user_role});
 
   User fromJson(Map<String, dynamic> json) {
@@ -33,17 +33,19 @@ class User extends Models {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return new User(
-        id: json["id"],
-        login: json["login"],
-        f_user_role_txt: getStr(json["f_user_role_txt"]),
-        display_name: getStr(json["display_name"]),
-        department_id: getIdFromList(json["department_id"]),
-        railway_id: (json["rel_railway_id"] != null) ? getIdFromList(json["rel_railway_id"]) : json["railway_id"],
-        email: getStr(json["email"]),
-        phone: getStr(json["phone"]),
-        active:  (json["active"].toString() == 'true'),
-        function: getStr(json["function"]),
-        user_role: getStr(json["user_role"]),);
+      id: json["id"],
+      login: getStr(json["login"]),
+      f_user_role_txt: getStr(json["f_user_role_txt"]),
+      display_name: getStr(json["display_name"]),
+      department_id: getIdFromList(json["department_id"]),
+      railway_id: unpackListId(json["rel_railway_id"])['id'] ??
+          unpackListId(json["railway_id"])['id'],
+      email: getStr(json["email"]),
+      phone: getStr(json["phone"]),
+      active: json["active"].toString() == 'true',
+      function: getStr(json["function"]),
+      user_role: getStr(json["user_role"]),
+    );
   }
 
   Map<String, dynamic> toJson() {
@@ -56,7 +58,7 @@ class User extends Models {
       'railway_id': railway_id,
       'email': email,
       'phone': phone,
-      'active':  (active == null || !active) ? 'false' : 'true',
+      'active': (active == null || !active) ? 'false' : 'true',
       'function': function,
       'search_field': display_name.trim().toLowerCase(),
       'user_role': user_role
@@ -67,7 +69,7 @@ class User extends Models {
   // each dog when using the print statement.
   @override
   String toString() {
-    return 'user{uid: $id, login: $login, ' +
-        ' f_user_role_txt: $f_user_role_txt, display_name: $display_name, }';
+    return 'user{uid: $id, login: $login, '
+        'f_user_role_txt: $f_user_role_txt, display_name: $display_name, }';
   }
 }

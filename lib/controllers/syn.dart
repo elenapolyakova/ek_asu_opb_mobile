@@ -303,7 +303,7 @@ class SynController extends Controllers {
     if (booleanFields != null && booleanFields.length > 0) {
       // For each boolean field in a record
       booleanFields.forEach((el) {
-        record[el] = record[el] == 'true';
+        record[el] = record[el].toString() == 'true';
       });
     }
 

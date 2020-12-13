@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
+import 'package:ek_asu_opb_mobile/controllers/report.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
 import "package:ek_asu_opb_mobile/controllers/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
@@ -252,5 +255,19 @@ class PlanController extends Controllers {
       res['message'] = 'Error deleting from $_tableName';
     });
     return res;
+  }
+
+  static Future<File> downloadPdfReport(int odooId) async {
+    return ReportController.downloadReport(
+        SynController.localRemoteTableNameMap[_tableName],
+        odooId,
+        pdfReportXmlId);
+  }
+
+  static Future<File> downloadXlsReport(int odooId) async {
+    return ReportController.downloadReport(
+        SynController.localRemoteTableNameMap[_tableName],
+        odooId,
+        xlsReportXmlId);
   }
 }

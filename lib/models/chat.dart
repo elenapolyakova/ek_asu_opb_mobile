@@ -113,7 +113,7 @@ class Chat extends Models {
       name: getObj(json["name"]),
       groupId: unpackListId(json["group_id"])['id'],
       type: getObj(json["type"]),
-      active: json["active"] == 'true',
+      active: json["active"].toString() == 'true',
       lastRead: stringToDateTime(json["last_read"]),
     );
     return res;

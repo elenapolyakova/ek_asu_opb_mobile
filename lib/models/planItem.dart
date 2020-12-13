@@ -30,7 +30,7 @@ class PlanItem extends Models {
   String checkResult;
 
   ///Действует
-  bool active = true;
+  bool active;
 
   ///Варианты вида проверки
   static Map<int, String> checkTypeSelection = {
@@ -82,7 +82,7 @@ class PlanItem extends Models {
     this.period,
     this.responsible,
     this.checkResult,
-    this.active,
+    this.active = true,
   });
 
   factory PlanItem.fromJson(Map<String, dynamic> json) {
@@ -96,7 +96,7 @@ class PlanItem extends Models {
       period: getObj(json["period"]),
       responsible: getObj(json["responsible"]),
       checkResult: getObj(json["check_result"]),
-      active: json["active"] == 'true',
+      active: json["active"].toString() == 'true',
     );
     return res;
   }

@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:ek_asu_opb_mobile/controllers/checkPlan.dart';
 import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import 'package:ek_asu_opb_mobile/controllers/planItem.dart';
@@ -51,7 +54,7 @@ class CheckPlan extends Models {
   String numSet;
 
   ///Действует
-  bool active = true;
+  bool active;
 
   ///Id комиссии
   int mainComGroupId;
@@ -120,6 +123,16 @@ class CheckPlan extends Models {
     return _parent;
   }
 
+  Future<File> get pdfReport {
+    if (odooId == null) return null;
+    return CheckPlanController.downloadPdfReport(odooId);
+  }
+
+  Future<File> get xlsReport {
+    if (odooId == null) return null;
+    return CheckPlanController.downloadXlsReport(odooId);
+  }
+
   CheckPlan({
     this.id,
     this.odooId,
@@ -135,7 +148,7 @@ class CheckPlan extends Models {
     this.appName,
     this.appPost,
     this.numSet,
-    this.active,
+    this.active = true,
   });
 
   factory CheckPlan.fromJson(Map<String, dynamic> json) {
@@ -154,7 +167,7 @@ class CheckPlan extends Models {
       appName: getObj(json["app_name"]),
       appPost: getObj(json["app_post"]),
       numSet: getObj(json["num_set"]),
-      active: json["active"] == 'true',
+      active: json["active"].toString() == 'true',
     );
     return res;
   }

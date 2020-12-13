@@ -61,11 +61,10 @@ class Department extends Models {
       id: json["id"],
       name: getStr(json["name"]),
       short_name: getStr(json["short_name"]),
-      railway_id: json["rel_railway_id"] != null
-          ? getIdFromList(json["rel_railway_id"])
-          : json["railway_id"],
-      parent_id: getIdFromList(json["parent_id"]),
-      active: (json["active"].toString() == 'true'),
+      railway_id: unpackListId(json["rel_railway_id"])['id'] ??
+          unpackListId(json["railway_id"])['id'],
+      parent_id: unpackListId(json["parent_id"])['id'],
+      active: json["active"].toString() == 'true',
       f_inn: getObj(json["f_inn"]),
       f_ogrn: getObj(json["f_ogrn"]),
       f_okpo: getObj(json["f_okpo"]),
@@ -76,12 +75,8 @@ class Department extends Models {
       deputy_fio: getObj(json["deputy_fio"]),
       deputy_email: getObj(json["deputy_email"]),
       deputy_phone: getObj(json["deputy_phone"]),
-      rel_sector_id: json["rel_sector_id"] is List
-          ? getObj(json["rel_sector_id"][0])
-          : null,
-      rel_sector_name: json["rel_sector_id"] is List
-          ? getObj(json["rel_sector_id"][1])
-          : null,
+      rel_sector_id: unpackListId(json["rel_sector_id"])['id'],
+      rel_sector_name: unpackListId(json["rel_sector_id"])['name'],
       f_coord_e: getObj(json["f_coord_e"]),
       f_coord_n: getObj(json["f_coord_n"]));
 
