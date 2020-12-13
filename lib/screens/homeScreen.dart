@@ -237,6 +237,7 @@ class _HomeScreen extends State<HomeScreen> {
 
         Navigator.pop(context, true);
         _storage.write(key: 'isHomePinDialogShow', value: 'false');
+        await SynController.syncTask();
       }
     }
   }
@@ -392,11 +393,14 @@ class _HomeScreen extends State<HomeScreen> {
                                         width: width, disabled: true),
                                     MyTile('Внеплановые проверки', () {},
                                         width: width, disabled: true),
-                                    MyTile('Последняя проверка', () {
-                                      Navigator.pushNamed(
-                                          context, '/checkItem');
-                                    }, width: width,
-                                    disabled: _checkPlanId == null,
+                                    MyTile(
+                                      'Последняя проверка',
+                                      () {
+                                        Navigator.pushNamed(
+                                            context, '/checkItem');
+                                      },
+                                      width: width,
+                                      disabled: _checkPlanId == null,
                                     ),
                                   ],
                                 ),
