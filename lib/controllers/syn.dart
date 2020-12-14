@@ -10,6 +10,7 @@ import 'package:ek_asu_opb_mobile/controllers/fault.dart';
 import 'package:ek_asu_opb_mobile/controllers/faultFix.dart';
 import 'package:ek_asu_opb_mobile/controllers/faultFixItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/faultItem.dart';
+import 'package:ek_asu_opb_mobile/main.dart';
 import "package:ek_asu_opb_mobile/models/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 import 'package:ek_asu_opb_mobile/src/fileStorage.dart';
@@ -212,6 +213,7 @@ class SynController extends Controllers {
   static Future loadFromOdoo({
     bool forceFirstLoad = false,
   }) async {
+    syncStatus = SYNC_STATUS.IN_PROGRESS;
     if (forceFirstLoad) {
       await removeLastSyncDate(_tableName);
       print('removed last sync date');
@@ -235,6 +237,7 @@ class SynController extends Controllers {
         await FaultItemController.firstLoadFromOdoo(true);
         await FaultFixController.firstLoadFromOdoo(true);
         await FaultFixItemController.firstLoadFromOdoo(true);
+        syncStatus = SYNC_STATUS.SUCCESS;
       });
 
       await CheckPlanController.firstLoadFromOdoo(true);
@@ -261,6 +264,7 @@ class SynController extends Controllers {
         await FaultItemController.loadChangesFromOdoo(true);
         await FaultFixController.loadChangesFromOdoo(true);
         await FaultFixItemController.loadChangesFromOdoo(true);
+        syncStatus = SYNC_STATUS.SUCCESS;
       });
 
       await CheckPlanController.loadChangesFromOdoo(true);
@@ -530,6 +534,7 @@ class SynController extends Controllers {
         await Future.delayed(Duration(seconds: 12));
       }
       Map lastUploadedTableRecordId = {};
+      syncStatus = SYNC_STATUS.IN_PROGRESS;
       while (true) {
         // Load a syn record
         List<Map<String, dynamic>> toSyn = await DBProvider.db.select(
@@ -542,6 +547,7 @@ class SynController extends Controllers {
           //Синхронизация завершена
           //TODO: вывести уведомление
           print('Finished synchronization');
+          syncStatus = SYNC_STATUS.SUCCESS;
           DBProvider.db.insert(
               'log', {'date': nowStr(), 'message': "Finished synchronization"});
           return true;
