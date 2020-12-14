@@ -415,7 +415,7 @@ class _HomeScreen extends State<HomeScreen> {
                       Expanded(
                           child: Container(
                               child: Image(
-                                  image: AssetImage("assets/images/tree.png"),
+                                  image: AssetImage("assets/images/tree_1.png"),
                                   fit: BoxFit.fitHeight)))
                     ],
                   )),
