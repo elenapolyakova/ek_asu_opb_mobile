@@ -215,7 +215,7 @@ class _CommissionScreen extends State<CommissionScreen> {
           orElse: () => null);
 
       if (commision != null) {
-        Chat chat = new Chat(id: null, active: true);
+        Chat chat = new Chat(id: null, active: true, groupId: commision.id);
         try {
           chat = await commision?.chat;
         } catch (e) {}
@@ -226,7 +226,7 @@ class _CommissionScreen extends State<CommissionScreen> {
       // groups.remove(commision);
       for (var i = 0; i < groups.length; i++)
         if (!groups[i].isMain) {
-          Chat chat = new Chat(id: null, active: true);
+          Chat chat = new Chat(id: null, active: true, groupId: groups[i].id);
           try {
             chat = await groups[i]?.chat;
           } catch (e) {}
@@ -533,7 +533,7 @@ class _CommissionScreen extends State<CommissionScreen> {
             active: _commision.group.active,
             headId: _commision.group.headId),
         [],
-        _commision.chat);
+        Chat.fromJson(_commision.chat.toJson()));
     _commision.members.forEach((member) {
       commissionCopy.members.add(Member(
           User(
@@ -587,7 +587,7 @@ class _CommissionScreen extends State<CommissionScreen> {
             active: group.group.active,
             headId: group.group.headId),
         [],
-        group.chat);
+        Chat.fromJson(group.chat.toJson()));
     group.members.forEach((member) {
       groupCopy.members.add(Member(
           User(
@@ -696,7 +696,7 @@ class _CommissionScreen extends State<CommissionScreen> {
                                 FormTitle('Формирование группы'),
                                 TextIcon(
                                   iconSize: 50,
-                                  
+
                                   icon: isChatActive
                                       ? Icons.toggle_on
                                       : Icons.toggle_off,
@@ -706,13 +706,14 @@ class _CommissionScreen extends State<CommissionScreen> {
                                   onTap: () {
                                     setState(() {
                                       isChatActive = !isChatActive;
-                                      if (isChatActive == true)
+                                      group.chat.active = isChatActive;
+                                      /* if (isChatActive == true)
                                         group.chat.setActive();
                                       else
-                                        group.chat.setInactive();
+                                        group.chat.setInactive();*/
                                     });
                                   },
-                                  color:isChatActive
+                                  color: isChatActive
                                       ? Theme.of(context).primaryColorDark
                                       : Theme.of(context)
                                           .primaryColorDark
@@ -915,10 +916,12 @@ class _CommissionScreen extends State<CommissionScreen> {
                           onTap: () {
                             setState(() {
                               isChatActive = !isChatActive;
-                              if (isChatActive)
+                              commission.chat.active = isChatActive;
+
+                              /*if (isChatActive)
                                 commission.chat.setActive();
                               else
-                                commission.chat.setInactive();
+                                commission.chat.setInactive();*/
                             });
                           },
                           color: isChatActive
@@ -1145,52 +1148,84 @@ class _CommissionScreen extends State<CommissionScreen> {
   Future<void> submitGroup(MyGroup group, setState) async {
     final form = formGroupKey.currentState;
     hideKeyboard();
-    if (form.validate()) {
-      form.save();
-      bool hasErorr = false;
-      Map<String, dynamic> result;
 
-      Map<String, dynamic> data = makeHeadAndUids(group);
-      group.group = data['comGroup'];
+    bool hasErorr = false;
+    Map<String, dynamic> result;
 
-      try {
-        if (group.group.id == null) {
-          result =
-              await ComGroupController.insert(data['comGroup'], data['ids']);
-        } else {
-          result =
-              await ComGroupController.update(data['comGroup'], data['ids']);
-        }
-        hasErorr = result["code"] < 0;
+    Map<String, dynamic> data = makeHeadAndUids(group);
+    group.group = data['comGroup'];
 
-        if (hasErorr) {
-          Navigator.pop<bool>(context, false);
-          Scaffold.of(context).showSnackBar(errorSnackBar());
-        } else {
-          if (group.group.id == null) {
-            group.group.id = result["id"];
-            setState(() {
-              _groups.add(group);
-            });
-          } else {
-            setState(() {
-              int index =
-                  _groups.indexWhere((item) => item.group.id == group.group.id);
-              _groups[index] = group;
-            });
-          }
+    try {
+      if (group.group.id == null) {
+        result = await ComGroupController.insert(data['comGroup'], data['ids']);
+      } else {
+        result = await ComGroupController.update(data['comGroup'], data['ids']);
+      }
+      hasErorr = result["code"] < 0;
 
-          Navigator.pop<bool>(context, true);
-          Scaffold.of(context).showSnackBar(successSnackBar);
-        }
-      } catch (e) {
+      if (hasErorr) {
         Navigator.pop<bool>(context, false);
         Scaffold.of(context).showSnackBar(errorSnackBar());
+      } else {
+        if (group.group.id == null) {
+          group.group.id = result["id"];
+          group.chat.groupId = result["id"];
+        }
+        bool hasChatErorr = false;
+        Map<String, dynamic> resultChat;
+
+        try {
+          if (group.chat.id == null) {
+            resultChat = await ChatController.insert(group.chat);
+          } else {
+            if (group.chat.active)
+              resultChat = await group.chat.setActive();
+            else
+              resultChat = await group.chat.setInactive();
+          }
+          hasChatErorr = resultChat["code"] < 0;
+
+          if (hasChatErorr) {
+            Navigator.pop<bool>(context, false);
+            Scaffold.of(context).showSnackBar(
+                errorSnackBar(text: 'Ошибка при создании чата группы'));
+            return;
+          } else {
+            if (group.chat.id == null) group.chat.id = resultChat["id"];
+
+            group.chat = await group.group.chat;
+
+            if (group.group.id == null) {
+              setState(() {
+                _groups.add(group);
+              });
+            } else {
+              setState(() {
+                int index = _groups
+                    .indexWhere((item) => item.group.id == group.group.id);
+                _groups[index] = group;
+              });
+            }
+          }
+        } catch (e) {
+          Navigator.pop<bool>(context, false);
+          Scaffold.of(context).showSnackBar(
+              errorSnackBar(text: 'Ошибка при создании чата группы'));
+          return;
+        }
+
+        Navigator.pop<bool>(context, true);
+        Scaffold.of(context).showSnackBar(successSnackBar);
       }
+    } catch (e) {
+      Navigator.pop<bool>(context, false);
+      Scaffold.of(context).showSnackBar(errorSnackBar());
     }
   }
 
   Future<void> submitCommission(MyGroup commission, setState) async {
+    hideKeyboard();
+
     bool hasErorr = false;
     Map<String, dynamic> result;
 
@@ -1210,12 +1245,48 @@ class _CommissionScreen extends State<CommissionScreen> {
         Navigator.pop<bool>(context, false);
         Scaffold.of(context).showSnackBar(errorSnackBar());
       } else {
-        if (commission.group.id == null) commission.group.id = result["id"];
-        setState(() {
-          _commision = commission;
-          commissionName =
-              getMemberName(commission.members, commission.group.isMain);
-        });
+        if (commission.group.id == null) {
+          commission.group.id = result["id"];
+          commission.chat.groupId = result["id"];
+        }
+
+        bool hasChatErorr = false;
+        Map<String, dynamic> resultChat;
+
+        try {
+          if (commission.chat.id == null) {
+            resultChat = await ChatController.insert(commission.chat);
+          } else {
+            if (commission.chat.active)
+              resultChat = await commission.chat.setActive();
+            else
+              resultChat = await commission.chat.setInactive();
+          }
+          hasChatErorr = resultChat["code"] < 0;
+
+          if (hasChatErorr) {
+            Navigator.pop<bool>(context, false);
+            Scaffold.of(context).showSnackBar(
+                errorSnackBar(text: 'Ошибка при создании чата комиссии'));
+            return;
+          } else {
+            if (commission.chat.id == null)
+              commission.chat.id = resultChat["id"];
+
+            commission.chat = await commission.group.chat;
+
+            setState(() {
+              _commision = commission;
+              commissionName =
+                  getMemberName(commission.members, commission.group.isMain);
+            });
+          }
+        } catch (e) {
+          Navigator.pop<bool>(context, false);
+          Scaffold.of(context).showSnackBar(
+              errorSnackBar(text: 'Ошибка при создании чата комиссии'));
+          return;
+        }
 
         Navigator.pop<bool>(context, true);
         Scaffold.of(context).showSnackBar(successSnackBar);

@@ -309,13 +309,13 @@ class _HomeScreen extends State<HomeScreen> {
                     stop: widget.stop,
                     syncTask: syncTask)),
             body: Container(
-                color: Colors.white,
+                padding: EdgeInsets.only(left: 40, top: 10),
+                //color: Colors.white,
                 child: Column(children: [
                   Expanded(
                       child: Row(
                     children: [
                       Container(
-                          padding: EdgeInsets.only(left: 40, top: 10),
                           width: width,
                           child: Column(
                             // mainAxisAlignment:
@@ -344,33 +344,38 @@ class _HomeScreen extends State<HomeScreen> {
                                           parentContext: context,
                                         ),
                                       ),
-                                      (isUserCbt()) ?
-                                        Expanded(
-                                          flex: 3,
-                                          child: Container(
-                                            padding: EdgeInsets.only(left: 10),
-                                            child:  MyDropdown(
-                                              text: 'Дорога',
-                                              width: 300,
+                                      (isUserCbt())
+                                          ? Expanded(
+                                              flex: 3,
+                                              child: Container(
+                                                padding:
+                                                    EdgeInsets.only(left: 10),
+                                                child: MyDropdown(
+                                                  text: 'Дорога',
+                                                  width: 300,
 
-                                              dropdownValue: _railway_id != null
-                                                  ? _railway_id.toString()
-                                                  : null, //"0",
-                                              items: railwayList,
-                                              onChange: (value) async {
-                                                setState(() {
-                                                  _railway_id =
-                                                      int.parse(value);
+                                                  dropdownValue: _railway_id !=
+                                                          null
+                                                      ? _railway_id.toString()
+                                                      : null, //"0",
+                                                  items: railwayList,
+                                                  onChange: (value) async {
+                                                    setState(() {
+                                                      _railway_id =
+                                                          int.parse(value);
 
-                                                  //  reloadPlan();
-                                                });
-                                                await auth
-                                                    .setRailway(_railway_id);
-                                              },
-                                              parentContext: context,
-                                            ) ,
-                                          ),
-                                        ) : Expanded (child: Text(''),),
+                                                      //  reloadPlan();
+                                                    });
+                                                    await auth.setRailway(
+                                                        _railway_id);
+                                                  },
+                                                  parentContext: context,
+                                                ),
+                                              ),
+                                            )
+                                          : Expanded(
+                                              child: Text(''),
+                                            ),
                                     ],
                                   )),
                               Expanded(
@@ -408,10 +413,10 @@ class _HomeScreen extends State<HomeScreen> {
                             ],
                           )),
                       Expanded(
-                          child: Center(
+                          child: Container(
                               child: Image(
-                                  image: AssetImage("assets/images/tree2.jpg"),
-                                  fit: BoxFit.fill)))
+                                  image: AssetImage("assets/images/tree.png"),
+                                  fit: BoxFit.fitHeight)))
                     ],
                   )),
                   Container(
