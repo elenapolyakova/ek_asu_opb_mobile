@@ -15,14 +15,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 
-SYNC_STATUS syncStatus  = SYNC_STATUS.INIT;
+SYNC_STATUS syncStatus = SYNC_STATUS.INIT;
 
-enum SYNC_STATUS {
- INIT,
- IN_PROGRESS,
- SUCCESS,
- ERROR
-}
+enum SYNC_STATUS { INIT, IN_PROGRESS, SUCCESS, ERROR }
 
 void callbackDispatcher() {
   WM.Workmanager.executeTask((task, inputData) async {
