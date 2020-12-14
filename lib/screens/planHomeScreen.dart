@@ -24,7 +24,7 @@ class _PlanHomeScreen extends State<PlanHomeScreen> {
   bool showLoading = true;
   final sizeTextBlack = TextStyle(fontSize: 17.0, color: Color(0xFF252A0E));
   Map<String, dynamic> planItem;
-  Map<String, dynamic> argumrnts;
+  Map<String, dynamic> arguments;
   String errorText;
   bool isSyncData = false;
 
@@ -34,6 +34,10 @@ class _PlanHomeScreen extends State<PlanHomeScreen> {
 
   List<dynamic> logRows = []; // = ['test', 'test2'];
 
+  int getIndexByName(String name) {
+    return _navigationMenu.indexWhere((menuItem) => menuItem['key'] == name);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -42,11 +46,12 @@ class _PlanHomeScreen extends State<PlanHomeScreen> {
       _userInfo = userInfo;
       _navigationMenu = getNavigationMenu(userInfo.f_user_role_txt);
       setState(() {
-        argumrnts = ModalRoute.of(context).settings.arguments;
-        if (argumrnts != null) {
-          if (argumrnts["type"] == 'cbt')
+        arguments = ModalRoute.of(context).settings.arguments;
+        if (arguments != null) {
+          _selectedIndex = getIndexByName(arguments["type"]);
+          /*if (arguments["type"] == 'cbt')
             _selectedIndex = 0;
-          else if (argumrnts["type"] == 'ncop') _selectedIndex = 1;
+          else if (arguments["type"] == 'ncop') _selectedIndex = 1;*/
         }
       });
 
@@ -140,7 +145,9 @@ class _PlanHomeScreen extends State<PlanHomeScreen> {
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Color(0xFF252A0E))))
             ]),
-            bottomNavigationBar: BottomNavigationBar(
+            bottomNavigationBar: 
+             (_navigationMenu.length > 1) ? 
+            BottomNavigationBar(
                 type: BottomNavigationBarType.fixed,
                 backgroundColor: Theme.of(context).bottomAppBarColor,
                 selectedItemColor: Theme.of(context).primaryColorDark,
@@ -160,7 +167,8 @@ class _PlanHomeScreen extends State<PlanHomeScreen> {
                         _navigationMenu.length,
                         (i) => BottomNavigationBarItem(
                             label: _navigationMenu[i]["label"],
-                            icon: _navigationMenu[i]["icon"]))),
+                            icon: _navigationMenu[i]["icon"])))
+                            : null,
           );
   }
 }

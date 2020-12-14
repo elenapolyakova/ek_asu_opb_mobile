@@ -344,12 +344,12 @@ class _HomeScreen extends State<HomeScreen> {
                                           parentContext: context,
                                         ),
                                       ),
-                                      if (isUserCbt())
+                                      (isUserCbt()) ?
                                         Expanded(
                                           flex: 3,
                                           child: Container(
                                             padding: EdgeInsets.only(left: 10),
-                                            child: MyDropdown(
+                                            child:  MyDropdown(
                                               text: 'Дорога',
                                               width: 300,
 
@@ -368,9 +368,9 @@ class _HomeScreen extends State<HomeScreen> {
                                                     .setRailway(_railway_id);
                                               },
                                               parentContext: context,
-                                            ),
+                                            ) ,
                                           ),
-                                        ),
+                                        ) : Expanded (child: Text(''),),
                                     ],
                                   )),
                               Expanded(
