@@ -399,7 +399,7 @@ class _HomeScreen extends State<HomeScreen> {
                                     MyTile('Внеплановые проверки', () {},
                                         width: width, disabled: true),
                                     MyTile(
-                                      'Последняя проверка',
+                                      'Текущая проверка',
                                       () {
                                         Navigator.pushNamed(
                                             context, '/checkItem');

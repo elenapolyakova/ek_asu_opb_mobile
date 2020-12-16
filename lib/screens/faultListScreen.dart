@@ -70,7 +70,12 @@ class _FaultListScreen extends State<FaultListScreen> {
       'title': 'Перейти к устранению',
       'icon': Icons.assignment_turned_in,
       'key': 'fix'
-    }
+    },
+    /* {
+      'title': 'Перейти к расчету вреда',
+      'icon': Icons.calculate,
+      'key': 'harm'
+    }*/
   ];
 
   Future<String> getFineName(int koapId) async {
