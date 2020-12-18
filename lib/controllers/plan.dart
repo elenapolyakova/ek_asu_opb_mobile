@@ -1,11 +1,16 @@
+import 'dart:io';
+
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
+import 'package:ek_asu_opb_mobile/controllers/report.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
 import "package:ek_asu_opb_mobile/controllers/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class PlanController extends Controllers {
-  static String _tableName = "plan";
+  static const String _tableName = "plan";
+  static const String xlsReportXmlId = 'report_mob_main_plan_xls';
+  static const String pdfReportXmlId = 'report_mob_main_plan_pdf';
 
   static Future<List<int>> selectIDs() async {
     List<Map<String, dynamic>> maps =
@@ -47,7 +52,7 @@ class PlanController extends Controllers {
       domain = [];
       await DBProvider.db.deleteAll(_tableName);
     } else {
-      domain = await getLastSyncDateDomain(_tableName, excludeActive: true);
+      domain = await getLastSyncDateDomain(_tableName);
     }
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
@@ -90,10 +95,6 @@ class PlanController extends Controllers {
     });
     print('loaded ${json.length} unrelated records of $_tableName');
     await setLatestWriteDate(_tableName, json);
-  }
-
-  static Future finishSync(dateTime) {
-    return setLastSyncDateForDomain(_tableName, dateTime);
   }
 
   /// Select the first record matching passed year, type and railwayId.
@@ -254,5 +255,19 @@ class PlanController extends Controllers {
       res['message'] = 'Error deleting from $_tableName';
     });
     return res;
+  }
+
+  static Future<File> downloadPdfReport(int odooId) async {
+    return ReportController.downloadReport(
+        SynController.localRemoteTableNameMap[_tableName],
+        odooId,
+        pdfReportXmlId);
+  }
+
+  static Future<File> downloadXlsReport(int odooId) async {
+    return ReportController.downloadReport(
+        SynController.localRemoteTableNameMap[_tableName],
+        odooId,
+        xlsReportXmlId);
   }
 }

@@ -6,7 +6,7 @@ import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class ChatMessageController extends Controllers {
-  static String _tableName = "chat_message";
+  static const String _tableName = "chat_message";
 
   static Future<List<int>> selectIDs() async {
     List<Map<String, dynamic>> maps =
@@ -23,15 +23,17 @@ class ChatMessageController extends Controllers {
     if (chat == null) return null;
     List queryRes = await DBProvider.db.select(
       _tableName,
-      columns: ['id'],
+      columns: ['id'] + (lastRead == null ? [] : ['create_date']),
       where: 'parent_id = ? and create_uid != ?',
       whereArgs: [chat, userId],
     );
     if (lastRead != null) {
-      queryRes = queryRes
-          .where((element) =>
-              stringToDateTime(element['create_date']).isAfter(lastRead))
-          .toList();
+      queryRes = queryRes.where((element) {
+        if (element['create_date'] != null) {
+          return stringToDateTime(element['create_date']).isAfter(lastRead);
+        } else
+          return true;
+      }).toList();
     }
     return queryRes.length;
   }
@@ -108,7 +110,7 @@ class ChatMessageController extends Controllers {
       'context': {'create_or_update': true}
     });
     await Future.forEach(json, (e) async {
-      int chatMessageId = (await selectByOdooId(e['id']))?.id;
+      ChatMessage chatMessage = await selectByOdooId(e['id']);
       int parentId = (await ChatController.selectByOdooId(
               unpackListId(e['parent_id'])['id']))
           ?.id;
@@ -117,8 +119,8 @@ class ChatMessageController extends Controllers {
         'odoo_id': e['id'],
         'parent_id': parentId,
       };
-      if (chatMessageId != null) {
-        res['id'] = chatMessageId;
+      if (chatMessage?.id != null) {
+        res['id'] = chatMessage.id;
         await DBProvider.db
             .update(_tableName, ChatMessage.fromJson(res).toJson());
       } else {

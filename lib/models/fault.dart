@@ -1,3 +1,4 @@
+import 'package:ek_asu_opb_mobile/controllers/faultFix.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
@@ -40,24 +41,27 @@ class Fault extends Models {
     this.plan_fix_date,
   });
 
+  Future<DateTime> get getLastFixDate async {
+    if (id != null) {
+      return FaultFixController.getMaxFixDate(id);
+    }
+    return null;
+  }
+
   factory Fault.fromJson(Map<String, dynamic> json) => new Fault(
         id: json["id"],
         odoo_id: json["odoo_id"],
-        parent_id: json["parent_id"],
+        parent_id: unpackListId(json["parent_id"])['id'],
         name: getObj(json["name"]),
         desc: getObj(json["desc"]),
         fine: getObj(json["fine"]),
         fine_desc: getObj(json["fine_desc"]),
         koap_id: getObj(json["koap_id"]),
-        date: json["date"] == null ? null : DateTime.parse(json["date"]),
-        date_done: json["date_done"] == null
-            ? null
-            : DateTime.parse(json["date_done"]),
+        date: stringToDateTime(json["date"], forceUtc: false),
+        date_done: stringToDateTime(json["date_done"], forceUtc: false),
         desc_done: getObj(json["desc_done"]),
-        active: (json["active"].toString() == 'true'),
-        plan_fix_date: json["plan_fix_date"] == null
-            ? null
-            : DateTime.parse(json["plan_fix_date"]),
+        active: json["active"].toString() == 'true',
+        plan_fix_date: stringToDateTime(json["plan_fix_date"], forceUtc: false),
       );
 
   Map<String, dynamic> toJson([omitId = false]) {

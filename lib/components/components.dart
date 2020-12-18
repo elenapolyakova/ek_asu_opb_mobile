@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
-import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
-import 'package:ek_asu_opb_mobile/controllers/syn.dart';
-import 'package:ek_asu_opb_mobile/src/exchangeData.dart';
+import 'package:ek_asu_opb_mobile/main.dart';
+import 'package:ek_asu_opb_mobile/controllers/report.dart';
 import 'package:ek_asu_opb_mobile/src/messenger.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
@@ -18,6 +17,7 @@ import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 import 'package:ek_asu_opb_mobile/models/department.dart' as dep;
 export 'search/search.dart';
 import 'package:flutter_treeview/tree_view.dart';
+import 'package:package_info/package_info.dart';
 
 class TextIcon extends StatefulWidget {
   IconData icon;
@@ -60,6 +60,95 @@ class _TextIcon extends State<TextIcon> {
                     TextStyle(color: widget.color, fontSize: widget.fontSize),
               )
             ])));
+  }
+}
+
+class SyncIcon extends StatefulWidget {
+  Function onTap;
+  Color color;
+  double margin;
+  double fontSize;
+  double iconSize;
+  SYNC_STATUS status;
+
+  SyncIcon(
+      {this.onTap,
+      this.color,
+      this.margin = 13.0,
+      this.status = SYNC_STATUS.INIT});
+  @override
+  State<SyncIcon> createState() => _SyncIcon();
+}
+
+class _SyncIcon extends State<SyncIcon> {
+  @override
+  Widget build(BuildContext context) {
+    //IconData icon =IconData(Icon)
+    Color color = Colors.transparent;
+    IconData icon;
+
+    switch (widget.status) {
+      case SYNC_STATUS.INIT:
+        color = Colors.transparent;
+        icon = null;
+        break;
+      case SYNC_STATUS.IN_PROGRESS:
+        color = Colors.yellow[300]; //.withOpacity(.6);
+        icon = Icons.hourglass_bottom;
+        break;
+      case SYNC_STATUS.ERROR:
+        color = Colors.redAccent; //.withOpacity(.6);
+        icon = Icons.close;
+        break;
+      case SYNC_STATUS.SUCCESS:
+        color =
+            Theme.of(context).primaryColor; //Colors.green;//.withOpacity(.6);
+        icon = Icons.done;
+        break;
+    }
+
+    return Container(
+      // width: 30,
+      //  height: 30,
+      child: Stack(
+        children: [
+          TextIcon(
+              icon: Icons.cached,
+              text: 'Синхронизация',
+              onTap: widget.onTap,
+              margin: widget.margin,
+              color: widget.color),
+          if (icon != null)
+            Container(
+              width: 30,
+              height: 30,
+              alignment: Alignment.bottomRight,
+              margin: EdgeInsets.only(top: 10, left: 20),
+              child: Container(
+                  width: 15,
+                  height: 15,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color:
+                         color,
+                      border: Border.all(
+                          color: Theme.of(context).primaryColorLight.withOpacity(.5),
+                          width: 0.5)),
+                  child: //Text('')
+                  Icon(icon, size: 13, color: Theme.of(context).primaryColorDark, )
+
+                  /*Container(
+                  width: 10,
+                  height: 10,
+                  alignment: Alignment.center,
+                  // margin: EdgeInsets.only(top: 4),
+                  child: Text('')),*/
+                  ),
+            ),
+        ],
+      ),
+    );
   }
 }
 
@@ -146,7 +235,7 @@ class _EditTextField extends State<EditTextField> {
     final color = widget.color ?? Theme.of(widget.context).buttonColor;
     final textStyle = TextStyle(fontSize: 16.0, color: color);
     return Container(
-        margin: EdgeInsets.symmetric(
+        padding: EdgeInsets.symmetric(
           horizontal: widget.margin,
           vertical: widget.margin,
         ),
@@ -159,37 +248,41 @@ class _EditTextField extends State<EditTextField> {
                     textAlign: TextAlign.left, style: textStyle)),
           Container(
               height: widget.height,
+              padding: EdgeInsets.all(0),
+              margin: EdgeInsets.all(0),
               decoration: BoxDecoration(
                 border: Border.all(
                     color: widget.borderColor ?? Colors.white, width: 1.5),
                 borderRadius: BorderRadius.all(Radius.circular(12)),
                 color: widget.backgroundColor ?? Colors.white,
               ),
-              child: ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: widget.height),
-                  child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      child: GestureDetector(
-                          onLongPress: widget.onLongPress,
-                          onTapDown: widget.onTapDown,
-                          onTap: () {
-                            if (!widget.showEditDialog || widget.readOnly)
-                              return;
-                            showEdit(
-                              widget.value,
-                              widget.text,
-                              widget.context,
-                              textInputType: widget.textInputType,
-                              inputFormatters: widget.inputFormatters,
-                              validator: widget.validator ?? (val) => null,
-                            ).then((newValue) => setState(() {
-                                  widget.value = newValue ?? "";
-                                  if (widget.onSaved != null)
-                                    return widget.onSaved(newValue);
-                                }));
-                          },
+              child: GestureDetector(
+                  onLongPress: widget.onLongPress,
+                  onTapDown: widget.onTapDown,
+                  onTap: () {
+                    if (!widget.showEditDialog || widget.readOnly) return;
+                    showEdit(
+                      widget.value,
+                      widget.text,
+                      widget.context,
+                      textInputType: widget.textInputType,
+                      inputFormatters: widget.inputFormatters,
+                      validator: widget.validator ?? (val) => null,
+                    ).then((newValue) => setState(() {
+                          widget.value = newValue ?? "";
+                          if (widget.onSaved != null)
+                            return widget.onSaved(newValue);
+                        }));
+                  },
+                  child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                          maxHeight: widget.height, minHeight: widget.height),
+                      child: SingleChildScrollView(
+                          padding: EdgeInsets.all(0),
+                          scrollDirection: Axis.vertical,
                           child: AbsorbPointer(
                             child: TextFormField(
+                                scrollPadding: EdgeInsets.all(0),
                                 readOnly:
                                     widget.showEditDialog && !widget.readOnly,
                                 keyboardType: widget.textInputType,
@@ -201,16 +294,19 @@ class _EditTextField extends State<EditTextField> {
                                             ? widget.value.toString()
                                             : "")),
                                 decoration: new InputDecoration(
+                                    isCollapsed: true,
                                     border: OutlineInputBorder(
                                         borderSide: BorderSide.none),
-                                    contentPadding: EdgeInsets.all(5.0)),
+                                    contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 5, vertical: 5)),
                                 // initialValue:
                                 //     _value, //widget.value != null ? widget.value.toString() : '',
 
                                 cursorColor: widget.color,
                                 style: textStyle,
                                 onSaved: widget.onSaved,
-                                minLines: widget.maxLines,
+                                minLines: null,
+                                //minLines: widget.maxLines,
                                 maxLines: null // widget.maxLines,
                                 // maxLength: 256,
                                 ),
@@ -289,8 +385,10 @@ class MyButton extends StatelessWidget {
   Function onPress;
   double width;
   double height;
+  double margin;
+  double fontSize;
   bool disabled;
-  final _sizeTextWhite = const TextStyle(fontSize: 20.0, color: Colors.white);
+  var _sizeTextWhite = TextStyle(fontSize: 20, color: Colors.white);
 
   MyButton(
       {this.text,
@@ -298,15 +396,20 @@ class MyButton extends StatelessWidget {
       this.onPress,
       this.width,
       this.height,
-      this.disabled = false});
+      this.disabled = false,
+      this.margin,
+      this.fontSize = 20.0});
   @override
   Widget build(BuildContext) {
+    _sizeTextWhite = TextStyle(fontSize: fontSize, color: Colors.white);
     return Container(
         height: height ?? 40.0,
         width: width ?? 150.0,
         alignment: Alignment.center,
-        padding: new EdgeInsets.all(5.0),
-        margin: new EdgeInsets.all(5.0),
+        padding:
+            new EdgeInsets.symmetric(horizontal: margin ?? 5, vertical: 5.0),
+        margin:
+            new EdgeInsets.symmetric(horizontal: margin ?? 5, vertical: 5.0),
         decoration: new BoxDecoration(
           borderRadius: BorderRadius.all(Radius.circular(10)),
           color: !disabled
@@ -890,6 +993,7 @@ class DepartmentSelect extends StatefulWidget {
   double width;
   double height;
   int maxLine;
+  double margin;
 
   DepartmentSelect(
       {this.text = "",
@@ -899,7 +1003,8 @@ class DepartmentSelect extends StatefulWidget {
       this.onSaved,
       this.width = 300,
       this.height = 60,
-      this.maxLine = 2});
+      this.maxLine = 2,
+      this.margin = 13.0});
   @override
   State<DepartmentSelect> createState() =>
       _DepartmentSelect(department, railwayId);
@@ -933,7 +1038,8 @@ class _DepartmentSelect extends State<DepartmentSelect> {
     final textStyle = TextStyle(fontSize: 16.0, color: color);
 
     return Container(
-        margin: EdgeInsets.symmetric(horizontal: 13, vertical: 13),
+        margin: EdgeInsets.symmetric(
+            horizontal: widget.margin, vertical: widget.margin),
         child: Column(children: <Widget>[
           Container(
               alignment: Alignment.bottomLeft,
@@ -941,13 +1047,65 @@ class _DepartmentSelect extends State<DepartmentSelect> {
               child: Text(widget.text,
                   textAlign: TextAlign.left, style: textStyle)),
           Container(
-            height: widget.height,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.white, width: 1.5),
-              borderRadius: BorderRadius.all(Radius.circular(12)),
-              color: Colors.white,
-            ),
-            child: TextFormField(
+              height: widget.height,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.white, width: 1.5),
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                color: Colors.white,
+              ),
+              child: GestureDetector(
+                  onTap: () {
+                    showDepartmentSelect(_department, _railwayId, widget.text,
+                            widget.context, setState,
+                            onRailwaySelected: onRailwaySelected)
+                        .then((department) {
+                      if (department == null) return;
+                      setState(() {
+                        _department = department ?? null;
+                        return widget.onSaved(_department);
+                      });
+                    });
+                  },
+                  child: ConstrainedBox(
+                      constraints: BoxConstraints(maxHeight: widget.height),
+                      child: SingleChildScrollView(
+                          scrollDirection: Axis.vertical,
+                          child: AbsorbPointer(
+                            child: TextFormField(
+                              readOnly: true,
+                              maxLines: null,
+                              controller: TextEditingController.fromValue(
+                                  TextEditingValue(
+                                      text: _department != null
+                                          ? _department.name
+                                          : '')),
+                              decoration: new InputDecoration(
+                                  isCollapsed: true,
+                                  border: OutlineInputBorder(
+                                      borderSide: BorderSide.none),
+                                  contentPadding: EdgeInsets.all(5.0)),
+                              // initialValue:
+                              //     _value, //widget.value != null ? widget.value.toString() : '',
+                              /* onTap: () {
+                                  showDepartmentSelect(_department, _railwayId,
+                                          widget.text, widget.context, setState,
+                                          onRailwaySelected: onRailwaySelected)
+                                      .then((department) {
+                                    if (department == null) return;
+                                    setState(() {
+                                      _department = department ?? null;
+                                      return widget.onSaved(_department);
+                                    });
+                                  });
+                                },*/
+                              cursorColor:
+                                  Theme.of(widget.context).primaryColorDark,
+                              style: textStyle,
+                              // maxLength: 256,
+                            ),
+                          )))))
+
+          /* TextFormField(
                 readOnly: true,
                 maxLines: widget.maxLine,
                 controller: TextEditingController.fromValue(TextEditingValue(
@@ -973,7 +1131,7 @@ class _DepartmentSelect extends State<DepartmentSelect> {
                 style: textStyle
                 // maxLength: 256,
                 ),
-          )
+          )*/
         ]));
   }
 
@@ -1231,17 +1389,24 @@ class _SearchBox extends State<SearchBox> {
                                                 _selectedId
                                             ? Theme.of(context).primaryColorDark
                                             : null,
-                                        child: Text(
-                                          result[index]["value"] ?? "",
-                                          style: TextStyle(
-                                              color: result[index]
-                                                          ["id"] ==
-                                                      _selectedId
-                                                  ? Theme.of(context)
-                                                      .primaryColorLight
-                                                  : Theme.of(context)
-                                                      .buttonColor),
-                                        )),
+                                        child: result[index]["widget"] != null
+                                            ? (result[index]["id"] ==
+                                                    _selectedId
+                                                ? result[index]
+                                                        ["widgetSelected"] ??
+                                                    result[index]["widget"]
+                                                : result[index]["widget"])
+                                            : Text(
+                                                result[index]["value"] ?? "",
+                                                style: TextStyle(
+                                                    color: result[index]
+                                                                ["id"] ==
+                                                            _selectedId
+                                                        ? Theme.of(context)
+                                                            .primaryColorLight
+                                                        : Theme.of(context)
+                                                            .buttonColor),
+                                              )),
                                   )
                                 ]));
                           }))
@@ -1307,15 +1472,51 @@ class MyRichText extends StatelessWidget {
   }
 }
 
+class MyArticleItem extends StatelessWidget {
+  String title;
+  String value;
+  Color color;
+  Color colorTitle;
+
+  @override
+  MyArticleItem(this.title, this.value, {this.color, this.colorTitle});
+
+  @override
+  Widget build(BuildContext context) {
+    TextStyle textStyleTitle = TextStyle(
+        fontWeight: FontWeight.w800,
+        fontSize: 20,
+        color: colorTitle ?? Theme.of(context).buttonColor);
+
+    TextStyle textStyleValue = TextStyle(
+        fontStyle: FontStyle.normal,
+        // fontStyle: FontStyle.normal,
+        fontSize: 17,
+        color: color ?? Theme.of(context).primaryColorDark);
+
+    return Container(
+        padding: EdgeInsets.all(5),
+        child: RichText(
+          text: TextSpan(
+              text: title,
+              style: textStyleTitle,
+              children: <TextSpan>[
+                TextSpan(text: value, style: textStyleValue)
+              ]),
+        ));
+  }
+}
+
 class MyCheckbox extends StatelessWidget {
   Function(bool) onChanged;
   bool value;
   String text;
-  MyCheckbox(this.value, this.text, this.onChanged);
+  Color color;
+  MyCheckbox(this.value, this.text, this.onChanged, {this.color});
 
   @override
   Widget build(BuildContext context) {
-    Color color = Theme.of(context).primaryColor;
+    Color checkColor = color ?? Theme.of(context).primaryColor;
     TextStyle textStyle =
         TextStyle(fontSize: 16, color: Theme.of(context).primaryColorDark);
     return GestureDetector(
@@ -1324,7 +1525,7 @@ class MyCheckbox extends StatelessWidget {
             Checkbox(
               value: value,
               onChanged: onChanged,
-              checkColor: color,
+              checkColor: checkColor,
             ),
             Text(text, style: textStyle)
           ],
@@ -1343,7 +1544,8 @@ class HomeIcon extends StatelessWidget {
     TextStyle textStyle = TextStyle(fontSize: 16, color: color);
 
     goHome() {
-      Navigator.pushNamed(context, '/home', arguments: {'first': false});
+      Navigator.pushNamed(context, '/home',
+          arguments: {'load': false, 'showPin': false});
     }
 
     return GestureDetector(
@@ -1480,18 +1682,26 @@ class MyAppBar extends StatefulWidget {
 class _MyAppBar extends State<MyAppBar> {
   int _countMessage;
   Timer _messengerTimer;
+  Timer _statusTimer;
+  Duration statusDuration = new Duration(seconds: 3);
   Duration seconds;
   int refreshMessenger;
+  String version = "";
+  SYNC_STATUS curSyncStatus = syncStatus;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     _countMessage = 0;
+    getVersion();
     if (widget.showMessenger != null && !widget.showMessenger) return;
+
     getCountMessages();
 
     createTimer();
+
+    createStatusTimer();
   }
 
   void timerTick() {
@@ -1499,6 +1709,14 @@ class _MyAppBar extends State<MyAppBar> {
 
     getCountMessages();
     createTimer();
+  }
+
+  void getVersion() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+
+    setState(() {
+      version = packageInfo.version;
+    });
   }
 
   void getCountMessages() async {
@@ -1526,9 +1744,29 @@ class _MyAppBar extends State<MyAppBar> {
     _messengerTimer = Timer(seconds, timerTick);
   }
 
+  createStatusTimer() async {
+    if (curSyncStatus != syncStatus)
+      setState(() {
+        curSyncStatus = syncStatus;
+      });
+
+    //syncStatus = SYNC_STATUS.ERROR;
+
+    _statusTimer = Timer(statusDuration, timerStatusTick);
+  }
+
+  timerStatusTick() {
+    if (widget.stop) return;
+
+    createStatusTimer();
+  }
+
   void cancelTimer() {
     if (_messengerTimer != null) _messengerTimer.cancel();
     _messengerTimer = null;
+
+    if (_statusTimer != null) _statusTimer.cancel();
+    _statusTimer = null;
     //setState(() { });
   }
 
@@ -1537,9 +1775,14 @@ class _MyAppBar extends State<MyAppBar> {
     if (widget.showMessenger == null || widget.showMessenger) {
       if (widget.stop)
         cancelTimer();
-      else if (_messengerTimer == null) {
-        getCountMessages();
-        createTimer();
+      else {
+        if (_messengerTimer == null) {
+          getCountMessages();
+          createTimer();
+        }
+        if (_statusTimer == null) {
+          createStatusTimer();
+        }
       }
     }
     //print('for ${widget.parentScreen} stop is ${widget.stop}');
@@ -1580,12 +1823,17 @@ class _MyAppBar extends State<MyAppBar> {
                 Container(
                     child: Center(
                   child: widget.syncTask != null
-                      ? TextIcon(
+                      ? SyncIcon(
+                          onTap: widget.syncTask,
+                          status: curSyncStatus,
+                          margin: 10,
+                          color: Theme.of(context).primaryColorLight)
+                      /*   TextIcon(
                           icon: Icons.cached,
                           text: 'Синхронизировать',
                           onTap: widget.syncTask,
                           margin: 10,
-                          color: Theme.of(context).primaryColorLight)
+                          color: Theme.of(context).primaryColorLight)*/
                       : Text(''),
                 )),
               ]),
@@ -1602,7 +1850,9 @@ class _MyAppBar extends State<MyAppBar> {
                     ),
             ]),
           ),
-          Container(child: Center(child: HomeIcon())),
+          widget.parentScreen != 'homeScreen'
+              ? Container(child: Center(child: HomeIcon()))
+              : Text(''),
           Expanded(
               child: Container(
                   alignment: Alignment.centerRight,
@@ -1619,12 +1869,24 @@ class _MyAppBar extends State<MyAppBar> {
                               : "",
                           margin: 0,
                           onTap: () async {
-                            // ChatController.loadFromOdoo(clean: true);
-                            // ChatMessageController.loadFromOdoo(clean: true);
-                            (await DBProvider.db.selectAll('chat_message'))
+                            // await ChatController.loadFromOdoo(clean: true);
+                            // await ChatMessageController.loadFromOdoo(
+                            //     clean: true);
+                            // await SynController.loadFromOdoo(
+                            //     forceFirstLoad: true);
+                            // print(
+                            //     (await DBProvider.db.selectAll('user')).length);
+                            // await Future.forEach(
+                            //     (await DBProvider.db.select('user',
+                            //         where: "id = 28824")), (el) {
+                            //   print(el);
+                            // });
+                            (await DBProvider.db.select('plan'))
                                 .forEach((element) {
                               print(element);
                             });
+                            /*print((await ReportController.downloadReport(
+                                26, 'report_mob_main_plan_xls')));*/
                           },
                           color: Theme.of(context).primaryColorLight,
                           fontSize: 20,
@@ -1632,6 +1894,10 @@ class _MyAppBar extends State<MyAppBar> {
                         ))
                       ]),
                       Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                        Container(
+                            child: Text('Версия: $version',
+                                style: TextStyle(
+                                    fontSize: 14, color: Color(0x66ADB439)))),
                         Container(
                           child: TextIcon(
                               icon: Icons.exit_to_app,
@@ -1756,7 +2022,7 @@ class MyMessageContainer extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(12)),
-            color: _isMy ? Color(0xAAF465C0B) : Color(0xFFEFF0D7),
+            color: _isMy ? Color(0xAAF465C0B) : Color(0xAAEFF0D7),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1791,5 +2057,256 @@ class MyMessageContainer extends StatelessWidget {
             ))
           : Text(''),
     ]));
+  }
+}
+
+class MyPinDialog extends StatefulWidget {
+  BuildContext context;
+  GlobalKey formKey;
+  Function(String) onSaved;
+  Function onTap;
+  Function pinConfirm;
+  Function getErrorText;
+
+  MyPinDialog(
+      {this.context,
+      this.formKey,
+      this.onSaved,
+      this.onTap,
+      this.pinConfirm,
+      this.getErrorText}) {
+    createState();
+  }
+
+  @override
+  State<MyPinDialog> createState() => _MyPinDialog();
+}
+
+class _MyPinDialog extends State<MyPinDialog> {
+  BuildContext context;
+/*Future<bool> showPinDialog(
+
+    BuildContext context,
+    GlobalKey formKey,
+    Function(String) onSaved,
+    Function onTap,
+    Function pinConfirm,
+    String errorText,
+    StateSetter setState) {*/
+  final _sizeTextWhite = const TextStyle(fontSize: 20.0, color: Colors.white);
+  final _sizeTextBlack =
+      const TextStyle(fontSize: 20.0, color: Color(0xFF252A0E));
+
+  /*return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Color(0x88E6E6E6),
+      builder: (BuildContext context) {*/
+  @override
+  Widget build(BuildContext context) {
+    context = widget.context;
+    return StatefulBuilder(builder: (context, StateSetter setState) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12.0))),
+        title: Text("Введите ПИН-код"),
+        backgroundColor: Theme.of(context).primaryColor,
+        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        content: new Form(
+            key: widget.formKey,
+            child: new Container(
+                height: 150,
+                child: new Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      new Container(
+                        decoration: new BoxDecoration(
+                          border: Border.all(
+                              color: Theme.of(context).primaryColorLight,
+                              width: 1.5),
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                          color: Colors.white,
+                        ),
+                        height: 56,
+                        child: new TextFormField(
+                            decoration: new InputDecoration(
+                              prefixIcon: Icon(Icons.vpn_key,
+                                  color: Theme.of(context).primaryColorLight),
+                              border: OutlineInputBorder(
+                                  borderSide: BorderSide.none),
+                            ),
+                            // inputFormatters: [widget._amountValidator],
+                            inputFormatters: <TextInputFormatter>[
+                              FilteringTextInputFormatter.digitsOnly
+                            ], // Only numbers can be entered
+                            keyboardType:
+                                TextInputType.numberWithOptions(decimal: true),
+                            maxLines: 1,
+                            maxLength: 5,
+                            obscureText: true,
+                            cursorColor: Theme.of(context).cursorColor,
+                            style: _sizeTextBlack,
+                            onSaved: widget.onSaved,
+                            onTap: widget.onTap
+                            /*validator: (val) => val.length < 5
+                                ? "ПИН-код должен состоять из 5 цифр"
+                                : null*/
+                            ),
+                      ),
+                      new Expanded(
+                          child: new Container(
+                              padding: new EdgeInsets.all(5.0),
+                              child: new Text(
+                                widget.getErrorText(),
+                                style: TextStyle(
+                                    color: Colors.redAccent, fontSize: 15),
+                                textAlign: TextAlign.left,
+                              ))),
+                      new Container(
+                        width: 200,
+                        height: 50.0,
+                        margin: new EdgeInsets.only(top: 15.0),
+                        decoration: new BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                          color: Theme.of(context).buttonColor,
+                        ),
+                        child: new MaterialButton(
+                            onPressed: () => widget.pinConfirm(setState),
+                            child: new Text(
+                              "OK",
+                              style: _sizeTextWhite,
+                            )),
+                      )
+                    ]))),
+      );
+    });
+  }
+  //  });
+}
+
+showAlertDialog(BuildContext context) {
+  //}, VoidCallback continueCallBack) {
+  // set up the buttons
+
+  // set up the AlertDialog
+  AlertDialog alert = AlertDialog(
+      backgroundColor: Theme.of(context).primaryColor,
+      title: Text("Вы уверены, что хотите выйти?"),
+      content: SizedBox(
+          height: 100,
+          child: Column(children: [
+            Container(
+              padding: EdgeInsets.all(10),
+              child: Text(
+                  "Все несохраненные данные текущего пользователя будут утеряны"),
+            ),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              MyButton(
+                  text: 'Продолжить',
+                  width: 200,
+                  parentContext: context,
+                  onPress: () {
+                    Navigator.of(context).pop();
+                    LogOut(context);
+                  }),
+              MyButton(
+                  text: 'Отменить',
+                  parentContext: context,
+                  onPress: () {
+                    Navigator.of(context).pop();
+                  })
+            ])
+          ])));
+  // show the dialog
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    barrierColor: Color(0x88E6E6E6),
+    builder: (BuildContext context) {
+      return alert;
+    },
+  );
+}
+
+class CustomToolTip extends PopupMenuEntry<Map<String, dynamic>> {
+  BuildContext context;
+  Widget content;
+  Color color;
+  CustomToolTip({this.context, this.content, this.color});
+
+  @override
+  double height = 1; //100;
+
+  @override
+  bool represents(Map<String, dynamic> n) => false;
+
+  @override
+  State<CustomToolTip> createState() => _CustomToolTip();
+}
+
+class _CustomToolTip extends State<CustomToolTip> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        decoration: BoxDecoration(
+            color: widget.color ?? Theme.of(widget.context).primaryColor,
+            borderRadius: BorderRadius.all(Radius.circular(12.0))),
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [widget.content]));
+  }
+}
+
+class MyTile extends StatelessWidget {
+  String text;
+  Function onTap;
+  Color color;
+  double width;
+  double height;
+  bool disabled;
+
+  MyTile(this.text, this.onTap,
+      {this.color, this.width = 300, this.height = 80, this.disabled = false});
+  @override
+  Widget build(BuildContext context) {
+    TextStyle style = TextStyle(
+      color: color ?? Theme.of(context).primaryColorLight,
+      fontSize: 20,
+    );
+
+    return GestureDetector(
+        onTap: !(disabled) ? onTap : null,
+        child: Container(
+            width: width,
+            height: height,
+            margin: EdgeInsets.symmetric(vertical: 10),
+            child: Stack(children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  disabled
+                      ? "assets/images/app_small_disabled.jpg"
+                      : "assets/images/app_small.jpg",
+                  fit: BoxFit.fill,
+                  height: height,
+                  width: width,
+                ),
+              ),
+              Container(
+                  width: width,
+                  height: height,
+                  color: Colors.transparent,
+                  /*child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: Form(*/
+                  child: Center(
+                      child: Text(
+                    text,
+                    style: style,
+                    textAlign: TextAlign.center,
+                  )))
+              //))
+            ])));
   }
 }

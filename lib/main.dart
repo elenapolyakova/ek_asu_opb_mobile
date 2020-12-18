@@ -11,8 +11,13 @@ import 'package:ek_asu_opb_mobile/screens/screens.dart';
 import 'package:ek_asu_opb_mobile/src/exchangeData.dart' as exchange;
 import 'utils/authenticate.dart' as auth;
 import 'utils/config.dart' as config;
-import 'utils/network.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:ek_asu_opb_mobile/components/components.dart';
+
+SYNC_STATUS syncStatus = SYNC_STATUS.INIT;
+
+enum SYNC_STATUS { INIT, IN_PROGRESS, SUCCESS, ERROR }
 
 void callbackDispatcher() {
   WM.Workmanager.executeTask((task, inputData) async {
@@ -22,6 +27,8 @@ void callbackDispatcher() {
     return false;
   });
 }
+
+final _storage = FlutterSecureStorage();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,6 +70,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
   bool _showErrorPin = false;
   bool _isPinDialogShow = false;
   bool _isTimeExpire = false;
+  bool _showLoading = false;
   final _sizeTextBlack =
       const TextStyle(fontSize: 20.0, color: Color(0xFF252A0E));
   final _sizeTextWhite = const TextStyle(fontSize: 20.0, color: Colors.white);
@@ -81,7 +89,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
         navigatorKey: MyApp.navKey,
         theme: ThemeData(
             primaryColor: Color(0xFFADB439), //салатовый
-            cardColor: Color(0x00ADB439), //салатовый,
+            cardColor: Color(0x00ADB439), //прозрачный,
             accentColor: Color(0xFF465C0B), //оливковый
             primaryColorLight: Color(0xFFEFF0D7), //бежевый
             primaryColorDark: Color(0xFF465C0B), //оливковый
@@ -111,6 +119,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
           // child: CheckScreen(context: context)),
           '/messenger': (context) =>
               RouteAwareWidget('/messenger', context: context),
+          '/plan': (context) => RouteAwareWidget('/plan', context: context), //
           //  child: MessengerScreen(/*context: context*/)),
 
           /* '/planCbt': (context) =>
@@ -137,13 +146,17 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.resumed:
-        if (_lastScreen == '/login' || _isPinDialogShow) return;
-        if (_isTimeExpire) {
-          setState(() {
-            _isTimeExpire = false;
-            showPasswordDialog();
-          });
-        } else if (_pinTimer != null) _pinTimer.cancel();
+        _storage.read(key: 'isHomePinDialogShow').then((_isHomePinDialogShow) {
+          if (_lastScreen == '/login' ||
+              _isPinDialogShow ||
+              _isHomePinDialogShow == 'true') return;
+          if (_isTimeExpire) {
+            setState(() {
+              _isTimeExpire = false;
+              showPasswordDialog();
+            });
+          } else if (_pinTimer != null) _pinTimer.cancel();
+        });
 
         //user returned to our app
         break;
@@ -187,8 +200,9 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
         setState(() {
           _isPinDialogShow = false;
           _showErrorPin = false;
+          //_showLoading = true;
         });
-        try {
+        /* try {
           checkConnection().then((isConnect) {
             if (isConnect) {
               auth.checkSession(context).then((isSessionExist) {
@@ -196,14 +210,21 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
                   exchange
                       .getDictionaries(all: true, isLastUpdate: true)
                       .then((result) {
-                    SynController.loadFromOdoo();
+                    SynController.loadFromOdoo().then((value) {
+                      setState(() {
+                        _showLoading = false;
+                      });
+                      Navigator.pop(context, true);
+                    });
                     //?
                   }); //getDictionary
                 } //isSessionExist = true
               }); //checkSession
             } //isConnect == true
           });
-        } catch (e) {}
+        } catch (e) {
+          Navigator.pop(context, true);
+        }*/
 //checkConnection
         Navigator.pop(context, true);
       }
@@ -283,7 +304,7 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
                                   ))),
                           new Container(
                             width: 200,
-                            height: 50.0,
+                            height: 40.0,
                             margin: new EdgeInsets.only(top: 15.0),
                             decoration: new BoxDecoration(
                               borderRadius:
@@ -291,13 +312,29 @@ class _MyApp extends State<MyApp> with WidgetsBindingObserver {
                               color: Theme.of(context).buttonColor,
                             ),
                             child: new MaterialButton(
-                              onPressed: pinConfirm,
-                              child: new Text(
-                                "OK",
-                                style: _sizeTextWhite,
-                              ),
+                              onPressed: (!_showLoading) ? pinConfirm : null,
+                              child: (!_showLoading)
+                                  ? new Text(
+                                      "OK",
+                                      style: _sizeTextWhite,
+                                    )
+                                  : CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Theme.of(context).primaryColorLight),
+                                    ),
                             ),
-                          )
+                          ),
+                          Container(
+                              padding: EdgeInsets.only(top: 10),
+                              child: GestureDetector(
+                                  onTap: () => showAlertDialog(context),
+                                  child: Text(
+                                    'Войти с помощью логина и пароля',
+                                    style: TextStyle(
+                                        color:
+                                            Theme.of(context).primaryColorDark,
+                                        decoration: TextDecoration.underline),
+                                  )))
                         ]))),
           );
         });
@@ -378,6 +415,10 @@ class _RouteAwareWidget extends State<RouteAwareWidget> with RouteAware {
       case '/ISP':
         return ISPScreen(
             context: context, stop: stop != null ? stop[name] : null);
+      case '/plan':
+        return PlanHomeScreen(
+            context: context, stop: stop != null ? stop[name] : null);
+
       case '/inspection':
         return InspectionScreen(
             context: context, stop: stop != null ? stop[name] : null);

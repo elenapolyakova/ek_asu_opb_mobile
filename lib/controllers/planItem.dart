@@ -6,7 +6,7 @@ import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class PlanItemController extends Controllers {
-  static String _tableName = "plan_item";
+  static const String _tableName = "plan_item";
 
   static Future<List<int>> selectIDs() async {
     List<Map<String, dynamic>> maps =
@@ -59,7 +59,7 @@ class PlanItemController extends Controllers {
       domain = [];
       await DBProvider.db.deleteAll(_tableName);
     } else {
-      domain = await getLastSyncDateDomain(_tableName, excludeActive: true);
+      domain = await getLastSyncDateDomain(_tableName);
     }
     List<dynamic> json = await getDataWithAttemp(
         SynController.localRemoteTableNameMap[_tableName], 'search_read', [
@@ -90,10 +90,6 @@ class PlanItemController extends Controllers {
     });
     print('loaded ${json.length} records of $_tableName');
     await setLatestWriteDate(_tableName, json);
-  }
-
-  static Future finishSync(dateTime) {
-    return setLastSyncDateForDomain(_tableName, dateTime);
   }
 
   /// Select all records with matching parentId

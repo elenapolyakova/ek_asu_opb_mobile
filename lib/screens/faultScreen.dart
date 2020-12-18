@@ -150,7 +150,7 @@ class _FaultScreen extends State<FaultScreen> {
         _fault.id != null ? await FaultItemController.select(_fault.id) : [];
 
     if (_imageList.length > 0) {
-      _image = File(_imageList[0].image);
+      _image = File(_imageList[0].file_data);
       _imageIndex = 0;
     }
   }
@@ -211,7 +211,13 @@ class _FaultScreen extends State<FaultScreen> {
       String fineName = await getFineName(list[i].id);
       result.add({
         'id': list[i].id,
-        'value': '${list[i].text} ' + (fineName != null ? ' ($fineName)' : '')
+        'value': '${list[i].text} ' + (fineName != null ? ' ($fineName)' : ''),
+        'widget':
+            MyArticleItem(fineName != null ? ' $fineName  ' : '', list[i].text),
+        'widgetSelected': MyArticleItem(
+            fineName != null ? ' $fineName  ' : '', list[i].text,
+            color: Theme.of(context).primaryColorLight,
+            colorTitle: Theme.of(context).primaryColor)
       });
     }
     return result;
@@ -258,13 +264,13 @@ class _FaultScreen extends State<FaultScreen> {
           FaultItem faultItems = FaultItem(
               id: null,
               parent_id: _fault.id,
-              image: path,
+              file_data: path,
               active: true,
               coord_e: geoPoint.longitude,
               coord_n: geoPoint.latitude);
           _imageList.insert(i, faultItems);
         }
-        _image = File(_imageList[0].image);
+        _image = File(_imageList[0].file_data);
         _imageIndex = 0;
         setState(() {
           showLoadingImage = false;
@@ -646,17 +652,18 @@ class _FaultScreen extends State<FaultScreen> {
         //   }
 
         if (deletedFile.id == null) {
-          _created.removeWhere((image) => image['path'] == deletedFile.image);
-          //await File(deletedFile.image).delete();
+          _created
+              .removeWhere((image) => image['path'] == deletedFile.file_data);
+          //await File(deletedFile.file_data).delete();
         } //если файл добавили, в бд не сохранили и тут же удалили - не передаём его в _createdPath
 
-        _deletedPath.add(deletedFile.image);
+        _deletedPath.add(deletedFile.file_data);
 
         _imageList.removeAt(index);
         if (index <= _imageIndex && _imageIndex != 0) _imageIndex--;
 
         if (_imageList.length > 0)
-          _image = File(_imageList[_imageIndex].image);
+          _image = File(_imageList[_imageIndex].file_data);
         else
           _image = null;
 
@@ -853,18 +860,58 @@ class _FaultScreen extends State<FaultScreen> {
                                           Expanded(
                                               flex: 1,
                                               child: Container(
-                                                alignment:
-                                                    Alignment.bottomCenter,
-                                                margin:
-                                                    EdgeInsets.only(bottom: 0),
-                                                // EdgeInsets.only(top: 20),
-                                                child: MyButton(
+                                                  alignment:
+                                                      Alignment.bottomCenter,
+                                                  margin: EdgeInsets.only(
+                                                      bottom: 5),
+                                                  // EdgeInsets.only(top: 20),
+                                                  child: new Container(
+                                                    width: 150,
+                                                    height: 40.0,
+                                                    padding:
+                                                        new EdgeInsets.all(0),
+                                                    margin:
+                                                        new EdgeInsets.all(0),
+                                                    decoration:
+                                                        new BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.all(
+                                                              Radius.circular(
+                                                                  10)),
+                                                      color: Theme.of(context)
+                                                          .buttonColor,
+                                                    ),
+                                                    child: new MaterialButton(
+                                                      onPressed: () async {
+                                                        if (!showLoadingImage)
+                                                          return await submitFault();
+                                                      },
+                                                      child: (!showLoadingImage)
+                                                          ? new Text(
+                                                              "принять",
+                                                              style: TextStyle(
+                                                                  fontSize:
+                                                                      17.0,
+                                                                  color: Colors
+                                                                      .white),
+                                                            )
+                                                          : CircularProgressIndicator(
+                                                              valueColor: AlwaysStoppedAnimation<
+                                                                  Color>(Theme.of(
+                                                                      context)
+                                                                  .primaryColorLight),
+                                                            ),
+                                                    ),
+                                                  )
+
+                                                  /*MyButton(
                                                     text: 'принять',
+                                                    fontSize: 17, margin: 0,
                                                     parentContext: context,
                                                     onPress: () async {
                                                       await submitFault();
-                                                    }),
-                                              ))
+                                                    }),*/
+                                                  ))
                                         ]),
                                   ])))),
                   Expanded(
@@ -887,9 +934,9 @@ class _FaultScreen extends State<FaultScreen> {
                                                 CircularProgressIndicator(
                                                   valueColor:
                                                       AlwaysStoppedAnimation<
-                                                          Color>(Theme.of(
-                                                              context)
-                                                          .primaryColorLight),
+                                                              Color>(
+                                                          Theme.of(context)
+                                                              .primaryColor),
                                                 ),
                                               ])
                                         : _image == null
@@ -938,8 +985,8 @@ class _FaultScreen extends State<FaultScreen> {
                                             (i) => GestureDetector(
                                               // onLongPress: () => deleteImage(i),
                                               onTap: () => setState(() {
-                                                _image =
-                                                    File(_imageList[i].image);
+                                                _image = File(
+                                                    _imageList[i].file_data);
                                                 _imageIndex = i;
                                               }),
                                               child: Container(
@@ -960,7 +1007,8 @@ class _FaultScreen extends State<FaultScreen> {
                                                                   horizontal:
                                                                       5),
                                                   child: Image.file(
-                                                    File(_imageList[i].image),
+                                                    File(_imageList[i]
+                                                        .file_data),
                                                     fit: BoxFit.cover,
                                                   )),
                                             ),

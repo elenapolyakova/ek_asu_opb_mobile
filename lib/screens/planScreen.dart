@@ -1,17 +1,19 @@
-
+import 'package:ek_asu_opb_mobile/controllers/report.dart';
 import 'package:ek_asu_opb_mobile/src/exchangeData.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
-import 'package:ek_asu_opb_mobile/controllers/controllers.dart' as controllers;
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:flutter/rendering.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'dart:async';
 import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 import 'package:ek_asu_opb_mobile/src/db.dart';
-
+import 'package:flutter_icons/flutter_icons.dart';
+import 'dart:io';
+import 'package:open_file/open_file.dart';
 
 class PlanScreen extends StatefulWidget {
   String type;
@@ -55,7 +57,6 @@ class _PlanScreen extends State<PlanScreen> {
 
   _PlanScreen(type) {
     _type = type;
-
   }
   final formPlanKey = new GlobalKey<FormState>();
   final formPlanItemKey = new GlobalKey<FormState>();
@@ -127,8 +128,7 @@ class _PlanScreen extends State<PlanScreen> {
     super.initState();
     auth.getUserInfo().then((userInfo) {
       _userInfo = userInfo;
-      _year = DateTime.now().year;
-      _railway_id = _userInfo.railway_id;
+
       saveError = "";
       emptyTableName =
           "ПЛАН\nпроведения комплексных аудитов и целевых проверок организации работы по экологической безопасности"; // на ${_year.toString()} год";
@@ -156,6 +156,10 @@ class _PlanScreen extends State<PlanScreen> {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
+
+      _year = await auth.getYear();
+      _railway_id = await auth.getRailway();
+
       yearList = getYearList(_year);
       railwayList = await getRailwayList();
       stateList = makeListFromJson(Plan.stateSelection);
@@ -172,8 +176,8 @@ class _PlanScreen extends State<PlanScreen> {
 
   Future<void> reloadPlan() async {
     try {
-      _plan =
-          await controllers.PlanController.select(_year, _type, _railway_id);
+      _plan = await PlanController.select(
+          _year, _type, _type == 'cbt' ? null : _railway_id);
     } catch (e) {
       _plan = null;
     }
@@ -213,6 +217,12 @@ class _PlanScreen extends State<PlanScreen> {
           case 'add':
             addPlanItemClicked();
             break;
+          case 'pdf':
+            exportToPdf();
+            return;
+          case 'excel':
+            exportToExcel();
+            return;
         }
       },
       icon: Icon(
@@ -233,37 +243,38 @@ class _PlanScreen extends State<PlanScreen> {
         tableName = '${_plan.name}';
     }
 
-    return new Container(
-        decoration: BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage("assets/images/frameScreen.png"),
-                fit: BoxFit.fitWidth)),
-        child: showLoading
-            ? Text("")
-            : Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: Column(children: [
-                  ListTile(
-                      trailing: menu,
-                      contentPadding: EdgeInsets.all(0),
-                      title: Text(tableName, textAlign: TextAlign.center),
-                      onTap: () {}),
-                  Expanded(
-                      child: ListView(
-                          padding: const EdgeInsets.all(16),
-                          children: [
-                        if (_plan.id != null)
-                          Column(children: [
-                            generateTableData(
-                                context, planItemHeader, planItems)
-                          ])
-                      ])),
-                  /* Container(
+    return Expanded(
+        child: new Container(
+            decoration: BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage("assets/images/frameScreen.png"),
+                    fit: BoxFit.fill)),
+            child: showLoading
+                ? Text("")
+                : Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    child: Column(children: [
+                      ListTile(
+                          trailing: menu,
+                          contentPadding: EdgeInsets.all(0),
+                          title: Text(tableName, textAlign: TextAlign.center),
+                          onTap: () {}),
+                      Expanded(
+                          child: ListView(
+                              padding: const EdgeInsets.all(16),
+                              children: [
+                            if (_plan.id != null)
+                              Column(children: [
+                                generateTableData(
+                                    context, planItemHeader, planItems)
+                              ])
+                          ])),
+                      /* Container(
                       child: MyButton(
                           text: 'test',
                           parentContext: context,
                           onPress: testClicked))*/
-                ])));
+                    ]))));
   }
 
   Widget generateTableData(BuildContext context,
@@ -340,8 +351,8 @@ class _PlanScreen extends State<PlanScreen> {
         child: cell);
   }
 
-  List<PopupMenuItem<String>> getMenu(BuildContext context) {
-    List<PopupMenuItem<String>> result = [];
+  List<PopupMenuEntry<Object>> getMenu(BuildContext context) {
+    List<PopupMenuEntry<Object>> result = [];
     result.add(
       PopupMenuItem<String>(
           child: TextIcon(
@@ -374,11 +385,12 @@ class _PlanScreen extends State<PlanScreen> {
               width: double.infinity,
               dropdownValue: _year.toString(),
               items: yearList,
-              onChange: (value) {
+              onChange: (value) async {
                 setState(() {
                   _year = int.parse(value);
                   reloadPlan();
                 });
+                await auth.setYear(_year);
               },
               parentContext: context,
             ),
@@ -398,11 +410,12 @@ class _PlanScreen extends State<PlanScreen> {
                 dropdownValue:
                     _railway_id != null ? _railway_id.toString() : null, //"0",
                 items: railwayList,
-                onChange: (value) {
+                onChange: (value) async {
                   setState(() {
                     _railway_id = int.parse(value);
                     reloadPlan();
                   });
+                  await auth.setRailway(_railway_id);
                 },
                 parentContext: context,
               ),
@@ -410,6 +423,35 @@ class _PlanScreen extends State<PlanScreen> {
             value: 'railway'),
       );
     }
+
+    result.add(PopupMenuDivider(
+      height: 20,
+    ));
+
+    result.add(
+      PopupMenuItem<String>(
+          child: TextIcon(
+            icon: Icon(FontAwesome5.file_pdf).icon, //Icons.edit,
+            text: "Экспорт в PDF",
+            margin: 5.0,
+            /* onTap: () */
+            color: Theme.of(context).primaryColorDark,
+          ),
+          value: 'pdf'),
+    );
+
+    result.add(
+      PopupMenuItem<String>(
+          child: TextIcon(
+            icon: Icon(FontAwesome5.file_excel).icon,
+            text: "Экспорт в Excel",
+            margin: 5.0,
+            /* onTap: () */
+            color: Theme.of(context).primaryColorDark,
+          ),
+          value: 'excel'),
+    );
+
     return result;
   }
 
@@ -512,7 +554,7 @@ class _PlanScreen extends State<PlanScreen> {
       bool hasErorr = false;
       Map<String, dynamic> result;
       try {
-        result = await controllers.PlanItemController.delete(planItemId);
+        result = await PlanItemController.delete(planItemId);
         hasErorr = result["code"] < 0;
 
         if (hasErorr) {
@@ -548,6 +590,51 @@ class _PlanScreen extends State<PlanScreen> {
 
   void _storePosition(TapDownDetails details) {
     _tapPosition = details.globalPosition;
+  }
+
+  Future<void> exportToPdf() async {
+    if (!canEdit()) {
+      Scaffold.of(context).showSnackBar(errorSnackBar(text: errorTableName));
+      return;
+    }
+    if (_plan.id == null) {
+      Scaffold.of(context).showSnackBar(
+          errorSnackBar(text: 'Сначала сохраните реквизиты плана'));
+      return;
+    }
+    try {
+      showLoadingDialog(context);
+      File file = await _plan.pdfReport;
+      hideDialog(context);
+      if (file != null) {
+        OpenFile.open(file.path);
+      }
+    } catch (e) {
+      hideDialog(context);
+    }
+  }
+
+  Future<void> exportToExcel() async {
+    if (!canEdit()) {
+      Scaffold.of(context).showSnackBar(errorSnackBar(text: errorTableName));
+      return;
+    }
+    if (_plan.id == null) {
+      Scaffold.of(context).showSnackBar(
+          errorSnackBar(text: 'Сначала сохраните реквизиты плана'));
+      return;
+    }
+
+    try {
+      showLoadingDialog(context);
+      File file = await _plan.xlsReport;
+      hideDialog(context);
+      if (file != null) {
+        OpenFile.open(file.path);
+      }
+    } catch (e) {
+      hideDialog(context);
+    }
   }
 
   Future<bool> showPlanDialog(Plan plan) {
@@ -908,9 +995,9 @@ class _PlanScreen extends State<PlanScreen> {
       Map<String, dynamic> result;
       try {
         if (planCopy.id == null) {
-          result = await controllers.PlanController.insert(planCopy);
+          result = await PlanController.insert(planCopy);
         } else {
-          result = await controllers.PlanController.update(planCopy);
+          result = await PlanController.update(planCopy);
         }
         hasErorr = result["code"] < 0;
 
@@ -964,9 +1051,9 @@ class _PlanScreen extends State<PlanScreen> {
       Map<String, dynamic> result;
       try {
         if (planItem.id == null) {
-          result = await controllers.PlanItemController.insert(planItem);
+          result = await PlanItemController.insert(planItem);
         } else {
-          result = await controllers.PlanItemController.update(planItem);
+          result = await PlanItemController.update(planItem);
         }
         hasErorr = result["code"] < 0;
 

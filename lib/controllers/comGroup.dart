@@ -7,7 +7,7 @@ import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class ComGroupController extends Controllers {
-  static String _tableName = "com_group";
+  static const String _tableName = "com_group";
 
   static Future<List<int>> selectIDs() async {
     List<Map<String, dynamic>> maps =
@@ -58,27 +58,8 @@ class ComGroupController extends Controllers {
     List<List> domain = [];
     if (loadRelated) {
       fields = ['write_date', 'parent_id', 'com_user_ids'];
-
-      // List<Map<String, dynamic>> queryRes =
-      //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
-      // domain = [
-      //   ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
-      // ];
     } else {
       await DBProvider.db.deleteAll(_tableName);
-      // List<List> toAdd = [];
-      // await Future.forEach(
-      //     SynController.tableMany2oneFieldsMap[_tableName].entries,
-      //     (element) async {
-      //   List<Map<String, dynamic>> queryRes =
-      //       await DBProvider.db.select(element.value, columns: ['odoo_id']);
-      //   toAdd.add([
-      //     element.key,
-      //     'in',
-      //     queryRes.map((e) => e['odoo_id'] as int).toList()
-      //   ]);
-      // });
-      // domain += toAdd;
       fields = [
         'head_id',
         'group_num',
@@ -98,8 +79,6 @@ class ComGroupController extends Controllers {
         CheckPlan checkPlan = await CheckPlanController.selectByOdooId(
             unpackListId(e['parent_id'])['id']);
         if (checkPlan == null) return;
-        // assert(checkPlan != null,
-        //     "Model plan_item_check has to be loaded before $_tableName");
         ComGroup comGroup = await selectByOdooId(e['id']);
         Map<String, dynamic> res = {
           'id': comGroup.id,
@@ -155,8 +134,6 @@ class ComGroupController extends Controllers {
         CheckPlan checkPlan = await CheckPlanController.selectByOdooId(
             unpackListId(e['parent_id'])['id']);
         if (checkPlan == null) return null;
-        // assert(checkPlan != null,
-        //     "Model plan_item_check has to be loaded before $_tableName");
         Map<String, dynamic> res = {
           'id': comGroup.id,
           'parent_id': checkPlan.id,
@@ -187,10 +164,6 @@ class ComGroupController extends Controllers {
     print(
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
     if (loadRelated) await setLatestWriteDate(_tableName, json);
-  }
-
-  static Future finishSync(dateTime) {
-    return setLastSyncDateForDomain(_tableName, dateTime);
   }
 
   /// Select all records with matching parentId

@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:convert/convert.dart';
 import 'package:odoo_rpc/odoo_rpc.dart';
 import 'package:ek_asu_opb_mobile/src/db.dart';
+import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 
 final _storage = FlutterSecureStorage();
 UserInfo _currentUser;
@@ -30,9 +31,17 @@ void LogOut(BuildContext context) async {
   }
 
   await _storage.delete(key: 'session');
+  await _storage.delete(key: 'isHomePinDialogShow');
+  await _storage.delete(key: 'railwayId');
+  await _storage.delete(key: 'year');
+  await _storage.delete(key: 'checkPlanId');
+
   // удалим при повторной авторизации, если вошел новый пользователь
   // await _storage.delete(key: 'pin');
   // await _storage.delete(key: 'lastDateUpdate');
+  String sessionString = await _storage.read(key: 'session');
+  if (sessionString != null) _storage.write(key: "session", value: null);
+  // print(sessionString);
 
   Navigator.pushNamedAndRemoveUntil(
       context, '/login', (Route<dynamic> route) => false);
@@ -42,7 +51,6 @@ Future<bool> checkLoginStatus(BuildContext context) async {
   // String uid = await _storage.read(key: 'uid');
   String session = await _storage.read(key: 'session');
   String pin = await _storage.read(key: "pin");
-  
 
   if (_currentUser == null) _currentUser = await getUserInfo();
 
@@ -50,7 +58,7 @@ Future<bool> checkLoginStatus(BuildContext context) async {
     LogOut(context);
     return false;
   }
-   OdooProxy.odooClient.sessionListen(sessionChanged);
+  OdooProxy.odooClient.sessionListen(sessionChanged);
   return true;
 }
 
@@ -67,6 +75,8 @@ Future<bool> checkSession(BuildContext context) async {
     }
   } on OdooSessionExpiredException catch (e) {
     await _storage.delete(key: 'session');
+    String sessionString = await _storage.read(key: 'session');
+    if (sessionString != null) _storage.write(key: "session", value: null);
 
     Navigator.pushNamed(context, '/login');
 
@@ -98,8 +108,6 @@ Future<bool> setUserData() async {
         await DBProvider.db.reCreateDictionary();
         //  await DBProvider.db.reCreateTable();
         await _storage.delete(key: 'lastDateUpdate');
-        await _storage.delete(key: 'messengerDates');
-        
       } else
         _isSameUser = true;
     }
@@ -149,8 +157,9 @@ Future<bool> authorize(String login, String password) async {
       if (oldUserInfo.id != uid) {
         await _storage.delete(key: 'pin');
         await _storage.delete(key: 'lastDateUpdate');
-        await _storage.delete(key: 'messengerDates');
         await _storage.delete(key: 'session');
+        String sessionString = await _storage.read(key: 'session');
+        if (sessionString != null) _storage.write(key: "session", value: null);
         // await DBProvider.db.deleteAll('userInfo');
         await DBProvider.db.reCreateDictionary();
         //await DBProvider.db.reCreateTable();
@@ -159,10 +168,29 @@ Future<bool> authorize(String login, String password) async {
       }
     }
     await _storage.write(key: "session", value: sessionString);
-  } else
+  } else {
     await _storage.delete(key: 'session');
+    String sessionString = await _storage.read(key: 'session');
+    if (sessionString != null) _storage.write(key: "session", value: null);
+  }
 
   return uid != null;
+}
+
+Future<bool> resetAllStorageData() async {
+  try {
+    await _storage.delete(key: 'pin');
+    await _storage.delete(key: 'lastDateUpdate');
+    await _storage.delete(key: 'railwayId');
+    await _storage.delete(key: 'year');
+    await _storage.delete(key: 'checkPlanId');
+    await _storage.delete(key: 'session');
+    String sessionString = await _storage.read(key: 'session');
+    if (sessionString != null) _storage.write(key: "session", value: null);
+  } catch (e) {
+    return false;
+  }
+  return true;
 }
 
 Future<OdooSession> getSession() async {
@@ -192,6 +220,49 @@ Future<bool> setPinCode(String pin) async {
   return true;
 }
 
+Future<bool> setBaseUrl(String baseUrl) async {
+  try {
+    String addressForPing = baseUrl.replaceAll(
+        new RegExp('https?://', multiLine: false, caseSensitive: false), '');
+    await _storage.write(key: 'ServiceRootUrl', value: baseUrl);
+    await _storage.write(key: 'addressForPing', value: addressForPing);
+
+    config.setItem("ServiceRootUrl", baseUrl);
+    config.setItem("addressForPing", addressForPing);
+
+    OdooProxy.odooClient.baseURL = baseUrl;
+  } catch (e) {
+    return false;
+  }
+  return true;
+}
+
+Future<String> getBaseUrl() async {
+  String baseUrl = await _storage.read(key: "ServiceRootUrl");
+  if ([null, ''].contains(baseUrl)) baseUrl = config.getItem('ServiceRootUrl');
+  if ([null, ''].contains(baseUrl)) baseUrl = "http://msk3tis2.vniizht.lan";
+  return baseUrl;
+}
+
+Future<String> getDB() async {
+  String db = await _storage.read(key: "db");
+  if ([null, ''].contains(db)) db = config.getItem('db');
+  if ([null, ''].contains(db)) db = "ecodb_2020-07-01";
+  return db;
+}
+
+Future<bool> setDB(String db) async {
+  try {
+    await _storage.write(key: 'db', value: db);
+    config.setItem("db", db);
+
+    OdooProxy.odooClient.db = db;
+  } catch (e) {
+    return false;
+  }
+  return true;
+}
+
 Future<String> getPin() async {
   return await _storage.read(key: "pin");
 }
@@ -204,4 +275,59 @@ Future<bool> isPinValid(String pin) async {
   var _hashPin = Digest(hex.decode(_pin));
 
   return hashPin == _hashPin;
+}
+
+Future<bool> setRailway(int railwayId) async {
+  if (railwayId != null)
+    try {
+      await _storage.write(key: 'railwayId', value: railwayId.toString());
+    } catch (e) {
+      return false;
+    }
+  return true;
+}
+
+Future<int> getRailway() async {
+  String railwayId = await _storage.read(key: "railwayId");
+  if ([null, ''].contains(railwayId)) {
+    UserInfo userinfo = await getUserInfo();
+    await setRailway(userinfo.railway_id);
+    return userinfo.railway_id;
+  } else
+    return railwayId != null ? int.parse(railwayId) : null;
+}
+
+Future<bool> setYear(int year) async {
+  if (year != null)
+    try {
+      await _storage.write(key: 'year', value: year.toString());
+    } catch (e) {
+      return false;
+    }
+  return true;
+}
+
+Future<int> getYear() async {
+  String year = await _storage.read(key: "year");
+  if ([null, ''].contains(year)) {
+    await setYear(DateTime.now().year);
+    return DateTime.now().year;
+  } else
+    return year != null ? int.parse(year) : null;
+}
+
+Future<bool> setCheckPlanId(int checkPlanId) async {
+  if (checkPlanId != null)
+    try {
+      await _storage.write(key: 'checkPlanId', value: checkPlanId.toString());
+    } catch (e) {
+      return false;
+    }
+  return true;
+}
+
+Future<int> getCheckPlanId() async {
+  String checkPlanId = await _storage.read(key: "checkPlanId");
+  if ([null, ''].contains(checkPlanId)) return null;
+  return int.parse(checkPlanId);
 }

@@ -444,6 +444,7 @@ class _MessengerScreen extends State<MessengerScreen> {
                                                                   // controller:
                                                                   //     TextEditingController.fromValue(TextEditingValue(text: _msg != null ? _msg.toString() : "")),
                                                                   decoration: new InputDecoration(
+                                                                    isCollapsed: true,
                                                                       hintText:
                                                                           'Введите сообщение...',
                                                                       border: OutlineInputBorder(

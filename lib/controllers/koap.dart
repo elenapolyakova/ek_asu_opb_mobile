@@ -2,7 +2,7 @@ import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import 'package:ek_asu_opb_mobile/models/koap.dart';
 
 class KoapController extends Controllers {
-  static String _tableName = "koap";
+  static const String _tableName = "koap";
 
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     Koap koap = Koap.fromJson(json);
@@ -19,8 +19,7 @@ class KoapController extends Controllers {
     return Koap.fromJson(json);
   }
 
-    static Future<List<Koap>> select(String template) async {
-   
+  static Future<List<Koap>> select(String template) async {
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       where: "search_field like ?",
@@ -32,6 +31,4 @@ class KoapController extends Controllers {
 
     return result;
   }
-
- 
 }

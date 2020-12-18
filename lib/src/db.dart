@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'package:ek_asu_opb_mobile/controllers/railway.dart';
 import 'package:ek_asu_opb_mobile/controllers/syn.dart';
 import 'package:flutter/widgets.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'dart:io';
 
 class DBProvider {
   DBProvider._();
@@ -55,7 +57,7 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS fault(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, name TEXT, desc TEXT, fine_desc TEXT, fine INTEGER, koap_id INTEGER, date TEXT, date_done TEXT, desc_done TEXT, active TEXT, plan_fix_date TEXT)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS fault_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, name STRING, type INTEGER, parent_id INTEGER, image TEXT, active TEXT, file_name TEXT, file_data STRING, coord_n REAL, coord_e REAL)");
+            "CREATE TABLE IF NOT EXISTS fault_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, name TEXT, type INTEGER, parent_id INTEGER, active TEXT, file_name TEXT, file_data TEXT, coord_n REAL, coord_e REAL)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS koap(id INTEGER PRIMARY KEY, article TEXT, paragraph TEXT, text TEXT, man_fine_from INTEGER, man_fine_to INTEGER, firm_fine_from INTEGER, firm_fine_to INTEGER, firm_stop INTEGER, desc TEXT, search_field TEXT)");
         await db.execute(
@@ -65,16 +67,19 @@ class DBProvider {
         await db.execute(
             "CREATE TABLE IF NOT EXISTS isp_document(id INTEGER PRIMARY KEY, parent2_id INTEGER, name TEXT, date TEXT, number TEXT, description TEXT, file_name TEXT, file_path TEXT, type INTEGER, is_new TEXT)");
         await db.execute(
-            "CREATE TABLE IF NOT EXISTS chat(id INTEGER PRIMARY KEY, odoo_id INTEGER, name TEXT, type INTEGER, group_id INTEGER, last_update TEXT, last_read TEXT)");
+            "CREATE TABLE IF NOT EXISTS chat(id INTEGER PRIMARY KEY, odoo_id INTEGER, name TEXT, type INTEGER, group_id INTEGER, last_read TEXT, active TEXT)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS chat_message(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, msg TEXT, create_date TEXT, create_uid INTEGER)");
         await db.execute(
             "CREATE TABLE IF NOT EXISTS rel_chat_user(id INTEGER PRIMARY KEY, chat_id INTEGER, user_id INTEGER)");
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS fault_fix(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, desc TEXT, date TEXT, active TEXT, is_finished TEXT)");
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS fault_fix_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, name TEXT, type INTEGER, parent3_id INTEGER, active TEXT, file_name TEXT, file_data TEXT, coord_n REAL, coord_e REAL)");
       },
       onUpgrade: (db, oldVersion, version) async {
         switch (oldVersion) {
           case 1:
-          case 2:
             await db.transaction((txn) async {
               await txn.execute(
                   'ALTER TABLE chat_message ADD COLUMN create_uid INTEGER');
@@ -91,6 +96,22 @@ class DBProvider {
             });
             continue v2;
           v2:
+          case 2:
+          case 3:
+            await db.execute(
+                "CREATE TABLE IF NOT EXISTS fault_fix(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, desc TEXT, date TEXT, active TEXT, is_finished TEXT)");
+            await db.execute(
+                "CREATE TABLE IF NOT EXISTS fault_fix_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, name TEXT, type INTEGER, parent3_id INTEGER, image TEXT, active TEXT, file_name TEXT, file_data TEXT, coord_n REAL, coord_e REAL)");
+            continue v3;
+          v3:
+          case 4:
+            await db.execute('ALTER TABLE chat ADD COLUMN active TEXT');
+            // Так же удалена колонка last_update, но удалять её здесь смысла нет
+            // Так же удалена колонка fault_item.image, но удалять её здесь смысла нет
+            // Так же удалена колонка fault_fix_item.image, но удалять её здесь смысла нет
+            continue v4;
+          v4:
+          case 5:
           default:
         }
       },
@@ -105,13 +126,73 @@ class DBProvider {
 
       // Set the version. This executes the onCreate function and provides a
       // path to perform database upgrades and downgrades.
-      version: 2,
+      version: 5,
     );
   }
 
+  Future<void> reCreateDB() async {
+    await deleteAll("railway");
+    await deleteAll("department");
+    await deleteAll("user");
+    await deleteAll("log");
+    await deleteAll("userInfo");
+    await deleteAll("plan");
+    await deleteAll("plan_item");
+    await deleteAll("plan_item_check");
+    await deleteAll("plan_item_check_item");
+    await deleteAll("com_group");
+    await deleteAll("rel_com_group_user");
+    await deleteAll("check_list");
+    await deleteAll("check_list_item");
+    await deleteAll("fault");
+
+    for (Map<String, dynamic> element
+        in (await DBProvider.db.selectAll('fault_item'))) {
+      String filePath = element["file_data"];
+      if (!['', null].contains(filePath)) await File(filePath).delete();
+    }
+    await deleteAll("fault_item");
+
+    await deleteAll("fault_fix");
+
+    for (Map<String, dynamic> element
+        in (await DBProvider.db.selectAll('fault_fix_item'))) {
+      String filePath = element["file_data"];
+      if (!['', null].contains(filePath)) await File(filePath).delete();
+    }
+    await deleteAll("fault_fix_item");
+
+    await deleteAll("koap");
+
+    for (Map<String, dynamic> element
+        in (await DBProvider.db.selectAll('department_document'))) {
+      String filePath = element["file_path"];
+      if (!['', null].contains(filePath)) await File(filePath).delete();
+    }
+    await deleteAll("department_document");
+
+    await deleteAll("document_list");
+
+    for (Map<String, dynamic> element
+        in (await DBProvider.db.selectAll('isp_document'))) {
+      String filePath = element["file_path"];
+      if (!['', null].contains(filePath)) await File(filePath).delete();
+    }
+    await deleteAll("isp_document");
+
+    await deleteAll("chat");
+    await deleteAll("chat_message");
+    await deleteAll("rel_chat_user");
+    await deleteAll("syn");
+  }
+
   Future<void> reCreateDictionary() async {
-    final Database db = await database;
-    await db.execute("DROP TABLE IF EXISTS railway");
+    await deleteAll("railway");
+    await deleteAll("department");
+    await deleteAll("user");
+    await deleteAll("koap");
+
+    /* await db.execute("DROP TABLE IF EXISTS railway");
     await db.execute("DROP TABLE IF EXISTS department");
     await db.execute("DROP TABLE IF EXISTS user");
     await db.execute("DROP TABLE IF EXISTS koap");
@@ -125,7 +206,7 @@ class DBProvider {
         "CREATE TABLE user(id INTEGER PRIMARY KEY, login TEXT, display_name TEXT, department_id int, f_user_role_txt TEXT, railway_id INTEGER, email TEXT, phone TEXT, active TEXT, function TEXT, search_field TEXT, user_role TEXT)");
     await db.execute(
         "CREATE TABLE IF NOT EXISTS koap(id INTEGER PRIMARY KEY, article TEXT, paragraph TEXT, text TEXT, man_fine_from INTEGER, man_fine_to INTEGER, firm_fine_from INTEGER, firm_fine_to INTEGER, firm_stop INTEGER, desc TEXT, search_field TEXT)");
-
+*/
     // await SynController.loadFromOdoo();
   }
 

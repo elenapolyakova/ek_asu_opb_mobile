@@ -7,12 +7,11 @@ import 'package:ek_asu_opb_mobile/models/faultItem.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import "package:ek_asu_opb_mobile/controllers/syn.dart";
 import 'dart:io';
-import 'package:ek_asu_opb_mobile/src/fileStorage.dart';
 import 'package:uuid/uuid.dart';
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 
 class FaultController extends Controllers {
-  static String _tableName = "fault";
+  static const String _tableName = "fault";
 
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     Fault fault = Fault.fromJson(json);
@@ -67,11 +66,10 @@ class FaultController extends Controllers {
             FaultItem item = new FaultItem();
             // Set properties
             item.active = true;
-            item.image = fItem["path"];
             item.coord_e = fItem["coord_e"];
             item.coord_n = fItem["coord_n"];
             item.parent_id = res["id"];
-            item.file_data = fileToBase64(fItem["path"]);
+            item.file_data = fItem["path"];
             item.type = 2;
             item.name = Uuid().v1();
             item.file_name = item.name + ".jpg";
@@ -103,7 +101,7 @@ class FaultController extends Controllers {
               print("print delete resp $deleteResp");
               if (deleteResp["code"] > 0) {
                 deletedFaultItemsIds.add(deleteResp["id"]);
-                await File(item.image).delete();
+                await File(item.file_data).delete();
               }
             }
           }
@@ -139,6 +137,102 @@ class FaultController extends Controllers {
     return faults;
   }
 
+  // Get all faults by ID плана проверки
+  static Future<List<Fault>> getFaultsByCheckPlanId(int planId) async {
+    if (planId == null) return [];
+
+    try {
+      var checkListIdsResp = await DBProvider.db.executeQuery(
+          "SELECT id from check_list where parent_id=$planId and active='true' and is_active='true' and is_base='false'");
+
+      // We not found checkLists assigned to plan, return []
+      if (checkListIdsResp.length == 0) return [];
+      var ids = [];
+      checkListIdsResp.forEach((e) {
+        ids.add(e["id"]);
+      });
+
+      var checkListItemResp = await DBProvider.db.executeQuery(
+          "SELECT id from check_list_item where parent_id IN (${ids.join(',')}) and active='true'");
+      // Not found assigned questions to checkList, faults are []
+      if (checkListItemResp.length == 0) return [];
+
+      // print('check list  item resp $checkListItemResp');
+      var checkListItemIds = [];
+      // Coupling ids from db resp
+      checkListItemResp.forEach((e) {
+        checkListItemIds.add(e["id"]);
+      });
+
+      var faults = await DBProvider.db.executeQuery(
+          "SELECT * FROM fault WHERE parent_id IN (${checkListItemIds.join(', ')}) and active='true'");
+
+      if (faults.length == 0) return [];
+
+      List<Fault> faultsByPlanId =
+          faults.map((e) => Fault.fromJson(e)).toList();
+
+      return faultsByPlanId;
+    } catch (e) {
+      print("getFaultsByCheckPlanId(), Error while getting faults: $e");
+      return [];
+    }
+  }
+
+  // Get all faults by department_id
+  static Future<List<Fault>> getFaultsByDepartment(int depId) async {
+    if (depId == null) return [];
+
+    try {
+      // Планы проверки по предприятию, id
+      var checkPlanItemResp = await DBProvider.db.executeQuery(
+          "SELECT id from plan_item_check_item WHERE department_id=$depId and active='true'");
+      // checkPlanItems not found return []
+      if (checkPlanItemResp.length == 0) return [];
+
+      var checkPlanIds = [];
+      // coupling ids
+      checkPlanItemResp.forEach((e) {
+        checkPlanIds.add(e["id"]);
+      });
+
+      var checkListIdsResp = await DBProvider.db.executeQuery(
+          "SELECT id from check_list where parent_id IN (${checkPlanIds.join(', ')}) and active='true' and is_active='true' and is_base='false'");
+
+      // We not found checkLists assigned to plan, return []
+      if (checkListIdsResp.length == 0) return [];
+      var ids = [];
+      checkListIdsResp.forEach((e) {
+        ids.add(e["id"]);
+      });
+
+      var checkListItemResp = await DBProvider.db.executeQuery(
+          "SELECT id from check_list_item where parent_id IN (${ids.join(',')}) and active='true'");
+      // Not found assigned questions to checkList, faults are []
+      if (checkListItemResp.length == 0) return [];
+
+      // print('check list  item resp $checkListItemResp');
+      var checkListItemIds = [];
+      // Coupling ids from db resp
+      checkListItemResp.forEach((e) {
+        checkListItemIds.add(e["id"]);
+      });
+
+      var faults = await DBProvider.db.executeQuery(
+          "SELECT * FROM fault WHERE parent_id IN (${checkListItemIds.join(', ')}) and active='true'");
+
+      if (faults.length == 0) return [];
+
+      List<Fault> faultsByPlanId =
+          faults.map((e) => Fault.fromJson(e)).toList();
+
+      return faultsByPlanId;
+    } catch (e) {
+      print("getFaultsByDepartment(), Error while getting faults: $e");
+      return [];
+    }
+  }
+
   // Update fault also allows to add or delete photos for 1 Fault
   // faultItems - list with data as photoPath coord_e coord_n and etc.
   // delete - list ids of photos(faultItems) to delete
@@ -153,7 +247,7 @@ class FaultController extends Controllers {
     // Set date_done as plan fix date for uploading to odoo!
     fault.date_done = fault.plan_fix_date;
 
-    print("Update() Fault: $fault, faultItems: $faultItems, delete: $delete");
+    print("Update() FAULT faultItems: $faultItems, delete: $delete");
     var createdFaultItemsIds = [];
     var deletedFaultItemsIds = [];
 
@@ -183,16 +277,17 @@ class FaultController extends Controllers {
           FaultItem item = new FaultItem();
           // Set properties
           item.active = true;
-          item.image = fItem["path"];
           item.coord_e = fItem["coord_e"];
           item.coord_n = fItem["coord_n"];
           item.parent_id = fault.id;
-          item.file_data = fileToBase64(fItem["path"]);
+          item.file_data = fItem["path"];
+
           item.type = 2;
           item.name = Uuid().v1();
           item.file_name = item.name + ".jpg";
 
           var createResp = await FaultItemController.create(item);
+          print("faultItem create resp $createResp");
           if (createResp["code"] > 0)
             createdFaultItemsIds.add(createResp["id"]);
         } catch (e) {
@@ -218,7 +313,7 @@ class FaultController extends Controllers {
               print("print delete resp $deleteResp");
               if (deleteResp["code"] > 0) {
                 deletedFaultItemsIds.add(deleteResp["id"]);
-                await File(item.image).delete();
+                await File(item.file_data).delete();
               }
             }
           }
@@ -276,7 +371,7 @@ class FaultController extends Controllers {
           var itemId = json["id"];
 
           await FaultItemController.delete(itemId);
-          await File(fItem.image).delete();
+          await File(fItem.file_data).delete();
           deletedFotosIds.add(itemId);
         }
       } catch (e) {
@@ -331,26 +426,8 @@ class FaultController extends Controllers {
     List<List> domain = [];
     if (loadRelated) {
       fields = ['write_date', 'parent_id'];
-      // List<Map<String, dynamic>> queryRes =
-      //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
-      // domain = [
-      //   ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
-      // ];
     } else {
       await DBProvider.db.deleteAll(_tableName);
-      // List<List> toAdd = [];
-      // await Future.forEach(
-      //     SynController.tableMany2oneFieldsMap[_tableName].entries,
-      //     (element) async {
-      //   List<Map<String, dynamic>> queryRes =
-      //       await DBProvider.db.select(element.value, columns: ['odoo_id']);
-      //   toAdd.add([
-      //     element.key,
-      //     'in',
-      //     queryRes.map((e) => e['odoo_id'] as int).toList()
-      //   ]);
-      // });
-      // domain += toAdd;
       fields = [
         'name',
         'desc',
@@ -396,8 +473,6 @@ class FaultController extends Controllers {
               await CheckListItemController.selectByOdooId(
                   unpackListId(e['parent_id'])['id']);
           if (parentCheckListItem == null) return null;
-          // assert(parentCheckListItem != null,
-          //     "Model check_list_item has to be loaded before $_tableName");
           res['id'] = fault.id;
           res['parent_id'] = parentCheckListItem.id;
         }
@@ -478,8 +553,6 @@ class FaultController extends Controllers {
               await CheckListItemController.selectByOdooId(
                   unpackListId(e['parent_id'])['id']);
           if (parentCheckListItem == null) return null;
-          // assert(parentCheckListItem != null,
-          //     "Model check_list_item has to be loaded before $_tableName");
           res['id'] = fault.id;
           res['parent_id'] = parentCheckListItem.id;
         }
@@ -507,9 +580,5 @@ class FaultController extends Controllers {
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
 
     if (loadRelated) await setLatestWriteDate(_tableName, json);
-  }
-
-  static Future finishSync(dateTime) {
-    return setLastSyncDateForDomain(_tableName, dateTime);
   }
 }

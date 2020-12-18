@@ -8,7 +8,7 @@ import "package:ek_asu_opb_mobile/controllers/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 
 class CheckListItemController extends Controllers {
-  static String _tableName = "check_list_item";
+  static const String _tableName = "check_list_item";
 
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     CheckListItem checkListItem = CheckListItem.fromJson(json);
@@ -186,26 +186,8 @@ class CheckListItemController extends Controllers {
     List<List> domain = [];
     if (loadRelated) {
       fields = ['write_date', 'parent_id'];
-      // List<Map<String, dynamic>> queryRes =
-      //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
-      // domain = [
-      //   ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
-      // ];
     } else {
       await DBProvider.db.deleteAll(_tableName);
-      // List<List> toAdd = [];
-      // await Future.forEach(
-      //     SynController.tableMany2oneFieldsMap[_tableName].entries,
-      //     (element) async {
-      //   List<Map<String, dynamic>> queryRes =
-      //       await DBProvider.db.select(element.value, columns: ['odoo_id']);
-      //   toAdd.add([
-      //     element.key,
-      //     'in',
-      //     queryRes.map((e) => e['odoo_id'] as int).toList()
-      //   ]);
-      // });
-      // domain += toAdd;
       fields = [
         'base_id',
         'name',
@@ -239,8 +221,6 @@ class CheckListItemController extends Controllers {
               await CheckListController.selectByOdooId(
                   unpackListId(e['parent_id'])['id']);
           if (parentCheckList == null) return null;
-          // assert(parentCheckList != null,
-          //     "Model check_list has to be loaded before $_tableName");
           res['id'] = checkListItem.id;
           res['parent_id'] = parentCheckList.id;
         }
@@ -305,8 +285,6 @@ class CheckListItemController extends Controllers {
               await CheckListController.selectByOdooId(
                   unpackListId(e['parent_id'])['id']);
           if (parentCheckList == null) return null;
-          // assert(parentCheckList != null,
-          //     "Model check_list has to be loaded before $_tableName");
           res['id'] = checkListItem.id;
           res['parent_id'] = parentCheckList.id;
         }
@@ -334,9 +312,5 @@ class CheckListItemController extends Controllers {
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
 
     if (loadRelated) await setLatestWriteDate(_tableName, json);
-  }
-
-  static Future finishSync(dateTime) {
-    return setLastSyncDateForDomain(_tableName, dateTime);
   }
 }

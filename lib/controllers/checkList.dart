@@ -9,7 +9,7 @@ import "package:ek_asu_opb_mobile/controllers/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 
 class CheckListController extends Controllers {
-  static String _tableName = "check_list";
+  static const String _tableName = "check_list";
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     CheckListWork checkList = CheckListWork.fromJson(json);
 
@@ -344,27 +344,9 @@ class CheckListController extends Controllers {
     List<List> domain = [];
     if (loadRelated) {
       fields = ['write_date', 'parent_id'];
-      // List<Map<String, dynamic>> queryRes =
-      //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
-      // domain = [
-      //   ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
-      // ];
     } else {
       await DBProvider.db
           .executeQuery("DELETE FROM $_tableName WHERE is_base = 'false'");
-      // List<List> toAdd = [];
-      // await Future.forEach(
-      //     SynController.tableMany2oneFieldsMap[_tableName].entries,
-      //     (element) async {
-      //   List<Map<String, dynamic>> queryRes =
-      //       await DBProvider.db.select(element.value, columns: ['odoo_id']);
-      //   toAdd.add([
-      //     element.key,
-      //     'in',
-      //     queryRes.map((e) => e['odoo_id'] as int).toList()
-      //   ]);
-      // });
-      // domain += toAdd;
       fields = [
         'is_base',
         'base_id',
@@ -401,8 +383,6 @@ class CheckListController extends Controllers {
               await CheckPlanItemController.selectByOdooId(
                   unpackListId(e['parent_id'])['id']);
           if (checkPlanItem == null) return null;
-          // assert(checkPlanItem != null,
-          //     "Model plan_item has to be loaded before $_tableName");
           res['id'] = checkList.id;
           res['parent_id'] = checkPlanItem.id;
         }
@@ -467,8 +447,6 @@ class CheckListController extends Controllers {
               await CheckPlanItemController.selectByOdooId(
                   unpackListId(e['parent_id'])['id']);
           if (checkPlanItem == null) return null;
-          //   assert(checkPlanItem != null,
-          //       "Model checkPlanItem has to be loaded before $_tableName");
           res['id'] = checkList.id;
           res['parent_id'] = checkPlanItem.id;
         }
@@ -498,9 +476,5 @@ class CheckListController extends Controllers {
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
 
     if (loadRelated) await setLatestWriteDate(_tableName, json);
-  }
-
-  static Future finishSync(dateTime) {
-    return setLastSyncDateForDomain(_tableName, dateTime);
   }
 }

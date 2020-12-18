@@ -10,38 +10,11 @@ import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
-/*class Fault {
-  int id;
-  int odooId;
-  int parent_id; //checkListItem.id
-  String name; //Наименование
-  String desc; //Описание
-  DateTime date; //Дата фиксации
-  String fine_desc; //Штраф. Описание
-  int fine; //Штраф. Сумма
-  int koap_id; //cтатья КОАП
-  DateTime date_done; //дата устранения
-  String desc_done; //описание к устранению
-  bool active;
-  Fault(
-      {this.id,
-      this.odooId,
-      this.parent_id,
-      this.name,
-      this.desc,
-      this.date,
-      this.fine,
-      this.fine_desc,
-      this.koap_id,
-      this.date_done,
-      this.desc_done,
-      this.active}); //Статья КОАП
-}*/
-
 class MyFault {
   Fault fault;
   String fineName;
-  MyFault(this.fault, this.fineName);
+  DateTime fixDate;
+  MyFault(this.fault, this.fineName, this.fixDate);
 }
 
 class FaultListScreen extends StatefulWidget {
@@ -49,11 +22,19 @@ class FaultListScreen extends StatefulWidget {
   Function(Map<String, String>, dynamic arg) push;
   Map<String, String> Function() pop;
   String checkListItemName;
+  int departmentId;
+  int checkPlanItemId;
   GlobalKey key;
 
   @override
-  FaultListScreen(this.checkListItemId, this.push, this.pop, this.key,
-      {this.checkListItemName});
+  FaultListScreen(
+      {this.checkListItemId,
+      this.push,
+      this.pop,
+      this.key,
+      this.checkListItemName,
+      this.departmentId,
+      this.checkPlanItemId});
   @override
   State<FaultListScreen> createState() => _FaultListScreen();
 }
@@ -63,13 +44,20 @@ class _FaultListScreen extends State<FaultListScreen> {
   bool showLoading = true;
   var _tapPosition;
   int checkListItemId;
-  String checkListItemName;
+  int checkPlanItemId;
+
+  bool isHistory =
+      false; //форма загружена из истории нарушений или вопроса чек-листа
+  bool allFaultByDepartment = false; //все нарушения предприятия или проверки
+
+  int departmentId;
   List<MyFault> _items;
   final formFaultKey = new GlobalKey<FormState>();
 
   List<Map<String, dynamic>> faultListHeader = [
     {'text': 'Описание нарушения', 'flex': 5.0},
-    {'text': 'Дата фиксации', 'flex': 2.0},
+    {'text': 'Плановая дата устранения', 'flex': 2.0},
+    {'text': 'Факт. дата устранения', 'flex': 2.0},
     {'text': 'Штраф в денежном выражении, руб.', 'flex': 3.0},
     {'text': 'Описание штрафа', 'flex': 6.0},
     {'text': 'Статья КОАП', 'flex': 2.0},
@@ -77,7 +65,17 @@ class _FaultListScreen extends State<FaultListScreen> {
 
   List<Map<String, dynamic>> choices = [
     {'title': 'Удалить нарушение', 'icon': Icons.delete, 'key': 'delete'},
-    {'title': 'Редактировать нарушение', 'icon': Icons.edit, 'key': 'edit'}
+    {'title': 'Редактировать нарушение', 'icon': Icons.edit, 'key': 'edit'},
+    {
+      'title': 'Перейти к устранению',
+      'icon': Icons.assignment_turned_in,
+      'key': 'fix'
+    },
+    /* {
+      'title': 'Перейти к расчету вреда',
+      'icon': Icons.calculate,
+      'key': 'harm'
+    }*/
   ];
 
   Future<String> getFineName(int koapId) async {
@@ -95,7 +93,13 @@ class _FaultListScreen extends State<FaultListScreen> {
         auth.getUserInfo().then((userInfo) {
           _userInfo = userInfo;
           checkListItemId = widget.checkListItemId;
-          checkListItemName = widget.checkListItemName;
+          if (checkListItemId != null) {
+            isHistory = false;
+          } else {
+            isHistory = true;
+          }
+          checkPlanItemId = widget.checkPlanItemId;
+          departmentId = widget.departmentId;
           loadData();
         });
       } //isLogin == true
@@ -114,13 +118,29 @@ class _FaultListScreen extends State<FaultListScreen> {
     }
   }
 
+  String getTitle() {
+    if (isHistory == false) return widget.checkListItemName;
+
+    if (allFaultByDepartment) return 'Список всех нарушений предприятия';
+
+    return 'Список всех нарушений проверки';
+  }
+
   Future<void> loadFaultItems() async {
     _items = [];
-    List<Fault> items = await FaultController.select(checkListItemId);
+    List<Fault> items = [];
+    if (checkListItemId != null)
+      items = await FaultController.select(checkListItemId);
+    else if (departmentId != null) if (allFaultByDepartment)
+      items = await FaultController.getFaultsByDepartment(departmentId);
+    else
+      items = await FaultController.getFaultsByCheckPlanId(checkPlanItemId);
+
     if (items != null)
       for (int i = 0; i < items.length; i++) {
         String fineName = await getFineName(items[i].koap_id);
-        _items.add(MyFault(items[i], fineName));
+        DateTime fixDate = await items[i].getLastFixDate;
+        _items.add(MyFault(items[i], fineName, fixDate));
       }
   }
 
@@ -158,8 +178,12 @@ class _FaultListScreen extends State<FaultListScreen> {
                   : Colors.white)),
           children: [
             getRowCell(row.desc, row.id, 0),
-            getRowCell(dateDMY(row.date), row.id, 1),
-            getRowCell(row.fine != null ? row.fine.toString() : '', row.id, 2),
+            getRowCell(dateDMY(row.plan_fix_date), row.id, 1,
+                textAlign: TextAlign.center),
+            getRowCell(dateDMY(fault.fixDate), row.id, 1,
+                textAlign: TextAlign.center),
+            getRowCell(row.fine != null ? row.fine.toString() : '', row.id, 2,
+                textAlign: TextAlign.center),
             getRowCell(row.fine_desc, row.id, 3),
             getRowCell(fault.fineName, row.id, 4),
           ]);
@@ -217,6 +241,9 @@ class _FaultListScreen extends State<FaultListScreen> {
         case 'delete':
           deleteFaultClicked(faultId);
           break;
+        case 'fix':
+          fixFaultClicked(faultId);
+          break;
       }
     });
   }
@@ -265,6 +292,17 @@ class _FaultListScreen extends State<FaultListScreen> {
     }
   }
 
+  Future<void> toggleFault() async {
+    showLoadingDialog(context);
+
+    setState(() {
+      allFaultByDepartment = !allFaultByDepartment;
+    });
+    await loadFaultItems();
+    setState(() {});
+    hideDialog(context);
+  }
+
   Future<void> addFaultClicked(StateSetter setState) async {
     return widget.push({
       "pathTo": 'fault',
@@ -278,6 +316,16 @@ class _FaultListScreen extends State<FaultListScreen> {
   Future<void> editFaultClicked(int faultId) async {
     return widget.push({
       "pathTo": 'fault',
+      "pathFrom": 'faultList',
+      'text': 'Назад к нарушениям'
+    }, {
+      'faultId': faultId
+    });
+  }
+
+  Future<void> fixFaultClicked(int faultId) async {
+    return widget.push({
+      "pathTo": 'faultFixList',
       "pathFrom": 'faultList',
       'text': 'Назад к нарушениям'
     }, {
@@ -309,28 +357,63 @@ class _FaultListScreen extends State<FaultListScreen> {
 
     return showLoading
         ? Text("")
-        : Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40, vertical: 5),
-            child: Column(children: [
-              Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-                Expanded(
-                  child: ListTile(
-                      trailing: menu,
-                      contentPadding: EdgeInsets.all(0),
-                      title: FormTitle(checkListItemName ?? ''),
-                      onTap: () {}),
-                ),
-              ]),
-              Expanded(
-                  child: ListView(
-                      padding: EdgeInsets.only(
-                        top: 10,
+        : (isHistory == false)
+            ? Padding(
+                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 5),
+                child: Column(children: [
+                  Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+                    Expanded(
+                      child: ListTile(
+                          trailing: menu,
+                          contentPadding: EdgeInsets.all(0),
+                          title: FormTitle(getTitle() ?? ''),
+                          onTap: () {}),
+                    ),
+                  ]),
+                  Expanded(
+                      child: ListView(
+                          padding: EdgeInsets.only(
+                            top: 10,
+                          ),
+                          children: [
+                        Column(children: [
+                          generateFaultTable(context, faultListHeader, _items)
+                        ])
+                      ]))
+                ]))
+            : Padding(
+                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 5),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextIcon(
+                            iconSize: 45,
+                            icon: allFaultByDepartment
+                                ? Icons.toggle_on
+                                : Icons.toggle_off,
+                            text: 'Все нарушения по предприятию',
+                            onTap: toggleFault,
+                            color: allFaultByDepartment
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey,
+                          )
+                        ],
                       ),
-                      children: [
-                    Column(children: [
-                      generateFaultTable(context, faultListHeader, _items)
-                    ])
-                  ]))
-            ]));
+                      FormTitle(getTitle() ?? ''),
+                      Expanded(
+                          child: ListView(
+                              padding: EdgeInsets.only(
+                                top: 10,
+                              ),
+                              children: [
+                            Column(children: [
+                              generateFaultTable(
+                                  context, faultListHeader, _items)
+                            ])
+                          ]))
+                    ]));
   }
 }

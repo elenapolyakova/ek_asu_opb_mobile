@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
+import 'package:ek_asu_opb_mobile/controllers/report.dart';
 import 'package:ek_asu_opb_mobile/models/comGroup.dart';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
@@ -9,6 +10,8 @@ import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
 import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
+import 'package:flutter_icons/flutter_icons.dart';
+import 'package:open_file/open_file.dart';
 
 /*class InspectionItem {
   int id;
@@ -167,6 +170,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     if (_inspection.id != null) {
       for (int i = 0; i < _inspectionItems.length; i++) {
         CheckPlanItem item = _inspectionItems[i];
+
         String name =
             await depOrEventName(item.type, item.departmentId, item.name);
         inspectionItems.add({'item': item, 'name': name});
@@ -196,9 +200,10 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
 
   Future<String> depOrEventName(
       int eventId, int departmentId, String eventName) async {
-    if (departmentId != null)
+    if (eventId == checkTypeId && departmentId != null)
       return (await DepartmentController.selectById(departmentId)).name;
-    return eventName ?? "";
+    return eventName ??
+        (eventId != null ? CheckPlanItem.typeSelection[eventId] : "");
   }
 
   @override
@@ -214,6 +219,12 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
           case 'add':
             addInspectionItemClicked();
             break;
+          case 'pdf':
+            exportToPdf();
+            return;
+          case 'excel':
+            exportToExcel();
+            return;
         }
       },
       icon: Icon(
@@ -236,7 +247,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
             decoration: BoxDecoration(
                 image: DecorationImage(
                     image: AssetImage("assets/images/frameScreen.png"),
-                    fit: BoxFit.fitWidth)),
+                    fit: BoxFit.fill)),
             child: showLoading
                 ? Text("")
                 : Padding(
@@ -260,8 +271,8 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                     ]))));
   }
 
-  List<PopupMenuItem<String>> getMenu(BuildContext context) {
-    List<PopupMenuItem<String>> result = [];
+  List<PopupMenuEntry<Object>> getMenu(BuildContext context) {
+    List<PopupMenuEntry<Object>> result = [];
     result.add(
       PopupMenuItem<String>(
           child: TextIcon(
@@ -284,6 +295,34 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
             color: Theme.of(context).primaryColorDark,
           ),
           value: 'add'),
+    );
+
+    result.add(PopupMenuDivider(
+      height: 20,
+    ));
+
+    result.add(
+      PopupMenuItem<String>(
+          child: TextIcon(
+            icon: Icon(FontAwesome5.file_pdf).icon, //Icons.edit,
+            text: "Экспорт в PDF",
+            margin: 5.0,
+            /* onTap: () */
+            color: Theme.of(context).primaryColorDark,
+          ),
+          value: 'pdf'),
+    );
+
+    result.add(
+      PopupMenuItem<String>(
+          child: TextIcon(
+            icon: Icon(FontAwesome5.file_excel).icon,
+            text: "Экспорт в Excel",
+            margin: 5.0,
+            /* onTap: () */
+            color: Theme.of(context).primaryColorDark,
+          ),
+          value: 'excel'),
     );
     return result;
   }
@@ -330,7 +369,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                 textAlign: TextAlign.center),
             getRowCell(getGroupById(item.comGroupId), item.id, 4, item.type,
                 item.departmentId,
-                textAlign: TextAlign.center),
+                textAlign: TextAlign.center, groupId: item.comGroupId),
           ]);
       tableRows.add(tableRow);
     });
@@ -343,7 +382,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
 
   Widget getRowCell(String text, int inspectionItemId, int index, int eventId,
       int departmentId,
-      {TextAlign textAlign = TextAlign.left}) {
+      {TextAlign textAlign = TextAlign.left, int groupId}) {
     Widget cell = Container(
       padding: EdgeInsets.all(10.0),
       child: Text(
@@ -354,10 +393,51 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
 
     return GestureDetector(
         onTapDown: _storePosition,
+        onTap: () async {
+          if (index == 4) return showGroupInfo(groupId);
+        },
         onLongPress: () {
           _showCustomMenu(inspectionItemId, index, eventId, departmentId);
         },
         child: cell);
+  }
+
+  Future<void> showGroupInfo(int groupId) async {
+    ComGroup group = await ComGroupController.selectById(groupId);
+    List<User> users = await group.comUsers;
+    User head = await group.head;
+    int headId = group.headId;
+
+    List<User> userToDisplay = [];
+    if (head != null) userToDisplay.add(head);
+    userToDisplay.addAll(users.where((user) => user.id != headId));
+
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject();
+    showMenu(
+        context: context,
+        position: RelativeRect.fromRect(
+            _tapPosition & const Size(1, 1), Offset.zero & overlay.size),
+        items: <PopupMenuEntry<Object>>[
+          CustomToolTip(
+            context: context,
+            content: Container(
+              width: 250,
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: userToDisplay
+                    .map((User user) => (user.id == headId)
+                        ? Row(children: [
+                            Icon(Icons.star),
+                            Text(user.display_name)
+                          ])
+                        : Text(user.display_name))
+                    .toList(),
+              ),
+            ),
+          )
+        ]);
   }
 
   String getTimePeriod(DateTime dtBegin, DateTime dtEnd) {
@@ -463,7 +543,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                           {inspection.name = value},
                                       context: context,
                                       height: 100,
-                                      maxLines: 5,
+                                      // maxLines: 5,
                                     ),
                                     Row(
                                         mainAxisAlignment:
@@ -619,7 +699,6 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
       department = tempDepartment;
     });
 
-    double widthDepartment = 500;
     final TextStyle enableText =
         TextStyle(fontSize: 16.0, color: Theme.of(context).buttonColor);
     final TextStyle disableText =
@@ -642,13 +721,13 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                   "assets/images/app.jpg",
                   fit: BoxFit.fill,
                   height: heightPlan,
-                  width: widthDepartment * 2 + 150,
+                  width: widthPlan,
                 ),
               ),
               Container(
-                  width: widthDepartment * 2 + 50,
+                  width: widthPlan,
                   margin: EdgeInsets.symmetric(horizontal: 13, vertical: 13),
-                  padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 20),
+                  padding: EdgeInsets.symmetric(horizontal: 50.0, vertical: 40),
                   child: Scaffold(
                       backgroundColor: Colors.transparent,
                       body: Form(
@@ -659,54 +738,131 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                 '${inspectionItem.id == null ? 'Добавление' : 'Редактирование'} пункта плана проверок'),
                             Expanded(
                                 child: Center(
+                                    // height: heightPlan,
                                     child: SingleChildScrollView(
                                         child: Row(children: [
                               Expanded(
-                                  child: Column(children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                        width: 450,
-                                        padding: EdgeInsets.only(bottom: 10),
-                                        child: MyDropdown(
-                                          text: 'Тип события',
-                                          dropdownValue: inspectionItem.type !=
-                                                  null
-                                              ? inspectionItem.type.toString()
-                                              : null,
-                                          items: eventList,
-                                          onChange: (value) {
-                                            inspectionItem.type =
-                                                int.tryParse(value);
-                                            setState(() {
-                                              eventId = int.tryParse(value);
-                                              if (eventId !=
-                                                  checkTypeId) if (eventId < 100)
-                                                eventName = CheckPlanItem
-                                                    .typeSelection[eventId];
-                                              else
-                                                eventName = "";
-                                              inspectionItem.name = eventName;
-                                            });
-                                          },
-                                          parentContext: context,
-                                        )),
-                                  ],
-                                ),
-                                Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 13),
+                                  child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceAround,
+                                      children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
                                           child: Container(
-                                              width: 200,
+                                              padding:
+                                                  EdgeInsets.only(right: 20),
+                                              child: MyDropdown(
+                                                text: 'Тип события',
+                                                dropdownValue:
+                                                    inspectionItem.type != null
+                                                        ? inspectionItem.type
+                                                            .toString()
+                                                        : checkTypeId
+                                                            .toString(),
+                                                items: eventList,
+                                                onChange: (value) {
+                                                  inspectionItem.type =
+                                                      int.tryParse(value);
+                                                  setState(() {
+                                                    eventId =
+                                                        int.tryParse(value);
+                                                    if (eventId !=
+                                                        checkTypeId) if (eventId < 100)
+                                                      eventName = CheckPlanItem
+                                                              .typeSelection[
+                                                          eventId];
+                                                    else
+                                                      eventName = "";
+                                                    inspectionItem.name =
+                                                        eventName;
+                                                  });
+                                                },
+                                                parentContext: context,
+                                              )),
+                                        ),
+                                        Expanded(
+                                          child: Container(
+                                              child: MyDropdown(
+                                            text: 'Члены комиссии',
+                                            dropdownValue:
+                                                inspectionItem.comGroupId !=
+                                                        null
+                                                    ? inspectionItem.comGroupId
+                                                        .toString()
+                                                    : null,
+                                            items: groupList,
+                                            onChange: (value) {
+                                              setState(() {
+                                                inspectionItem.comGroupId =
+                                                    int.tryParse(value);
+                                              });
+                                            },
+                                            parentContext: context,
+                                          )),
+                                        )
+                                      ],
+                                    ),
+                                    Container(
+                                        padding:
+                                            EdgeInsets.symmetric(vertical: 20),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            if (eventId != null &&
+                                                    eventId == checkTypeId ||
+                                                eventId == null)
+                                              ConstrainedBox(
+                                                  constraints: BoxConstraints(
+                                                      maxWidth: widthPlan,
+                                                      minHeight: 60),
+                                                  child: DepartmentSelect(
+                                                      text:
+                                                          "Структурное подразделение",
+                                                      width: widthPlan,
+                                                      height: 150,
+                                                      margin: 0,
+                                                      department: department,
+                                                      railwayId:
+                                                          planItem["railwayId"],
+                                                      context: context,
+                                                      onSaved: (newDepartment) {
+                                                        if (newDepartment ==
+                                                            null) return;
+                                                        setState(() {
+                                                          inspectionItem
+                                                                  .departmentId =
+                                                              newDepartment.id;
+                                                          department =
+                                                              newDepartment;
+                                                        });
+                                                      })),
+                                            if (eventId != null &&
+                                                eventId != checkTypeId)
+                                              ConstrainedBox(
+                                                  constraints: BoxConstraints(
+                                                      maxWidth: widthPlan,
+                                                      minHeight: 60),
+                                                  child: EditTextField(
+                                                    text: 'Описание',
+                                                    value: eventName,
+                                                    onSaved: (value) {
+                                                      eventName = value;
+                                                      inspectionItem.name =
+                                                          value;
+                                                    },
+                                                    context: context,
+                                                    height: 150,
+                                                    margin: 0,
+                                                  )),
+                                          ],
+                                        )),
+                                    Row(children: [
+                                      Expanded(
+                                          child: Container(
+                                              padding:
+                                                  EdgeInsets.only(right: 20),
                                               child: Column(
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
@@ -724,7 +880,8 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                     DatePicker(
                                                         parentContext: context,
                                                         text: "",
-                                                        width: 200,
+                                                        width: double.infinity,
+                                                        // width: 200,
                                                         selectedDate:
                                                             inspectionItem
                                                                     .date ??
@@ -754,82 +911,73 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                           });
                                                         })),
                                                   ]))),
-                                      Container(
+                                      Expanded(
                                           child: Container(
-                                              width: 200,
+                                              // width: 200,
                                               child: Column(
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
                                                   children: [
-                                                    Container(
-                                                        padding:
-                                                            EdgeInsets.only(
-                                                                bottom: 2),
-                                                        child: Row(children: [
-                                                          SizedBox(
-                                                              height: 24,
-                                                              width: 24,
-                                                              child: Checkbox(
-                                                                value:
-                                                                    hasTimeBegin ??
-                                                                        false,
-                                                                onChanged:
-                                                                    (value) {
-                                                                  setState(() {
-                                                                    hasTimeBegin =
-                                                                        value;
-                                                                    //if (value && inspectionItem.dtFrom == null) inspectionItem.dtFrom = DateTime.now();
-                                                                    // if (!value) inspectionItem.dtFrom = null;
-                                                                  });
-                                                                },
-                                                                checkColor: Theme.of(
-                                                                        context)
-                                                                    .primaryColor,
-                                                              )),
-                                                          GestureDetector(
-                                                              child: Text(
-                                                                'Время',
-                                                                style: hasTimeBegin
-                                                                    ? enableText
-                                                                    : disableText,
-                                                                textAlign:
-                                                                    TextAlign
-                                                                        .left,
-                                                              ),
-                                                              onTap: () {
-                                                                setState(() {
-                                                                  hasTimeBegin =
-                                                                      !hasTimeBegin;
-                                                                });
-                                                              })
-                                                        ])),
-                                                    TimePicker(
-                                                      time: inspectionItem
-                                                              .dtFrom ??
-                                                          DateTime.now(),
-                                                      enable: hasTimeBegin,
-                                                      minutesInterval: 1,
-                                                      spacing: 50,
-                                                      itemHeight: 80,
-                                                      context: context,
-                                                      onTimeChange: (time) {
-                                                        inspectionItem.dtFrom =
-                                                            time;
-                                                      },
-                                                    )
-                                                  ]))),
+                                            Container(
+                                                padding:
+                                                    EdgeInsets.only(bottom: 2),
+                                                child: Row(children: [
+                                                  SizedBox(
+                                                      height: 24,
+                                                      width: 24,
+                                                      child: Checkbox(
+                                                        value: hasTimeBegin ??
+                                                            false,
+                                                        onChanged: (value) {
+                                                          setState(() {
+                                                            hasTimeBegin =
+                                                                value;
+                                                            //if (value && inspectionItem.dtFrom == null) inspectionItem.dtFrom = DateTime.now();
+                                                            // if (!value) inspectionItem.dtFrom = null;
+                                                          });
+                                                        },
+                                                        checkColor:
+                                                            Theme.of(context)
+                                                                .primaryColor,
+                                                      )),
+                                                  GestureDetector(
+                                                      child: Text(
+                                                        'Время',
+                                                        style: hasTimeBegin
+                                                            ? enableText
+                                                            : disableText,
+                                                        textAlign:
+                                                            TextAlign.left,
+                                                      ),
+                                                      onTap: () {
+                                                        setState(() {
+                                                          hasTimeBegin =
+                                                              !hasTimeBegin;
+                                                        });
+                                                      })
+                                                ])),
+                                            TimePicker(
+                                              width: double.infinity,
+                                              time: inspectionItem.dtFrom ??
+                                                  DateTime.now(),
+                                              enable: hasTimeBegin,
+                                              minutesInterval: 1,
+                                              spacing: 50,
+                                              itemHeight: 80,
+                                              context: context,
+                                              onTimeChange: (time) {
+                                                inspectionItem.dtFrom = time;
+                                              },
+                                            )
+                                          ]))),
                                     ]),
-                                Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 13),
+                                    Row(children: [
+                                      Expanded(
                                           child: Container(
-                                              width: 200,
+                                              width: double.infinity,
+                                              // width: 200,
+                                              padding:
+                                                  EdgeInsets.only(right: 20),
                                               child: Column(
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
@@ -880,7 +1028,8 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                     DatePicker(
                                                         parentContext: context,
                                                         text: "",
-                                                        width: 200,
+                                                        //  width: 200,
+                                                        width: double.infinity,
                                                         enable: hasTimeEnd,
                                                         selectedDate:
                                                             inspectionItem
@@ -908,9 +1057,10 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                           });
                                                         })),
                                                   ]))),
-                                      Container(
+                                      Expanded(
                                           child: Container(
-                                              width: 200,
+                                              //  width: 200,
+                                              width: double.infinity,
                                               padding: EdgeInsets.only(top: 15),
                                               child: Column(
                                                   crossAxisAlignment:
@@ -959,6 +1109,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                               })
                                                         ])),
                                                     TimePicker(
+                                                      width: double.infinity,
                                                       time: inspectionItem.dtTo,
                                                       enable: hasTimeEnd,
                                                       minutesInterval: 1,
@@ -972,72 +1123,7 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                                                     )
                                                   ]))),
                                     ]),
-                                Container(
-                                    width: 450,
-                                    child: MyDropdown(
-                                      text: 'Члены комиссии',
-                                      dropdownValue:
-                                          inspectionItem.comGroupId != null
-                                              ? inspectionItem.comGroupId
-                                                  .toString()
-                                              : null,
-                                      items: groupList,
-                                      onChange: (value) {
-                                        setState(() {
-                                          inspectionItem.comGroupId =
-                                              int.tryParse(value);
-                                        });
-                                      },
-                                      parentContext: context,
-                                    )),
-                              ])),
-                              Expanded(
-                                  child: Column(
-                                children: [
-                                  if (eventId != null && eventId == checkTypeId)
-                                    ConstrainedBox(
-                                        constraints: BoxConstraints(
-                                            maxWidth: widthDepartment,
-                                            minHeight: 60),
-                                        child: DepartmentSelect(
-                                            text: "Структурное подразделение",
-                                            width: widthDepartment,
-                                            height: 250,
-                                            maxLine: 12,
-                                            department: department,
-                                            railwayId: planItem["railwayId"],
-                                            context: context,
-                                            onSaved: (newDepartment) {
-                                              if (newDepartment == null) return;
-                                              setState(() {
-                                                inspectionItem.departmentId =
-                                                    newDepartment.id;
-                                                department = newDepartment;
-                                              });
-                                            })),
-                                  if (eventId != null && eventId != checkTypeId)
-                                    ConstrainedBox(
-                                        constraints: BoxConstraints(
-                                            maxWidth: widthDepartment,
-                                            minHeight: 60),
-                                        child: EditTextField(
-                                          text: 'Описание',
-                                          value: eventName,
-                                          onSaved: (value) {
-                                            eventName = value;
-                                            inspectionItem.name = value;
-                                          },
-                                          context: context,
-                                          height: 250,
-                                          maxLines: 12,
-                                        )),
-                                  if (eventId == null)
-                                    Container(
-                                        width: widthDepartment,
-                                        height: 250,
-                                        child: Text("")),
-                                ],
-                              ))
+                                  ])),
                             ])))),
                             Container(
                                 child: Row(
@@ -1138,6 +1224,14 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
 
       if (!hasTimeBegin) inspectionItem.dtFrom = null;
       if (!hasTimeEnd) inspectionItem.dtTo = null;
+
+      if (inspectionItem.type != checkTypeId)
+        inspectionItem.departmentId = null;
+      /* CheckPlanItem inspectionItemCopy =
+          CheckPlanItem.fromJson(inspectionItem.toJson());
+      inspectionItemCopy.date = inspectionItemCopy.date?.toUtc();
+      inspectionItemCopy.dtFrom = inspectionItemCopy.dtFrom?.toUtc();
+      inspectionItemCopy.dtTo = inspectionItemCopy.dtTo?.toUtc();*/
 
       try {
         if (inspectionItem.id == null) {
@@ -1245,12 +1339,50 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     CheckPlanItem inspectionItem = new CheckPlanItem(
         id: null,
         odooId: null,
+        type: checkTypeId,
         parentId: _inspection.id,
         date: DateTime.now(),
         active: true);
     bool result = await showInspectionItemDialog(inspectionItem, setState);
     if (result != null && result) {
       setState(() {});
+    }
+  }
+
+  Future<void> exportToPdf() async {
+    if (_inspection.id == null) {
+      Scaffold.of(context).showSnackBar(
+          errorSnackBar(text: 'Сначала сохраните реквизиты плана проверок'));
+      return;
+    }
+    try {
+      showLoadingDialog(context);
+
+      File file = await _inspection.pdfReport;
+      hideDialog(context);
+      if (file != null) {
+        OpenFile.open(file.path);
+      }
+    } catch (e) {
+      hideDialog(context);
+    }
+  }
+
+  Future<void> exportToExcel() async {
+    if (_inspection.id == null) {
+      Scaffold.of(context).showSnackBar(
+          errorSnackBar(text: 'Сначала сохраните реквизиты плана проверок'));
+      return;
+    }
+    try {
+      showLoadingDialog(context);
+      File file = await _inspection.xlsReport;
+      hideDialog(context);
+      if (file != null) {
+        OpenFile.open(file.path);
+      }
+    } catch (e) {
+      hideDialog(context);
     }
   }
 

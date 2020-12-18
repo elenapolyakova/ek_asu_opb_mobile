@@ -85,9 +85,12 @@ bool isDateEqual(DateTime dt1, DateTime dt2) {
   return dt1.year == dt2.year && dt1.month == dt2.month && dt1.day == dt2.day;
 }
 
-DateTime stringToDateTime(dynamic date) {
+DateTime stringToDateTime(dynamic date, {bool forceUtc: true}) {
   if (date == null || date is bool && !date) return null;
-  return DateTime.tryParse(date);
+  if (forceUtc && date[date.length - 1] != 'Z')
+    return DateTime.tryParse("${date}Z");
+  else
+    return DateTime.tryParse(date);
 }
 
 String dateTimeToString(DateTime date, [bool includeTime = false]) {
@@ -103,13 +106,4 @@ String emailValidator(String value) {
           .hasMatch(value)
       ? "Неверный e-mail"
       : null;
-}
-
-/// Convert user time to server time.
-///
-/// :param: `date` can be either String or DateTime
-DateTime toServerTime(date) {
-  if (date is String) date = stringToDateTime(date);
-  if (date == null) return null;
-  return date;
 }

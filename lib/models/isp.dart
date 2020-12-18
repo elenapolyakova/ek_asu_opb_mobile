@@ -17,7 +17,7 @@ class DocumentList extends Models {
   factory DocumentList.fromJson(Map<String, dynamic> json) => new DocumentList(
         id: json["id"],
         name: json["name"],
-        parent_id: getObj(json["parent_id"]),
+        parent_id: unpackListId(json["parent_id"])['id'],
       );
 
   Map<String, dynamic> toJson() {

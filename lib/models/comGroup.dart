@@ -44,10 +44,9 @@ class ComGroup extends Models {
     return _head;
   }
 
-  // set comUsers(Future<List<User>> users) {
-  //   //mob.check.plan.com_group
-  //   return null;
-  // }
+  Future<Chat> get chat async {
+    return (await ChatController.select(groupId: id))[0];
+  }
 
   ComGroup({
     this.id,
@@ -66,8 +65,8 @@ class ComGroup extends Models {
       parentId: unpackListId(json["parent_id"])['id'],
       headId: unpackListId(json["head_id"])['id'],
       groupNum: getObj(json["group_num"]),
-      isMain: json["is_main"] == 'true',
-      active: json["active"] == 'true',
+      isMain: json["is_main"].toString() == 'true',
+      active: json["active"].toString() == 'true',
     );
     return res;
   }

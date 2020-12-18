@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:ek_asu_opb_mobile/controllers/checkPlan.dart';
+import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:ek_asu_opb_mobile/models/checkPlan.dart';
@@ -34,7 +37,7 @@ class CheckPlanItem extends Models {
   DateTime dtTo;
 
   ///Действует
-  bool active = true;
+  bool active;
 
   ///ID рабочей группы
   int comGroupId;
@@ -76,6 +79,16 @@ class CheckPlanItem extends Models {
     return _parent;
   }
 
+  Future<File> get pdfReport {
+    if (odooId == null) return null;
+    return CheckPlanItemController.downloadPdfReport(odooId);
+  }
+
+  Future<File> get xlsReport {
+    if (odooId == null) return null;
+    return CheckPlanItemController.downloadXlsReport(odooId);
+  }
+
   CheckPlanItem({
     this.id,
     this.odooId,
@@ -86,7 +99,7 @@ class CheckPlanItem extends Models {
     this.date,
     this.dtFrom,
     this.dtTo,
-    this.active,
+    this.active = true,
     this.comGroupId,
   });
 
@@ -98,10 +111,10 @@ class CheckPlanItem extends Models {
       name: getObj(json["name"]),
       type: getObj(json["type"]),
       departmentId: unpackListId(json["department_id"])['id'],
-      date: stringToDateTime(json["date"]),
-      dtFrom: stringToDateTime(json["dt_from"]),
-      dtTo: stringToDateTime(json["dt_to"]),
-      active: json["active"] == 'true',
+      date: stringToDateTime(json["date"], forceUtc: false),
+      dtFrom: stringToDateTime(json["dt_from"], forceUtc: false),
+      dtTo: stringToDateTime(json["dt_to"], forceUtc: false),
+      active: json["active"].toString() == 'true',
       comGroupId: unpackListId(json["com_group_id"])['id'],
     );
     return res;

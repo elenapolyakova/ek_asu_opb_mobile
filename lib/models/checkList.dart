@@ -9,7 +9,7 @@ class CheckListWork extends Models {
   bool is_base;
   String name;
   int type;
-  bool active = true;
+  bool active;
   // Status of check list, true in work, false not used now
   bool is_active;
   int base_id;
@@ -23,7 +23,7 @@ class CheckListWork extends Models {
     this.name,
     this.is_active,
     this.type,
-    this.active,
+    this.active = true,
   });
 
   static Map<int, String> typeSelection = {
@@ -48,13 +48,13 @@ class CheckListWork extends Models {
       new CheckListWork(
         id: json["id"],
         odoo_id: json["odoo_id"],
-        parent_id: json["parent_id"] is List ? null : getObj(json["parent_id"]),
-        is_base: (json["is_base"].toString() == 'true'),
+        parent_id: unpackListId(json["parent_id"])['id'],
+        is_base: json["is_base"].toString() == 'true',
         name: getStr(json["name"]),
-        is_active: (json["is_active"].toString() == 'true'),
+        is_active: json["is_active"].toString() == 'true',
         type: getObj(json["type"]),
-        base_id: getObj(json["base_id"]),
-        active: (json["active"].toString() == 'true'),
+        base_id: unpackListId(json["base_id"])['id'],
+        active: json["active"].toString() == 'true',
       );
 
   Map<String, dynamic> toJson([omitId = false]) {

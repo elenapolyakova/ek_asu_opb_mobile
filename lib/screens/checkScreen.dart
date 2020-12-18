@@ -1,3 +1,4 @@
+import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
@@ -23,7 +24,7 @@ class _CheckScreen extends State<CheckScreen> {
   int _selectedIndex = 0;
   bool showLoading = true;
   final sizeTextBlack = TextStyle(fontSize: 17.0, color: Color(0xFF252A0E));
-  Map<String, dynamic> checkPlanItem;
+  Map<String, dynamic> arguments;
   int _checkPlanItemId;
   int _departmentId;
   bool isSyncData = false;
@@ -36,10 +37,34 @@ class _CheckScreen extends State<CheckScreen> {
     WidgetsFlutterBinding.ensureInitialized();
     auth.getUserInfo().then((userInfo) {
       _userInfo = userInfo;
-      _navigationMenu = getNavigationMenu();
-      showLoading = false;
-      setState(() {});
+
+      loadParams().then((hasParam) {
+        if (hasParam)
+          _navigationMenu = getNavigationMenu();
+        showLoading = false;
+        setState(() {});
+      });
     });
+  }
+
+  Future<bool> loadParams() async {
+    arguments = ModalRoute.of(context).settings.arguments;
+    if (arguments != null) {
+      _checkPlanItemId = arguments["id"];
+      _departmentId = arguments["department_id"];
+    }
+
+    if (_checkPlanItemId != null) {
+      auth.setCheckPlanId(_checkPlanItemId);
+    } else {
+      _checkPlanItemId = await auth.getCheckPlanId();
+      if (_checkPlanItemId != null)
+        _departmentId =
+            (await CheckPlanItemController.selectById(_checkPlanItemId))
+                .departmentId;
+    }
+
+    return _checkPlanItemId != null;
   }
 
   int getReportIndex() {
@@ -55,6 +80,8 @@ class _CheckScreen extends State<CheckScreen> {
       'label': 'Чек-листы',
       'icon': Icon(Icons.fact_check)
     });
+    result.add(
+        {'key': 'history', 'label': 'Нарушения', 'icon': Icon(Icons.history)});
     result.add({
       'key': 'documents',
       'label': 'Документы',
@@ -63,11 +90,11 @@ class _CheckScreen extends State<CheckScreen> {
     result
         .add({'key': 'map', 'label': 'Карта', 'icon': Icon(Icons.location_on)});
 
-    result.add({
+  /*  result.add({
       'key': 'report',
       'label': 'Отчеты',
       'icon': Icon(Icons.insert_drive_file)
-    });
+    });*/
 
     return result;
   }
@@ -92,11 +119,12 @@ class _CheckScreen extends State<CheckScreen> {
 
   Widget getBodyContent(isSyncData) {
     String screenKey = _navigationMenu[_selectedIndex]["key"];
-    if (!isSyncData)
-      if (screenList[screenKey] != null) return screenList[screenKey];
+    if (!isSyncData) if (screenList[screenKey] != null)
+      return screenList[screenKey];
     switch (screenKey) {
       case 'info':
-        screenList[screenKey] = screens.InfoCheckScreen(context, _departmentId, GlobalKey());
+        screenList[screenKey] =
+            screens.InfoCheckScreen(context, _departmentId, _checkPlanItemId, GlobalKey());
         break;
       case "map":
         screenList[screenKey] = screens.MapScreen(departmentId: _departmentId);
@@ -109,7 +137,12 @@ class _CheckScreen extends State<CheckScreen> {
             screens.CheckListManagerScreen(_checkPlanItemId, isSyncData);
         break;
       case "documents":
-        screenList[screenKey] = screens.DepartmentDocumentScreen(_departmentId, GlobalKey());
+        screenList[screenKey] =
+            screens.DepartmentDocumentScreen(_departmentId, GlobalKey());
+        break;
+      case "history":
+        screenList[screenKey] = screens.FaultHistoryScreen(
+            _departmentId, _checkPlanItemId, isSyncData);
         break;
       default:
         return Text("");
@@ -119,12 +152,6 @@ class _CheckScreen extends State<CheckScreen> {
 
   @override
   Widget build(BuildContext context) {
-    setState(() {
-      checkPlanItem = ModalRoute.of(context).settings.arguments;
-      _checkPlanItemId = checkPlanItem["id"];
-      _departmentId = checkPlanItem["department_id"];
-    });
-
     return showLoading
         ? new ConstrainedBox(
             child:

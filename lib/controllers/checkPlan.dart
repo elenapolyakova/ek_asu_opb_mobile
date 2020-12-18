@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
+import 'package:ek_asu_opb_mobile/controllers/report.dart';
 import 'package:ek_asu_opb_mobile/models/checkPlan.dart';
 import 'package:ek_asu_opb_mobile/models/comGroup.dart';
 import "package:ek_asu_opb_mobile/models/models.dart";
@@ -8,7 +11,9 @@ import "package:ek_asu_opb_mobile/src/exchangeData.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
 class CheckPlanController extends Controllers {
-  static String _tableName = "plan_item_check";
+  static const String _tableName = "plan_item_check";
+  static const String xlsReportXmlId = 'report_mob_check_plan_xls';
+  static const String pdfReportXmlId = 'report_mob_check_plan_pdf';
 
   static Future<List<int>> selectIDs() async {
     List<Map<String, dynamic>> maps =
@@ -49,26 +54,8 @@ class CheckPlanController extends Controllers {
     List<List> domain = [];
     if (loadRelated) {
       fields = ['write_date', 'parent_id', 'main_com_group_id'];
-      // List<Map<String, dynamic>> queryRes =
-      //     await DBProvider.db.select(_tableName, columns: ['odoo_id']);
-      // domain = [
-      //   ['id', 'in', queryRes.map((e) => e['odoo_id'] as int).toList()]
-      // ];
     } else {
       await DBProvider.db.deleteAll(_tableName);
-      // List<List> toAdd = [];
-      // await Future.forEach(
-      //     SynController.tableMany2oneFieldsMap[_tableName].entries,
-      //     (element) async {
-      //   List<Map<String, dynamic>> queryRes =
-      //       await DBProvider.db.select(element.value, columns: ['odoo_id']);
-      //   toAdd.add([
-      //     element.key,
-      //     'in',
-      //     queryRes.map((e) => e['odoo_id'] as int).toList()
-      //   ]);
-      // });
-      // domain += toAdd;
       fields = [
         'name',
         'rw_id',
@@ -99,8 +86,6 @@ class CheckPlanController extends Controllers {
           PlanItem planItem = await PlanItemController.selectByOdooId(
               unpackListId(e['parent_id'])['id']);
           if (planItem == null) return null;
-          // assert(planItem != null,
-          //     "Model plan_item has to be loaded before $_tableName");
           res['id'] = checkPlan.id;
           res['parent_id'] = planItem.id;
         }
@@ -108,8 +93,6 @@ class CheckPlanController extends Controllers {
           ComGroup comGroup = await ComGroupController.selectByOdooId(
               unpackListId(e['main_com_group_id'])['id']);
           if (comGroup == null) return null;
-          // assert(comGroup != null,
-          //     "Model com_group has to be loaded before $_tableName");
           res['id'] = checkPlan.id;
           res['main_com_group_id'] = comGroup.id;
         }
@@ -206,10 +189,6 @@ class CheckPlanController extends Controllers {
     print(
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
     if (loadRelated) await setLatestWriteDate(_tableName, json);
-  }
-
-  static Future finishSync(dateTime) {
-    return setLastSyncDateForDomain(_tableName, dateTime);
   }
 
   /// Select a list of CheckPlan with provided parentId
@@ -325,5 +304,19 @@ class CheckPlanController extends Controllers {
       res['message'] = 'Error deleting from $_tableName';
     });
     return res;
+  }
+
+  static Future<File> downloadPdfReport(int odooId) async {
+    return ReportController.downloadReport(
+        SynController.localRemoteTableNameMap[_tableName],
+        odooId,
+        pdfReportXmlId);
+  }
+
+  static Future<File> downloadXlsReport(int odooId) async {
+    return ReportController.downloadReport(
+        SynController.localRemoteTableNameMap[_tableName],
+        odooId,
+        xlsReportXmlId);
   }
 }

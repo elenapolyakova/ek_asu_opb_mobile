@@ -9,6 +9,10 @@ export 'package:ek_asu_opb_mobile/models/checkPlanItem.dart';
 export 'package:ek_asu_opb_mobile/models/comGroup.dart';
 export 'package:ek_asu_opb_mobile/models/chat.dart';
 export 'package:ek_asu_opb_mobile/models/chatMessage.dart';
+export 'package:ek_asu_opb_mobile/models/fault.dart';
+export 'package:ek_asu_opb_mobile/models/faultItem.dart';
+export 'package:ek_asu_opb_mobile/models/faultFix.dart';
+export 'package:ek_asu_opb_mobile/models/faultFixItem.dart';
 
 abstract class Models {
   fomJson() {}

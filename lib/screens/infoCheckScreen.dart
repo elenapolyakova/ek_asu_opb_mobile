@@ -1,26 +1,34 @@
 import 'dart:ui';
 
+import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
+import 'package:flutter_icons/flutter_icons.dart';
+import 'dart:io';
+import 'package:open_file/open_file.dart';
 
 class InfoCheckScreen extends StatefulWidget {
   int departmentId;
+  int checkPlanItemId;
   BuildContext context;
-   GlobalKey key;
+  GlobalKey key;
   @override
-  InfoCheckScreen(this.context, this.departmentId, this.key);
+  InfoCheckScreen(
+      this.context, this.departmentId, this.checkPlanItemId, this.key);
 
   @override
-  State<InfoCheckScreen> createState() => _InfoCheckScreen(departmentId);
+  State<InfoCheckScreen> createState() =>
+      _InfoCheckScreen(departmentId, checkPlanItemId);
 }
 
 class _InfoCheckScreen extends State<InfoCheckScreen> {
   UserInfo _userInfo;
   int departmentId;
+  int checkPlanItemId;
   bool showLoading = true;
   Department _department;
   final formKey = new GlobalKey<FormState>();
@@ -29,7 +37,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
   String _inn;
 
   @override
-  _InfoCheckScreen(this.departmentId);
+  _InfoCheckScreen(this.departmentId, this.checkPlanItemId);
 
   @override
   void initState() {
@@ -66,8 +74,8 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
     }
   }
 
-  List<PopupMenuItem<String>> getMenu(BuildContext context) {
-    List<PopupMenuItem<String>> result = [];
+  List<PopupMenuEntry<Object>> getMenu(BuildContext context) {
+    List<PopupMenuEntry<Object>> result = [];
     result.add(
       PopupMenuItem<String>(
           child: TextIcon(
@@ -78,6 +86,34 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
             color: Theme.of(context).primaryColorDark,
           ),
           value: 'edit'),
+    );
+
+    result.add(PopupMenuDivider(
+      height: 20,
+    ));
+
+    result.add(
+      PopupMenuItem<String>(
+          child: TextIcon(
+            icon: Icon(FontAwesome5.file_pdf).icon, //Icons.edit,
+            text: "Экспорт в PDF",
+            margin: 5.0,
+            /* onTap: () */
+            color: Theme.of(context).primaryColorDark,
+          ),
+          value: 'pdf'),
+    );
+
+    result.add(
+      PopupMenuItem<String>(
+          child: TextIcon(
+            icon: Icon(FontAwesome5.file_excel).icon,
+            text: "Экспорт в Excel",
+            margin: 5.0,
+            /* onTap: () */
+            color: Theme.of(context).primaryColorDark,
+          ),
+          value: 'excel'),
     );
 
     return result;
@@ -99,7 +135,6 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
       deputy_fio: _department.deputy_fio,
       deputy_email: _department.deputy_email,
       deputy_phone: _department.deputy_phone,
-      
     );
     setState(() {});
     bool result = await showEditDialog(departmentCopy, setState);
@@ -157,7 +192,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
                                   MyRichText(
                                     'Наименование структурного подразделения: ',
                                     departmentCopy.name,
-                                     color: Theme.of(context).primaryColorDark,
+                                    color: Theme.of(context).primaryColorDark,
                                   ),
                                   Row(children: [
                                     Expanded(
@@ -363,6 +398,36 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
     }
   }
 
+  Future<void> exportToExcel() async {
+    try {
+      showLoadingDialog(context);
+      CheckPlanItem checkPlanItem =
+          await CheckPlanItemController.selectById(checkPlanItemId);
+      File file = await checkPlanItem.xlsReport;
+      hideDialog(context);
+      if (file != null) {
+        OpenFile.open(file.path);
+      }
+    } catch (e) {
+      hideDialog(context);
+    }
+  }
+
+  Future<void> exportToPdf() async {
+    try {
+      showLoadingDialog(context);
+       CheckPlanItem checkPlanItem =
+          await CheckPlanItemController.selectById(checkPlanItemId);
+      File file = await checkPlanItem.pdfReport;
+      hideDialog(context);
+      if (file != null) {
+        OpenFile.open(file.path);
+      }
+    } catch (e) {
+      hideDialog(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(widget.context).buttonColor;
@@ -376,6 +441,12 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
           case 'edit':
             editInfoClicked();
             break;
+          case 'pdf':
+            exportToPdf();
+            return;
+          case 'excel':
+            exportToExcel();
+            return;
         }
       },
       icon: Icon(
@@ -419,7 +490,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
             decoration: BoxDecoration(
                 image: DecorationImage(
                     image: AssetImage("assets/images/frameScreen.png"),
-                    fit: BoxFit.fitWidth)),
+                    fit: BoxFit.fill)),
             child: showLoading
                 ? Text("")
                 : Padding(
@@ -447,7 +518,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
                                             margin: EdgeInsets.symmetric(
                                                 vertical: 10),
                                             child: MyRichText(
-                                              'Наименование структурного подразделения: ',
+                                              'Наименование структурного подразделения: \n ',
                                               _department.name,
                                             ),
                                           ),

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:ek_asu_opb_mobile/controllers/checkList.dart';
 import 'package:ek_asu_opb_mobile/controllers/checkListItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
@@ -5,16 +7,20 @@ import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import "package:ek_asu_opb_mobile/controllers/controllers.dart";
 import 'package:ek_asu_opb_mobile/controllers/departmentDocument.dart';
 import 'package:ek_asu_opb_mobile/controllers/fault.dart';
+import 'package:ek_asu_opb_mobile/controllers/faultFix.dart';
+import 'package:ek_asu_opb_mobile/controllers/faultFixItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/faultItem.dart';
+import 'package:ek_asu_opb_mobile/main.dart';
 import "package:ek_asu_opb_mobile/models/syn.dart";
 import "package:ek_asu_opb_mobile/src/exchangeData.dart";
+import 'package:ek_asu_opb_mobile/src/fileStorage.dart';
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'package:ek_asu_opb_mobile/utils/network.dart';
 
 class SynController extends Controllers {
   static bool ongoingSync = false;
-  static String _tableName = "syn";
-  static Map<String, String> localRemoteTableNameMap = {
+  static const String _tableName = "syn";
+  static const Map<String, String> localRemoteTableNameMap = {
     'plan': 'mob.main.plan',
     'plan_item': 'mob.main.plan.item',
     'plan_item_check': 'mob.check.plan',
@@ -27,8 +33,10 @@ class SynController extends Controllers {
     'fault_item': 'mob.document',
     'chat': 'mob.chat',
     'chat_message': 'mob.chat.msg',
+    'fault_fix': 'mob.check.list.item.fault_control',
+    'fault_fix_item': 'mob.document',
   };
-  static Map<String, List<String>> tableBooleanFieldsMap = {
+  static const Map<String, List<String>> tableBooleanFieldsMap = {
     'plan': ['active'],
     'plan_item': ['active'],
     'plan_item_check': ['active'],
@@ -37,11 +45,13 @@ class SynController extends Controllers {
     'check_list': ['active', 'is_active', 'is_base'],
     'check_list_item': ['active'],
     'fault': ['active'],
-    'fault_item': ['active'],
+    'fault_item': [],
+    'fault_fix': ['active', 'is_finished'],
+    'fault_fix_item': [],
     'chat': [],
     'chat_message': [],
   };
-  static Map<String, Map<String, String>> tableMany2oneFieldsMap = {
+  static const Map<String, Map<String, String>> tableMany2oneFieldsMap = {
     'plan': {},
     'plan_item': {
       'parent_id': 'plan',
@@ -76,8 +86,11 @@ class SynController extends Controllers {
     'chat_message': {
       'parent_id': 'chat',
     },
+    'fault_fix': {'parent_id': 'fault'},
+    'fault_fix_item': {'parent3_id': 'fault_fix'}
   };
-  static Map<String, List<Map<String, dynamic>>> tableMany2ManyFieldsMap = {
+  static const Map<String, List<Map<String, dynamic>>> tableMany2ManyFieldsMap =
+      {
     'com_group': [
       {
         // поле, в котором хранится отношение many2many на сервере
@@ -106,6 +119,21 @@ class SynController extends Controllers {
       },
     ]
   };
+  static const Map<String, List<String>> tableFileFieldsMap = {
+    'plan': [],
+    'plan_item': [],
+    'plan_item_check': [],
+    'plan_item_check_item': [],
+    'com_group': [],
+    'check_list': [],
+    'check_list_item': [],
+    'fault': [],
+    'fault_item': ['file_data'],
+    'fault_fix': [],
+    'fault_fix_item': ['file_data'],
+    'chat': [],
+    'chat_message': [],
+  };
   static Future<dynamic> insert(Map<String, dynamic> json) async {
     Syn syn = Syn.fromJson(json); //нужно, чтобы преобразовать одоо rel в id
     return await DBProvider.db.insert(_tableName, syn.toJson());
@@ -124,19 +152,21 @@ class SynController extends Controllers {
   }
 
   /// Adds a record to create into syn table
-  static Future<int> create(String localTableName, int resId) async {
+  static Future<int> create(String localTableName, int resId,
+      {bool noImmediateSync = false}) async {
     int res = await DBProvider.db.insert(_tableName, {
       'record_id': resId,
       'local_table_name': localTableName,
       'method': 'create',
     });
-    await syncTask(noLoadFromOdoo: true);
+    if (!noImmediateSync) await syncTask(noLoadFromOdoo: true);
     return res;
   }
 
   /// If a record wasn't uploaded yet, do nothing.
   /// Else adds a record to edit into syn table
-  static Future<int> edit(String localTableName, int resId, int odooId) async {
+  static Future<int> edit(String localTableName, int resId, int odooId,
+      {bool noImmediateSync = false}) async {
     List toSyn = await DBProvider.db.select(
       _tableName,
       columns: ['method'],
@@ -155,7 +185,7 @@ class SynController extends Controllers {
       'local_table_name': localTableName,
       'method': 'write',
     });
-    await syncTask(noLoadFromOdoo: true);
+    if (!noImmediateSync) await syncTask(noLoadFromOdoo: true);
     return res;
   }
 
@@ -183,6 +213,7 @@ class SynController extends Controllers {
   static Future loadFromOdoo({
     bool forceFirstLoad = false,
   }) async {
+    syncStatus = SYNC_STATUS.IN_PROGRESS;
     if (forceFirstLoad) {
       await removeLastSyncDate(_tableName);
       print('removed last sync date');
@@ -198,16 +229,22 @@ class SynController extends Controllers {
       await DepartmentDocumentController.firstLoadFromOdoo();
       await CheckListController.firstLoadFromOdoo();
       await CheckListItemController.firstLoadFromOdoo();
-      await FaultController.firstLoadFromOdoo();
-      await FaultItemController.firstLoadFromOdoo();
+      FaultController.firstLoadFromOdoo().then((value) async {
+        await FaultItemController.firstLoadFromOdoo();
+        await FaultFixController.firstLoadFromOdoo();
+        await FaultFixItemController.firstLoadFromOdoo();
+        await FaultController.firstLoadFromOdoo(true);
+        await FaultItemController.firstLoadFromOdoo(true);
+        await FaultFixController.firstLoadFromOdoo(true);
+        await FaultFixItemController.firstLoadFromOdoo(true);
+        syncStatus = SYNC_STATUS.SUCCESS;
+      });
 
       await CheckPlanController.firstLoadFromOdoo(true);
       await ComGroupController.firstLoadFromOdoo(true);
       await CheckPlanItemController.firstLoadFromOdoo(true);
       await CheckListController.firstLoadFromOdoo(true);
       await CheckListItemController.firstLoadFromOdoo(true);
-      await FaultController.firstLoadFromOdoo(true);
-      await FaultItemController.firstLoadFromOdoo(true);
 
       await ChatController.loadFromOdoo(clean: true);
       await ChatMessageController.loadFromOdoo(clean: true);
@@ -219,16 +256,22 @@ class SynController extends Controllers {
       await CheckPlanItemController.loadChangesFromOdoo();
       await CheckListController.loadChangesFromOdoo();
       await CheckListItemController.loadChangesFromOdoo();
-      await FaultController.loadChangesFromOdoo();
-      await FaultItemController.loadChangesFromOdoo();
+      FaultController.loadChangesFromOdoo().then((value) async {
+        await FaultItemController.loadChangesFromOdoo();
+        await FaultFixController.loadChangesFromOdoo();
+        await FaultFixItemController.loadChangesFromOdoo();
+        await FaultController.loadChangesFromOdoo(true);
+        await FaultItemController.loadChangesFromOdoo(true);
+        await FaultFixController.loadChangesFromOdoo(true);
+        await FaultFixItemController.loadChangesFromOdoo(true);
+        syncStatus = SYNC_STATUS.SUCCESS;
+      });
 
       await CheckPlanController.loadChangesFromOdoo(true);
       await CheckPlanItemController.loadChangesFromOdoo(true);
       await ComGroupController.loadChangesFromOdoo(loadRelated: true);
       await CheckListController.loadChangesFromOdoo(true);
       await CheckListItemController.loadChangesFromOdoo(true);
-      await FaultController.loadChangesFromOdoo(true);
-      await FaultItemController.loadChangesFromOdoo(true);
     }
     await ChatController.loadFromOdoo(clean: lastDateDomain.isEmpty);
     await ChatMessageController.loadFromOdoo(clean: lastDateDomain.isEmpty);
@@ -264,7 +307,7 @@ class SynController extends Controllers {
     if (booleanFields != null && booleanFields.length > 0) {
       // For each boolean field in a record
       booleanFields.forEach((el) {
-        record[el] = record[el] == 'true';
+        record[el] = record[el].toString() == 'true';
       });
     }
 
@@ -273,6 +316,7 @@ class SynController extends Controllers {
         tableMany2oneFieldsMap[syn.localTableName];
     // If a record contains any many2one fields
     if (many2oneFields != null && many2oneFields.length > 0) {
+      bool stopSync = false;
       print("Model ${syn.localTableName} has many2one fields");
       // For each many2one field in a record
       await Future.forEach(many2oneFields.entries, (el) async {
@@ -322,22 +366,30 @@ class SynController extends Controllers {
                 'local_table_name': localTable,
                 'method': 'create',
               });
-              synList.add({
-                'record_id': many2oneFieldId,
-                'local_table_name': localTable,
-                'method': 'create',
-                'id': id,
-              });
+              synList = [
+                {
+                  'record_id': many2oneFieldId,
+                  'local_table_name': localTable,
+                  'method': 'create',
+                  'id': id,
+                }
+              ];
             }
             await doSync(Syn.fromJson(synList[0]));
             // Try to synchronize the original record again
-            return doSync(syn);
+            await doSync(syn);
+            throw "Finished synchronizing ${el.key}=$many2oneFieldId of $syn.";
           }
           print(
               "${el.key} of ${syn.localTableName} to upload = ${many2oneRecord[0]['odoo_id']}");
           record[el.key] = many2oneRecord[0]['odoo_id'];
         }
+      }).catchError((error) {
+        stopSync = true;
       });
+      if (stopSync) {
+        return true;
+      }
     }
 
     // Add many2many records to upload
@@ -433,11 +485,21 @@ class SynController extends Controllers {
       }
     }
 
-    // Upload to backend
     record.remove('create_uid');
     record.remove('write_uid');
     record.remove('create_date');
     record.remove('write_date');
+    final List<String> fileFields = tableFileFieldsMap[syn.localTableName];
+    if (fileFields != null && fileFields.length > 0) {
+      print("Getting files of $fileFields from record.");
+      await Future.forEach(fileFields, (el) async {
+        // while (!File(record[el]).existsSync()) {
+        //   print("${record[el]} does not exist. Waiting 1 second...");
+        //   await Future.delayed(Duration(seconds: 1));
+        // }
+        record[el] = fileToBase64(record[el]);
+      });
+    }
     print("Uploading $record");
     return await getDataWithAttemp(
             localRemoteTableNameMap[syn.localTableName], syn.method, args, {})
@@ -472,6 +534,7 @@ class SynController extends Controllers {
         await Future.delayed(Duration(seconds: 12));
       }
       Map lastUploadedTableRecordId = {};
+      syncStatus = SYNC_STATUS.IN_PROGRESS;
       while (true) {
         // Load a syn record
         List<Map<String, dynamic>> toSyn = await DBProvider.db.select(
@@ -484,6 +547,7 @@ class SynController extends Controllers {
           //Синхронизация завершена
           //TODO: вывести уведомление
           print('Finished synchronization');
+          syncStatus = SYNC_STATUS.SUCCESS;
           DBProvider.db.insert(
               'log', {'date': nowStr(), 'message': "Finished synchronization"});
           return true;

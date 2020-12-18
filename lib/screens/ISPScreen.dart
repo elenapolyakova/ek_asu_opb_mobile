@@ -239,7 +239,7 @@ class _ISPScreen extends State<ISPScreen> {
                 decoration: BoxDecoration(
                     image: DecorationImage(
                         image: AssetImage("assets/images/frameScreen.png"),
-                        fit: BoxFit.fitWidth)),
+                        fit: BoxFit.fill)),
                 child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     child: Column(children: [

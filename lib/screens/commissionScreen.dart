@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
 import 'package:ek_asu_opb_mobile/controllers/comGroup.dart';
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:ek_asu_opb_mobile/models/comGroup.dart';
@@ -31,14 +32,16 @@ import 'dart:async';
 */
 class MyGroup {
   ComGroup group;
+  Chat chat;
   List<Member> members;
-  MyGroup(this.group, this.members);
+  MyGroup(this.group, this.members, this.chat);
 }
 
 class Member {
   User user;
   int roleId;
-  Member(this.user, {this.roleId});
+  String depName;
+  Member(this.user, {this.depName, this.roleId});
 }
 
 enum TYPE_LIST { commission, group, available }
@@ -46,7 +49,7 @@ enum TYPE_LIST { commission, group, available }
 class CommissionScreen extends StatefulWidget {
   int checkPlanId;
   BuildContext context;
-   GlobalKey key;
+  GlobalKey key;
 
   @override
   CommissionScreen(this.context, this.checkPlanId, this.key);
@@ -58,9 +61,11 @@ class CommissionScreen extends StatefulWidget {
 class _CommissionScreen extends State<CommissionScreen> {
   UserInfo _userInfo;
   bool showLoading = true;
-  List<User> userList;
-  List<User> _userList;
+  List<Member> userList =
+      []; //Пользователи доступные в выпадающем списке комиссии
+  List<Member> _userList = []; //полный список всех пользователей
   int checkPlanId;
+  int railwayId;
   var _tapPosition;
   String commissionName;
   String emptyCommissionName;
@@ -151,15 +156,25 @@ class _CommissionScreen extends State<CommissionScreen> {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
-      _userList = await UserController.selectAll();
-      userList = await UserController.selectAll();
-      _userList.sort(
+      //CheckPlan checkPlan = await CheckPlanController.selectById(checkPlanId);
+      // railwayId = checkPlan.railwayId;
+      List<User> allUserList =
+          await UserController.selectByRailway(_userInfo.railway_id);
+
+      allUserList.sort(
           (a, b) => a.display_name.trim().compareTo(b.display_name.trim()));
-      userList.sort(
-          (a, b) => a.display_name.trim().compareTo(b.display_name.trim()));
+
+      for (User user in allUserList) {
+        String shortDepName = await depName(user.department_id);
+        _userList.add(Member(user, depName: shortDepName));
+        userList.add(Member(user, depName: shortDepName));
+      }
+
       _errorText = '';
       await loadGroups();
-    } catch (e) {} finally {
+    } catch (e) {
+      print(e);
+    } finally {
       hideDialog(context);
       showLoading = false;
       setState(() => {});
@@ -171,12 +186,17 @@ class _CommissionScreen extends State<CommissionScreen> {
   Future<List<Member>> getMembers(ComGroup group) async {
     List<User> users = await group.comUsers;
     int headId = group.headId;
-    List<Member> result = List.generate(users.length, (index) {
-      if (headId == users[index].id)
-        return Member(users[index],
-            roleId: group.isMain ? headCommissionRole : headGroupRole);
-      return Member(users[index]);
-    });
+    List<Member> result = [];
+
+    for (User user in users) {
+      String shortDepName = await depName(user.department_id);
+      if (headId == user.id)
+        result.add(Member(user,
+            depName: shortDepName,
+            roleId: group.isMain ? headCommissionRole : headGroupRole));
+      else
+        result.add(Member(user, depName: shortDepName));
+    }
 
     return result;
   }
@@ -194,12 +214,24 @@ class _CommissionScreen extends State<CommissionScreen> {
       commision = groups.firstWhere((group) => group.isMain == true,
           orElse: () => null);
 
-      _commision = new MyGroup(commision, await getMembers(commision));
+      if (commision != null) {
+        Chat chat = new Chat(id: null, active: true, groupId: commision.id);
+        try {
+          chat = await commision?.chat;
+        } catch (e) {}
+
+        _commision = new MyGroup(commision, await getMembers(commision), chat);
+      }
 
       // groups.remove(commision);
       for (var i = 0; i < groups.length; i++)
-        if (!groups[i].isMain)
-          _groups.add(MyGroup(groups[i], await getMembers(groups[i])));
+        if (!groups[i].isMain) {
+          Chat chat = new Chat(id: null, active: true, groupId: groups[i].id);
+          try {
+            chat = await groups[i]?.chat;
+          } catch (e) {}
+          _groups.add(MyGroup(groups[i], await getMembers(groups[i]), chat));
+        }
     } else
       _commision = null;
 
@@ -216,7 +248,8 @@ class _CommissionScreen extends State<CommissionScreen> {
               groupNum: null,
               isMain: true,
               active: true),
-          []);
+          [],
+          Chat(id: null, active: true));
       // !![];
     }
   }
@@ -396,7 +429,7 @@ class _CommissionScreen extends State<CommissionScreen> {
   void deleteUserFromCommission(int userId, setState) {
     setState(() {
       _commissionList.removeWhere((member) => member.user.id == userId);
-      userList.add(_userList.firstWhere((user) => user.id == userId));
+      userList.add(_userList.firstWhere((user) => user.user.id == userId));
     });
   }
 
@@ -499,7 +532,8 @@ class _CommissionScreen extends State<CommissionScreen> {
             isMain: _commision.group.isMain,
             active: _commision.group.active,
             headId: _commision.group.headId),
-        []);
+        [],
+        Chat.fromJson(_commision.chat.toJson()));
     _commision.members.forEach((member) {
       commissionCopy.members.add(Member(
           User(
@@ -507,6 +541,7 @@ class _CommissionScreen extends State<CommissionScreen> {
             department_id: member.user.department_id,
             id: member.user.id,
           ),
+          depName: member.depName,
           roleId: member.roleId));
     });
     bool result = await showCommissionDialog(commissionCopy, setState);
@@ -529,7 +564,8 @@ class _CommissionScreen extends State<CommissionScreen> {
             groupNum: null,
             isMain: false,
             active: true),
-        []);
+        [],
+        Chat(id: null, active: true));
     bool result = await showGroupDialog(group, setState);
     if (result != null && result) {
       setState(() {});
@@ -542,16 +578,16 @@ class _CommissionScreen extends State<CommissionScreen> {
     if (group == null) return;
 
     MyGroup groupCopy = new MyGroup(
-      ComGroup(
-          id: group.group.id,
-          odooId: group.group.odooId,
-          parentId: group.group.parentId,
-          groupNum: group.group.groupNum,
-          isMain: group.group.isMain,
-          active: group.group.active,
-          headId: group.group.headId),
-      [],
-    );
+        ComGroup(
+            id: group.group.id,
+            odooId: group.group.odooId,
+            parentId: group.group.parentId,
+            groupNum: group.group.groupNum,
+            isMain: group.group.isMain,
+            active: group.group.active,
+            headId: group.group.headId),
+        [],
+        Chat.fromJson(group.chat.toJson()));
     group.members.forEach((member) {
       groupCopy.members.add(Member(
           User(
@@ -559,6 +595,7 @@ class _CommissionScreen extends State<CommissionScreen> {
             department_id: member.user.department_id,
             id: member.user.id,
           ),
+          depName: member.depName,
           roleId: member.roleId));
     });
 
@@ -602,6 +639,7 @@ class _CommissionScreen extends State<CommissionScreen> {
   }
 
   Future<bool> showGroupDialog(MyGroup group, setState) {
+    bool isChatActive = group.chat != null && group.chat.active == true;
     setState(() {
       _groupList = group.members;
       _availableList = [];
@@ -653,149 +691,182 @@ class _CommissionScreen extends State<CommissionScreen> {
                       body: Form(
                           key: formGroupKey,
                           child: Container(
+                              padding: const EdgeInsets.only(top: 16),
                               child: Column(children: [
-                            FormTitle('Формирование группы'),
-                            Container(
-                              child: EditTextField(
-                                text: 'Название группы',
-                                value: group.group.groupNum,
-                                onSaved: (value) => setState(() {
-                                  group.group.groupNum = value;
-                                }),
-                                context: context,
-                              ),
-                            ),
-                            Expanded(
-                                child: Row(children: [
-                              Expanded(
-                                  child: Column(children: [
+                                FormTitle('Формирование группы'),
+                                TextIcon(
+                                  iconSize: 50,
+
+                                  icon: isChatActive
+                                      ? Icons.toggle_on
+                                      : Icons.toggle_off,
+                                  text: isChatActive
+                                      ? 'Выключить чат группы'
+                                      : 'Включить чат группы',
+                                  onTap: () {
+                                    setState(() {
+                                      isChatActive = !isChatActive;
+                                      group.chat.active = isChatActive;
+                                      /* if (isChatActive == true)
+                                        group.chat.setActive();
+                                      else
+                                        group.chat.setInactive();*/
+                                    });
+                                  },
+                                  color: isChatActive
+                                      ? Theme.of(context).primaryColorDark
+                                      : Theme.of(context)
+                                          .primaryColorDark
+                                          .withOpacity(.5), //Colors.grey[600],
+                                ),
                                 Container(
-                                    child: Text(
-                                      'Члены коммиссии:',
-                                      style: textStyle,
-                                      textAlign: TextAlign.left,
-                                    ),
-                                    width: double.maxFinite,
-                                    padding: EdgeInsets.only(bottom: 5)),
-                                Expanded(
-                                    child: Container(
-                                        height: double.infinity,
-                                        width: 1000, //костыль
-                                        margin: EdgeInsets.only(bottom: 10),
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(12.0),
-                                          color: Colors.white,
-                                        ),
-                                        child: SingleChildScrollView(
-                                            child: Column(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: generateList(
-                                                    _availableList, setState,
-                                                    typeList:
-                                                        TYPE_LIST.available)))))
-                              ])),
-                              Container(
-                                  // height: double.infinity,
-                                  child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  MyButton(
-                                    parentContext: context,
-                                    text: '>>',
-                                    disabled: !(_availableList != null &&
-                                        _availableList.length > 0),
-                                    width: 100,
-                                    onPress: () {
-                                      addUserToGroup(setState);
-                                    },
+                                  child: EditTextField(
+                                    text: 'Название группы',
+                                    value: group.group.groupNum,
+                                    onSaved: (value) => setState(() {
+                                      group.group.groupNum = value;
+                                    }),
+                                    context: context,
                                   ),
-                                  Container(height: 30, child: Text('')),
-                                  MyButton(
-                                    parentContext: context,
-                                    disabled: !(_groupList != null &&
-                                        _groupList.length > 0),
-                                    text: '<<',
-                                    width: 100,
-                                    onPress: () {
-                                      removeUserFromGroup(setState);
-                                    },
-                                  )
-                                ],
-                              )),
-                              Expanded(
-                                  child: Column(children: [
-                                Container(
-                                    child: Text(
-                                      'Участники группы:',
-                                      textAlign: TextAlign.left,
-                                      style: textStyle,
-                                    ),
-                                    width: double.maxFinite,
-                                    padding: EdgeInsets.only(bottom: 5)),
+                                ),
                                 Expanded(
-                                    child: Container(
-                                        height: double.infinity,
-                                        width: 1000, //костыль
-                                        margin: EdgeInsets.only(bottom: 10),
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(12.0),
-                                          color: Colors.white,
+                                    child: Row(children: [
+                                  Expanded(
+                                      child: Column(children: [
+                                    Container(
+                                        child: Text(
+                                          'Члены коммиссии:',
+                                          style: textStyle,
+                                          textAlign: TextAlign.left,
                                         ),
-                                        child: SingleChildScrollView(
-                                            child: Column(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: generateList(
-                                                    _groupList, setState,
-                                                    typeList:
-                                                        TYPE_LIST.group)))))
-                              ])),
-                            ])),
-                            Container(
-                                child: Row(
+                                        width: double.maxFinite,
+                                        padding: EdgeInsets.only(bottom: 5)),
+                                    Expanded(
+                                        child: Container(
+                                            height: double.infinity,
+                                            width: 1000, //костыль
+                                            margin: EdgeInsets.only(bottom: 10),
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(12.0),
+                                              color: Colors.white,
+                                            ),
+                                            child: SingleChildScrollView(
+                                                child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.start,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: generateList(
+                                                        _availableList,
+                                                        setState,
+                                                        typeList: TYPE_LIST
+                                                            .available)))))
+                                  ])),
+                                  Container(
+                                      // height: double.infinity,
+                                      child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                  MyButton(
-                                      text: 'принять',
-                                      parentContext: context,
-                                      onPress: () {
-                                        group.members = _groupList;
-                                        submitGroup(group, setState);
-                                      }),
-                                  MyButton(
-                                      text: 'отменить',
-                                      parentContext: context,
-                                      onPress: () {
-                                        cancelCommission();
-                                      }),
+                                      MyButton(
+                                        parentContext: context,
+                                        text: '>>',
+                                        disabled: !(_availableList != null &&
+                                            _availableList.length > 0),
+                                        width: 100,
+                                        onPress: () {
+                                          addUserToGroup(setState);
+                                        },
+                                      ),
+                                      Container(height: 30, child: Text('')),
+                                      MyButton(
+                                        parentContext: context,
+                                        disabled: !(_groupList != null &&
+                                            _groupList.length > 0),
+                                        text: '<<',
+                                        width: 100,
+                                        onPress: () {
+                                          removeUserFromGroup(setState);
+                                        },
+                                      )
+                                    ],
+                                  )),
+                                  Expanded(
+                                      child: Column(children: [
+                                    Container(
+                                        child: Text(
+                                          'Участники группы:',
+                                          textAlign: TextAlign.left,
+                                          style: textStyle,
+                                        ),
+                                        width: double.maxFinite,
+                                        padding: EdgeInsets.only(bottom: 5)),
+                                    Expanded(
+                                        child: Container(
+                                            height: double.infinity,
+                                            width: 1000, //костыль
+                                            margin: EdgeInsets.only(bottom: 10),
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(12.0),
+                                              color: Colors.white,
+                                            ),
+                                            child: SingleChildScrollView(
+                                                child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.start,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: generateList(
+                                                        _groupList, setState,
+                                                        typeList:
+                                                            TYPE_LIST.group)))))
+                                  ])),
                                 ])),
-                            Container(
-                                width: double.infinity,
-                                height: 20,
-                                color: (_errorText != "")
-                                    ? Color(0xAAE57373)
-                                    : Color(0x00E57373),
-                                child: Text('$_errorText',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(color: Color(0xFF252A0E))))
-                          ])))))
+                                Container(
+                                    child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                      MyButton(
+                                          text: 'принять',
+                                          parentContext: context,
+                                          onPress: () {
+                                            group.members = _groupList;
+                                            submitGroup(group, setState);
+                                          }),
+                                      MyButton(
+                                          text: 'отменить',
+                                          parentContext: context,
+                                          onPress: () {
+                                            cancelCommission();
+                                          }),
+                                    ])),
+                                Container(
+                                    width: double.infinity,
+                                    height: 20,
+                                    color: (_errorText != "")
+                                        ? Color(0xAAE57373)
+                                        : Color(0x00E57373),
+                                    child: Text('$_errorText',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            color: Color(0xFF252A0E))))
+                              ])))))
             ]);
           });
         });
   }
 
   Future<bool> showCommissionDialog(MyGroup commission, setState) {
+    bool isChatActive =
+        commission.chat != null && commission.chat.active == true;
     setState(() {
       _commissionList = [];
       _commision.members.forEach((member) {
-        userList.removeWhere((user) => user.id == member.user.id);
+        userList.removeWhere((user) => user.user.id == member.user.id);
       });
       _commissionList = commission.members;
 
@@ -834,62 +905,90 @@ class _CommissionScreen extends State<CommissionScreen> {
                       body: Container(
                           child: Column(children: [
                         FormTitle('Формирование комиссии'),
+                        TextIcon(
+                          iconSize: 50,
+
+                          icon:
+                              isChatActive ? Icons.toggle_on : Icons.toggle_off,
+                          text: isChatActive
+                              ? 'Выключить чат комиссии'
+                              : 'Включить чат комиссии',
+                          onTap: () {
+                            setState(() {
+                              isChatActive = !isChatActive;
+                              commission.chat.active = isChatActive;
+
+                              /*if (isChatActive)
+                                commission.chat.setActive();
+                              else
+                                commission.chat.setInactive();*/
+                            });
+                          },
+                          color: isChatActive
+                              ? Theme.of(context).primaryColorDark
+                              : Theme.of(context)
+                                  .primaryColorDark
+                                  .withOpacity(.5), //Colors.grey[600],
+                        ),
                         Container(
                           child: SingleChildScrollView(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              // padding: const EdgeInsets.symmetric(vertical: 16),
                               child: Column(
-                                children: <Widget>[
-                                  const SizedBox(
-                                    height: 16,
-                                  ),
-                                  if (_show)
-                                    new SearchWidget<User>(
-                                      key: Key('userList${userList.length}'),
-                                      dataList: userList,
-                                      hideSearchBoxWhenItemSelected: false,
-                                      listContainerHeight:
-                                          MediaQuery.of(context).size.height /
-                                              4,
-                                      queryBuilder: (query, list) {
-                                        return list
-                                            .where((item) => item.display_name
+                            children: <Widget>[
+                              const SizedBox(
+                                height: 16,
+                              ),
+                              if (_show)
+                                new SearchWidget<Member>(
+                                  key: Key('userList${userList.length}'),
+                                  dataList: userList,
+                                  hideSearchBoxWhenItemSelected: false,
+                                  listContainerHeight:
+                                      MediaQuery.of(context).size.height / 4,
+                                  queryBuilder: (query, list) {
+                                    return list
+                                        .where((item) =>
+                                            (item.user.display_name +
+                                                    ' ' +
+                                                    (item.user.function ?? '') +
+                                                    ' ' +
+                                                    (item.depName ?? ''))
                                                 .toLowerCase()
                                                 .contains(query.toLowerCase()))
-                                            .toList();
-                                      },
-                                      popupListItemBuilder: (item) {
-                                        return PopupListItemWidget(
-                                            item.display_name);
-                                      },
-                                      selectedItemBuilder:
-                                          (selectedItem, deleteSelectedItem) {
-                                        return Text('');
-                                        // return SelectedItemWidget(
-                                        //      selectedItem, deleteSelectedItem);
-                                      },
-                                      // widget customization
-                                      noItemsFoundWidget: NoItemsFound(),
-                                      textFieldBuilder:
-                                          (controller, focusNode) {
-                                        return MyTextField(
-                                            controller, focusNode,
-                                            hintText: 'Введите ФИО сотрудника');
-                                      },
-                                      onItemSelected: (item) {
-                                        _commissionList.add(Member(item));
+                                        .toList();
+                                  },
+                                  popupListItemBuilder: (item) {
+                                    return PopupListItemWidget(
+                                        '${item.user.display_name} (${item.user.function ?? ''} ${item.depName ?? ''})');
+                                  },
+                                  selectedItemBuilder:
+                                      (selectedItem, deleteSelectedItem) {
+                                    return Text('');
+                                    // return SelectedItemWidget(
+                                    //      selectedItem, deleteSelectedItem);
+                                  },
+                                  // widget customization
+                                  noItemsFoundWidget: NoItemsFound(),
+                                  textFieldBuilder: (controller, focusNode) {
+                                    return MyTextField(controller, focusNode,
+                                        hintText: 'Введите ФИО сотрудника');
+                                  },
+                                  onItemSelected: (item) {
+                                    _commissionList.add(Member(item.user,
+                                        depName: item.depName));
 
-                                        userList.removeWhere(
-                                            (user) => user.id == item.id);
-                                        setState(() {
-                                          //_selectedItem = item;
-                                        });
-                                      },
-                                    ),
-                                  const SizedBox(
-                                    height: 32,
-                                  )
-                                ],
-                              )),
+                                    userList.removeWhere(
+                                        (user) => user.user.id == item.user.id);
+                                    setState(() {
+                                      //_selectedItem = item;
+                                    });
+                                  },
+                                ),
+                              const SizedBox(
+                                height: 32,
+                              )
+                            ],
+                          )),
                         ),
                         Expanded(
                             child: Container(
@@ -988,12 +1087,12 @@ class _CommissionScreen extends State<CommissionScreen> {
           onTap: () => onRowSelected(members[i].user.id, typeList, setState),
           child: Container(
               color: backGroundColor,
-              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              //padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                // crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Container(
+                  SizedBox(
                     child: (members[i].roleId == headCommissionRole &&
                             typeList == TYPE_LIST.commission)
                         ? Icon(
@@ -1008,13 +1107,15 @@ class _CommissionScreen extends State<CommissionScreen> {
                               ) //для руководителя группы
                             : Text('')),
                     width: 30,
-                    height: 20,
+                    height: 40,
                   ),
                   Expanded(
                       child: Container(
-                          height: 20,
+                          height: 40,
+                          alignment: Alignment.centerLeft,
                           child: Text(
-                            members[i].user.display_name,
+                            //members[i].user.display_name,
+                            '${members[i].user.display_name} (${members[i].user.function ?? ''} ${members[i].depName ?? ''})',
                             style: TextStyle(
                               fontSize: 16.0,
                               color: fontColor,
@@ -1047,52 +1148,84 @@ class _CommissionScreen extends State<CommissionScreen> {
   Future<void> submitGroup(MyGroup group, setState) async {
     final form = formGroupKey.currentState;
     hideKeyboard();
-    if (form.validate()) {
-      form.save();
-      bool hasErorr = false;
-      Map<String, dynamic> result;
 
-      Map<String, dynamic> data = makeHeadAndUids(group);
-      group.group = data['comGroup'];
+    bool hasErorr = false;
+    Map<String, dynamic> result;
 
-      try {
-        if (group.group.id == null) {
-          result =
-              await ComGroupController.insert(data['comGroup'], data['ids']);
-        } else {
-          result =
-              await ComGroupController.update(data['comGroup'], data['ids']);
-        }
-        hasErorr = result["code"] < 0;
+    Map<String, dynamic> data = makeHeadAndUids(group);
+    group.group = data['comGroup'];
 
-        if (hasErorr) {
-          Navigator.pop<bool>(context, false);
-          Scaffold.of(context).showSnackBar(errorSnackBar());
-        } else {
-          if (group.group.id == null) {
-            group.group.id = result["id"];
-            setState(() {
-              _groups.add(group);
-            });
-          } else {
-            setState(() {
-              int index =
-                  _groups.indexWhere((item) => item.group.id == group.group.id);
-              _groups[index] = group;
-            });
-          }
+    try {
+      if (group.group.id == null) {
+        result = await ComGroupController.insert(data['comGroup'], data['ids']);
+      } else {
+        result = await ComGroupController.update(data['comGroup'], data['ids']);
+      }
+      hasErorr = result["code"] < 0;
 
-          Navigator.pop<bool>(context, true);
-          Scaffold.of(context).showSnackBar(successSnackBar);
-        }
-      } catch (e) {
+      if (hasErorr) {
         Navigator.pop<bool>(context, false);
         Scaffold.of(context).showSnackBar(errorSnackBar());
+      } else {
+        if (group.group.id == null) {
+          group.group.id = result["id"];
+          group.chat.groupId = result["id"];
+        }
+        bool hasChatErorr = false;
+        Map<String, dynamic> resultChat;
+
+        try {
+          if (group.chat.id == null) {
+            resultChat = await ChatController.insert(group.chat);
+          } else {
+            if (group.chat.active)
+              resultChat = await group.chat.setActive();
+            else
+              resultChat = await group.chat.setInactive();
+          }
+          hasChatErorr = resultChat["code"] < 0;
+
+          if (hasChatErorr) {
+            Navigator.pop<bool>(context, false);
+            Scaffold.of(context).showSnackBar(
+                errorSnackBar(text: 'Ошибка при создании чата группы'));
+            return;
+          } else {
+            if (group.chat.id == null) group.chat.id = resultChat["id"];
+
+            group.chat = await group.group.chat;
+
+            if (group.group.id == null) {
+              setState(() {
+                _groups.add(group);
+              });
+            } else {
+              setState(() {
+                int index = _groups
+                    .indexWhere((item) => item.group.id == group.group.id);
+                _groups[index] = group;
+              });
+            }
+          }
+        } catch (e) {
+          Navigator.pop<bool>(context, false);
+          Scaffold.of(context).showSnackBar(
+              errorSnackBar(text: 'Ошибка при создании чата группы'));
+          return;
+        }
+
+        Navigator.pop<bool>(context, true);
+        Scaffold.of(context).showSnackBar(successSnackBar);
       }
+    } catch (e) {
+      Navigator.pop<bool>(context, false);
+      Scaffold.of(context).showSnackBar(errorSnackBar());
     }
   }
 
   Future<void> submitCommission(MyGroup commission, setState) async {
+    hideKeyboard();
+
     bool hasErorr = false;
     Map<String, dynamic> result;
 
@@ -1112,12 +1245,48 @@ class _CommissionScreen extends State<CommissionScreen> {
         Navigator.pop<bool>(context, false);
         Scaffold.of(context).showSnackBar(errorSnackBar());
       } else {
-        if (commission.group.id == null) commission.group.id = result["id"];
-        setState(() {
-          _commision = commission;
-          commissionName =
-              getMemberName(commission.members, commission.group.isMain);
-        });
+        if (commission.group.id == null) {
+          commission.group.id = result["id"];
+          commission.chat.groupId = result["id"];
+        }
+
+        bool hasChatErorr = false;
+        Map<String, dynamic> resultChat;
+
+        try {
+          if (commission.chat.id == null) {
+            resultChat = await ChatController.insert(commission.chat);
+          } else {
+            if (commission.chat.active)
+              resultChat = await commission.chat.setActive();
+            else
+              resultChat = await commission.chat.setInactive();
+          }
+          hasChatErorr = resultChat["code"] < 0;
+
+          if (hasChatErorr) {
+            Navigator.pop<bool>(context, false);
+            Scaffold.of(context).showSnackBar(
+                errorSnackBar(text: 'Ошибка при создании чата комиссии'));
+            return;
+          } else {
+            if (commission.chat.id == null)
+              commission.chat.id = resultChat["id"];
+
+            commission.chat = await commission.group.chat;
+
+            setState(() {
+              _commision = commission;
+              commissionName =
+                  getMemberName(commission.members, commission.group.isMain);
+            });
+          }
+        } catch (e) {
+          Navigator.pop<bool>(context, false);
+          Scaffold.of(context).showSnackBar(
+              errorSnackBar(text: 'Ошибка при создании чата комиссии'));
+          return;
+        }
 
         Navigator.pop<bool>(context, true);
         Scaffold.of(context).showSnackBar(successSnackBar);
@@ -1186,7 +1355,7 @@ class _CommissionScreen extends State<CommissionScreen> {
             decoration: BoxDecoration(
                 image: DecorationImage(
                     image: AssetImage("assets/images/frameScreen.png"),
-                    fit: BoxFit.fitWidth)),
+                    fit: BoxFit.fill)),
             child: showLoading
                 ? Text("")
                 : Padding(
