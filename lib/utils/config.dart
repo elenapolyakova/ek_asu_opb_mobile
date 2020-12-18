@@ -1,14 +1,20 @@
 Map<String, Object> _config = {
-  //"ServiceRootUrl": "http://msk3tis2.vniizht.lan",
-  // "addressForPing": "msk3tis2.vniizht.lan",
-  //"port": 8069,
-  //"password": "09051945",
-  // "db": "ecodb_2020-07-01",
-  "ServiceRootUrl": "http://ekasuopb.svrw.oao.rzd",
+  /*ВНИИЖТ - dev*/
+  "ServiceRootUrl": "http://msk3tis2.vniizht.lan",
+  "addressForPing": "msk3tis2.vniizht.lan",
+  "db": "ecodb_2020-07-01",
+  "port": 8069,
+  /*РЖД - prod*/
+  /* "ServiceRootUrl": "http://ekasuopb.svrw.oao.rzd",
   "addressForPing": "ekasuopb.svrw.oao.rzd",
   "db": "ek_asu_opb2",
-  "password": "1",
-
+  "port": 80,*/
+  /*РЖД - test*/
+  /* 
+  "ServiceRootUrl": "http://10.247.1.133",
+  "addressForPing": "10.247.1.133",
+  "db": "ek_asu_opb_db"*/
+  "password": "09051945",
   "cbtRole": "ЦБТ",
   "ncopRole": "НЦОП",
   "attemptCount": 50,
@@ -17,7 +23,6 @@ Map<String, Object> _config = {
   "refreshMessenger": 10, //как часто обновляем сообщения в мессенджере, секунд
   "refreshCountMessenger":
       60, //как часто обновляем количество сообщений в иконке чат, секунд
-  "ServiceRoots": ["http://msk3tis2.vniizht.lan"]
 };
 
 dynamic getItem(String item) {
