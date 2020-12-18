@@ -14,7 +14,8 @@
     <application
         android:name="io.flutter.app.FlutterApplication"
         android:label="ek_asu_opb_mobile"
-	android:icon="@mipmap/icon"
+      	android:icon="@mipmap/icon"
+
         android:requestLegacyExternalStorage="true">
         <activity
             android:name=".MainActivity"

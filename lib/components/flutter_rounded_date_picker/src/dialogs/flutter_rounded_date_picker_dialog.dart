@@ -82,10 +82,12 @@ class FlutterRoundedDatePickerDialog extends StatefulWidget {
   final OnTapDay onTapDay;
 
   @override
-  _FlutterRoundedDatePickerDialogState createState() => _FlutterRoundedDatePickerDialogState();
+  _FlutterRoundedDatePickerDialogState createState() =>
+      _FlutterRoundedDatePickerDialogState();
 }
 
-class _FlutterRoundedDatePickerDialogState extends State<FlutterRoundedDatePickerDialog> {
+class _FlutterRoundedDatePickerDialogState
+    extends State<FlutterRoundedDatePickerDialog> {
   @override
   void initState() {
     super.initState();
@@ -234,13 +236,16 @@ class _FlutterRoundedDatePickerDialogState extends State<FlutterRoundedDatePicke
 
     Color backgroundPicker = theme.dialogBackgroundColor;
     if (_mode == DatePickerMode.day) {
-      backgroundPicker = widget.styleDatePicker?.backgroundPicker ?? theme.dialogBackgroundColor;
+      backgroundPicker = widget.styleDatePicker?.backgroundPicker ??
+          theme.dialogBackgroundColor;
     } else {
-      backgroundPicker = widget.styleYearPicker?.backgroundPicker ?? theme.dialogBackgroundColor;
+      backgroundPicker = widget.styleYearPicker?.backgroundPicker ??
+          theme.dialogBackgroundColor;
     }
 
     final Dialog dialog = Dialog(
-      child: OrientationBuilder(builder: (BuildContext context, Orientation orientation) {
+      child: OrientationBuilder(
+          builder: (BuildContext context, Orientation orientation) {
         assert(orientation != null);
         final Widget header = FlutterRoundedDatePickerHeader(
             selectedDate: _selectedDate,
@@ -280,7 +285,7 @@ class _FlutterRoundedDatePickerDialogState extends State<FlutterRoundedDatePicke
             return Container(
               //height: widget.height ?? 450,
               constraints: BoxConstraints.loose(Size(550, 500)),
-            //  width: 500,
+              //  width: 500,
               decoration: BoxDecoration(
                 color: backgroundPicker,
                 borderRadius: BorderRadius.circular(widget.borderRadius),
@@ -289,7 +294,7 @@ class _FlutterRoundedDatePickerDialogState extends State<FlutterRoundedDatePicke
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                 // Flexible(flex: 1, child: header),
+                  // Flexible(flex: 1, child: header),
                   Flexible(
                     flex: 3, // have the picker take up 2/3 of the dialog width
                     child: Column(

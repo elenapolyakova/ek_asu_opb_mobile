@@ -48,6 +48,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
     try {
       LogController.insert(dicts[i]);
       dynamic lastUpdate = isLastUpdate ? await getLastUpdate(dicts[i]) : null;
+
       int page = 0;
       do {
         print('Downloading ${dicts[i]}. Page $page.');
@@ -87,10 +88,12 @@ Future<List<Map<String, dynamic>>> getDictionaries(
             List<dynamic> domain = new List<dynamic>();
             if (lastUpdate != null) domain.add(lastUpdate);
             /* domain.add([
+
             'id',
             'in',
             [32229, 32230, 22886, 21818]
           ]);*/
+
             data =
                 await getDataWithAttemp('eco.department', 'search_read', null, {
               'domain': domain,
@@ -126,6 +129,7 @@ Future<List<Map<String, dynamic>>> getDictionaries(
 
             //раскоментировать, если нужно будет огграничивать пользователей дорогой нцоп
             /*listDepIds = await DepartmentController.selectIDs();
+
           if (listDepIds == null) continue;
           if (listDepIds.length > 0) if (userRoleTxt == ncopRole)
             domain.add(['department_id', 'in', listDepIds]);*/
