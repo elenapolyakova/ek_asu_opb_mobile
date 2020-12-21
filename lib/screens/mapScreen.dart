@@ -7,6 +7,7 @@ import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:ek_asu_opb_mobile/components/user_location/user_location.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong/latlong.dart';
+import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 
 Marker getMarker(double lat, double lng,
     [IconData icon = Icons.circle,
@@ -163,7 +164,9 @@ class _MapScreen extends State<MapScreen> {
                 // urlTemplate:
                 // "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                 // subdomains: ['a', 'b', 'c'],
-                urlTemplate: "http://172.22.3.173/russia/map/{z}/{x}/{y}.png",
+                //urlTemplate: "http://172.22.3.173/russia/map/{z}/{x}/{y}.png",
+                urlTemplate:
+                    config.getItem('MapAddr') + "/russia/map/{z}/{x}/{y}.png",
               ),
               MarkerLayerOptions(markers: markers),
               userLocationOptions,
