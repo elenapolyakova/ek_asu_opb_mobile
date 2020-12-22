@@ -1,5 +1,7 @@
 Map<String, Object> _config = {
   /*ВНИИЖТ - dev*/
+  // vasvas 21dec20
+  "MapAddr": "http://172.22.3.173",
   "ServiceRootUrl": "http://msk3tis2.vniizht.lan",
   "addressForPing": "msk3tis2.vniizht.lan",
   "db": "ecodb_2020-07-01",
@@ -23,6 +25,7 @@ Map<String, Object> _config = {
   "refreshMessenger": 10, //как часто обновляем сообщения в мессенджере, секунд
   "refreshCountMessenger":
       60, //как часто обновляем количество сообщений в иконке чат, секунд
+  "ServiceRoots": ["http://msk3tis2.vniizht.lan"]
 };
 
 dynamic getItem(String item) {
