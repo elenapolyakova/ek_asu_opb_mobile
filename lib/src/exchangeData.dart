@@ -343,11 +343,12 @@ Future<dynamic> getData(String model, String method, dynamic args,
 }
 
 //получение данных с attemptCount попытками
-Future<dynamic> getDataWithAttemp(String model, String method, dynamic args,
-    Map<String, dynamic> kwargs) async {
+Future<dynamic> getDataWithAttemp(
+    String model, String method, dynamic args, Map<String, dynamic> kwargs,
+    {bool noAttemptCount = false}) async {
   int curAttempt = 0;
 
-  while (curAttempt++ < attemptCount) {
+  while (curAttempt++ < attemptCount || noAttemptCount) {
     print('Attempt ${curAttempt.toString()}..........');
     LogController.insert('Attempt ${curAttempt.toString()}..........');
     var data = await getData(model, method, args, kwargs);

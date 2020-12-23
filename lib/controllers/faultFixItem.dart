@@ -10,6 +10,7 @@ import "package:ek_asu_opb_mobile/src/fileStorage.dart";
 
 class FaultFixItemController extends Controllers {
   static const String _tableName = "fault_fix_item";
+  static const int limit = 1;
 
   static Future<Map<String, dynamic>> create(FaultFixItem faultFixItem,
       [bool saveOdooId = false]) async {
@@ -153,14 +154,15 @@ class FaultFixItemController extends Controllers {
     int page = 0;
     do {
       json = await getDataWithAttemp(
-          SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-        domain,
-        fields
-      ], {
-        'limit': 1,
-        'offset': 1 * page++,
-        'context': {'create_or_update': true}
-      });
+          SynController.localRemoteTableNameMap[_tableName],
+          'search_read',
+          [domain, fields],
+          {
+            'limit': limit,
+            'offset': limit * page++,
+            'context': {'create_or_update': true}
+          },
+          noAttemptCount: true);
 
       await Future.forEach(json, (e) async {
         if (loadRelated) {
@@ -209,11 +211,10 @@ class FaultFixItemController extends Controllers {
           }
         }
       });
-    } while (json is List && json.length == 1);
-    print(
-        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
-
-    if (loadRelated) await setLatestWriteDate(_tableName, json);
+      if (loadRelated) await setLatestWriteDate(_tableName, json);
+      print(
+          'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
+    } while (json is List && json.length == limit);
   }
 
   static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
@@ -240,14 +241,15 @@ class FaultFixItemController extends Controllers {
     int page = 0;
     do {
       json = await getDataWithAttemp(
-          SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-        domain,
-        fields
-      ], {
-        'limit': 1,
-        'offset': 1 * page++,
-        'context': {'create_or_update': true}
-      });
+          SynController.localRemoteTableNameMap[_tableName],
+          'search_read',
+          [domain, fields],
+          {
+            'limit': limit,
+            'offset': limit * page++,
+            'context': {'create_or_update': true}
+          },
+          noAttemptCount: true);
 
       print("FaultFixItem, Load changes from odoo! $json");
       print("Domain $domain");
@@ -299,14 +301,9 @@ class FaultFixItemController extends Controllers {
           // return DBProvider.db.update(_tableName, res);
         }
       });
-    } while (json is List && json.length == 1);
-    print(
-        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
-
-    if (loadRelated) await setLatestWriteDate(_tableName, json);
-  }
-
-  static Future finishSync(dateTime) {
-    return setLastSyncDateForDomain(_tableName, dateTime);
+      if (loadRelated) await setLatestWriteDate(_tableName, json);
+      print(
+          'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
+    } while (json is List && json.length == limit);
   }
 }

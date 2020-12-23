@@ -465,8 +465,4 @@ class FaultFixController extends Controllers {
 
     if (loadRelated) await setLatestWriteDate(_tableName, json);
   }
-
-  static Future finishSync(dateTime) {
-    return setLastSyncDateForDomain(_tableName, dateTime);
-  }
 }
