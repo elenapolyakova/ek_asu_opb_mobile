@@ -154,15 +154,18 @@ class FaultFixItemController extends Controllers {
     int page = 0;
     do {
       json = await getDataWithAttemp(
-          SynController.localRemoteTableNameMap[_tableName],
-          'search_read',
-          [domain, fields],
-          {
-            'limit': limit,
-            'offset': limit * page++,
-            'context': {'create_or_update': true}
-          },
-          noAttemptCount: true);
+          SynController.localRemoteTableNameMap[_tableName], 'search_read', [
+        domain,
+        fields
+      ], {
+        'limit': limit,
+        'offset': limit * page++,
+        'context': {'create_or_update': true}
+      });
+      if (json == null) {
+        print('Did not load $_tableName record. Skipping');
+        continue;
+      }
 
       await Future.forEach(json, (e) async {
         if (loadRelated) {
@@ -241,15 +244,18 @@ class FaultFixItemController extends Controllers {
     int page = 0;
     do {
       json = await getDataWithAttemp(
-          SynController.localRemoteTableNameMap[_tableName],
-          'search_read',
-          [domain, fields],
-          {
-            'limit': limit,
-            'offset': limit * page++,
-            'context': {'create_or_update': true}
-          },
-          noAttemptCount: true);
+          SynController.localRemoteTableNameMap[_tableName], 'search_read', [
+        domain,
+        fields
+      ], {
+        'limit': limit,
+        'offset': limit * page++,
+        'context': {'create_or_update': true}
+      });
+      if (json == null) {
+        print('Did not load $_tableName record. Skipping');
+        continue;
+      }
 
       print("FaultFixItem, Load changes from odoo! $json");
       print("Domain $domain");
