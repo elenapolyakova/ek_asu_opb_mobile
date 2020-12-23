@@ -132,7 +132,7 @@ class FaultItemController extends Controllers {
     return FaultItem.fromJson(json[0]);
   }
 
-  static firstLoadFromOdoo([bool loadRelated = false, int limit]) async {
+  static firstLoadFromOdoo([bool loadRelated = false]) async {
     List<String> fields;
     List<List> domain = [];
     if (loadRelated) {
@@ -218,7 +218,7 @@ class FaultItemController extends Controllers {
     } while (json is List && json.length == limit);
   }
 
-  static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
+  static loadChangesFromOdoo([bool loadRelated = false]) async {
     List<String> fields;
     if (loadRelated)
       fields = ['write_date', 'parent_id'];

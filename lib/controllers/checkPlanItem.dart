@@ -50,7 +50,7 @@ class CheckPlanItemController extends Controllers {
     return queryRes[0]['odoo_id'];
   }
 
-  static firstLoadFromOdoo([bool loadRelated = false, int limit]) async {
+  static firstLoadFromOdoo([bool loadRelated = false]) async {
     List<String> fields;
     List<List> domain = [];
     if (loadRelated) {
@@ -71,7 +71,6 @@ class CheckPlanItemController extends Controllers {
       domain,
       fields
     ], {
-      'limit': limit,
       'context': {'create_or_update': true}
     });
     await Future.forEach(json, (e) async {
@@ -110,7 +109,7 @@ class CheckPlanItemController extends Controllers {
     if (loadRelated) await setLatestWriteDate(_tableName, json);
   }
 
-  static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
+  static loadChangesFromOdoo([bool loadRelated = false]) async {
     List<String> fields;
     if (loadRelated)
       fields = ['write_date', 'parent_id', 'com_group_id'];
@@ -130,7 +129,6 @@ class CheckPlanItemController extends Controllers {
       domain,
       fields
     ], {
-      'limit': limit,
       'context': {'create_or_update': true}
     });
     await Future.forEach(json, (e) async {

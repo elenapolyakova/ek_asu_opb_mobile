@@ -53,7 +53,7 @@ class ComGroupController extends Controllers {
     return queryRes[0]['odoo_id'];
   }
 
-  static firstLoadFromOdoo([bool loadRelated = false, int limit]) async {
+  static firstLoadFromOdoo([bool loadRelated = false]) async {
     List<String> fields;
     List<List> domain = [];
     if (loadRelated) {
@@ -71,7 +71,6 @@ class ComGroupController extends Controllers {
       domain,
       fields
     ], {
-      'limit': limit,
       'context': {'create_or_update': true}
     });
     await Future.forEach(json, (e) async {

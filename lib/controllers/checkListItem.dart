@@ -181,7 +181,7 @@ class CheckListItemController extends Controllers {
     return CheckListItem.fromJson(json[0]);
   }
 
-  static firstLoadFromOdoo([bool loadRelated = false, int limit]) async {
+  static firstLoadFromOdoo([bool loadRelated = false]) async {
     List<String> fields;
     List<List> domain = [];
     if (loadRelated) {
@@ -203,7 +203,6 @@ class CheckListItemController extends Controllers {
       domain,
       fields
     ], {
-      'limit': limit,
       'context': {'create_or_update': true}
     });
 
@@ -246,7 +245,7 @@ class CheckListItemController extends Controllers {
     if (loadRelated) await setLatestWriteDate(_tableName, json);
   }
 
-  static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
+  static loadChangesFromOdoo([bool loadRelated = false]) async {
     List<String> fields;
     if (loadRelated)
       fields = ['write_date', 'parent_id'];
@@ -266,7 +265,6 @@ class CheckListItemController extends Controllers {
       domain,
       fields
     ], {
-      'limit': limit,
       'context': {'create_or_update': true}
     });
 

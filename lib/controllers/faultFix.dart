@@ -337,7 +337,7 @@ class FaultFixController extends Controllers {
     return FaultFix.fromJson(json[0]);
   }
 
-  static firstLoadFromOdoo([bool loadRelated = false, int limit]) async {
+  static firstLoadFromOdoo([bool loadRelated = false]) async {
     List<String> fields;
     List<List> domain = [];
     if (loadRelated) {
@@ -357,7 +357,6 @@ class FaultFixController extends Controllers {
       domain,
       fields
     ], {
-      'limit': limit,
       'context': {'create_or_update': true}
     });
 
@@ -400,7 +399,7 @@ class FaultFixController extends Controllers {
     if (loadRelated) await setLatestWriteDate(_tableName, json);
   }
 
-  static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
+  static loadChangesFromOdoo([bool loadRelated = false]) async {
     List<String> fields;
     if (loadRelated)
       fields = ['write_date', 'parent_id'];
@@ -419,7 +418,6 @@ class FaultFixController extends Controllers {
       domain,
       fields
     ], {
-      'limit': limit,
       'context': {'create_or_update': true}
     });
 
