@@ -187,11 +187,11 @@ class ChatController extends Controllers {
       return chats;
     } else {
       List<Map<String, dynamic>> queryRes = await selectAll();
-      List<Chat> chats = queryRes
-          .map((e) => Chat.fromJson(e))
-          .where((e) => e.active == active)
-          .toList();
-      return chats;
+      var chats = queryRes.map((e) => Chat.fromJson(e));
+      if (active != null) {
+        chats = chats.where((e) => e.active == active);
+      }
+      return chats.toList();
     }
     /*
     if (groupId != null && id != null) {

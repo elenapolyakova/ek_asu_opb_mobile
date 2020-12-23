@@ -102,16 +102,24 @@ class DBProvider {
                 "CREATE TABLE IF NOT EXISTS fault_fix(id INTEGER PRIMARY KEY, odoo_id INTEGER, parent_id INTEGER, desc TEXT, date TEXT, active TEXT, is_finished TEXT)");
             await db.execute(
                 "CREATE TABLE IF NOT EXISTS fault_fix_item(id INTEGER PRIMARY KEY, odoo_id INTEGER, name TEXT, type INTEGER, parent3_id INTEGER, image TEXT, active TEXT, file_name TEXT, file_data TEXT, coord_n REAL, coord_e REAL)");
-            continue v3;
-          v3:
+            continue v4;
+          v4:
           case 4:
             await db.execute('ALTER TABLE chat ADD COLUMN active TEXT');
             // Так же удалена колонка last_update, но удалять её здесь смысла нет
             // Так же удалена колонка fault_item.image, но удалять её здесь смысла нет
             // Так же удалена колонка fault_fix_item.image, но удалять её здесь смысла нет
-            continue v4;
-          v4:
+            continue v5;
+          v5:
           case 5:
+            await db.execute('ALTER TABLE fault ADD COLUMN damage_amount REAL');
+            continue v6;
+          v6:
+          case 6:
+          // шаблон для новой версии
+          //   continue v7;
+          // v7:
+          // case 7:
           default:
         }
       },
@@ -124,9 +132,9 @@ class DBProvider {
             "CREATE TABLE IF NOT EXISTS syn (id INTEGER PRIMARY KEY, record_id INTEGER, local_table_name TEXT, method TEXT, error TEXT)");
       },
 
-      // Set the version. This executes the onCreate function and provides a
-      // path to perform database upgrades and downgrades.
-      version: 5,
+      // Текущая версия должна указывать на последний пустой кейс
+      // (либо следующий за ним, что эквивалентно попаданию в default)
+      version: 6,
     );
   }
 

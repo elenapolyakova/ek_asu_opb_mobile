@@ -2358,10 +2358,11 @@ class _MyAppBar extends State<MyAppBar> {
                             //         where: "id = 28824")), (el) {
                             //   print(el);
                             // });
-                            (await DBProvider.db.select('plan'))
-                                .forEach((element) {
-                              print(element);
-                            });
+                            await FaultItemController.loadFromOdoo(clean: true);
+                            // (await DBProvider.db.select('fault_item'))
+                            //     .forEach((element) {
+                            //   print(element);
+                            // });
                             /*print((await ReportController.downloadReport(
                                 26, 'report_mob_main_plan_xls')));*/
                           },

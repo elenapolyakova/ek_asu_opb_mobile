@@ -10,6 +10,7 @@ import "package:ek_asu_opb_mobile/src/fileStorage.dart";
 
 class FaultFixItemController extends Controllers {
   static const String _tableName = "fault_fix_item";
+  static const int limit = 1;
 
   static Future<Map<String, dynamic>> create(FaultFixItem faultFixItem,
       [bool saveOdooId = false]) async {
@@ -130,7 +131,85 @@ class FaultFixItemController extends Controllers {
     return FaultFixItem.fromJson(json[0]);
   }
 
-  static firstLoadFromOdoo([bool loadRelated = false, int limit]) async {
+  static Future loadFromOdoo({bool clean: false}) async {
+    List<String> fields = [
+      'name',
+      'type',
+      'file_name',
+      'file_data',
+      'coord_n',
+      'coord_e',
+      'write_date',
+      'parent3_id',
+    ];
+    List domain = [
+      ['parent_id', '=', null],
+      ['parent2_id', '=', null],
+    ];
+    if (clean) {
+      await DBProvider.db.deleteAll(_tableName);
+    } else {
+      domain += await getLastSyncDateDomain(_tableName, excludeActive: true);
+    }
+    List json;
+    int page = 0;
+    do {
+      json = await getDataWithAttemp(
+          SynController.localRemoteTableNameMap[_tableName], 'search_read', [
+        domain,
+        fields
+      ], {
+        'limit': limit,
+        'offset': limit * page++,
+        'context': {'create_or_update': true}
+      });
+      if (json == null) {
+        print('Did not load $_tableName record. Skipping');
+        continue;
+      }
+
+      await Future.forEach(json, (e) async {
+        FaultFixItem faultFixItem = await selectByOdooId(e['id']);
+        int parentId = (await FaultFixController.selectByOdooId(
+                unpackListId(e['parent_id'])['id']))
+            ?.id;
+        if (parentId == null) {
+          print("$_tableName record with odooId=${e['id']} doesn't have"
+              "existing parent_id. Skipping");
+          return;
+        }
+        Map<String, dynamic> res = {
+          ...e,
+          'odoo_id': e['id'],
+          'parent3_id': parentId,
+          'active': 'true',
+        };
+        if (getObj(res['file_data']) == null) {
+          print("$_tableName record with odooId=${res['odoo_id']} doesn't have"
+              "file_data. Skipping");
+          return;
+        }
+        if (faultFixItem != null) {
+          var file = await base64ToFile(res['file_data'],
+              path: faultFixItem.file_data);
+          res['file_data'] = file.path;
+          res['id'] = faultFixItem.id;
+          await DBProvider.db
+              .update(_tableName, FaultFixItem.fromJson(res).toJson());
+        } else {
+          var file = await base64ToFile(res['file_data']);
+          res['file_data'] = file.path;
+          res['odoo_id'] = e['id'];
+          await DBProvider.db
+              .insert(_tableName, FaultFixItem.fromJson(res).toJson());
+        }
+      });
+      print('loaded ${json.length} records of $_tableName');
+      await setLatestWriteDate(_tableName, json);
+    } while (json is List && json.length == limit);
+  }
+
+  static firstLoadFromOdoo([bool loadRelated = false]) async {
     List<String> fields;
     List<List> domain = [];
     if (loadRelated) {
@@ -157,10 +236,14 @@ class FaultFixItemController extends Controllers {
         domain,
         fields
       ], {
-        'limit': 1,
-        'offset': 1 * page++,
+        'limit': limit,
+        'offset': limit * page++,
         'context': {'create_or_update': true}
       });
+      if (json == null) {
+        print('Did not load $_tableName record. Skipping');
+        continue;
+      }
 
       await Future.forEach(json, (e) async {
         if (loadRelated) {
@@ -209,14 +292,13 @@ class FaultFixItemController extends Controllers {
           }
         }
       });
-    } while (json is List && json.length == 1);
-    print(
-        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
-
-    if (loadRelated) await setLatestWriteDate(_tableName, json);
+      if (loadRelated) await setLatestWriteDate(_tableName, json);
+      print(
+          'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
+    } while (json is List && json.length == limit);
   }
 
-  static loadChangesFromOdoo([bool loadRelated = false, int limit]) async {
+  static loadChangesFromOdoo([bool loadRelated = false]) async {
     List<String> fields;
     if (loadRelated)
       fields = ['write_date', 'parent3_id'];
@@ -244,10 +326,14 @@ class FaultFixItemController extends Controllers {
         domain,
         fields
       ], {
-        'limit': 1,
-        'offset': 1 * page++,
+        'limit': limit,
+        'offset': limit * page++,
         'context': {'create_or_update': true}
       });
+      if (json == null) {
+        print('Did not load $_tableName record. Skipping');
+        continue;
+      }
 
       print("FaultFixItem, Load changes from odoo! $json");
       print("Domain $domain");
@@ -299,14 +385,9 @@ class FaultFixItemController extends Controllers {
           // return DBProvider.db.update(_tableName, res);
         }
       });
-    } while (json is List && json.length == 1);
-    print(
-        'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
-
-    if (loadRelated) await setLatestWriteDate(_tableName, json);
-  }
-
-  static Future finishSync(dateTime) {
-    return setLastSyncDateForDomain(_tableName, dateTime);
+      if (loadRelated) await setLatestWriteDate(_tableName, json);
+      print(
+          'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
+    } while (json is List && json.length == limit);
   }
 }
