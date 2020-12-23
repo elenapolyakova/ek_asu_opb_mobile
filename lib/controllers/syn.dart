@@ -246,9 +246,6 @@ class SynController extends Controllers {
       await CheckPlanItemController.firstLoadFromOdoo(true);
       await CheckListController.firstLoadFromOdoo(true);
       await CheckListItemController.firstLoadFromOdoo(true);
-
-      await ChatController.loadFromOdoo(clean: true);
-      await ChatMessageController.loadFromOdoo(clean: true);
     } else {
       await PlanController.loadFromOdoo();
       await PlanItemController.loadFromOdoo();
