@@ -237,6 +237,7 @@ class SynController extends Controllers {
         await FaultItemController.firstLoadFromOdoo(true);
         await FaultFixController.firstLoadFromOdoo(true);
         await FaultFixItemController.firstLoadFromOdoo(true);
+        print("Finished background first load. Setting syncStatus to SUCCESS");
         syncStatus = SYNC_STATUS.SUCCESS;
       });
 
@@ -264,6 +265,8 @@ class SynController extends Controllers {
         await FaultItemController.loadChangesFromOdoo(true);
         await FaultFixController.loadChangesFromOdoo(true);
         await FaultFixItemController.loadChangesFromOdoo(true);
+        print(
+            "Finished background load changes. Setting syncStatus to SUCCESS");
         syncStatus = SYNC_STATUS.SUCCESS;
       });
 
@@ -547,7 +550,6 @@ class SynController extends Controllers {
           //Синхронизация завершена
           //TODO: вывести уведомление
           print('Finished synchronization');
-          syncStatus = SYNC_STATUS.SUCCESS;
           DBProvider.db.insert(
               'log', {'date': nowStr(), 'message': "Finished synchronization"});
           return true;
