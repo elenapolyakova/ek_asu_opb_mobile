@@ -19,4 +19,10 @@ export "package:ek_asu_opb_mobile/screens/faultHistoryScreen.dart";
 export "package:ek_asu_opb_mobile/screens/faultFixScreen.dart";
 export "package:ek_asu_opb_mobile/screens/faultFixListScreen.dart";
 export "package:ek_asu_opb_mobile/screens/planHomeScreen.dart";
+export "package:ek_asu_opb_mobile/screens/faultDamageScreen.dart";
+export "package:ek_asu_opb_mobile/screens/waterScreen.dart";
+export "package:ek_asu_opb_mobile/screens/soilScreen.dart";
+export "package:ek_asu_opb_mobile/screens/forestScreen.dart";
+export "package:ek_asu_opb_mobile/screens/undergroundScreen.dart";
+
 

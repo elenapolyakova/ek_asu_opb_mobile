@@ -13,7 +13,7 @@ import 'package:path_provider/path_provider.dart';
 
 class DepartmentDocumentController extends Controllers {
   static final String baseURL =
-      '${config.getItem('ServiceRootUrl')}:${config.getItem('port')}';
+      '${config.getItem('ServiceRootUrl')}';
   static const String _tableName = "department_document";
 
   static Future firstLoadFromOdoo([int limit]) async {

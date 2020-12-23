@@ -764,6 +764,8 @@ class _CommissionScreen extends State<CommissionScreen> {
                                                         typeList: TYPE_LIST
                                                             .available)))))
                                   ])),
+                                  SingleChildScrollView(
+                                    child:
                                   Container(
                                       // height: double.infinity,
                                       child: Column(
@@ -791,7 +793,7 @@ class _CommissionScreen extends State<CommissionScreen> {
                                         },
                                       )
                                     ],
-                                  )),
+                                  ))),
                                   Expanded(
                                       child: Column(children: [
                                     Container(
@@ -1168,7 +1170,7 @@ class _CommissionScreen extends State<CommissionScreen> {
         Scaffold.of(context).showSnackBar(errorSnackBar());
       } else {
         if (group.group.id == null) {
-          group.group.id = result["id"];
+          //group.group.id = result["id"];
           group.chat.groupId = result["id"];
         }
         bool hasChatErorr = false;
@@ -1193,16 +1195,20 @@ class _CommissionScreen extends State<CommissionScreen> {
           } else {
             if (group.chat.id == null) group.chat.id = resultChat["id"];
 
-            group.chat = await group.group.chat;
+           
 
             if (group.group.id == null) {
+              group.group.id = result["id"];
+               group.chat = await group.group.chat;
               setState(() {
                 _groups.add(group);
               });
             } else {
+               group.chat = await group.group.chat;
               setState(() {
                 int index = _groups
                     .indexWhere((item) => item.group.id == group.group.id);
+                    
                 _groups[index] = group;
               });
             }
@@ -1246,7 +1252,6 @@ class _CommissionScreen extends State<CommissionScreen> {
         Scaffold.of(context).showSnackBar(errorSnackBar());
       } else {
         if (commission.group.id == null) {
-          commission.group.id = result["id"];
           commission.chat.groupId = result["id"];
         }
 
@@ -1273,8 +1278,14 @@ class _CommissionScreen extends State<CommissionScreen> {
             if (commission.chat.id == null)
               commission.chat.id = resultChat["id"];
 
-            commission.chat = await commission.group.chat;
+           
 
+            if (commission.group.id == null) {
+              commission.group.id = result["id"];
+              
+            }
+
+            commission.chat = await commission.group.chat;
             setState(() {
               _commision = commission;
               commissionName =

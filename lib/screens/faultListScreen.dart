@@ -59,6 +59,7 @@ class _FaultListScreen extends State<FaultListScreen> {
     {'text': 'Плановая дата устранения', 'flex': 2.0},
     {'text': 'Факт. дата устранения', 'flex': 2.0},
     {'text': 'Штраф в денежном выражении, руб.', 'flex': 3.0},
+    {'text': 'Размер вреда, руб.', 'flex': 2.0},
     {'text': 'Описание штрафа', 'flex': 6.0},
     {'text': 'Статья КОАП', 'flex': 2.0},
   ];
@@ -71,11 +72,11 @@ class _FaultListScreen extends State<FaultListScreen> {
       'icon': Icons.assignment_turned_in,
       'key': 'fix'
     },
-    /* {
+    {
       'title': 'Перейти к расчету вреда',
       'icon': Icons.calculate,
-      'key': 'harm'
-    }*/
+      'key': 'damage'
+    }
   ];
 
   Future<String> getFineName(int koapId) async {
@@ -180,12 +181,14 @@ class _FaultListScreen extends State<FaultListScreen> {
             getRowCell(row.desc, row.id, 0),
             getRowCell(dateDMY(row.plan_fix_date), row.id, 1,
                 textAlign: TextAlign.center),
-            getRowCell(dateDMY(fault.fixDate), row.id, 1,
+            getRowCell(dateDMY(fault.fixDate), row.id, 2,
                 textAlign: TextAlign.center),
-            getRowCell(row.fine != null ? row.fine.toString() : '', row.id, 2,
+            getRowCell(row.fine != null ? row.fine.toString() : '', row.id, 3,
                 textAlign: TextAlign.center),
-            getRowCell(row.fine_desc, row.id, 3),
-            getRowCell(fault.fineName, row.id, 4),
+            getRowCell(row.fine != null ? row.fine.toString() : '', row.id, 4,
+                textAlign: TextAlign.center),
+            getRowCell(row.fine_desc, row.id, 5),
+            getRowCell(fault.fineName, row.id, 6),
           ]);
       tableRows.add(tableRow);
     });
@@ -243,6 +246,9 @@ class _FaultListScreen extends State<FaultListScreen> {
           break;
         case 'fix':
           fixFaultClicked(faultId);
+          break;
+        case 'damage':
+          faultDamageClicked(faultId);
           break;
       }
     });
@@ -316,6 +322,16 @@ class _FaultListScreen extends State<FaultListScreen> {
   Future<void> editFaultClicked(int faultId) async {
     return widget.push({
       "pathTo": 'fault',
+      "pathFrom": 'faultList',
+      'text': 'Назад к нарушениям'
+    }, {
+      'faultId': faultId
+    });
+  }
+
+  Future<void> faultDamageClicked(int faultId) async {
+    return widget.push({
+      "pathTo": 'faultDamage',
       "pathFrom": 'faultList',
       'text': 'Назад к нарушениям'
     }, {

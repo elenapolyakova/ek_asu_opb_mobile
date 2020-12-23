@@ -222,8 +222,9 @@ Future<bool> setPinCode(String pin) async {
 
 Future<bool> setBaseUrl(String baseUrl) async {
   try {
-    String addressForPing = baseUrl.replaceAll(
-        new RegExp('https?://', multiLine: false, caseSensitive: false), '');
+    String addressForPing = baseUrl
+        .replaceAll(new RegExp('https?://', multiLine: false, caseSensitive: false), '')
+        .replaceAll(new RegExp(':[0-9]+',multiLine: false, caseSensitive: false), '');
     await _storage.write(key: 'ServiceRootUrl', value: baseUrl);
     await _storage.write(key: 'addressForPing', value: addressForPing);
 

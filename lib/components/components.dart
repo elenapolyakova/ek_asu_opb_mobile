@@ -18,6 +18,7 @@ import 'package:ek_asu_opb_mobile/models/department.dart' as dep;
 export 'search/search.dart';
 import 'package:flutter_treeview/tree_view.dart';
 import 'package:package_info/package_info.dart';
+import 'package:super_tooltip/super_tooltip.dart';
 
 class TextIcon extends StatefulWidget {
   IconData icon;
@@ -54,7 +55,7 @@ class _TextIcon extends State<TextIcon> {
                   icon: Icon(widget.icon), //Icons.logout),
                   color: widget.color,
                   onPressed: widget.onTap),
-              new Text(
+              Text(
                 widget.text,
                 style:
                     TextStyle(color: widget.color, fontSize: widget.fontSize),
@@ -130,13 +131,18 @@ class _SyncIcon extends State<SyncIcon> {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color:
-                         color,
+                      color: color,
                       border: Border.all(
-                          color: Theme.of(context).primaryColorLight.withOpacity(.5),
+                          color: Theme.of(context)
+                              .primaryColorLight
+                              .withOpacity(.5),
                           width: 0.5)),
                   child: //Text('')
-                  Icon(icon, size: 13, color: Theme.of(context).primaryColorDark, )
+                      Icon(
+                    icon,
+                    size: 13,
+                    color: Theme.of(context).primaryColorDark,
+                  )
 
                   /*Container(
                   width: 10,
@@ -184,6 +190,7 @@ hideDialog(BuildContext context) {
 
 class EditTextField extends StatefulWidget {
   String text;
+  String textInPopEdit;
   dynamic value;
   Function(String) onSaved;
   BuildContext context;
@@ -198,11 +205,13 @@ class EditTextField extends StatefulWidget {
   Color borderColor;
   Function(TapDownDetails) onTapDown;
   Function() onLongPress;
+  Function() onTap;
   bool readOnly;
   List<TextInputFormatter> inputFormatters;
 
   EditTextField(
       {this.text = "",
+      this.textInPopEdit,
       this.value = "",
       this.context,
       this.color,
@@ -217,6 +226,7 @@ class EditTextField extends StatefulWidget {
       this.borderColor,
       this.onTapDown,
       this.onLongPress,
+      this.onTap,
       this.readOnly = false,
       this.inputFormatters});
   @override
@@ -259,21 +269,23 @@ class _EditTextField extends State<EditTextField> {
               child: GestureDetector(
                   onLongPress: widget.onLongPress,
                   onTapDown: widget.onTapDown,
-                  onTap: () {
-                    if (!widget.showEditDialog || widget.readOnly) return;
-                    showEdit(
-                      widget.value,
-                      widget.text,
-                      widget.context,
-                      textInputType: widget.textInputType,
-                      inputFormatters: widget.inputFormatters,
-                      validator: widget.validator ?? (val) => null,
-                    ).then((newValue) => setState(() {
-                          widget.value = newValue ?? "";
-                          if (widget.onSaved != null)
-                            return widget.onSaved(newValue);
-                        }));
-                  },
+                  onTap: widget.onTap ??
+                      () {
+                        if (!widget.showEditDialog || widget.readOnly) return;
+                        showEdit(
+                          widget.value,
+                          widget.text,
+                          widget.context,
+                          textInputType: widget.textInputType,
+                          inputFormatters: widget.inputFormatters,
+                          validator: widget.validator ?? (val) => null,
+                          textInPopEdit: widget.textInPopEdit,
+                        ).then((newValue) => setState(() {
+                              widget.value = newValue ?? "";
+                              if (widget.onSaved != null)
+                                return widget.onSaved(newValue);
+                            }));
+                      },
                   child: ConstrainedBox(
                       constraints: BoxConstraints(
                           maxHeight: widget.height, minHeight: widget.height),
@@ -311,6 +323,407 @@ class _EditTextField extends State<EditTextField> {
                                 // maxLength: 256,
                                 ),
                           )))))
+        ]));
+  }
+}
+
+class CalcButton extends StatelessWidget {
+  String btnNumber;
+  IconData icon;
+  Color bgColor;
+  Color fontColor;
+  Color borderColor;
+  double fontSize;
+  Function onTap;
+  CalcButton(
+      {this.btnNumber,
+      this.icon,
+      this.onTap,
+      this.bgColor,
+      this.fontColor,
+      this.borderColor,
+      this.fontSize});
+
+  @override
+  Widget build(BuildContext context) {
+    TextStyle _styleBtn = TextStyle(
+        fontSize: fontSize ?? 30,
+        color: fontColor ?? Theme.of(context).primaryColorDark);
+
+    return GestureDetector(
+        onTap: onTap,
+        child: Container(
+            margin: EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(6)),
+              border: Border.all(
+                  color: borderColor ?? Theme.of(context).primaryColorDark,
+                  width: 1.5),
+              color: bgColor ?? Theme.of(context).primaryColorLight,
+            ),
+            child: Center(
+              child: btnNumber != null
+                  ? Text(btnNumber, style: _styleBtn)
+                  : Icon(icon,
+                      size: 30,
+                      color: fontColor ?? Theme.of(context).primaryColorDark),
+            )));
+  }
+}
+
+class Calculate extends StatefulWidget {
+  String value;
+  Function(String) onSaved;
+  Function onClosed;
+  double height;
+  double width;
+
+  Calculate({
+    this.value,
+    this.onSaved,
+    this.onClosed,
+    this.height = 400,
+    this.width = 300,
+  });
+
+  @override
+  State<Calculate> createState() => _Calculate(value);
+}
+
+class _Calculate extends State<Calculate> {
+  String _value;
+  String msgError = "";
+  _Calculate(value) {
+    _value = value != null ? value.toString() : "";
+  }
+
+  btnTap(String number) {
+    setState(() {
+      msgError = "";
+      _value += number;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    TextStyle _styleInput =
+        TextStyle(fontSize: 20, color: Theme.of(context).buttonColor);
+
+    return Container(
+        height: widget.height,
+        width: widget.width,
+        decoration: BoxDecoration(
+          border: Border.all(color: Theme.of(context).primaryColor, width: 0),
+          color: Theme.of(context).primaryColor,
+        ),
+        child: Column(children: [
+          Row(
+            children: [
+              Container(
+                  width: widget.width,
+                  padding: EdgeInsets.symmetric(horizontal: 5, vertical: 15),
+                  margin: EdgeInsets.only(bottom: 5),
+                  decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColorLight,
+                      border: Border.all(
+                          width: 1.5,
+                          color: Theme.of(context).primaryColorDark),
+                      borderRadius: BorderRadius.all(Radius.circular(12))),
+                  child: Text(_value, style: _styleInput))
+            ],
+          ),
+          Row(
+            children: [
+              Text(
+                msgError,
+                style: TextStyle(color: Colors.red, fontSize: 14),
+              )
+            ],
+          ),
+          Expanded(
+            flex: 4,
+            child: Row(children: [
+              Expanded(
+                child: CalcButton(btnNumber: "1", onTap: () => btnTap("1")),
+              ),
+              Expanded(
+                child: CalcButton(btnNumber: "2", onTap: () => btnTap("2")),
+              ),
+              Expanded(
+                child: CalcButton(btnNumber: "3", onTap: () => btnTap("3")),
+              ),
+            ]),
+          ),
+          Expanded(
+            flex: 4,
+            child: Row(children: [
+              Expanded(
+                child: CalcButton(btnNumber: "4", onTap: () => btnTap("4")),
+              ),
+              Expanded(
+                child: CalcButton(btnNumber: "5", onTap: () => btnTap("5")),
+              ),
+              Expanded(
+                child: CalcButton(btnNumber: "6", onTap: () => btnTap("6")),
+              ),
+            ]),
+          ),
+          Expanded(
+            flex: 4,
+            child: Row(
+              children: [
+                Expanded(
+                  child: CalcButton(btnNumber: "7", onTap: () => btnTap("7")),
+                ),
+                Expanded(
+                  child: CalcButton(btnNumber: "8", onTap: () => btnTap("8")),
+                ),
+                Expanded(
+                  child: CalcButton(btnNumber: "9", onTap: () => btnTap("9")),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 4,
+            child: Row(
+              children: [
+                Expanded(
+                  child: CalcButton(
+                      icon: Icons.backspace,
+                      onTap: () => setState(() {
+                            _value = _value.substring(0, _value.length - 1);
+                          })),
+                ),
+                Expanded(
+                  child: CalcButton(
+                      btnNumber: "0",
+                      onTap: () => setState(() {
+                            _value += '0';
+                          })),
+                ),
+                Expanded(
+                  child: CalcButton(
+                      btnNumber: ",",
+                      onTap: () => setState(() {
+                            _value += ',';
+                          })),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 4,
+            child: Container(
+              child: Row(children: [
+                Expanded(
+                    child: Container(
+                        height: 45,
+                        margin: EdgeInsets.only(right: 5),
+                        child: CalcButton(
+                            bgColor: Theme.of(context).buttonColor,
+                            borderColor: Theme.of(context).buttonColor,
+                            fontColor: Colors.white,
+                            fontSize: 20,
+                            btnNumber: 'Принять',
+                            onTap: () {
+                              if (double.tryParse(
+                                      _value.replaceAll(',', '.')) ==
+                                  null) {
+                                setState(() {
+                                  msgError = "Строка имеет неверный формат";
+                                });
+                              } else {
+                                if (widget.onSaved != null)
+                                  return widget.onSaved(_value);
+                              }
+                            }))),
+                Expanded(
+                  child: Container(
+                      height: 45,
+                      margin: EdgeInsets.only(left: 5),
+                      child: CalcButton(
+                        icon: Icons.clear,
+                        bgColor: Theme.of(context).buttonColor,
+                        borderColor: Theme.of(context).buttonColor,
+                        fontColor: Colors.white,
+                        fontSize: 20,
+                        btnNumber: 'Отменить',
+                        onTap: () => widget.onClosed(),
+                      )),
+                ),
+              ]),
+            ),
+          ),
+        ]));
+  }
+}
+
+class EditDigitField extends StatefulWidget {
+  dynamic value;
+  String text;
+  Function(String) onSaved;
+  BuildContext context;
+  Color color;
+  double height;
+  Color backgroundColor;
+  Color borderColor;
+  bool readOnly;
+  double margin;
+  Function onTap;
+  double kbHeight;
+  double kbWidth;
+
+  EditDigitField(
+      {this.value = "",
+      this.text = "",
+      this.context,
+      this.color,
+      this.onSaved,
+      this.height = 35,
+      this.backgroundColor,
+      this.borderColor,
+      this.readOnly = false,
+      this.margin = 5,
+      this.onTap,
+      this.kbHeight = 400,
+      this.kbWidth = 300});
+  @override
+  State<EditDigitField> createState() => _EditDigitField(value);
+}
+
+class _EditDigitField extends State<EditDigitField> {
+  String _value;
+  _EditDigitField(value) {
+    _value = value != null ? value.toString() : "";
+  }
+
+  SuperTooltip tooltip;
+
+  Future<bool> _willPopCallback() async {
+    // If the tooltip is open we don't pop the page on a backbutton press
+    // but close the ToolTip
+    if (tooltip.isOpen) {
+      tooltip.close();
+      return false;
+    }
+    return true;
+  }
+
+  void onTap() {
+    if (tooltip != null && tooltip.isOpen) {
+      tooltip.close();
+      return;
+    }
+
+    void onSubmit(String newValue) {
+      tooltip.close();
+      if (widget.onSaved != null) return widget.onSaved(newValue);
+    }
+    void onClose(){
+       tooltip.close();
+    }
+
+    var renderBox = context.findRenderObject() as RenderBox;
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    var targetGlobalCenter = renderBox
+        .localToGlobal(renderBox.size.center(Offset.zero), ancestor: overlay);
+
+    // We create the tooltip on the first use
+    tooltip = SuperTooltip(
+      popupDirection: TooltipDirection.left,
+      arrowTipDistance: 80,
+      arrowBaseWidth: 20.0,
+      arrowLength: 20,
+      borderColor: Theme.of(context).primaryColorDark,
+      backgroundColor: Theme.of(context).primaryColor,
+      borderWidth: 2.0,
+      snapsFarAwayVertically: false,
+      showCloseButton: ShowCloseButton.none,
+      hasShadow: true,
+      minWidth: widget.kbWidth ?? 300,
+      minHeight: widget.kbHeight ?? 400,
+
+      // maxWidth: 300,
+      // maxHeight: 300,
+      content: new Material(
+          child: Calculate(
+              value: widget.value,
+              onSaved: onSubmit,
+              onClosed: onClose,
+              width: widget.kbWidth,
+              height: widget.kbHeight)),
+    );
+
+    tooltip.show(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // String _value = widget.value.toString();
+    final color = widget.color ?? Theme.of(widget.context).buttonColor;
+    final textStyle = TextStyle(fontSize: 16.0, color: color);
+    return Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: widget.margin,
+          vertical: widget.margin,
+        ),
+        child: Column(children: <Widget>[
+          if (widget.text != null)
+            Container(
+                alignment: Alignment.bottomLeft,
+                padding: EdgeInsets.only(bottom: 5.0),
+                child: Text(widget.text,
+                    textAlign: TextAlign.left, style: textStyle)),
+          Container(
+              height: widget.height,
+              padding: EdgeInsets.all(0),
+              margin: EdgeInsets.all(0),
+              decoration: BoxDecoration(
+                border: Border.all(
+                    color: widget.borderColor ?? Colors.white, width: 1.5),
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                color: widget.backgroundColor ?? Colors.white,
+              ),
+              child: WillPopScope(
+                  onWillPop: _willPopCallback,
+                  child: new GestureDetector(
+                      onTap: !widget.readOnly ? widget.onTap ?? onTap : null,
+                      child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                              maxHeight: widget.height,
+                              minHeight: widget.height),
+                          child: SingleChildScrollView(
+                              padding: EdgeInsets.all(0),
+                              scrollDirection: Axis.vertical,
+                              child: AbsorbPointer(
+                                child: TextFormField(
+                                    scrollPadding: EdgeInsets.all(0),
+                                    readOnly: true,
+                                    controller: TextEditingController.fromValue(
+                                        TextEditingValue(
+                                            text: widget.value != null
+                                                ? widget.value.toString()
+                                                : "")),
+                                    decoration: new InputDecoration(
+                                        isCollapsed: true,
+                                        border: OutlineInputBorder(
+                                            borderSide: BorderSide.none),
+                                        contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 5, vertical: 5)),
+                                    // initialValue:
+                                    //     _value, //widget.value != null ? widget.value.toString() : '',
+
+                                    cursorColor: widget.color,
+                                    style: textStyle,
+                                    onSaved: widget.onSaved,
+                                    minLines: null,
+                                    //minLines: widget.maxLines,
+                                    maxLines: null // widget.maxLines,
+                                    // maxLength: 256,
+                                    ),
+                              ))))))
         ]));
   }
 }
@@ -502,11 +915,11 @@ class _EditPopUp extends State<EditPopUp> {
             borderRadius: BorderRadius.all(Radius.circular(12.0))),
         backgroundColor: Theme.of(context).primaryColor,
         content: ConstrainedBox(
-            constraints: BoxConstraints.tight(new Size(700, 220)),
+            constraints: BoxConstraints.tightFor(width: 700, height: 252),
             child: Form(
                 key: formKey,
                 child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       Container(
                           alignment: Alignment.bottomLeft,
@@ -518,8 +931,9 @@ class _EditPopUp extends State<EditPopUp> {
                               color: color,
                             ),
                           )),
-                      Container(
-                        height: 140,
+                      Expanded(
+                          child: Container(
+                        // height: 140,
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.white, width: 1.5),
                           borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -534,14 +948,15 @@ class _EditPopUp extends State<EditPopUp> {
                             cursorColor: color,
                             style: textStyle,
                             onSaved: (value) => newValue = value,
-                            maxLines: 7,
+                            maxLines: null,
                             keyboardType: widget.textInputType,
                             inputFormatters: widget.inputFormatters,
                             validator: widget.validator
                             // maxLength: 256,
                             ),
-                      ),
-                      Row(
+                      )),
+                      Container(
+                          child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           MyButton(
@@ -559,7 +974,7 @@ class _EditPopUp extends State<EditPopUp> {
                                     context, widget.sourceValue);
                               })
                         ],
-                      )
+                      ))
                     ]))
             //Navigator.pop<bool>(context, result);
             ));
@@ -583,7 +998,8 @@ Future<String> showEdit(
     String sourceValue, String text, BuildContext parentContext,
     {TextInputType textInputType,
     Function(String) validator,
-    List<TextInputFormatter> inputFormatters}) {
+    List<TextInputFormatter> inputFormatters,
+    String textInPopEdit}) {
   return showDialog<String>(
       context: parentContext,
       barrierDismissible: false,
@@ -591,7 +1007,7 @@ Future<String> showEdit(
       builder: (context) {
         return EditPopUp(
             sourceValue: sourceValue,
-            text: text,
+            text: textInPopEdit ?? text,
             parentContext: parentContext,
             textInputType: textInputType,
             inputFormatters: inputFormatters,
@@ -1472,6 +1888,62 @@ class MyRichText extends StatelessWidget {
   }
 }
 
+class UnderlineIndex extends StatelessWidget {
+  String value;
+  String index;
+  Color color;
+  double valueSize;
+  double indexSize;
+
+  @override
+  UnderlineIndex(this.value, this.index,
+      {this.color, this.valueSize, this.indexSize});
+
+  @override
+  Widget build(BuildContext context) {
+    TextStyle textStyleValue = TextStyle(
+        fontStyle: FontStyle.normal,
+        fontSize: valueSize ?? 14,
+        color: color ?? Theme.of(context).buttonColor);
+
+    TextStyle textStyleIndex = TextStyle(
+        fontStyle: FontStyle.normal,
+        fontSize: indexSize ?? 14,
+        color: color ?? Theme.of(context).buttonColor);
+
+    return Container(
+        height: 20,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+                alignment: Alignment.topCenter,
+                child: Text(value, style: textStyleValue)),
+            Container(
+                margin: EdgeInsets.only(top: 5),
+                alignment: Alignment.bottomLeft,
+                child: Text(index, style: textStyleIndex)),
+          ],
+        ));
+  }
+}
+
+class Formula extends StatelessWidget {
+  String fileName;
+
+  @override
+  Formula(this.fileName);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        height: 60,
+        child: Image(
+            image: AssetImage("assets/formulas/$fileName"),
+            fit: BoxFit.fitHeight));
+  }
+}
+
 class MyArticleItem extends StatelessWidget {
   String title;
   String value;
@@ -1612,10 +2084,15 @@ class MyChatIcon extends StatelessWidget {
   MyChatIcon(this._counter);
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return 
+    GestureDetector(
+       onTap: () => Navigator.pushNamed(context, '/messenger'),
+      child:
+    Container(
       // width: 30,
       //  height: 30,
-      child: Stack(
+      child:
+       Stack(
         children: [
           TextIcon(
               icon: Icons.message,
@@ -1653,7 +2130,7 @@ class MyChatIcon extends StatelessWidget {
               : Text(''),
         ],
       ),
-    );
+    ));
   }
 }
 
@@ -2232,7 +2709,8 @@ class CustomToolTip extends PopupMenuEntry<Map<String, dynamic>> {
   BuildContext context;
   Widget content;
   Color color;
-  CustomToolTip({this.context, this.content, this.color});
+  double width;
+  CustomToolTip({this.context, this.content, this.color, this.width});
 
   @override
   double height = 1; //100;
@@ -2248,6 +2726,7 @@ class _CustomToolTip extends State<CustomToolTip> {
   @override
   Widget build(BuildContext context) {
     return Container(
+        width: widget.width,
         decoration: BoxDecoration(
             color: widget.color ?? Theme.of(widget.context).primaryColor,
             borderRadius: BorderRadius.all(Radius.circular(12.0))),
@@ -2255,6 +2734,74 @@ class _CustomToolTip extends State<CustomToolTip> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [widget.content]));
+  }
+}
+
+class MyToolTip extends StatefulWidget {
+  Widget formula;
+  Color bgColor;
+
+  @override
+  MyToolTip(this.formula, {Key key, this.bgColor}) : super(key: key);
+
+  @override
+  State<MyToolTip> createState() => new _MyToolTip();
+}
+
+class _MyToolTip extends State<MyToolTip> {
+  SuperTooltip tooltip;
+
+  Future<bool> _willPopCallback() async {
+    // If the tooltip is open we don't pop the page on a backbutton press
+    // but close the ToolTip
+    if (tooltip.isOpen) {
+      tooltip.close();
+      return false;
+    }
+    return true;
+  }
+
+  void onTap() {
+    if (tooltip != null && tooltip.isOpen) {
+      tooltip.close();
+      return;
+    }
+
+    var renderBox = context.findRenderObject() as RenderBox;
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    var targetGlobalCenter = renderBox
+        .localToGlobal(renderBox.size.center(Offset.zero), ancestor: overlay);
+
+    // We create the tooltip on the first use
+    tooltip = SuperTooltip(
+      popupDirection: TooltipDirection.down,
+      arrowTipDistance: 10,
+      arrowBaseWidth: 0.0,
+      arrowLength: 0,
+      borderColor: Theme.of(context).primaryColorDark,
+      backgroundColor: widget.bgColor ?? Theme.of(context).primaryColor,
+      borderWidth: 2.0,
+      snapsFarAwayVertically: false,
+      showCloseButton: ShowCloseButton.none,
+      hasShadow: false,
+      // maxWidth: 300,
+      // maxHeight: 300,
+      content: new Material(child: widget.formula),
+    );
+
+    tooltip.show(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return new WillPopScope(
+      onWillPop: _willPopCallback,
+      child: new GestureDetector(
+          onTap: onTap,
+          child: Icon(Icons.help_outline,
+              size: 30, color: Theme.of(context).primaryColor)),
+    );
   }
 }
 

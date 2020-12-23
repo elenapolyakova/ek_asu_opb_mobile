@@ -18,11 +18,11 @@ class OdooProxy {
 
   String get baseURL {
     if (_baseUrl != "") return _baseUrl;
-    _baseUrl = '${config.getItem('ServiceRootUrl')}:${config.getItem('port')}';
+    _baseUrl = '${config.getItem('ServiceRootUrl')}';
     return _baseUrl;
   }
 
-  set baseURL(String value) => _baseUrl = '$value:${config.getItem('port')}';
+  set baseURL(String value) => _baseUrl = '$value';
 
   String get db {
     if (_db != "") return _db;

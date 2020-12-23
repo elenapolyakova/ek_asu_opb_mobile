@@ -28,6 +28,8 @@ class _PlanHomeScreen extends State<PlanHomeScreen> {
   String errorText;
   bool isSyncData = false;
 
+
+
   Map<String, dynamic> screenList = {};
 
 //SpinKitFadingCircle(color: Color(0xFFADB439));
@@ -145,30 +147,29 @@ class _PlanHomeScreen extends State<PlanHomeScreen> {
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Color(0xFF252A0E))))
             ]),
-            bottomNavigationBar: 
-             (_navigationMenu.length > 1) ? 
-            BottomNavigationBar(
-                type: BottomNavigationBarType.fixed,
-                backgroundColor: Theme.of(context).bottomAppBarColor,
-                selectedItemColor: Theme.of(context).primaryColorDark,
-                unselectedItemColor: Theme.of(context).primaryColor,
-                selectedFontSize: 14,
-                unselectedFontSize: 14,
-                onTap: (value) {
-                  setState(() {
-                    _selectedIndex = value;
-                    // selectedMenu = _navigationMenu[value]["key"];
-                  });
-                },
-                currentIndex: _selectedIndex,
-                items: _navigationMenu == null
-                    ? []
-                    : List.generate(
-                        _navigationMenu.length,
-                        (i) => BottomNavigationBarItem(
-                            label: _navigationMenu[i]["label"],
-                            icon: _navigationMenu[i]["icon"])))
-                            : null,
+            bottomNavigationBar: (_navigationMenu.length > 1)
+                ? BottomNavigationBar(
+                    type: BottomNavigationBarType.fixed,
+                    backgroundColor: Theme.of(context).bottomAppBarColor,
+                    selectedItemColor: Theme.of(context).primaryColorDark,
+                    unselectedItemColor: Theme.of(context).primaryColor,
+                    selectedFontSize: 14,
+                    unselectedFontSize: 14,
+                    onTap: (value) {
+                      setState(() {
+                        _selectedIndex = value;
+                        // selectedMenu = _navigationMenu[value]["key"];
+                      });
+                    },
+                    currentIndex: _selectedIndex,
+                    items: _navigationMenu == null
+                        ? []
+                        : List.generate(
+                            _navigationMenu.length,
+                            (i) => BottomNavigationBarItem(
+                                label: _navigationMenu[i]["label"],
+                                icon: _navigationMenu[i]["icon"])))
+                : null,
           );
   }
 }

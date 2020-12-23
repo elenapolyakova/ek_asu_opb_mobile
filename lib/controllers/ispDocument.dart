@@ -11,7 +11,7 @@ class ISPDocumentController extends Controllers {
   static const String _tableName = "isp_document";
 
   static final String baseURL =
-      '${config.getItem('ServiceRootUrl')}:${config.getItem('port')}';
+      '${config.getItem('ServiceRootUrl')}';
   static String documentModel = 'mob.document';
 
   static Future<dynamic> insert(Map<String, dynamic> json) async {

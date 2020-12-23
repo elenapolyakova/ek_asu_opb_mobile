@@ -107,6 +107,12 @@ class _FaultHistoryScreen extends State<FaultHistoryScreen> {
             screens.FaultFixScreen(faultFixId, faultId, push, pop, GlobalKey());
 
         break;
+      
+       case "faultDamage":
+        _screenList[_selectedPage] =
+            screens.FaultDamageScreen(faultId, push, pop, GlobalKey());
+
+        break;
 
       default:
         return Text("");

@@ -233,6 +233,7 @@ class _HomeScreen extends State<HomeScreen> {
       if (isPinValid) {
         setState(() {
           errorPin = '';
+          _pin = '';
         });
 
         Navigator.pop(context, true);

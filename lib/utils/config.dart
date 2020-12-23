@@ -1,14 +1,14 @@
 Map<String, Object> _config = {
-  /*ВНИИЖТ - dev*/
-  /*"ServiceRootUrl": "http://msk3tis2.vniizht.lan",
+   /*ВНИИЖТ - dev*/
+ "ServiceRootUrl": "http://msk3tis2.vniizht.lan:8069",
   "addressForPing": "msk3tis2.vniizht.lan",
   "db": "ecodb_2020-07-01",
-  "port": 8069,*/
+  
   /*РЖД - prod*/
-  "ServiceRootUrl": "http://ekasuopb.svrw.oao.rzd",
+ /* "ServiceRootUrl": "http://ekasuopb.svrw.oao.rzd:8069",
   "addressForPing": "ekasuopb.svrw.oao.rzd",
-  "db": "ek_asu_opb2",
-  "port": 80,
+  "db": "ek_asu_opb2",*/
+
   /*РЖД - test*/
   /* 
   "ServiceRootUrl": "http://10.247.1.133",
