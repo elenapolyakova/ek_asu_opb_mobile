@@ -2346,7 +2346,7 @@ class _MyAppBar extends State<MyAppBar> {
                               : "",
                           margin: 0,
                           onTap: () async {
-                            // await ChatController.loadFromOdoo(clean: true);
+                             await ChatController.loadFromOdoo(clean: true);
                             // await ChatMessageController.loadFromOdoo(
                             //     clean: true);
                             // await SynController.loadFromOdoo(
@@ -2358,8 +2358,7 @@ class _MyAppBar extends State<MyAppBar> {
                             //         where: "id = 28824")), (el) {
                             //   print(el);
                             // });
-                            await FaultItemController.loadFromOdoo(clean: true);
-                            // (await DBProvider.db.select('fault_item'))
+                            // (await DBProvider.db.select('plan'))
                             //     .forEach((element) {
                             //   print(element);
                             // });

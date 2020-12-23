@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:ek_asu_opb_mobile/models/comGroup.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ek_asu_opb_mobile/models/chat.dart';
 import 'package:ek_asu_opb_mobile/models/chatMessage.dart';
@@ -75,8 +76,10 @@ class Messenger {
     }
     for (var chatItem in chatMap.entries) {
       String name;
-      if (chatItem.key.groupId != null)
-        name = (await chatItem.key.group).groupNum;
+      if (chatItem.key.groupId != null) {
+        ComGroup group = await chatItem.key.group;
+        name = group.groupNum;
+      }
 
       MyChat item =
           MyChat(chatItem.key, name, countMessage: chatItem.value ?? 0);

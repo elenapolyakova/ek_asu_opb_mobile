@@ -215,7 +215,7 @@ class _CommissionScreen extends State<CommissionScreen> {
           orElse: () => null);
 
       if (commision != null) {
-        Chat chat = new Chat(id: null, active: true, groupId: commision.id);
+        Chat chat = new Chat(id: null, active: true, groupId: commision.id, type:2);
         try {
           chat = await commision?.chat;
         } catch (e) {}
@@ -226,7 +226,7 @@ class _CommissionScreen extends State<CommissionScreen> {
       // groups.remove(commision);
       for (var i = 0; i < groups.length; i++)
         if (!groups[i].isMain) {
-          Chat chat = new Chat(id: null, active: true, groupId: groups[i].id);
+          Chat chat = new Chat(id: null, active: true, groupId: groups[i].id, type:2);
           try {
             chat = await groups[i]?.chat;
           } catch (e) {}
@@ -249,7 +249,7 @@ class _CommissionScreen extends State<CommissionScreen> {
               isMain: true,
               active: true),
           [],
-          Chat(id: null, active: true));
+          Chat(id: null, active: true, type:2));
       // !![];
     }
   }
@@ -565,7 +565,7 @@ class _CommissionScreen extends State<CommissionScreen> {
             isMain: false,
             active: true),
         [],
-        Chat(id: null, active: true));
+        Chat(id: null, active: true, type:2));
     bool result = await showGroupDialog(group, setState);
     if (result != null && result) {
       setState(() {});
