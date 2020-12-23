@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:ek_asu_opb_mobile/controllers/fault.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
@@ -25,7 +26,6 @@ class _WaterScreen extends State<WaterScreen> {
   List<Map<String, dynamic>> harmType = [];
   String harmName = "";
 
-
   List<List<Map<String, dynamic>>> _rows = [];
   List<List<double>> values = [
     List(6),
@@ -48,13 +48,13 @@ class _WaterScreen extends State<WaterScreen> {
         auth.getUserInfo().then((userInfo) {
           _userInfo = userInfo;
 
-          loadData();
+          loadData(context);
         });
       } //isLogin == true
     }); //checkLoginStatus
   }
 
-  Future<void> loadData() async {
+  Future<void> loadData(BuildContext context) async {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
@@ -746,6 +746,7 @@ class _WaterScreen extends State<WaterScreen> {
       showLoading = false;
       setState(() => {});
     }
+    return;
   }
 
   Widget generateTable(
@@ -795,7 +796,7 @@ class _WaterScreen extends State<WaterScreen> {
             )),
         EditDigitField(
           text: null,
-          
+
           value: values[_type - 1][row["rowIndex"]]
                   ?.toString()
                   ?.replaceAll('.', ',') ??
@@ -807,7 +808,7 @@ class _WaterScreen extends State<WaterScreen> {
             })
           },
           context: context,
-        
+
           readOnly: row["readOnly"] ?? false,
           backgroundColor: row["readOnly"] == true
               ? Theme.of(context).primaryColorLight
@@ -878,6 +879,28 @@ class _WaterScreen extends State<WaterScreen> {
     setState(() {});
   }
 
+  save() async {
+    bool hasErorr = false;
+    Map<String, dynamic> result;
+    double damageAmount = values[_type - 1].last;
+    Fault fault = await FaultController.selectById(widget.faultId);
+    fault.damageAmount = damageAmount;
+    try {
+      result = await FaultController.update(fault, [], []);
+      hasErorr = result["code"] < 0;
+
+      if (hasErorr) {
+        // Navigator.pop<bool>(context, false);
+        Scaffold.of(context).showSnackBar(errorSnackBar());
+      } else {
+        Scaffold.of(context).showSnackBar(successSnackBar);
+      }
+    } catch (e) {
+      //Navigator.pop<bool>(context, false);
+      Scaffold.of(context).showSnackBar(errorSnackBar());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -899,7 +922,6 @@ class _WaterScreen extends State<WaterScreen> {
                   GestureDetector(
                       onTap: () => setState(() {
                             showTypeSelection = !showTypeSelection;
-                           
                           }),
                       child: Container(
                           margin: EdgeInsets.symmetric(horizontal: 0),
@@ -913,7 +935,6 @@ class _WaterScreen extends State<WaterScreen> {
                               color: Theme.of(context).primaryColorDark,
                               onPressed: () => setState(() {
                                 showTypeSelection = !showTypeSelection;
-                               
                               }),
                             ),
                             Expanded(
@@ -935,58 +956,62 @@ class _WaterScreen extends State<WaterScreen> {
                               softWrap: true,
                             ))
                           ]))),
-                //  if (showTypeSelection)
+                  //  if (showTypeSelection)
                   AnimatedSwitcher(
-                   // curve: Curves.easeOut,
-                  //  opacity: showTypeSelection ? 1 : 0,
-                    duration: Duration(milliseconds: 300),
-                    child: 
-                 showTypeSelection ?  Container(
-                    key: UniqueKey(),
-                        height: 370,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(12.0)),
-                          border: Border.all(
-                              color: Theme.of(context).primaryColorDark,
-                              width: 2),
-                          color: Theme.of(context)
-                              .primaryColorLight
-                              .withOpacity(.5),
-                        ),
-                        child: ListView(
-                          children: List.generate(
-                              harmType.length,
-                              (index) => ListTile(
-                                    onTap: () => setState(() {
-                                      _type = harmType[index]["id"];
-                                      harmName = harmType[index]["name"];
-                                      showTypeSelection = false;
-                                   
-                                      _harm = values[_type - 1].last;
-                                    }),
-                                    title: Text(
-                                      harmType[index]["name"],
-                                    ),
-                                    leading: Radio(
-                                      value: harmType[index]["id"],
-                                      groupValue: _type,
-                                      activeColor:
-                                          Theme.of(context).primaryColor,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          _type = value;
+                      // curve: Curves.easeOut,
+                      //  opacity: showTypeSelection ? 1 : 0,
+                      duration: Duration(milliseconds: 300),
+                      child: showTypeSelection
+                          ? Container(
+                              key: UniqueKey(),
+                              height: 370,
+                              decoration: BoxDecoration(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(12.0)),
+                                border: Border.all(
+                                    color: Theme.of(context).primaryColorDark,
+                                    width: 2),
+                                color: Theme.of(context)
+                                    .primaryColorLight
+                                    .withOpacity(.5),
+                              ),
+                              child: ListView(
+                                children: List.generate(
+                                    harmType.length,
+                                    (index) => ListTile(
+                                          onTap: () => setState(() {
+                                            _type = harmType[index]["id"];
+                                            harmName = harmType[index]["name"];
+                                            showTypeSelection = false;
 
-                                          harmName = harmType[index]["name"];
-                                          showTypeSelection = false;
-                                         
-                                          _harm = values[_type - 1].last;
-                                          ;
-                                        });
-                                      },
-                                    ),
-                                  )),
-                        )) : Text('')
-                  ),
+                                            _harm = values[_type - 1].last;
+                                          }),
+                                          title: Text(
+                                            harmType[index]["name"],
+                                          ),
+                                          leading: Radio(
+                                            value: harmType[index]["id"],
+                                            groupValue: _type,
+                                            activeColor:
+                                                Theme.of(context).primaryColor,
+                                            onChanged: (value) {
+                                              setState(() {
+                                                _type = value;
+
+                                                harmName =
+                                                    harmType[index]["name"];
+                                                showTypeSelection = false;
+
+                                                _harm = values[_type - 1].last;
+                                              });
+                                            },
+                                          ),
+                                        )),
+                              ))
+                          : Container(
+                              child: Text(''),
+                              height: 0,
+                            )),
                   Container(
                     constraints: BoxConstraints.tight(Size(
                         double.infinity,
@@ -1011,7 +1036,7 @@ class _WaterScreen extends State<WaterScreen> {
                               text: 'Сохранить',
                               disabled: _harm == null,
                               parentContext: context,
-                              onPress: () {}),
+                              onPress: save),
                         ],
                       )),
                 ]))));

@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
@@ -31,13 +32,13 @@ class _SoilScreen extends State<SoilScreen> {
         auth.getUserInfo().then((userInfo) {
           _userInfo = userInfo;
 
-          loadData();
+          loadData(context);
         });
       } //isLogin == true
     }); //checkLoginStatus
   }
 
-  Future<void> loadData() async {
+  Future<void> loadData(BuildContext context) async {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
@@ -116,7 +117,6 @@ class _SoilScreen extends State<SoilScreen> {
                       color: Theme.of(context).buttonColor),
                 ),
               ),
-             
             ])),
         Container(
           padding: EdgeInsets.symmetric(vertical: 10),
@@ -131,7 +131,7 @@ class _SoilScreen extends State<SoilScreen> {
             )),
         EditDigitField(
           text: null,
-         // textInPopEdit: row["name"],
+          // textInPopEdit: row["name"],
           value:
               values[row["rowIndex"]]?.toString()?.replaceAll('.', ',') ?? '',
           onSaved: (value) => {
@@ -140,43 +140,44 @@ class _SoilScreen extends State<SoilScreen> {
                   double.tryParse(value.replaceAll(',', '.'));
             })
           },
-           readOnly: row["readOnly"] ?? false,
+          readOnly: row["readOnly"] ?? false,
           context: context,
-           backgroundColor: row["readOnly"] == true
+          backgroundColor: row["readOnly"] == true
               ? Theme.of(context).primaryColorLight
               : null,
           margin: 3,
           borderColor: Theme.of(context).primaryColorDark,
         ),
-         (row["showToolTip"] == true) ? 
-                MyToolTip(
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                            color: Theme.of(context).primaryColor, width: 0),
-                        color: Theme.of(context).primaryColor,
-                      ),
-                      height: 30,
-                      width: 370,
-                      alignment: Alignment.center,
-                      padding: EdgeInsets.all(5),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        children: [
-                          Text('УЩ = '),
-                         UnderlineIndex('УЩ', 'загр'),
-                          Text('+'),
-                          UnderlineIndex('УЩ', 'отх'),
-                          Text('+'),
-                          UnderlineIndex('УЩ', 'перек'),
-                          Text('+'),
-                          UnderlineIndex('УЩ', 'сн'),
-                          Text('+'),
-                          UnderlineIndex('УЩ', 'уничт'),
-                        ],
-                      ),
-                    ),
-                    bgColor: Theme.of(context).primaryColor) : Text(''),
+        (row["showToolTip"] == true)
+            ? MyToolTip(
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: Theme.of(context).primaryColor, width: 0),
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  height: 30,
+                  width: 370,
+                  alignment: Alignment.center,
+                  padding: EdgeInsets.all(5),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    children: [
+                      Text('УЩ = '),
+                      UnderlineIndex('УЩ', 'загр'),
+                      Text('+'),
+                      UnderlineIndex('УЩ', 'отх'),
+                      Text('+'),
+                      UnderlineIndex('УЩ', 'перек'),
+                      Text('+'),
+                      UnderlineIndex('УЩ', 'сн'),
+                      Text('+'),
+                      UnderlineIndex('УЩ', 'уничт'),
+                    ],
+                  ),
+                ),
+                bgColor: Theme.of(context).primaryColor)
+            : Text(''),
       ]);
       tableRows.add(tableRow);
     });
@@ -193,6 +194,28 @@ class _SoilScreen extends State<SoilScreen> {
     for (var i = 0; i < len - 1; i++) harm += values[i] ?? 0;
     values[len - 1] = harm;
     setState(() {});
+  }
+
+  save() async {
+    bool hasErorr = false;
+    Map<String, dynamic> result;
+    double damageAmount = values.last;
+    Fault fault = await FaultController.selectById(widget.faultId);
+    fault.damageAmount = damageAmount;
+    try{
+     result = await FaultController.update(fault, [], []);
+       hasErorr = result["code"] < 0;
+
+      if (hasErorr) {
+        // Navigator.pop<bool>(context, false);
+        Scaffold.of(context).showSnackBar(errorSnackBar());
+      } else {
+         Scaffold.of(context).showSnackBar(successSnackBar);
+      }
+    } catch (e) {
+      //Navigator.pop<bool>(context, false);
+      Scaffold.of(context).showSnackBar(errorSnackBar());
+    }
   }
 
   @override
@@ -229,7 +252,7 @@ class _SoilScreen extends State<SoilScreen> {
                               text: 'Сохранить',
                               disabled: values[values.length - 1] == null,
                               parentContext: context,
-                              onPress: () {}),
+                              onPress: save),
                         ],
                       )),
                 ])));

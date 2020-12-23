@@ -1,3 +1,4 @@
+import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
@@ -29,13 +30,13 @@ class _ForestScreen extends State<ForestScreen> {
         auth.getUserInfo().then((userInfo) {
           _userInfo = userInfo;
 
-          loadData();
+          loadData(context);
         });
       } //isLogin == true
     }); //checkLoginStatus
   }
 
-  Future<void> loadData() async {
+  Future<void> loadData(BuildContext context) async {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
@@ -192,6 +193,28 @@ class _ForestScreen extends State<ForestScreen> {
     setState(() {});
   }
 
+  save() async {
+    bool hasErorr = false;
+    Map<String, dynamic> result;
+    double damageAmount = values.last;
+    Fault fault = await FaultController.selectById(widget.faultId);
+    fault.damageAmount = damageAmount;
+    try{
+     result = await FaultController.update(fault, [], []);
+       hasErorr = result["code"] < 0;
+
+      if (hasErorr) {
+        // Navigator.pop<bool>(context, false);
+        Scaffold.of(context).showSnackBar(errorSnackBar());
+      } else {
+         Scaffold.of(context).showSnackBar(successSnackBar);
+      }
+    } catch (e) {
+      //Navigator.pop<bool>(context, false);
+      Scaffold.of(context).showSnackBar(errorSnackBar());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -228,7 +251,7 @@ class _ForestScreen extends State<ForestScreen> {
                               text: 'Сохранить',
                               disabled: values[values.length - 1] == null,
                               parentContext: context,
-                              onPress: () {}),
+                              onPress: save),
                         ],
                       )),
                 ])));

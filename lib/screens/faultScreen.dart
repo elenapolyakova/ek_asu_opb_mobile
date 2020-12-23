@@ -881,9 +881,9 @@ class _FaultScreen extends State<FaultScreen> {
                                                         text:
                                                             'Размер вреда, руб',
                                                         value:
-                                                            _fault.fine != null
-                                                                ? _fault.fine
-                                                                    .toString()
+                                                            _fault.damageAmount != null
+                                                                ? _fault.damageAmount
+                                                                    .toString().replaceAll('.', ',')
                                                                 : '',
                                                         readOnly: true,
                                                         context: context,
@@ -892,7 +892,7 @@ class _FaultScreen extends State<FaultScreen> {
                                                             .primaryColorDark,
                                                         height: 40,
                                                         margin: 0,
-                                                        onTap: () => faultDamageClicked(_fault.fine)
+                                                        onTap: () => faultDamageClicked(_fault.id)
                                                       ),
                                                     ),
                                                     Container(

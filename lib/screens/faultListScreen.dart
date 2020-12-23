@@ -185,7 +185,7 @@ class _FaultListScreen extends State<FaultListScreen> {
                 textAlign: TextAlign.center),
             getRowCell(row.fine != null ? row.fine.toString() : '', row.id, 3,
                 textAlign: TextAlign.center),
-            getRowCell(row.fine != null ? row.fine.toString() : '', row.id, 4,
+            getRowCell(row.damageAmount != null ? row.damageAmount.toString().replaceAll('.', ',') : '', row.id, 4,
                 textAlign: TextAlign.center),
             getRowCell(row.fine_desc, row.id, 5),
             getRowCell(fault.fineName, row.id, 6),
