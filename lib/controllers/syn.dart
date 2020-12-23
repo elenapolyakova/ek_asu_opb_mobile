@@ -230,13 +230,11 @@ class SynController extends Controllers {
       await CheckListController.firstLoadFromOdoo();
       await CheckListItemController.firstLoadFromOdoo();
       FaultController.firstLoadFromOdoo().then((value) async {
-        await FaultItemController.firstLoadFromOdoo();
-        await FaultFixController.firstLoadFromOdoo();
-        await FaultFixItemController.firstLoadFromOdoo();
         await FaultController.firstLoadFromOdoo(true);
-        await FaultItemController.firstLoadFromOdoo(true);
+        await FaultItemController.loadFromOdoo(clean: true);
+        await FaultFixController.firstLoadFromOdoo();
         await FaultFixController.firstLoadFromOdoo(true);
-        await FaultFixItemController.firstLoadFromOdoo(true);
+        await FaultFixItemController.loadFromOdoo(clean: true);
         print("Finished background first load. Setting syncStatus to SUCCESS");
         syncStatus = SYNC_STATUS.SUCCESS;
       });
@@ -255,13 +253,11 @@ class SynController extends Controllers {
       await CheckListController.loadChangesFromOdoo();
       await CheckListItemController.loadChangesFromOdoo();
       FaultController.loadChangesFromOdoo().then((value) async {
-        await FaultItemController.loadChangesFromOdoo();
-        await FaultFixController.loadChangesFromOdoo();
-        await FaultFixItemController.loadChangesFromOdoo();
         await FaultController.loadChangesFromOdoo(true);
-        await FaultItemController.loadChangesFromOdoo(true);
+        await FaultItemController.loadFromOdoo();
+        await FaultFixController.loadChangesFromOdoo();
         await FaultFixController.loadChangesFromOdoo(true);
-        await FaultFixItemController.loadChangesFromOdoo(true);
+        await FaultFixItemController.loadFromOdoo();
         print(
             "Finished background load changes. Setting syncStatus to SUCCESS");
         syncStatus = SYNC_STATUS.SUCCESS;

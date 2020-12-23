@@ -131,6 +131,84 @@ class FaultFixItemController extends Controllers {
     return FaultFixItem.fromJson(json[0]);
   }
 
+  static Future loadFromOdoo({bool clean: false}) async {
+    List<String> fields = [
+      'name',
+      'type',
+      'file_name',
+      'file_data',
+      'coord_n',
+      'coord_e',
+      'write_date',
+      'parent3_id',
+    ];
+    List domain = [
+      ['parent_id', '=', null],
+      ['parent2_id', '=', null],
+    ];
+    if (clean) {
+      await DBProvider.db.deleteAll(_tableName);
+    } else {
+      domain += await getLastSyncDateDomain(_tableName, excludeActive: true);
+    }
+    List json;
+    int page = 0;
+    do {
+      json = await getDataWithAttemp(
+          SynController.localRemoteTableNameMap[_tableName], 'search_read', [
+        domain,
+        fields
+      ], {
+        'limit': limit,
+        'offset': limit * page++,
+        'context': {'create_or_update': true}
+      });
+      if (json == null) {
+        print('Did not load $_tableName record. Skipping');
+        continue;
+      }
+
+      await Future.forEach(json, (e) async {
+        FaultFixItem faultFixItem = await selectByOdooId(e['id']);
+        int parentId = (await FaultFixController.selectByOdooId(
+                unpackListId(e['parent_id'])['id']))
+            ?.id;
+        if (parentId == null) {
+          print("$_tableName record with odooId=${e['id']} doesn't have"
+              "existing parent_id. Skipping");
+          return;
+        }
+        Map<String, dynamic> res = {
+          ...e,
+          'odoo_id': e['id'],
+          'parent3_id': parentId,
+          'active': 'true',
+        };
+        if (getObj(res['file_data']) == null) {
+          print("$_tableName record with odooId=${res['odoo_id']} doesn't have"
+              "file_data. Skipping");
+          return;
+        }
+        if (faultFixItem != null) {
+          var file = await base64ToFile(res['file_data'],
+              path: faultFixItem.file_data);
+          res['file_data'] = file.path;
+          res['id'] = faultFixItem.id;
+          await DBProvider.db
+              .update(_tableName, FaultFixItem.fromJson(res).toJson());
+        } else {
+          var file = await base64ToFile(res['file_data']);
+          res['file_data'] = file.path;
+          res['odoo_id'] = e['id'];
+          await DBProvider.db
+              .insert(_tableName, FaultFixItem.fromJson(res).toJson());
+        }
+      });
+      print('loaded ${json.length} records of $_tableName');
+      await setLatestWriteDate(_tableName, json);
+    } while (json is List && json.length == limit);
+  }
+
   static firstLoadFromOdoo([bool loadRelated = false]) async {
     List<String> fields;
     List<List> domain = [];

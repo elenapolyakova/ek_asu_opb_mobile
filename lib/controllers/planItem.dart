@@ -67,6 +67,7 @@ class PlanItemController extends Controllers {
       fields
     ], {
       'limit': limit,
+      'offset': offset,
       'context': {'create_or_update': true}
     });
     await Future.forEach(json, (e) async {
