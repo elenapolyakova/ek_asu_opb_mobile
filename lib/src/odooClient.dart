@@ -7,6 +7,8 @@ import 'package:ek_asu_opb_mobile/models/userInfo.dart' as user;
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
+class SessionExpired implements Exception {}
+
 class OdooProxy {
   OdooProxy._();
   static final OdooProxy odooClient = OdooProxy._();
@@ -128,6 +130,9 @@ class OdooProxy {
     final OdooClient odooClient = await client;
     try {
       return await odooClient.callKw(param);
+    } on OdooSessionExpiredException catch (e) {
+      print(e);
+      throw new SessionExpired();
     } on OdooException catch (e) {
       print(e);
       DBProvider.db

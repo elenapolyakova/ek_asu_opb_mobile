@@ -351,9 +351,13 @@ Future<dynamic> getDataWithAttemp(
   while (curAttempt++ < attemptCount || noAttemptCount) {
     print('Attempt ${curAttempt.toString()}..........');
     LogController.insert('Attempt ${curAttempt.toString()}..........');
-    var data = await getData(model, method, args, kwargs);
-    if (data == null) continue;
-    return data;
+    try {
+      var data = await getData(model, method, args, kwargs);
+      if (data == null) continue;
+      return data;
+    } on SessionExpired {
+      return null;
+    }
   }
   return null;
 }
