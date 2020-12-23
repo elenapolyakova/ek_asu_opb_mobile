@@ -22,6 +22,7 @@ class Fault extends Models {
   // double lon;
   // //
   DateTime plan_fix_date;
+  double damageAmount;
 
   Fault({
     this.id,
@@ -39,6 +40,7 @@ class Fault extends Models {
     // this.lat,
     // this.lon,
     this.plan_fix_date,
+    this.damageAmount,
   });
 
   Future<DateTime> get getLastFixDate async {
@@ -62,6 +64,7 @@ class Fault extends Models {
         desc_done: getObj(json["desc_done"]),
         active: json["active"].toString() == 'true',
         plan_fix_date: stringToDateTime(json["plan_fix_date"], forceUtc: false),
+        damageAmount: getObj(json["damage_amount"]),
       );
 
   Map<String, dynamic> toJson([omitId = false]) {
@@ -79,6 +82,7 @@ class Fault extends Models {
       'desc_done': desc_done,
       'active': (active == null || !active) ? 'false' : 'true',
       'plan_fix_date': dateTimeToString(plan_fix_date),
+      'damage_amount': damageAmount,
     };
   }
 
@@ -96,6 +100,7 @@ class Fault extends Models {
       'koap_id': koap_id,
       'date_done': dateTimeToString(date_done),
       'plan_fix_date': dateTimeToString(plan_fix_date),
+      'damage_amount': damageAmount,
     };
   }
 
