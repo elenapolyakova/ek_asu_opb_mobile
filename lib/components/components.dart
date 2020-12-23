@@ -130,13 +130,18 @@ class _SyncIcon extends State<SyncIcon> {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color:
-                         color,
+                      color: color,
                       border: Border.all(
-                          color: Theme.of(context).primaryColorLight.withOpacity(.5),
+                          color: Theme.of(context)
+                              .primaryColorLight
+                              .withOpacity(.5),
                           width: 0.5)),
                   child: //Text('')
-                  Icon(icon, size: 13, color: Theme.of(context).primaryColorDark, )
+                      Icon(
+                    icon,
+                    size: 13,
+                    color: Theme.of(context).primaryColorDark,
+                  )
 
                   /*Container(
                   width: 10,
@@ -1881,10 +1886,11 @@ class _MyAppBar extends State<MyAppBar> {
                             //         where: "id = 28824")), (el) {
                             //   print(el);
                             // });
-                            (await DBProvider.db.select('plan'))
-                                .forEach((element) {
-                              print(element);
-                            });
+                            await FaultItemController.loadFromOdoo(clean: true);
+                            // (await DBProvider.db.select('fault_item'))
+                            //     .forEach((element) {
+                            //   print(element);
+                            // });
                             /*print((await ReportController.downloadReport(
                                 26, 'report_mob_main_plan_xls')));*/
                           },

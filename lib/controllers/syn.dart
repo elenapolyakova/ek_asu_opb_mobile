@@ -530,7 +530,6 @@ class SynController extends Controllers {
         await Future.delayed(Duration(seconds: 12));
       }
       Map lastUploadedTableRecordId = {};
-      syncStatus = SYNC_STATUS.IN_PROGRESS;
       while (true) {
         // Load a syn record
         List<Map<String, dynamic>> toSyn = await DBProvider.db.select(
