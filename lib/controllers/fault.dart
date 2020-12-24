@@ -436,6 +436,7 @@ class FaultController extends Controllers {
         'koap_id',
         'date',
         'date_done',
+        'damage_amount',
         'active',
       ];
     }
@@ -514,6 +515,7 @@ class FaultController extends Controllers {
         'koap_id',
         'date',
         'date_done',
+        'damage_amount',
         'active',
       ];
 
