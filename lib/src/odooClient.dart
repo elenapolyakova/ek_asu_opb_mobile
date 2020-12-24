@@ -140,6 +140,8 @@ class OdooProxy {
 
       return null;
     } catch (e) {
+      if (e.message != "Connection closed while receiving data")
+        throw new SessionExpired();
       print(e);
       return null;
     }
