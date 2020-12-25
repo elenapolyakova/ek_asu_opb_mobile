@@ -468,9 +468,8 @@ class _LoginPage extends State<LoginPage> {
     }
 
     setState(() {
-      setState(() {
-        isLoginProccess = false;
-      });
+     isLoginProccess = false;
+     
       if (!isAuthorize)
         _errorMessage = "Неверное имя пользователя или пароль";
       else if (!isSet)

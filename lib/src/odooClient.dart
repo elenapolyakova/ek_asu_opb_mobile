@@ -58,6 +58,7 @@ class OdooProxy {
   Future<void> destroySession() async {
     final OdooClient odooClient = await client;
     subscription = null;
+    _session = null;
     return odooClient.destroySession();
   }
 

@@ -22,6 +22,7 @@ void LogOut(BuildContext context) async {
       // если нет сети - не завершим сессию для Odoo
       LogController.insert('destroy session for odoo');
       await OdooProxy.odooClient.destroySession();
+      
       OdooProxy.odooClient.close();
       LogController.insert('success');
     }
