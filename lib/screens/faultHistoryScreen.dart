@@ -41,7 +41,6 @@ class _FaultHistoryScreen extends State<FaultHistoryScreen> {
 
   @override
   void initState() {
-    print('initState');
     super.initState();
 
     setState(() {

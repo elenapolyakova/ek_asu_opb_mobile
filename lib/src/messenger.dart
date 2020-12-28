@@ -78,7 +78,10 @@ class Messenger {
       String name;
       if (chatItem.key.groupId != null) {
         ComGroup group = await chatItem.key.group;
-        name = group.groupNum;
+        if (group.isMain == false)
+          name = 'Группа ${group.groupNum}';
+        else
+          name = 'Комиссия';
       }
 
       MyChat item =

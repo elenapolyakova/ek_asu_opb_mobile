@@ -45,7 +45,6 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
 
   @override
   void initState() {
-    print('initState');
     super.initState();
 
     setState(() {
