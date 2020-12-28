@@ -498,8 +498,9 @@ class SynController extends Controllers {
     }
     print("Uploading $record");
     return await getDataWithAttemp(
-            localRemoteTableNameMap[syn.localTableName], syn.method, args, {})
-        .then((value) async {
+        localRemoteTableNameMap[syn.localTableName], syn.method, args, {
+      'context': {'create_or_update': true}
+    }).then((value) async {
       if (syn.method == 'create') {
         print(
             "Created ${syn.localTableName} with id = ${syn.recordId}. New odoo_id = $value");
