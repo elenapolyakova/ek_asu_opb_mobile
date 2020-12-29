@@ -215,7 +215,8 @@ class _CommissionScreen extends State<CommissionScreen> {
           orElse: () => null);
 
       if (commision != null) {
-        Chat chat = new Chat(id: null, active: true, groupId: commision.id, type:2);
+        Chat chat =
+            new Chat(id: null, active: true, groupId: commision.id, type: 2);
         try {
           chat = await commision?.chat;
         } catch (e) {}
@@ -226,7 +227,8 @@ class _CommissionScreen extends State<CommissionScreen> {
       // groups.remove(commision);
       for (var i = 0; i < groups.length; i++)
         if (!groups[i].isMain) {
-          Chat chat = new Chat(id: null, active: true, groupId: groups[i].id, type:2);
+          Chat chat =
+              new Chat(id: null, active: true, groupId: groups[i].id, type: 2);
           try {
             chat = await groups[i]?.chat;
           } catch (e) {}
@@ -249,7 +251,7 @@ class _CommissionScreen extends State<CommissionScreen> {
               isMain: true,
               active: true),
           [],
-          Chat(id: null, active: true, type:2));
+          Chat(id: null, active: true, type: 2));
       // !![];
     }
   }
@@ -341,8 +343,9 @@ class _CommissionScreen extends State<CommissionScreen> {
     members.forEach((m) {
       if (m.roleId != headRoleId) member += '${m.user.display_name}, ';
     });
+
     member = member != '' ? slice(member, 0, -2) : member;
-    return '${head != '' ? '$head($headPosition), ' : ''} $member';
+    return '${head != '' ? '$head($headPosition)' : ''} ${member != '' ? ', ': ''} $member';
   }
 
   void _showCustomMenu(int groupId) {
@@ -565,7 +568,7 @@ class _CommissionScreen extends State<CommissionScreen> {
             isMain: false,
             active: true),
         [],
-        Chat(id: null, active: true, type:2));
+        Chat(id: null, active: true, type: 2));
     bool result = await showGroupDialog(group, setState);
     if (result != null && result) {
       setState(() {});
@@ -765,10 +768,9 @@ class _CommissionScreen extends State<CommissionScreen> {
                                                             .available)))))
                                   ])),
                                   SingleChildScrollView(
-                                    child:
-                                  Container(
-                                      // height: double.infinity,
-                                      child: Column(
+                                      child: Container(
+                                          // height: double.infinity,
+                                          child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       MyButton(
@@ -1026,7 +1028,16 @@ class _CommissionScreen extends State<CommissionScreen> {
                                   onPress: () {
                                     cancelCommission();
                                   }),
-                            ]))
+                            ])),
+                        Container(
+                            width: double.infinity,
+                            height: 20,
+                            color: (_errorText != "")
+                                ? Color(0xAAE57373)
+                                : Color(0x00E57373),
+                            child: Text('$_errorText',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Color(0xFF252A0E))))
                       ]))))
             ]);
           });
@@ -1144,7 +1155,7 @@ class _CommissionScreen extends State<CommissionScreen> {
       // else
       ids.add(member.user.id);
     });
-    return {'comGroup': comGroup, 'ids': ids};
+    return {'comGroup': comGroup, 'ids': ids, 'headId': comGroup.headId};
   }
 
   Future<void> submitGroup(MyGroup group, setState) async {
@@ -1156,6 +1167,11 @@ class _CommissionScreen extends State<CommissionScreen> {
 
     Map<String, dynamic> data = makeHeadAndUids(group);
     group.group = data['comGroup'];
+
+    if (['', null, 'null'].contains(data['headId'])) {
+      showError('Назначьте руководителя группы', setState);
+      return;
+    }
 
     try {
       if (group.group.id == null) {
@@ -1195,20 +1211,18 @@ class _CommissionScreen extends State<CommissionScreen> {
           } else {
             if (group.chat.id == null) group.chat.id = resultChat["id"];
 
-           
-
             if (group.group.id == null) {
               group.group.id = result["id"];
-               group.chat = await group.group.chat;
+              group.chat = await group.group.chat;
               setState(() {
                 _groups.add(group);
               });
             } else {
-               group.chat = await group.group.chat;
+              group.chat = await group.group.chat;
               setState(() {
                 int index = _groups
                     .indexWhere((item) => item.group.id == group.group.id);
-                    
+
                 _groups[index] = group;
               });
             }
@@ -1238,6 +1252,11 @@ class _CommissionScreen extends State<CommissionScreen> {
     Map<String, dynamic> data = makeHeadAndUids(commission);
     commission.group = data['comGroup'];
     //commission.group.groupNum = 'Все члены комиссии';
+
+    if (['', null, 'null'].contains(data['headId'])) {
+      showError('Назначьте председателя комиссии', setState);
+      return;
+    }
 
     try {
       if (commission.group.id == null) {
@@ -1278,11 +1297,8 @@ class _CommissionScreen extends State<CommissionScreen> {
             if (commission.chat.id == null)
               commission.chat.id = resultChat["id"];
 
-           
-
             if (commission.group.id == null) {
               commission.group.id = result["id"];
-              
             }
 
             commission.chat = await commission.group.chat;

@@ -3,11 +3,13 @@ Map<String, Object> _config = {
  "ServiceRootUrl": "http://msk3tis2.vniizht.lan:8069",
   "addressForPing": "msk3tis2.vniizht.lan",
   "db": "ecodb_2020-07-01",
+ 
   
   /*РЖД - prod*/
- /* "ServiceRootUrl": "http://ekasuopb.svrw.oao.rzd:8069",
+  /*"ServiceRootUrl": "http://ekasuopb.svrw.oao.rzd:8069",
   "addressForPing": "ekasuopb.svrw.oao.rzd",
   "db": "ek_asu_opb2",*/
+  "MapAddr": "http://ekasuopb.svrw.oao.rzd",
 
   /*РЖД - test*/
   /* 
@@ -23,7 +25,7 @@ Map<String, Object> _config = {
   "refreshMessenger": 10, //как часто обновляем сообщения в мессенджере, секунд
   "refreshCountMessenger":
       60, //как часто обновляем количество сообщений в иконке чат, секунд
-  "MapAddr": "http://172.22.3.173",
+  //"MapAddr": "http://172.22.3.173",
 };
 
 dynamic getItem(String item) {
