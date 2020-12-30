@@ -192,6 +192,7 @@ class CheckPlanController extends Controllers {
   /// Select a list of CheckPlan with provided parentId
   /// Returns selected record or null.
   static Future<List<CheckPlan>> select(int parentId) async {
+    if (parentId == null) return [];
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       where: "parent_id = ? and active = 'true'",

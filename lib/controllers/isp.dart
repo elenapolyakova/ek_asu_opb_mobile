@@ -35,6 +35,7 @@ class DocumentListController extends Controllers {
 
   // Get child documentList
   static Future<List<DocumentList>> select(int parentId) async {
+    if (parentId == null) return [];
     List<Map<String, dynamic>> queryRes = await DBProvider.db
         .select(_tableName, where: "parent_id = ?", whereArgs: [parentId]);
 

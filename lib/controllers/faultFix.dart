@@ -125,6 +125,7 @@ class FaultFixController extends Controllers {
   // Select all FaultFix by parent_id( ID)
   // Returns found records or null.
   static Future<List<FaultFix>> select(int parentId) async {
+    if (parentId == null) return [];
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       where: "parent_id = ? and active = 'true'",

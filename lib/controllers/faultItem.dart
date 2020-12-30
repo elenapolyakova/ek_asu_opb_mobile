@@ -49,6 +49,7 @@ class FaultItemController extends Controllers {
   // Select all fault items by parent_id(by fault Id)
   // Returns found records or null.
   static Future<List<FaultItem>> select(int parentId) async {
+    if (parentId == null) return [];
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       where: "parent_id = ? and active = 'true'",

@@ -168,6 +168,7 @@ class ComGroupController extends Controllers {
   /// Select all records with matching parentId
   /// Returns found records or null.
   static Future<List<ComGroup>> select(int parentId) async {
+    if (parentId == null) return [];
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       where: "parent_id = ? and active = 'true'",
@@ -182,6 +183,7 @@ class ComGroupController extends Controllers {
   /// Select all records with matching parentId and isMain = false
   /// Returns found records or null.
   static Future<List<ComGroup>> selectWorkGroups(int parentId) async {
+    if (parentId == null) return [];
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       where: "parent_id = ? and is_main = 'false' and active = 'true'",
@@ -196,6 +198,7 @@ class ComGroupController extends Controllers {
   /// Select all records with matching parentId and isMain = false
   /// Returns found records or null.
   static Future<ComGroup> selectMainGroup(int parentId) async {
+    if (parentId == null) return null;
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       where: "parent_id = ? and is_main = 'true' and active = 'true'",
@@ -227,6 +230,8 @@ class ComGroupController extends Controllers {
   /// ```
   static Future<Map<String, dynamic>> insert(ComGroup comGroup,
       [List<int> userIds = const [], bool saveOdooId = false]) async {
+    print(
+        "---ComGroupController.insert. comGroup=$comGroup, userIds=$userIds, saveOdooId=$saveOdooId");
     Map<String, dynamic> res = {
       'code': null,
       'message': null,
