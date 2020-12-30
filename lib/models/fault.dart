@@ -58,7 +58,7 @@ class Fault extends Models {
         desc: getObj(json["desc"]),
         fine: getObj(json["fine"]),
         fine_desc: getObj(json["fine_desc"]),
-        koap_id: getObj(json["koap_id"]),
+        koap_id: unpackListId(json["koap_id"])['id'],
         date: stringToDateTime(json["date"], forceUtc: false),
         date_done: stringToDateTime(json["date_done"], forceUtc: false),
         desc_done: getObj(json["desc_done"]),
