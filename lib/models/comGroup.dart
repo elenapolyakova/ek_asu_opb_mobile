@@ -45,7 +45,9 @@ class ComGroup extends Models {
   }
 
   Future<Chat> get chat async {
-    return (await ChatController.select(groupId: id))[0];
+    var chats = await ChatController.select(groupId: id);
+    if (chats.isEmpty) return null;
+    return chats[0];
   }
 
   ComGroup({
