@@ -486,7 +486,7 @@ class _CommissionScreen extends State<CommissionScreen> {
         (available) => available.user.id == selectedAvailibleUserId,
         orElse: () => null);
     if (member != null) {
-      member.roleId = 0;
+     
       _groupList.add(member);
       _availableList.remove(member);
       selectedAvailibleUserId =
@@ -654,7 +654,7 @@ class _CommissionScreen extends State<CommissionScreen> {
       _commision.members.forEach((member) {
         if (!_groupList
             .any((groupMember) => groupMember.user.id == member.user.id))
-          _availableList.add(member);
+          _availableList.add(new Member(member.user, depName: member.depName, roleId: member.roleId));
       });
 
       selectedAvailibleUserId =
