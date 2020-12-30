@@ -218,8 +218,11 @@ class _CommissionScreen extends State<CommissionScreen> {
         Chat chat =
             new Chat(id: null, active: true, groupId: commision.id, type: 2);
         try {
-          chat = await commision?.chat;
-        } catch (e) {}
+          Chat chatCom = await commision?.chat;
+          chat = chatCom ?? chat;
+        } catch (e) {
+          print('error getting chat for commission with id = ${commision.id}');
+        }
 
         _commision = new MyGroup(commision, await getMembers(commision), chat);
       }
@@ -230,7 +233,8 @@ class _CommissionScreen extends State<CommissionScreen> {
           Chat chat =
               new Chat(id: null, active: true, groupId: groups[i].id, type: 2);
           try {
-            chat = await groups[i]?.chat;
+            Chat chatGroup = await groups[i]?.chat;
+            chat = chatGroup ?? chat;
           } catch (e) {}
           _groups.add(MyGroup(groups[i], await getMembers(groups[i]), chat));
         }
@@ -345,7 +349,7 @@ class _CommissionScreen extends State<CommissionScreen> {
     });
 
     member = member != '' ? slice(member, 0, -2) : member;
-    return '${head != '' ? '$head($headPosition)' : ''} ${member != '' ? ', ': ''} $member';
+    return '${head != '' ? '$head($headPosition)' : ''} ${member != '' ? ', ' : ''} $member';
   }
 
   void _showCustomMenu(int groupId) {
@@ -482,6 +486,7 @@ class _CommissionScreen extends State<CommissionScreen> {
         (available) => available.user.id == selectedAvailibleUserId,
         orElse: () => null);
     if (member != null) {
+      member.roleId = 0;
       _groupList.add(member);
       _availableList.remove(member);
       selectedAvailibleUserId =
