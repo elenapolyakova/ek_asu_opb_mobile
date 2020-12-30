@@ -39,19 +39,20 @@ class RelChatUserController extends Controllers {
   /// Select User records by provided chatId.
   /// Returns selected records or an empty list.
   static Future<List<User>> selectByChatId(int chatId) async {
+    if (chatId == null) return [];
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       columns: ['user_id'],
       where: "chat_id = ?", // and active = 'true'",
       whereArgs: [chatId],
     );
-    var a = await DBProvider.db.selectAll(_tableName);
     if (queryRes == null || queryRes.length == 0) return [];
     return UserController.selectByIds(
         queryRes.map((e) => e['user_id'] as int).toList());
   }
 
   static Future insertByChatId(int chatId, List<int> userIds) async {
+    if (chatId == null || userIds == null) return;
     var batch = await DBProvider.db.batch;
     userIds.forEach((int userId) {
       batch.insert(_tableName, {
@@ -65,6 +66,7 @@ class RelChatUserController extends Controllers {
   /// Find a Chat record with provided chatId.
   /// Update its users with provided newUserIds.
   static Future updateChatUsers(int chatId, List<int> newUserIds) async {
+    if (chatId == null || newUserIds == null) return;
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       columns: ['user_id', 'id'],

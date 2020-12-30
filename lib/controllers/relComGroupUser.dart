@@ -27,6 +27,7 @@ class RelComGroupUserController extends Controllers {
   /// Select ComGroup records by provided userId.
   /// Returns selected records or an empty list.
   static Future<List<ComGroup>> selectByUserId(int userId) async {
+    if (userId == null) return [];
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       columns: ['com_group_id'],
@@ -41,6 +42,7 @@ class RelComGroupUserController extends Controllers {
   /// Select User records by provided comGroupId.
   /// Returns selected records or an empty list.
   static Future<List<User>> selectByComGroupId(int comGroupId) async {
+    if (comGroupId == null) return [];
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       columns: ['user_id'],
@@ -54,6 +56,7 @@ class RelComGroupUserController extends Controllers {
   }
 
   static Future insertByComGroupId(int comGroupId, List<int> userIds) async {
+    if (comGroupId == null || userIds == null) return;
     var batch = await DBProvider.db.batch;
     userIds.forEach((int userId) {
       batch.insert(_tableName, {
@@ -68,6 +71,7 @@ class RelComGroupUserController extends Controllers {
   /// Update its users with provided newUserIds.
   static Future updateComGroupUsers(
       int comGroupId, List<int> newUserIds) async {
+    if (comGroupId == null || newUserIds == null) return;
     List<Map<String, dynamic>> queryRes = await DBProvider.db.select(
       _tableName,
       columns: ['user_id', 'id'],
