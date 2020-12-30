@@ -254,7 +254,9 @@ class ChatController extends Controllers {
       'id': null,
     };
     Future<int> odooId = selectOdooId(chat.id);
-    await DBProvider.db.update(_tableName, chat.toJson()).then((resId) async {
+    var chatJson = chat.toJson();
+    chatJson.remove('odoo_id');
+    await DBProvider.db.update(_tableName, chatJson).then((rowsAffected) async {
       return RelChatUserController.updateChatUsers(chat.id, userIds)
           .then((value) async {
         res['code'] = 1;

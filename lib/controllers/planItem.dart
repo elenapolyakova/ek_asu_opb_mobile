@@ -163,8 +163,10 @@ class PlanItemController extends Controllers {
       'id': null,
     };
     Future<int> odooId = selectOdooId(planItem.id);
+    var planItemJson = planItem.toJson();
+    planItemJson.remove('odoo_id');
     await DBProvider.db
-        .update(_tableName, planItem.toJson())
+        .update(_tableName, planItemJson)
         .then((rowsAffected) async {
       res['code'] = 1;
       res['id'] = rowsAffected;

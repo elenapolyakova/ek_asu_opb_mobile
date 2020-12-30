@@ -92,12 +92,14 @@ class CheckListItemController extends Controllers {
 
     print("Update() CheckListItem!");
     print(checkListItem);
+    var checkListItemJson = checkListItem.prepareForUpdate();
+    checkListItemJson.remove('odoo_id');
     Future<int> odooId = selectOdooId(checkListItem.id);
     await DBProvider.db
-        .update(_tableName, checkListItem.prepareForUpdate())
-        .then((resId) async {
+        .update(_tableName, checkListItemJson)
+        .then((rowsAffected) async {
       res['code'] = 1;
-      res['id'] = resId;
+      res['id'] = checkListItem.id;
 
       return SynController.edit(_tableName, checkListItem.id, await odooId)
           .catchError((err) {

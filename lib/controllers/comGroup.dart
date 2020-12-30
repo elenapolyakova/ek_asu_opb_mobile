@@ -277,7 +277,9 @@ class ComGroupController extends Controllers {
       'id': null,
     };
     Future<int> odooId = selectOdooId(comGroup.id);
-    await DBProvider.db.update(_tableName, comGroup.toJson()).then((resId) {
+    var comGroupJson = comGroup.toJson();
+    comGroupJson.remove('odoo_id');
+    await DBProvider.db.update(_tableName, comGroupJson).then((rowsAffected) {
       return RelComGroupUserController.updateComGroupUsers(comGroup.id, userIds)
           .then((value) async {
         res['code'] = 1;

@@ -213,7 +213,9 @@ class PlanController extends Controllers {
           .insert('log', {'date': nowStr(), 'message': res.toString()});
       return res;
     }
-    await DBProvider.db.update(_tableName, plan.toJson()).then((resId) async {
+    var planJson = plan.toJson();
+    planJson.remove('odoo_id');
+    await DBProvider.db.update(_tableName, planJson).then((rowsAffected) async {
       res['code'] = 1;
       res['id'] = plan.id;
       return SynController.edit(_tableName, plan.id, await odooId)

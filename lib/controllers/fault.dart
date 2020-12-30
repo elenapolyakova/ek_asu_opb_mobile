@@ -257,9 +257,9 @@ class FaultController extends Controllers {
     // Mainly update fault record
     await DBProvider.db
         .update(_tableName, fault.prepareForUpdate())
-        .then((resId) async {
+        .then((rowsAffected) async {
       res['code'] = 1;
-      res['id'] = resId;
+      res['id'] = fault.id;
       await SynController.edit(_tableName, fault.id, await odooId)
           .catchError((err) {
         res['code'] = -2;
