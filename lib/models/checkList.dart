@@ -1,7 +1,7 @@
 import "package:ek_asu_opb_mobile/models/models.dart";
 import 'package:ek_asu_opb_mobile/utils/convert.dart';
 
-class CheckListWork extends Models {
+class CheckList extends Models {
   int id;
   int odoo_id;
   // Plan id which uses this check list
@@ -14,7 +14,7 @@ class CheckListWork extends Models {
   bool is_active;
   int base_id;
 
-  CheckListWork({
+  CheckList({
     this.id,
     this.odoo_id,
     this.parent_id,
@@ -44,8 +44,7 @@ class CheckListWork extends Models {
     return type.toString();
   }
 
-  factory CheckListWork.fromJson(Map<String, dynamic> json) =>
-      new CheckListWork(
+  factory CheckList.fromJson(Map<String, dynamic> json) => new CheckList(
         id: json["id"],
         odoo_id: json["odoo_id"],
         parent_id: unpackListId(json["parent_id"])['id'],
@@ -87,6 +86,6 @@ class CheckListWork extends Models {
 
   @override
   String toString() {
-    return 'CheckListWork{id: $id, odooId: $odoo_id, parent_id: $parent_id, name: $name, type: $type, active: $active, is_base: $is_base, is_active: $is_active }';
+    return 'CheckList{id: $id, odooId: $odoo_id, parent_id: $parent_id, name: $name, type: $type, active: $active, is_base: $is_base, is_active: $is_active }';
   }
 }
