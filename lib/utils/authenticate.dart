@@ -9,6 +9,7 @@ import 'package:convert/convert.dart';
 import 'package:odoo_rpc/odoo_rpc.dart';
 import 'package:ek_asu_opb_mobile/src/db.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
+import 'package:ek_asu_opb_mobile/main.dart';
 
 final _storage = FlutterSecureStorage();
 UserInfo _currentUser;
@@ -22,7 +23,7 @@ void LogOut(BuildContext context) async {
       // если нет сети - не завершим сессию для Odoo
       LogController.insert('destroy session for odoo');
       await OdooProxy.odooClient.destroySession();
-      
+
       OdooProxy.odooClient.close();
       LogController.insert('success');
     }
@@ -42,6 +43,7 @@ void LogOut(BuildContext context) async {
   // await _storage.delete(key: 'lastDateUpdate');
   String sessionString = await _storage.read(key: 'session');
   if (sessionString != null) _storage.write(key: "session", value: null);
+  context = context ?? MyApp.navKey.currentState.overlay.context;
   // print(sessionString);
 
   Navigator.pushNamedAndRemoveUntil(
@@ -224,8 +226,10 @@ Future<bool> setPinCode(String pin) async {
 Future<bool> setBaseUrl(String baseUrl) async {
   try {
     String addressForPing = baseUrl
-        .replaceAll(new RegExp('https?://', multiLine: false, caseSensitive: false), '')
-        .replaceAll(new RegExp(':[0-9]+',multiLine: false, caseSensitive: false), '');
+        .replaceAll(
+            new RegExp('https?://', multiLine: false, caseSensitive: false), '')
+        .replaceAll(
+            new RegExp(':[0-9]+', multiLine: false, caseSensitive: false), '');
     await _storage.write(key: 'ServiceRootUrl', value: baseUrl);
     await _storage.write(key: 'addressForPing', value: addressForPing);
 
