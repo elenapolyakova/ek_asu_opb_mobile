@@ -145,8 +145,7 @@ class OdooProxy {
         throw new SessionExpired();
       print(e);
       
-      auth.LogOut(null);
-      //return null;
+      return null;
     }
   }
 

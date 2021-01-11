@@ -356,7 +356,8 @@ Future<dynamic> getDataWithAttemp(
       if (data == null) continue;
       return data;
     } on SessionExpired {
-      return null;
+      auth.LogOut(null);
+      //return null;
     }
   }
   return null;
