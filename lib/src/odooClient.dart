@@ -144,7 +144,7 @@ class OdooProxy {
       if (e.message != "Connection closed while receiving data")
         throw new SessionExpired();
       print(e);
-      auth.LogOut(null); //return null;
+      return null;
     }
   }
 
