@@ -1558,7 +1558,7 @@ class _DepartmentSelect extends State<DepartmentSelect> {
     List<dynamic> result = List.generate(list.length, (index) {
       return {
         'id': list[index].id,
-        'value': '${list[index].name}(${list[index].short_name})'
+        'value': '${list[index].name.trim()} (${list[index].short_name.trim()})'
       };
     });
     return result;
