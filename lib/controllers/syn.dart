@@ -235,7 +235,7 @@ class SynController extends Controllers {
           await ComGroupController.firstLoadFromOdoo(parentIds: checkPlanIds);
 
       await CheckPlanController.firstLoadFromOdoo(
-          loadRelated: true, parentIds: planItemIds);
+          loadRelated: true, parentIds: checkPlanIds);
       await ComGroupController.firstLoadFromOdoo(
           loadRelated: true, parentIds: comGroupIds);
 
