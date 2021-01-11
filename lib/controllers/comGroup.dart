@@ -53,12 +53,19 @@ class ComGroupController extends Controllers {
     return queryRes[0]['odoo_id'];
   }
 
-  static firstLoadFromOdoo([bool loadRelated = false]) async {
+  static Future<List<int>> firstLoadFromOdoo(
+      {bool loadRelated = false, List<int> parentIds = const []}) async {
     List<String> fields;
     List<List> domain = [];
     if (loadRelated) {
+      domain += [
+        ['id', 'in', parentIds]
+      ];
       fields = ['write_date', 'parent_id', 'com_user_ids'];
     } else {
+      domain += [
+        ['parent_id', 'in', parentIds]
+      ];
       await DBProvider.db.deleteAll(_tableName);
       fields = [
         'head_id',
@@ -67,18 +74,17 @@ class ComGroupController extends Controllers {
       ];
     }
     List<dynamic> json = await getDataWithAttemp(
-        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-      domain,
-      fields
-    ], {
-      'context': {'create_or_update': true}
-    });
+        SynController.localRemoteTableNameMap[_tableName],
+        'search_read',
+        [domain, fields],
+        {});
     await Future.forEach(json, (e) async {
       if (loadRelated) {
         CheckPlan checkPlan = await CheckPlanController.selectByOdooId(
             unpackListId(e['parent_id'])['id']);
         if (checkPlan == null) return;
         ComGroup comGroup = await selectByOdooId(e['id']);
+        if (comGroup == null) return null;
         Map<String, dynamic> res = {
           'id': comGroup.id,
           'parent_id': checkPlan.id,
@@ -100,13 +106,11 @@ class ComGroupController extends Controllers {
     print(
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
     if (loadRelated) await setLatestWriteDate(_tableName, json);
+    return json.map((e) => e['id'] as int).toList();
   }
 
-  static loadChangesFromOdoo({
-    bool loadRelated = false,
-    int limit,
-    int offset,
-  }) async {
+  static Future<List<int>> loadChangesFromOdoo(
+      {bool loadRelated = false}) async {
     List<String> fields;
     if (loadRelated)
       fields = ['write_date', 'parent_id', 'com_user_ids'];
@@ -119,17 +123,14 @@ class ComGroupController extends Controllers {
       ];
     List domain = await getLastSyncDateDomain(_tableName);
     List<dynamic> json = await getDataWithAttemp(
-        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-      domain,
-      fields
-    ], {
-      'limit': limit,
-      'offset': offset,
-      'context': {'create_or_update': true}
-    });
+        SynController.localRemoteTableNameMap[_tableName],
+        'search_read',
+        [domain, fields],
+        {});
     await Future.forEach(json, (e) async {
       ComGroup comGroup = await selectByOdooId(e['id']);
       if (loadRelated) {
+        if (comGroup == null) return null;
         CheckPlan checkPlan = await CheckPlanController.selectByOdooId(
             unpackListId(e['parent_id'])['id']);
         if (checkPlan == null) return null;
@@ -163,6 +164,7 @@ class ComGroupController extends Controllers {
     print(
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
     if (loadRelated) await setLatestWriteDate(_tableName, json);
+    return json.map((e) => e['id'] as int).toList();
   }
 
   /// Select all records with matching parentId
@@ -230,8 +232,6 @@ class ComGroupController extends Controllers {
   /// ```
   static Future<Map<String, dynamic>> insert(ComGroup comGroup,
       [List<int> userIds = const [], bool saveOdooId = false]) async {
-    print(
-        "---ComGroupController.insert. comGroup=$comGroup, userIds=$userIds, saveOdooId=$saveOdooId");
     Map<String, dynamic> res = {
       'code': null,
       'message': null,

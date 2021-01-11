@@ -50,7 +50,65 @@ class CheckPlanItemController extends Controllers {
     return queryRes[0]['odoo_id'];
   }
 
-  static firstLoadFromOdoo([bool loadRelated = false]) async {
+  static Future<List<int>> loadFromOdoo(
+      {bool clean: false, List<int> parentIds = const []}) async {
+    const List<String> fields = [
+      'name',
+      'type',
+      'department_id',
+      'date',
+      'dt_from',
+      'dt_to',
+      'parent_id',
+      'com_group_id',
+      'active',
+      'write_date',
+    ];
+    List domain = [];
+    if (clean) {
+      await DBProvider.db.deleteAll(_tableName);
+      domain += [
+        ['parent_id', 'in', parentIds]
+      ];
+    } else {
+      domain += await getLastSyncDateDomain(_tableName);
+    }
+    List<dynamic> json = await getDataWithAttemp(
+        SynController.localRemoteTableNameMap[_tableName],
+        'search_read',
+        [domain, fields],
+        {});
+    await Future.forEach(json, (e) async {
+      int checkPlanItemId = (await selectByOdooId(e['id']))?.id;
+      int parentId = (await CheckPlanController.selectByOdooId(
+              unpackListId(e['parent_id'])['id']))
+          ?.id;
+      int comGroupId = (await ComGroupController.selectByOdooId(
+              unpackListId(e['com_group_id'])['id']))
+          ?.id;
+      Map<String, dynamic> res = {
+        ...e,
+        'odoo_id': e['id'],
+        'parent_id': parentId,
+        'com_group_id': comGroupId,
+        'active': e['active'] ? 'true' : 'false',
+      };
+      if (checkPlanItemId != null) {
+        res['id'] = checkPlanItemId;
+        await DBProvider.db
+            .update(_tableName, CheckPlanItem.fromJson(res).toJson());
+      } else {
+        res['odoo_id'] = e['id'];
+        await DBProvider.db
+            .insert(_tableName, CheckPlanItem.fromJson(res).toJson());
+      }
+    });
+    print('loaded ${json.length} records of $_tableName');
+    await setLatestWriteDate(_tableName, json);
+    return json.map((e) => e['id'] as int).toList();
+  }
+
+  static Future<List<int>> firstLoadFromOdoo([bool loadRelated = false]) async {
     List<String> fields;
     List<List> domain = [];
     if (loadRelated) {
@@ -107,6 +165,7 @@ class CheckPlanItemController extends Controllers {
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
 
     if (loadRelated) await setLatestWriteDate(_tableName, json);
+    return json.map((e) => e['id'] as int).toList();
   }
 
   static loadChangesFromOdoo([bool loadRelated = false]) async {

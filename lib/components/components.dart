@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:ek_asu_opb_mobile/controllers/checkPlanItem.dart';
+import 'package:ek_asu_opb_mobile/controllers/syn.dart';
 import 'package:ek_asu_opb_mobile/main.dart';
 import 'package:ek_asu_opb_mobile/controllers/report.dart';
+import 'package:ek_asu_opb_mobile/src/exchangeData.dart';
 import 'package:ek_asu_opb_mobile/src/messenger.dart';
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:ek_asu_opb_mobile/controllers/controllers.dart';
@@ -620,8 +623,9 @@ class _EditDigitField extends State<EditDigitField> {
       tooltip.close();
       if (widget.onSaved != null) return widget.onSaved(newValue);
     }
-    void onClose(){
-       tooltip.close();
+
+    void onClose() {
+      tooltip.close();
     }
 
     var renderBox = context.findRenderObject() as RenderBox;
@@ -2084,53 +2088,50 @@ class MyChatIcon extends StatelessWidget {
   MyChatIcon(this._counter);
   @override
   Widget build(BuildContext context) {
-    return 
-    GestureDetector(
-       onTap: () => Navigator.pushNamed(context, '/messenger'),
-      child:
-    Container(
-      // width: 30,
-      //  height: 30,
-      child:
-       Stack(
-        children: [
-          TextIcon(
-              icon: Icons.message,
-              text: 'Чат',
-              onTap: () => Navigator.pushNamed(context, '/messenger'),
-              margin: 0,
-              color: Theme.of(context).primaryColorLight),
-          _counter != null && _counter > 0
-              ? Container(
-                  width: 30,
-                  height: 30,
-                  alignment: Alignment.topRight,
-                  margin: EdgeInsets.only(top: 5, left: 15),
-                  child: Container(
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(0xFFE57373),
-                        border: Border.all(
-                            color: Theme.of(context).primaryColorLight,
-                            width: 0.5)),
-                    child: Container(
-                      width: 20,
-                      height: 20,
-                      alignment: Alignment.center,
-                      // margin: EdgeInsets.only(top: 4),
-                      child: Text(
-                        _counter != null ? _counter.toString() : '',
-                        style: TextStyle(fontSize: 10),
+    return GestureDetector(
+        onTap: () => Navigator.pushNamed(context, '/messenger'),
+        child: Container(
+          // width: 30,
+          //  height: 30,
+          child: Stack(
+            children: [
+              TextIcon(
+                  icon: Icons.message,
+                  text: 'Чат',
+                  onTap: () => Navigator.pushNamed(context, '/messenger'),
+                  margin: 0,
+                  color: Theme.of(context).primaryColorLight),
+              _counter != null && _counter > 0
+                  ? Container(
+                      width: 30,
+                      height: 30,
+                      alignment: Alignment.topRight,
+                      margin: EdgeInsets.only(top: 5, left: 15),
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xFFE57373),
+                            border: Border.all(
+                                color: Theme.of(context).primaryColorLight,
+                                width: 0.5)),
+                        child: Container(
+                          width: 20,
+                          height: 20,
+                          alignment: Alignment.center,
+                          // margin: EdgeInsets.only(top: 4),
+                          child: Text(
+                            _counter != null ? _counter.toString() : '',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                )
-              : Text(''),
-        ],
-      ),
-    ));
+                    )
+                  : Text(''),
+            ],
+          ),
+        ));
   }
 }
 
@@ -2346,11 +2347,10 @@ class _MyAppBar extends State<MyAppBar> {
                               : "",
                           margin: 0,
                           onTap: () async {
-                             await ChatController.loadFromOdoo(clean: true);
                             // await ChatMessageController.loadFromOdoo(
                             //     clean: true);
-                            // await SynController.loadFromOdoo(
-                            //     forceFirstLoad: true);
+                            await SynController.loadFromOdoo(
+                                forceFirstLoad: true);
                             // print(
                             //     (await DBProvider.db.selectAll('user')).length);
                             // await Future.forEach(
@@ -2358,12 +2358,14 @@ class _MyAppBar extends State<MyAppBar> {
                             //         where: "id = 28824")), (el) {
                             //   print(el);
                             // });
-                            // (await DBProvider.db.select('plan'))
+                            // await DBProvider.db.update("com_group", {
+                            //   'id': 59,
+                            //   'odoo_id': 1041,
+                            // });
+                            // (await DBProvider.db.select('com_group'))
                             //     .forEach((element) {
                             //   print(element);
                             // });
-                            /*print((await ReportController.downloadReport(
-                                26, 'report_mob_main_plan_xls')));*/
                           },
                           color: Theme.of(context).primaryColorLight,
                           fontSize: 20,

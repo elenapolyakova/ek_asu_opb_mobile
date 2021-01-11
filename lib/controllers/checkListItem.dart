@@ -183,6 +183,58 @@ class CheckListItemController extends Controllers {
     return CheckListItem.fromJson(json[0]);
   }
 
+  static Future<List<int>> loadFromOdoo(
+      {bool clean: false, List<int> parentIds = const []}) async {
+    const List<String> fields = [
+      'base_id',
+      'name',
+      'question',
+      'active',
+      'result',
+      'description',
+      'parent_id',
+      'write_date',
+    ];
+    List domain = [];
+    if (clean) {
+      domain += [
+        ['parent_id', 'in', parentIds]
+      ];
+      await DBProvider.db.deleteAll(_tableName);
+    } else {
+      domain += await getLastSyncDateDomain(_tableName);
+    }
+    List<dynamic> json = await getDataWithAttemp(
+        SynController.localRemoteTableNameMap[_tableName],
+        'search_read',
+        [domain, fields],
+        {});
+    await Future.forEach(json, (e) async {
+      int checkListId = (await selectByOdooId(e['id']))?.id;
+      int parentId = (await CheckListController.selectByOdooId(
+              unpackListId(e['parent_id'])['id']))
+          ?.id;
+      Map<String, dynamic> res = {
+        ...e,
+        'odoo_id': e['id'],
+        'parent_id': parentId,
+        'active': e['active'] ? 'true' : 'false',
+      };
+      if (checkListId != null) {
+        res['id'] = checkListId;
+        await DBProvider.db
+            .update(_tableName, CheckListItem.fromJson(res).toJson());
+      } else {
+        res['odoo_id'] = e['id'];
+        await DBProvider.db
+            .insert(_tableName, CheckListItem.fromJson(res).toJson());
+      }
+    });
+    print('loaded ${json.length} records of $_tableName');
+    await setLatestWriteDate(_tableName, json);
+    return json.map((e) => e['id'] as int).toList();
+  }
+
   static firstLoadFromOdoo([bool loadRelated = false]) async {
     List<String> fields;
     List<List> domain = [];
@@ -218,9 +270,8 @@ class CheckListItemController extends Controllers {
         CheckListItem checkListItem = await selectByOdooId(e['id']);
         Map<String, dynamic> res = {};
         if (e['parent_id'] is List) {
-          CheckListWork parentCheckList =
-              await CheckListController.selectByOdooId(
-                  unpackListId(e['parent_id'])['id']);
+          CheckList parentCheckList = await CheckListController.selectByOdooId(
+              unpackListId(e['parent_id'])['id']);
           if (parentCheckList == null) return null;
           res['id'] = checkListItem.id;
           res['parent_id'] = parentCheckList.id;
@@ -281,9 +332,8 @@ class CheckListItemController extends Controllers {
       if (loadRelated) {
         Map<String, dynamic> res = {};
         if (e['parent_id'] is List) {
-          CheckListWork parentCheckList =
-              await CheckListController.selectByOdooId(
-                  unpackListId(e['parent_id'])['id']);
+          CheckList parentCheckList = await CheckListController.selectByOdooId(
+              unpackListId(e['parent_id'])['id']);
           if (parentCheckList == null) return null;
           res['id'] = checkListItem.id;
           res['parent_id'] = parentCheckList.id;

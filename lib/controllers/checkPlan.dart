@@ -49,12 +49,78 @@ class CheckPlanController extends Controllers {
     return queryRes[0]['odoo_id'];
   }
 
-  static firstLoadFromOdoo([bool loadRelated = false]) async {
+  static Future<List<int>> loadFromOdoo(
+      {bool clean: false, List<int> parentIds}) async {
+    const List<String> fields = [
+      'name',
+      'rw_id',
+      'date_from',
+      'date_to',
+      'date_set',
+      'state',
+      'signer_name',
+      'signer_post',
+      'app_name',
+      'app_post',
+      'num_set',
+      'parent_id',
+      'main_com_group_id',
+      'write_date',
+    ];
+    List domain = [];
+    if (parentIds != null)
+      domain += [
+        ['parent_id', 'in', parentIds]
+      ];
+    if (clean) {
+      await DBProvider.db.deleteAll(_tableName);
+    } else {
+      domain += await getLastSyncDateDomain(_tableName);
+    }
+    List<dynamic> json = await getDataWithAttemp(
+        SynController.localRemoteTableNameMap[_tableName],
+        'search_read',
+        [domain, fields],
+        {});
+    await Future.forEach(json, (e) async {
+      int checkPlanId = (await selectByOdooId(e['id']))?.id;
+      int parentId = (await PlanItemController.selectByOdooId(
+              unpackListId(e['parent_id'])['id']))
+          ?.id;
+      Map<String, dynamic> res = {
+        ...e,
+        'odoo_id': e['id'],
+        'parent_id': parentId,
+        'active': e['active'] ? 'true' : 'false',
+      };
+      if (checkPlanId != null) {
+        res['id'] = checkPlanId;
+        await DBProvider.db
+            .update(_tableName, CheckPlan.fromJson(res).toJson());
+      } else {
+        res['odoo_id'] = e['id'];
+        await DBProvider.db
+            .insert(_tableName, CheckPlan.fromJson(res).toJson());
+      }
+    });
+    print('loaded ${json.length} records of $_tableName');
+    await setLatestWriteDate(_tableName, json);
+    return json.map((e) => e['id'] as int).toList();
+  }
+
+  static Future<List<int>> firstLoadFromOdoo(
+      {bool loadRelated = false, List<int> parentIds = const []}) async {
     List<String> fields;
     List<List> domain = [];
     if (loadRelated) {
+      domain += [
+        ['id', 'in', parentIds]
+      ];
       fields = ['write_date', 'parent_id', 'main_com_group_id'];
     } else {
+      domain += [
+        ['parent_id', 'in', parentIds]
+      ];
       await DBProvider.db.deleteAll(_tableName);
       fields = [
         'name',
@@ -81,6 +147,7 @@ class CheckPlanController extends Controllers {
       if (loadRelated) {
         Map<String, dynamic> res = {};
         CheckPlan checkPlan = await selectByOdooId(e['id']);
+        if (checkPlan == null) return null;
         if (e['parent_id'] is List) {
           PlanItem planItem = await PlanItemController.selectByOdooId(
               unpackListId(e['parent_id'])['id']);
@@ -111,9 +178,11 @@ class CheckPlanController extends Controllers {
     print(
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
     if (loadRelated) await setLatestWriteDate(_tableName, json);
+    return json.map((e) => e['id'] as int).toList();
   }
 
-  static loadChangesFromOdoo([bool loadRelated = false]) async {
+  static Future<List<int>> loadChangesFromOdoo(
+      [bool loadRelated = false]) async {
     List<String> fields;
     if (loadRelated)
       fields = ['write_date', 'parent_id', 'main_com_group_id'];
@@ -145,7 +214,7 @@ class CheckPlanController extends Controllers {
       CheckPlan checkPlan = await selectByOdooId(e['id']);
       if (loadRelated) {
         Map<String, dynamic> res = {};
-        CheckPlan checkPlan = await selectByOdooId(e['id']);
+        if (checkPlan == null) return null;
         if (e['parent_id'] is List) {
           PlanItem planItem = await PlanItemController.selectByOdooId(
               unpackListId(e['parent_id'])['id']);
@@ -187,6 +256,7 @@ class CheckPlanController extends Controllers {
     print(
         'loaded ${json.length} ${loadRelated ? '' : 'un'}related records of $_tableName');
     if (loadRelated) await setLatestWriteDate(_tableName, json);
+    return json.map((e) => e['id'] as int).toList();
   }
 
   /// Select a list of CheckPlan with provided parentId

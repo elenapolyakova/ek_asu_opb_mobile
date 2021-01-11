@@ -46,7 +46,7 @@ class PlanController extends Controllers {
     return queryRes[0]['odoo_id'];
   }
 
-  static Future loadFromOdoo({bool clean: false, int limit, int offset}) async {
+  static Future<List<int>> loadFromOdoo({bool clean: false}) async {
     List domain;
     if (clean) {
       domain = [];
@@ -70,11 +70,7 @@ class PlanController extends Controllers {
         'active',
         'write_date',
       ]
-    ], {
-      'limit': limit,
-      'offset': offset,
-      'context': {'create_or_update': true}
-    });
+    ], {});
     await Future.forEach(json, (e) async {
       Plan plan = await selectByOdooId(e['id']);
       if (plan == null) {
@@ -95,6 +91,7 @@ class PlanController extends Controllers {
     });
     print('loaded ${json.length} unrelated records of $_tableName');
     await setLatestWriteDate(_tableName, json);
+    return json.map((e) => e['id'] as int).toList();
   }
 
   /// Select the first record matching passed year, type and railwayId.

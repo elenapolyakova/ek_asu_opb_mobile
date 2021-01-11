@@ -42,8 +42,9 @@ class PlanItemController extends Controllers {
     return queryRes[0]['odoo_id'];
   }
 
-  static Future loadFromOdoo({bool clean: false, int limit, int offset}) async {
-    List<String> fields = [
+  static Future<List<int>> loadFromOdoo(
+      {bool clean: false, List<int> parentIds = const []}) async {
+    const List<String> fields = [
       'name',
       'department_txt',
       'check_type',
@@ -54,22 +55,20 @@ class PlanItemController extends Controllers {
       'active',
       'write_date',
     ];
-    List domain;
+    List domain = [];
     if (clean) {
-      domain = [];
       await DBProvider.db.deleteAll(_tableName);
+      domain += [
+        ['parent_id', 'in', parentIds]
+      ];
     } else {
-      domain = await getLastSyncDateDomain(_tableName);
+      domain += await getLastSyncDateDomain(_tableName);
     }
     List<dynamic> json = await getDataWithAttemp(
-        SynController.localRemoteTableNameMap[_tableName], 'search_read', [
-      domain,
-      fields
-    ], {
-      'limit': limit,
-      'offset': offset,
-      'context': {'create_or_update': true}
-    });
+        SynController.localRemoteTableNameMap[_tableName],
+        'search_read',
+        [domain, fields],
+        {});
     await Future.forEach(json, (e) async {
       int planItemId = (await selectByOdooId(e['id']))?.id;
       int parentId = (await PlanController.selectByOdooId(
@@ -91,6 +90,7 @@ class PlanItemController extends Controllers {
     });
     print('loaded ${json.length} records of $_tableName');
     await setLatestWriteDate(_tableName, json);
+    return json.map((e) => e['id'] as int).toList();
   }
 
   /// Select all records with matching parentId
