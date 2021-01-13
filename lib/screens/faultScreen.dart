@@ -23,6 +23,7 @@ class FaultScreen extends StatefulWidget {
   Function(Map<String, String>, dynamic arg) push;
   Map<String, String> Function() pop;
   GlobalKey key;
+ 
 
   @override
   FaultScreen(
@@ -613,7 +614,10 @@ class _FaultScreen extends State<FaultScreen> {
 
       if (hasErorr) {
         // Navigator.pop<bool>(context, false);
-        Scaffold.of(context).showSnackBar(errorSnackBar());
+
+      
+        if (context != null)
+          Scaffold.of(context).showSnackBar(errorSnackBar());
       } else {
         if ([-1, null].contains(_fault.id)) {
           _fault.id = result["id"];
@@ -624,11 +628,13 @@ class _FaultScreen extends State<FaultScreen> {
         setState(() {});
 
         // Navigator.pop<bool>(context, true);
-        Scaffold.of(context).showSnackBar(successSnackBar);
+         if (context != null)
+          Scaffold.of(context).showSnackBar(successSnackBar);
       }
     } catch (e) {
       //Navigator.pop<bool>(context, false);
-      Scaffold.of(context).showSnackBar(errorSnackBar());
+       if (context != null)
+        Scaffold.of(context).showSnackBar(errorSnackBar());
     }
     // widget.pop();
   }
