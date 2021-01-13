@@ -285,7 +285,8 @@ Future<List<Map<String, dynamic>>> getDictionaries(
                 await UserController.insert(
                     dataList[j] as Map<String, dynamic>);
                 break;
-              case 'check_list':
+              // Перенос загрузки шаблонов отсюда в CheckListController.loadFromOdoo(clean: true)
+              case 'check_listt':
                 await CheckListController.insert(
                     dataList[j] as Map<String, dynamic>);
                 if (dataList[j]["q_data"].length > 0) {
