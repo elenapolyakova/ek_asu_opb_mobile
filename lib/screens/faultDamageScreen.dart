@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
-import 'package:ek_asu_opb_mobile/utils/convert.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 
 class FaultDamageScreen extends StatefulWidget {
@@ -50,71 +49,6 @@ class _FaultDamageScreen extends State<FaultDamageScreen> {
       showLoading = false;
       setState(() => {});
     }
-  }
-
-  Widget generateFaultFixTable(BuildContext context,
-      List<Map<String, dynamic>> headers, List<FaultFix> rows) {
-    int i = 0;
-    Map<int, TableColumnWidth> columnWidths = Map.fromIterable(headers,
-        key: (item) => i++,
-        value: (item) =>
-            FlexColumnWidth(double.parse(item['flex'].toString())));
-
-    TableRow headerTableRow = TableRow(
-        decoration: BoxDecoration(color: Theme.of(context).primaryColor),
-        children: List.generate(
-            headers.length,
-            (index) => Column(
-                  children: [
-                    Padding(
-                        padding: EdgeInsets.all(10.0),
-                        child: Text(
-                          headers[index]["text"],
-                          textAlign: TextAlign.center,
-                        )),
-                  ],
-                )));
-    List<TableRow> tableRows = [headerTableRow];
-    int rowIndex = 0;
-    rows.forEach((row) {
-      rowIndex++;
-      TableRow tableRow = TableRow(
-          decoration: BoxDecoration(
-              color: (rowIndex % 2 == 0
-                  ? Theme.of(context).shadowColor
-                  : Colors.white)),
-          children: [
-            getRowCell(dateDMY(row.date), row.id, 0,
-                textAlign: TextAlign.center),
-            getRowCell(row.desc, row.id, 1),
-            getRowCell((row.is_finished == true).toString(), row.id, 2,
-                textAlign: TextAlign.center),
-          ]);
-      tableRows.add(tableRow);
-    });
-
-    return Table(
-        border: TableBorder.all(),
-        columnWidths: columnWidths,
-        children: tableRows);
-  }
-
-  Widget getRowCell(String text, int faultFixId, int index,
-      {TextAlign textAlign = TextAlign.left}) {
-    Widget cell = Container(
-      padding: EdgeInsets.all(index != 2 ? 10.0 : 0.0),
-      child: (index != 2)
-          ? Text(
-              text ?? '',
-              textAlign: textAlign,
-            )
-          : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              MyCheckbox(text == 'true', '', (val) {},
-                  color: Theme.of(context).primaryColorLight)
-            ]),
-    );
-
-    return cell;
   }
 
   Widget getTabContent(Map<String, dynamic> tab) {

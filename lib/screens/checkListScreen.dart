@@ -74,8 +74,8 @@ class _CheckListScreen extends State<CheckListScreen> {
   _CheckListScreen(this.checkPlanItemId);
 
   List<Map<String, dynamic>> checkListHeader = [
-    {'text': 'Наименование', 'flex': 3.0},
-    {'text': 'Тип', 'flex': 1.0}
+    {'text': 'Наименование', 'flex': 3},
+    {'text': 'Тип', 'flex': 1}
   ];
 
   List<Map<String, dynamic>> choices = [
@@ -200,68 +200,107 @@ class _CheckListScreen extends State<CheckListScreen> {
     return result;
   }
 
-  Widget generateTableData(BuildContext context,
+  List<Widget> generateTableData(BuildContext context,
       List<Map<String, dynamic>> headers, List<CheckListWork> rows) {
     int i = 0;
-    Map<int, TableColumnWidth> columnWidths = Map.fromIterable(headers,
+    Map<int, int> columnWidths = Map.fromIterable(headers,
         key: (item) => i++,
-        value: (item) =>
-            FlexColumnWidth(double.parse(item['flex'].toString())));
+        value: (item) => int.parse(item['flex'].toString()));
 
-    TableRow headerTableRow = TableRow(
-        decoration: BoxDecoration(color: Theme.of(context).primaryColor),
-        children: List.generate(
-            headers.length,
-            (index) => Column(
-                  children: [
-                    Padding(
-                        padding: EdgeInsets.all(10.0),
-                        child: Text(
-                          headers[index]["text"],
-                          textAlign: TextAlign.center,
-                        )),
-                  ],
-                )));
-    List<TableRow> tableRows = [headerTableRow];
+    List<Widget> result = [];
+
+    Widget headerTableRow = Container(
+        color: Theme.of(context).primaryColor,
+        child: IntrinsicHeight(
+            child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: List.generate(
+                    headers.length,
+                    (index) => Expanded(
+                        flex: columnWidths[index],
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                                right: BorderSide(
+                                  color: Colors.black,
+                                ),
+                                top: BorderSide(
+                                  color: Colors.black,
+                                ),
+                                bottom: BorderSide(
+                                  color: Colors.black,
+                                ),
+                                left: BorderSide(
+                                    style: index == 0
+                                        ? BorderStyle.solid
+                                        : BorderStyle.none,
+                                    color: Colors.black)),
+                          ),
+                          child: Padding(
+                              padding: EdgeInsets.all(10.0),
+                              child: Text(
+                                headers[index]["text"],
+                                softWrap: true,
+                                textAlign: TextAlign.center,
+                              )),
+                        ))))));
+
+    result.add(headerTableRow);
+
     int rowIndex = 0;
     if (rows != null) {
       rows.forEach((row) {
         rowIndex++;
 
-        TableRow tableRow = TableRow(
-            decoration: BoxDecoration(
-                color: (rowIndex % 2 == 0
-                    ? Theme.of(context).shadowColor
-                    : Colors.white)),
-            children: [
-              getRowCell(row.name, row.id, 0),
-              getRowCell(CheckListWork.typeSelection[row.type], row.id, 1),
-            ]);
-        tableRows.add(tableRow);
+        Widget tableRow = Container(
+            color: (rowIndex % 2 == 0
+                ? Theme.of(context).shadowColor
+                : Colors.white),
+            child: IntrinsicHeight(
+                child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                  getRowCell(row.name, row.id, 0, flex: columnWidths[0]),
+                  getRowCell(CheckListWork.typeSelection[row.type], row.id, 1,
+                      flex: columnWidths[1]),
+                ])));
+        result.add(tableRow);
       });
     }
 
-    return Table(
-      border: TableBorder.all(),
-      children: tableRows,
-      columnWidths: columnWidths,
-      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-    );
+    return result;
   }
 
   Widget getRowCell(String text, int checkListId, int index,
-      {TextAlign textAlign = TextAlign.left}) {
-    return GestureDetector(
-        onTapDown: _storePosition,
-        onLongPress: () {
-          _showCustomMenu(checkListId, index);
-        },
-        child: Container(
+      {TextAlign textAlign = TextAlign.left, int flex = 1}) {
+    Widget cell = Container(
+        decoration: BoxDecoration(
+          border: Border(
+              right: BorderSide(
+                color: Colors.black,
+              ),
+              bottom: BorderSide(
+                color: Colors.black,
+              ),
+              left: BorderSide(
+                  style: index == 0 ? BorderStyle.solid : BorderStyle.none,
+                  color: Colors.black)),
+        ),
+        child: Padding(
             padding: EdgeInsets.all(10.0),
             child: Text(
-              text ?? '',
+              text ?? "",
               textAlign: textAlign,
             )));
+
+    return Expanded(
+        flex: flex,
+        child: GestureDetector(
+            onTapDown: _storePosition,
+            onLongPress: () {
+              _showCustomMenu(checkListId, index);
+            },
+            child: cell));
   }
 
   void _storePosition(TapDownDetails details) {
@@ -493,9 +532,9 @@ class _CheckListScreen extends State<CheckListScreen> {
                         top: 16,
                       ),
                       children: [
-                    Column(children: [
-                      generateTableData(context, checkListHeader, _items)
-                    ])
+                    Column(
+                        children:
+                            generateTableData(context, checkListHeader, _items))
                   ]))
             ]));
   }

@@ -96,10 +96,10 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
   ];
 
   List<Map<String, dynamic>> inspectionItemHeader = [
-    {'text': 'Дата проверки', 'flex': 2.0},
-    {'text': 'Наименование структурного подразделения', 'flex': 5.0},
-    {'text': 'Время проверки (мест. вр)', 'flex': 2.0},
-    {'text': 'Члены комиссии', 'flex': 2.0}
+    {'text': 'Дата проверки', 'flex': 2},
+    {'text': 'Наименование структурного подразделения', 'flex': 5},
+    {'text': 'Время проверки (мест. вр)', 'flex': 2},
+    {'text': 'Члены комиссии', 'flex': 2}
   ];
 
   @override
@@ -263,10 +263,9 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
                               padding: const EdgeInsets.all(16),
                               children: [
                             if (_inspection.id != null)
-                              Column(children: [
-                                generateTableData(context, inspectionItemHeader,
-                                    inspectionItems)
-                              ])
+                              Column(
+                                  children: generateTableData(context,
+                                      inspectionItemHeader, inspectionItems))
                           ])),
                     ]))));
   }
@@ -327,83 +326,125 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
     return result;
   }
 
-  Widget generateTableData(BuildContext context,
+  List<Widget> generateTableData(BuildContext context,
       List<Map<String, dynamic>> headers, List<Map<String, dynamic>> rows) {
     int i = 0;
-    Map<int, TableColumnWidth> columnWidths = Map.fromIterable(headers,
+    Map<int, int> columnWidths = Map.fromIterable(headers,
         key: (item) => i++,
-        value: (item) =>
-            FlexColumnWidth(double.parse(item['flex'].toString())));
+        value: (item) => int.parse(item['flex'].toString()));
 
-    TableRow headerTableRow = TableRow(
-        decoration: BoxDecoration(color: Theme.of(context).primaryColor),
-        children: List.generate(
-            headers.length,
-            (index) => Column(
-                  children: [
-                    Padding(
-                        padding: EdgeInsets.all(10.0),
-                        child: Text(
-                          headers[index]["text"],
-                          textAlign: TextAlign.center,
-                        )),
-                  ],
-                )));
-    List<TableRow> tableRows = [headerTableRow];
+    List<Widget> result = [];
+
+    Widget headerTableRow = Container(
+        color: Theme.of(context).primaryColor,
+        child: IntrinsicHeight(
+            child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: List.generate(
+                    headers.length,
+                    (index) => Expanded(
+                        flex: columnWidths[index],
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                                right: BorderSide(
+                                  color: Colors.black,
+                                ),
+                                top: BorderSide(
+                                  color: Colors.black,
+                                ),
+                                bottom: BorderSide(
+                                  color: Colors.black,
+                                ),
+                                left: BorderSide(
+                                    style: index == 0
+                                        ? BorderStyle.solid
+                                        : BorderStyle.none,
+                                    color: Colors.black)),
+                          ),
+                          child: Padding(
+                              padding: EdgeInsets.all(10.0),
+                              child: Text(
+                                headers[index]["text"],
+                                softWrap: true,
+                                textAlign: TextAlign.center,
+                              )),
+                        ))))));
+
+    result.add(headerTableRow);
+
     int rowIndex = 0;
     rows.forEach((row) {
       rowIndex++;
       CheckPlanItem item = row["item"] as CheckPlanItem;
-      TableRow tableRow = TableRow(
-          decoration: BoxDecoration(
-              color: (rowIndex % 2 == 0
-                  ? Theme.of(context).shadowColor
-                  : Colors.white)),
-          children: [
-            getRowCell(
-                dateDMY(item.date), item.id, 0, item.type, item.departmentId,
-                textAlign: TextAlign.center),
-            getRowCell(row['name'], item.id, 1, item.type, item.departmentId),
-            getRowCell(getTimePeriod(item.dtFrom, item.dtTo), item.id, 2,
-                item.type, item.departmentId,
-                textAlign: TextAlign.center),
-            getRowCell(getGroupById(item.comGroupId), item.id, 4, item.type,
-                item.departmentId,
-                textAlign: TextAlign.center, groupId: item.comGroupId),
-          ]);
-      tableRows.add(tableRow);
+      Widget tableRow = Container(
+          color: (rowIndex % 2 == 0
+              ? Theme.of(context).shadowColor
+              : Colors.white),
+          child: IntrinsicHeight(
+              child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                getRowCell(dateDMY(item.date), item.id, 0, item.type,
+                    item.departmentId,
+                    textAlign: TextAlign.center, flex: columnWidths[0]),
+                getRowCell(
+                    row['name'], item.id, 1, item.type, item.departmentId,
+                    flex: columnWidths[1]),
+                getRowCell(getTimePeriod(item.dtFrom, item.dtTo), item.id, 2,
+                    item.type, item.departmentId,
+                    textAlign: TextAlign.center, flex: columnWidths[2]),
+                getRowCell(getGroupById(item.comGroupId), item.id, 3, item.type,
+                    item.departmentId,
+                    textAlign: TextAlign.center,
+                    groupId: item.comGroupId,
+                    flex: columnWidths[3]),
+              ])));
+      result.add(tableRow);
     });
 
-    return Table(
-        border: TableBorder.all(),
-        columnWidths: columnWidths,
-        children: tableRows);
+    return result;
   }
 
   Widget getRowCell(String text, int inspectionItemId, int index, int eventId,
       int departmentId,
-      {TextAlign textAlign = TextAlign.left, int groupId}) {
+      {TextAlign textAlign = TextAlign.left, int groupId, int flex = 1}) {
     Widget cell = Container(
-      padding: EdgeInsets.all(10.0),
-      child: Text(
-        text ?? "",
-        textAlign: textAlign,
-      ),
-    );
+        decoration: BoxDecoration(
+          border: Border(
+              right: BorderSide(
+                color: Colors.black,
+              ),
+              bottom: BorderSide(
+                color: Colors.black,
+              ),
+              left: BorderSide(
+                  style: index == 0 ? BorderStyle.solid : BorderStyle.none,
+                  color: Colors.black)),
+        ),
+        child: Padding(
+            padding: EdgeInsets.all(10.0),
+            child: Text(
+              text ?? "",
+              textAlign: textAlign,
+            )));
 
-    return GestureDetector(
-        onTapDown: _storePosition,
-        onTap: () async {
-          if (index == 4) return showGroupInfo(groupId);
-        },
-        onLongPress: () {
-          _showCustomMenu(inspectionItemId, index, eventId, departmentId);
-        },
-        child: cell);
+    return Expanded(
+        flex: flex,
+        child: GestureDetector(
+            onTapDown: _storePosition,
+            onTap: () async {
+              if (index == 3) return showGroupInfo(groupId);
+            },
+            onLongPress: () {
+              _showCustomMenu(inspectionItemId, index, eventId, departmentId);
+            },
+            child: cell));
   }
 
   Future<void> showGroupInfo(int groupId) async {
     ComGroup group = await ComGroupController.selectById(groupId);
+    if (group == null) return;
     List<User> users = await group.comUsers;
     User head = await group.head;
     int headId = group.headId;
