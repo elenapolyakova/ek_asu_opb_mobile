@@ -163,7 +163,8 @@ Future<List<Map<String, dynamic>>> getDictionaries(
             });
 
             break;
-          case 'check_list':
+          // Перенос загрузки шаблонов отсюда в CheckListController.loadFromOdoo(clean: true)
+          case 'check_listt':
             List<dynamic> domain = new List<dynamic>();
             if (lastUpdate != null) domain.add(lastUpdate);
 

@@ -356,10 +356,13 @@ class CheckListController extends Controllers {
     List domain = [];
     if (clean) {
       domain += [
-        ['parent_id', 'in', parentIds]
+        '|',
+        ['parent_id', 'in', parentIds],
+        ['is_base', '=', true],
       ];
-      await DBProvider.db
-          .executeQuery("DELETE FROM $_tableName WHERE is_base = 'false'");
+      await DBProvider.db.deleteAll(_tableName);
+      // await DBProvider.db
+      //     .executeQuery("DELETE FROM $_tableName WHERE is_base = 'false'");
     } else {
       domain += await getLastSyncDateDomain(_tableName);
     }
