@@ -358,7 +358,8 @@ class CheckListController extends Controllers {
       domain += [
         ['parent_id', 'in', parentIds]
       ];
-      await DBProvider.db.deleteAll(_tableName);
+      await DBProvider.db
+          .executeQuery("DELETE FROM $_tableName WHERE is_base = 'false'");
     } else {
       domain += await getLastSyncDateDomain(_tableName);
     }
