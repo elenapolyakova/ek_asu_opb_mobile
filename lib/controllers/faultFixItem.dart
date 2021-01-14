@@ -131,7 +131,8 @@ class FaultFixItemController extends Controllers {
     return FaultFixItem.fromJson(json[0]);
   }
 
-  static Future loadFromOdoo({bool clean: false}) async {
+  static Future loadFromOdoo(
+      {bool clean: false, List<int> parent3Ids = const []}) async {
     List<String> fields = [
       'name',
       'type',
@@ -139,14 +140,17 @@ class FaultFixItemController extends Controllers {
       'file_data',
       'coord_n',
       'coord_e',
-      'write_date',
       'parent3_id',
+      'write_date',
     ];
     List domain = [
-      ['parent_id', '=', null],
-      ['parent2_id', '=', null],
+      // ['parent_id', '=', null],
+      // ['parent2_id', '=', null],
     ];
     if (clean) {
+      domain += [
+        ['parent3_id', 'in', parent3Ids]
+      ];
       await DBProvider.db.deleteAll(_tableName);
     } else {
       domain += await getLastSyncDateDomain(_tableName, excludeActive: true);
@@ -161,7 +165,6 @@ class FaultFixItemController extends Controllers {
       ], {
         'limit': limit,
         'offset': limit * page++,
-        'context': {'create_or_update': true}
       });
       if (json == null) {
         print('Did not load $_tableName record. Skipping');

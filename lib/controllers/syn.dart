@@ -154,6 +154,8 @@ class SynController extends Controllers {
   /// Adds a record to create into syn table
   static Future<int> create(String localTableName, int resId,
       {bool noImmediateSync = false}) async {
+    print(
+        "---SynController.create. localTableName=$localTableName, resId=$resId, noImmediateSync=$noImmediateSync");
     int res = await DBProvider.db.insert(_tableName, {
       'record_id': resId,
       'local_table_name': localTableName,
@@ -220,57 +222,50 @@ class SynController extends Controllers {
     }
     List lastDateDomain =
         await getLastSyncDateDomain(_tableName, excludeActive: true);
-    if (lastDateDomain.isEmpty) {
-      await PlanController.loadFromOdoo(clean: true);
-      await PlanItemController.loadFromOdoo(clean: true);
-      await ComGroupController.firstLoadFromOdoo();
-      await CheckPlanController.firstLoadFromOdoo();
-      await CheckPlanItemController.firstLoadFromOdoo();
-      await DepartmentDocumentController.firstLoadFromOdoo();
-      await CheckListController.firstLoadFromOdoo();
-      await CheckListItemController.firstLoadFromOdoo();
-      FaultController.firstLoadFromOdoo().then((value) async {
-        await FaultController.firstLoadFromOdoo(true);
-        await FaultItemController.loadFromOdoo(clean: true);
-        await FaultFixController.firstLoadFromOdoo();
-        await FaultFixController.firstLoadFromOdoo(true);
-        await FaultFixItemController.loadFromOdoo(clean: true);
-        print("Finished background first load. Setting syncStatus to SUCCESS");
-        syncStatus = SYNC_STATUS.SUCCESS;
-      });
+    final bool clean = lastDateDomain.isEmpty;
 
-      await CheckPlanController.firstLoadFromOdoo(true);
-      await ComGroupController.firstLoadFromOdoo(true);
-      await CheckPlanItemController.firstLoadFromOdoo(true);
-      await CheckListController.firstLoadFromOdoo(true);
-      await CheckListItemController.firstLoadFromOdoo(true);
+    List<int> planIds = await PlanController.loadFromOdoo(clean: clean);
+    List<int> planItemIds =
+        await PlanItemController.loadFromOdoo(clean: clean, parentIds: planIds);
+    List<int> checkPlanIds;
+    if (clean) {
+      checkPlanIds =
+          await CheckPlanController.firstLoadFromOdoo(parentIds: planItemIds);
+      List<int> comGroupIds =
+          await ComGroupController.firstLoadFromOdoo(parentIds: checkPlanIds);
+
+      await CheckPlanController.firstLoadFromOdoo(
+          loadRelated: true, parentIds: checkPlanIds);
+      await ComGroupController.firstLoadFromOdoo(
+          loadRelated: true, parentIds: comGroupIds);
+
+      await DepartmentDocumentController.firstLoadFromOdoo();
     } else {
-      await PlanController.loadFromOdoo();
-      await PlanItemController.loadFromOdoo();
+      checkPlanIds = await CheckPlanController.loadChangesFromOdoo();
       await ComGroupController.loadChangesFromOdoo();
-      await CheckPlanController.loadChangesFromOdoo();
-      await CheckPlanItemController.loadChangesFromOdoo();
-      await CheckListController.loadChangesFromOdoo();
-      await CheckListItemController.loadChangesFromOdoo();
-      FaultController.loadChangesFromOdoo().then((value) async {
-        await FaultController.loadChangesFromOdoo(true);
-        await FaultItemController.loadFromOdoo();
-        await FaultFixController.loadChangesFromOdoo();
-        await FaultFixController.loadChangesFromOdoo(true);
-        await FaultFixItemController.loadFromOdoo();
-        print(
-            "Finished background load changes. Setting syncStatus to SUCCESS");
-        syncStatus = SYNC_STATUS.SUCCESS;
-      });
 
       await CheckPlanController.loadChangesFromOdoo(true);
-      await CheckPlanItemController.loadChangesFromOdoo(true);
       await ComGroupController.loadChangesFromOdoo(loadRelated: true);
-      await CheckListController.loadChangesFromOdoo(true);
-      await CheckListItemController.loadChangesFromOdoo(true);
     }
-    await ChatController.loadFromOdoo(clean: lastDateDomain.isEmpty);
-    await ChatMessageController.loadFromOdoo(clean: lastDateDomain.isEmpty);
+    List<int> checkPlanItemIds = await CheckPlanItemController.loadFromOdoo(
+        clean: clean, parentIds: checkPlanIds);
+    List<int> checkListIds = await CheckListController.loadFromOdoo(
+        clean: clean, parentIds: checkPlanItemIds);
+    List<int> checkListItemIds = await CheckListItemController.loadFromOdoo(
+        clean: clean, parentIds: checkListIds);
+    FaultController.loadFromOdoo(clean: clean, parentIds: checkListItemIds)
+        .then((faultIds) async {
+      List<int> faultFixIds = await FaultFixController.loadFromOdoo(
+          clean: clean, parentIds: faultIds);
+      await FaultItemController.loadFromOdoo(clean: clean, parentIds: faultIds);
+      await FaultFixItemController.loadFromOdoo(
+          clean: clean, parent3Ids: faultFixIds);
+      print("Finished background first load. Setting syncStatus to SUCCESS");
+      syncStatus = SYNC_STATUS.SUCCESS;
+    });
+    await ChatController.loadFromOdoo(clean: clean);
+    await ChatMessageController.loadFromOdoo(clean: clean);
+    // нужен только сам факт того, что завершилась синхронизация
     await setLastSyncDateForDomain(_tableName, DateTime.now().toUtc());
   }
 

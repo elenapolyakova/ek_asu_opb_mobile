@@ -45,6 +45,9 @@ void LogOut(BuildContext context) async {
   if (sessionString != null) _storage.write(key: "session", value: null);
   context = context ?? MyApp.navKey.currentState.overlay.context;
   // print(sessionString);
+  context = context ??
+      //(MyApp.navKey).currentContext; 
+          MyApp.navKey.currentState.overlay.context;
 
   Navigator.pushNamedAndRemoveUntil(
       context, '/login', (Route<dynamic> route) => false);

@@ -133,7 +133,8 @@ class FaultItemController extends Controllers {
     return FaultItem.fromJson(json[0]);
   }
 
-  static Future loadFromOdoo({bool clean: false}) async {
+  static Future<List<int>> loadFromOdoo(
+      {bool clean: false, List<int> parentIds = const []}) async {
     List<String> fields = [
       'name',
       'type',
@@ -141,19 +142,24 @@ class FaultItemController extends Controllers {
       'file_data',
       'coord_n',
       'coord_e',
-      'write_date',
       'parent_id',
+      'write_date',
     ];
-    List domain = [
-      ['parent2_id', '=', null],
-      ['parent3_id', '=', null],
-    ];
+    List domain = [];
     if (clean) {
+      domain += [
+        ['parent_id', 'in', parentIds]
+      ];
       await DBProvider.db.deleteAll(_tableName);
     } else {
-      domain += await getLastSyncDateDomain(_tableName, excludeActive: true);
+      domain += [
+            ['parent2_id', '=', null],
+            ['parent3_id', '=', null],
+          ] +
+          await getLastSyncDateDomain(_tableName, excludeActive: true);
     }
     List json;
+    List<int> ids = [];
     int page = 0;
     do {
       json = await getDataWithAttemp(
@@ -163,7 +169,6 @@ class FaultItemController extends Controllers {
       ], {
         'limit': limit,
         'offset': limit * page++,
-        'context': {'create_or_update': true}
       });
       if (json == null) {
         print('Did not load $_tableName record. Skipping');
@@ -205,10 +210,12 @@ class FaultItemController extends Controllers {
           await DBProvider.db
               .insert(_tableName, FaultItem.fromJson(res).toJson());
         }
+        ids.add(e['id']);
       });
       print('loaded ${json.length} records of $_tableName');
       await setLatestWriteDate(_tableName, json);
     } while (json is List && json.length == limit);
+    return ids;
   }
 
   static firstLoadFromOdoo([bool loadRelated = false]) async {

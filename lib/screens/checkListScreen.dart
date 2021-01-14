@@ -63,11 +63,11 @@ class _CheckListScreen extends State<CheckListScreen> {
   List<Map<String, Object>> typeCheckListListAll;
   int _selectedType = 0;
   int _selectedTypeTemplate = 0;
-  CheckListWork _currentCheckList;
-  List<CheckListWork> _items;
-  List<CheckListWork> _allItems;
-  List<CheckListWork> _itemsCopy;
-  List<CheckListWork> _itemsTemplate;
+  CheckList _currentCheckList;
+  List<CheckList> _items;
+  List<CheckList> _allItems;
+  List<CheckList> _itemsCopy;
+  List<CheckList> _itemsTemplate;
   var _tapPosition;
   double heightCheckList = 700;
   double widthCheckList = 1000;
@@ -105,7 +105,7 @@ class _CheckListScreen extends State<CheckListScreen> {
     try {
       showLoadingDialog(context);
       setState(() => {showLoading = true});
-      typeCheckListListAll = makeListFromJson(CheckListWork.typeSelection);
+      typeCheckListListAll = makeListFromJson(CheckList.typeSelection);
       typeCheckListListAll.insert(0, {'id': 0, 'value': 'Все'});
       await loadCheckList();
     } catch (e) {} finally {
@@ -129,13 +129,13 @@ class _CheckListScreen extends State<CheckListScreen> {
     if (_itemsCopy != null)
       _itemsCopy.forEach((item) {
         if (item.type == _selectedTypeTemplate || _selectedTypeTemplate == 0)
-          _itemsTemplate.add(CheckListWork.fromJson(item.toJson()));
+          _itemsTemplate.add(CheckList.fromJson(item.toJson()));
       });
   }
 
   Future<void> loadCheckList() async {
     _itemsCopy = [];
-    List<CheckListWork> items =
+    List<CheckList> items =
         await CheckListController.selectByParentId(checkPlanItemId);
 
     _allItems = items ?? [];
@@ -149,10 +149,10 @@ class _CheckListScreen extends State<CheckListScreen> {
     _items = _items ?? [];
   }
 
-  Future<void> submitCheckListTemplate(List<CheckListWork> itemsCopy) async {
+  Future<void> submitCheckListTemplate(List<CheckList> itemsCopy) async {
     bool hasErorr = false;
     Map<String, dynamic> result;
-    List<CheckListWork> activeTemplates =
+    List<CheckList> activeTemplates =
         itemsCopy.where((item) => item.is_active == true).toList() ?? [];
     List<int> ids =
         List.generate(activeTemplates.length, (i) => activeTemplates[i].id);
@@ -201,7 +201,7 @@ class _CheckListScreen extends State<CheckListScreen> {
   }
 
   List<Widget> generateTableData(BuildContext context,
-      List<Map<String, dynamic>> headers, List<CheckListWork> rows) {
+      List<Map<String, dynamic>> headers, List<CheckList> rows) {
     int i = 0;
     Map<int, int> columnWidths = Map.fromIterable(headers,
         key: (item) => i++,
@@ -261,7 +261,7 @@ class _CheckListScreen extends State<CheckListScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                   getRowCell(row.name, row.id, 0, flex: columnWidths[0]),
-                  getRowCell(CheckListWork.typeSelection[row.type], row.id, 1,
+                  getRowCell(CheckList.typeSelection[row.type], row.id, 1,
                       flex: columnWidths[1]),
                 ])));
         result.add(tableRow);
@@ -332,7 +332,7 @@ class _CheckListScreen extends State<CheckListScreen> {
   }
 
   void editCheckList(int checkListId) {
-    CheckListWork checkList =
+    CheckList checkList =
         _items.firstWhere((item) => item.id == checkListId, orElse: () => null);
     /* Map<String, dynamic> args = {
       'checkListId': checkListId,
@@ -354,7 +354,7 @@ class _CheckListScreen extends State<CheckListScreen> {
     _itemsCopy = [];
     if (_allItems != null)
       _allItems.forEach((item) {
-        _itemsCopy.add(CheckListWork.fromJson(item.toJson()));
+        _itemsCopy.add(CheckList.fromJson(item.toJson()));
       });
 
     reloadTemplateCopyList();
@@ -423,7 +423,7 @@ class _CheckListScreen extends State<CheckListScreen> {
                                                 _itemsTemplate[i].is_active,
                                                 _itemsTemplate[i].name,
                                                 (value) {
-                                              CheckListWork item =
+                                              CheckList item =
                                                   _itemsCopy.firstWhere(
                                                       (item) =>
                                                           item.id ==
