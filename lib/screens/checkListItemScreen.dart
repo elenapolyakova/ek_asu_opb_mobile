@@ -9,7 +9,6 @@ import 'package:ek_asu_opb_mobile/models/checkListItem.dart';
 class MyCheckListItem {
   CheckListItem item;
   int faultCount;
-  
 
   MyCheckListItem(this.item, this.faultCount);
 }
@@ -121,15 +120,17 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
         hasErorr = result["code"] < 0;
 
         if (hasErorr) {
-          Scaffold.of(context).showSnackBar(
-              errorSnackBar(text: 'Произошла ошибка при удалении'));
+          if (context != null)
+            Scaffold.of(context).showSnackBar(
+                errorSnackBar(text: 'Произошла ошибка при удалении'));
           return;
         }
         _items.remove(deletedCheckListItem);
         setState(() {});
       } catch (e) {
-        Scaffold.of(context)
-            .showSnackBar(errorSnackBar(text: 'Произошла ошибка при удалении'));
+        if (context != null)
+          Scaffold.of(context).showSnackBar(
+              errorSnackBar(text: 'Произошла ошибка при удалении'));
       }
     }
   }
@@ -330,7 +331,8 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
 
         if (hasErorr) {
           Navigator.pop<bool>(context, false);
-          Scaffold.of(context).showSnackBar(errorSnackBar());
+          if (context != null)
+            Scaffold.of(context).showSnackBar(errorSnackBar());
         } else {
           if (checkListItem.item.id == null) {
             checkListItem.item.id = result["id"];
@@ -351,7 +353,7 @@ class _CheckListItemScreen extends State<CheckListItemScreen> {
         }
       } catch (e) {
         Navigator.pop<bool>(context, false);
-        Scaffold.of(context).showSnackBar(errorSnackBar());
+        if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
       }
     }
   }

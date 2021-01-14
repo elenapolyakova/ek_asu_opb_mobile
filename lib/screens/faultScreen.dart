@@ -675,6 +675,7 @@ class _FaultScreen extends State<FaultScreen> {
 
         setState(() {});
       } catch (e) {
+        if (context != null)
         Scaffold.of(context)
             .showSnackBar(errorSnackBar(text: 'Произошла ошибка при удалении'));
       }

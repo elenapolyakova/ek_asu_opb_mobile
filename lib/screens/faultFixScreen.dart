@@ -169,8 +169,9 @@ class _FaultFixScreen extends State<FaultFixScreen> {
 
         setState(() {});
       } catch (e) {
-        Scaffold.of(context)
-            .showSnackBar(errorSnackBar(text: 'Произошла ошибка при удалении'));
+        if (context != null)
+          Scaffold.of(context).showSnackBar(
+              errorSnackBar(text: 'Произошла ошибка при удалении'));
       }
     }
   }
@@ -225,7 +226,7 @@ class _FaultFixScreen extends State<FaultFixScreen> {
 
       if (hasErorr) {
         // Navigator.pop<bool>(context, false);
-        Scaffold.of(context).showSnackBar(errorSnackBar());
+        if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
       } else {
         if ([-1, null].contains(_faultFix.id)) {
           _faultFix.id = result["id"];
@@ -236,11 +237,11 @@ class _FaultFixScreen extends State<FaultFixScreen> {
         setState(() {});
 
         // Navigator.pop<bool>(context, true);
-        Scaffold.of(context).showSnackBar(successSnackBar);
+        if (context != null) Scaffold.of(context).showSnackBar(successSnackBar);
       }
     } catch (e) {
       //Navigator.pop<bool>(context, false);
-      Scaffold.of(context).showSnackBar(errorSnackBar());
+      if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
     }
     // widget.pop();
   }

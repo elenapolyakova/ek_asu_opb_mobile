@@ -264,8 +264,6 @@ class _PlanScreen extends State<PlanScreen> {
                               padding: const EdgeInsets.all(16),
                               children: [
                             if (_plan.id != null)
-                              
-
                               Column(
                                 children: generateTableData(
                                     context, planItemHeader, planItems),
@@ -334,13 +332,11 @@ class _PlanScreen extends State<PlanScreen> {
               ? Theme.of(context).shadowColor
               : Colors.white),
           child: IntrinsicHeight(
-              child:
-              Row(
+              child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                 getRowCell(row.name, row.id, 0, flex: columnWidths[0]),
-                getRowCell(row.departmentTxt, row.id, 1,
-                    flex: columnWidths[1]),
+                getRowCell(row.departmentTxt, row.id, 1, flex: columnWidths[1]),
                 getRowCell(
                     row.checkTypeDisplay.toString() == 'null'
                         ? ''
@@ -367,8 +363,6 @@ class _PlanScreen extends State<PlanScreen> {
         children: tableRows)*/
         result;
   }
-
- 
 
   Widget getRowCell(String text, int planItemId, int index,
       {TextAlign textAlign = TextAlign.left, int flex = 1}) {
@@ -646,12 +640,14 @@ class _PlanScreen extends State<PlanScreen> {
 
   Future<void> exportToPdf() async {
     if (!canEdit()) {
-      Scaffold.of(context).showSnackBar(errorSnackBar(text: errorTableName));
+      if (context != null)
+        Scaffold.of(context).showSnackBar(errorSnackBar(text: errorTableName));
       return;
     }
     if (_plan.id == null) {
-      Scaffold.of(context).showSnackBar(
-          errorSnackBar(text: 'Сначала сохраните реквизиты плана'));
+      if (context != null)
+        Scaffold.of(context).showSnackBar(
+            errorSnackBar(text: 'Сначала сохраните реквизиты плана'));
       return;
     }
     try {
@@ -668,12 +664,14 @@ class _PlanScreen extends State<PlanScreen> {
 
   Future<void> exportToExcel() async {
     if (!canEdit()) {
-      Scaffold.of(context).showSnackBar(errorSnackBar(text: errorTableName));
+      if (context != null)
+        Scaffold.of(context).showSnackBar(errorSnackBar(text: errorTableName));
       return;
     }
     if (_plan.id == null) {
-      Scaffold.of(context).showSnackBar(
-          errorSnackBar(text: 'Сначала сохраните реквизиты плана'));
+      if (context != null)
+        Scaffold.of(context).showSnackBar(
+            errorSnackBar(text: 'Сначала сохраните реквизиты плана'));
       return;
     }
 
@@ -1067,7 +1065,8 @@ class _PlanScreen extends State<PlanScreen> {
           //      text: 'Уже существует план на ${planCopy.year} год'));
           else {
             Navigator.pop<bool>(context, false);
-            Scaffold.of(context).showSnackBar(errorSnackBar());
+            if (context != null)
+              Scaffold.of(context).showSnackBar(errorSnackBar());
           }
         } else {
           if (planCopy.id == null) planCopy.id = result["id"];
@@ -1080,11 +1079,12 @@ class _PlanScreen extends State<PlanScreen> {
           });
 
           Navigator.pop<bool>(context, true);
-          Scaffold.of(context).showSnackBar(successSnackBar);
+          if (context != null)
+            Scaffold.of(context).showSnackBar(successSnackBar);
         }
       } catch (e) {
         Navigator.pop<bool>(context, false);
-        Scaffold.of(context).showSnackBar(errorSnackBar());
+        if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
       }
     }
   }
@@ -1111,7 +1111,8 @@ class _PlanScreen extends State<PlanScreen> {
 
         if (hasErorr) {
           Navigator.pop<bool>(context, false);
-          Scaffold.of(context).showSnackBar(errorSnackBar());
+          if (context != null)
+            Scaffold.of(context).showSnackBar(errorSnackBar());
         } else {
           if (planItem.id == null) {
             planItem.id = result["id"];
@@ -1128,11 +1129,12 @@ class _PlanScreen extends State<PlanScreen> {
           }
 
           Navigator.pop<bool>(context, true);
-          Scaffold.of(context).showSnackBar(successSnackBar);
+          if (context != null)
+            Scaffold.of(context).showSnackBar(successSnackBar);
         }
       } catch (e) {
         Navigator.pop<bool>(context, false);
-        Scaffold.of(context).showSnackBar(errorSnackBar());
+        if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
       }
     }
   }

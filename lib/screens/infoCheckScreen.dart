@@ -381,19 +381,20 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
         hasErorr = result["code"] < 0; //TODO вернуть
 
         if (hasErorr) {
-          Navigator.pop<bool>(context, false);
-          Scaffold.of(context).showSnackBar(errorSnackBar());
+          if (context != null)
+            Scaffold.of(context).showSnackBar(errorSnackBar());
         } else {
           setState(() {
             _department = departmentCopy;
           });
 
           Navigator.pop<bool>(context, true);
-          Scaffold.of(context).showSnackBar(successSnackBar);
+          if (context != null)
+            Scaffold.of(context).showSnackBar(successSnackBar);
         }
       } catch (e) {
         Navigator.pop<bool>(context, false);
-        Scaffold.of(context).showSnackBar(errorSnackBar());
+        if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
       }
     }
   }
@@ -416,7 +417,7 @@ class _InfoCheckScreen extends State<InfoCheckScreen> {
   Future<void> exportToPdf() async {
     try {
       showLoadingDialog(context);
-       CheckPlanItem checkPlanItem =
+      CheckPlanItem checkPlanItem =
           await CheckPlanItemController.selectById(checkPlanItemId);
       File file = await checkPlanItem.pdfReport;
       hideDialog(context);

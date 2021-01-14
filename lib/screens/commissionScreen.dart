@@ -598,8 +598,9 @@ class _CommissionScreen extends State<CommissionScreen> {
 
   Future<void> addGroupClicked() async {
     if (_commision.group.id == null) {
-      Scaffold.of(context)
-          .showSnackBar(errorSnackBar(text: 'Сначала сохраните комиссию'));
+      if (context != null)
+        Scaffold.of(context)
+            .showSnackBar(errorSnackBar(text: 'Сначала сохраните комиссию'));
       return;
     }
     MyGroup group = new MyGroup(
@@ -671,15 +672,17 @@ class _CommissionScreen extends State<CommissionScreen> {
         hasErorr = result["code"] < 0;
 
         if (hasErorr) {
-          Scaffold.of(context).showSnackBar(
-              errorSnackBar(text: 'Произошла ошибка при удалении'));
+          if (context != null)
+            Scaffold.of(context).showSnackBar(
+                errorSnackBar(text: 'Произошла ошибка при удалении'));
           return;
         }
         _groups.remove(deletedGroup);
         setState(() {});
       } catch (e) {
-        Scaffold.of(context)
-            .showSnackBar(errorSnackBar(text: 'Произошла ошибка при удалении'));
+        if (context != null)
+          Scaffold.of(context).showSnackBar(
+              errorSnackBar(text: 'Произошла ошибка при удалении'));
       }
     }
   }
@@ -1227,7 +1230,7 @@ class _CommissionScreen extends State<CommissionScreen> {
 
       if (hasErorr) {
         Navigator.pop<bool>(context, false);
-        Scaffold.of(context).showSnackBar(errorSnackBar());
+        if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
       } else {
         if (group.group.id == null) {
           //group.group.id = result["id"];
@@ -1249,8 +1252,9 @@ class _CommissionScreen extends State<CommissionScreen> {
 
           if (hasChatErorr) {
             Navigator.pop<bool>(context, false);
-            Scaffold.of(context).showSnackBar(
-                errorSnackBar(text: 'Ошибка при создании чата группы'));
+            if (context != null)
+              Scaffold.of(context).showSnackBar(
+                  errorSnackBar(text: 'Ошибка при создании чата группы'));
             return;
           } else {
             if (group.chat.id == null) group.chat.id = resultChat["id"];
@@ -1273,17 +1277,18 @@ class _CommissionScreen extends State<CommissionScreen> {
           }
         } catch (e) {
           Navigator.pop<bool>(context, false);
-          Scaffold.of(context).showSnackBar(
-              errorSnackBar(text: 'Ошибка при создании чата группы'));
+          if (context != null)
+            Scaffold.of(context).showSnackBar(
+                errorSnackBar(text: 'Ошибка при создании чата группы'));
           return;
         }
 
         Navigator.pop<bool>(context, true);
-        Scaffold.of(context).showSnackBar(successSnackBar);
+        if (context != null) Scaffold.of(context).showSnackBar(successSnackBar);
       }
     } catch (e) {
       Navigator.pop<bool>(context, false);
-      Scaffold.of(context).showSnackBar(errorSnackBar());
+      if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
     }
   }
 
@@ -1354,17 +1359,18 @@ class _CommissionScreen extends State<CommissionScreen> {
           }
         } catch (e) {
           Navigator.pop<bool>(context, false);
-          Scaffold.of(context).showSnackBar(
-              errorSnackBar(text: 'Ошибка при создании чата комиссии'));
+          if (context != null)
+            Scaffold.of(context).showSnackBar(
+                errorSnackBar(text: 'Ошибка при создании чата комиссии'));
           return;
         }
 
         Navigator.pop<bool>(context, true);
-        Scaffold.of(context).showSnackBar(successSnackBar);
+        if (context != null) Scaffold.of(context).showSnackBar(successSnackBar);
       }
     } catch (e) {
       Navigator.pop<bool>(context, false);
-      Scaffold.of(context).showSnackBar(errorSnackBar());
+      if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
     }
   }
 

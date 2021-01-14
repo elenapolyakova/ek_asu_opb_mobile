@@ -891,13 +891,13 @@ class _WaterScreen extends State<WaterScreen> {
 
       if (hasErorr) {
         // Navigator.pop<bool>(context, false);
-        Scaffold.of(context).showSnackBar(errorSnackBar());
+        if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
       } else {
-        Scaffold.of(context).showSnackBar(successSnackBar);
+        if (context != null) Scaffold.of(context).showSnackBar(successSnackBar);
       }
     } catch (e) {
       //Navigator.pop<bool>(context, false);
-      Scaffold.of(context).showSnackBar(errorSnackBar());
+      if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
     }
   }
 

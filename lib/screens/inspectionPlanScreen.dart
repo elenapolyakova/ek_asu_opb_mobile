@@ -1231,7 +1231,8 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
 
         if (hasErorr) {
           Navigator.pop<bool>(context, false);
-          Scaffold.of(context).showSnackBar(errorSnackBar());
+          if (context != null)
+            Scaffold.of(context).showSnackBar(errorSnackBar());
         } else {
           if (inspectionCopy.id == null) inspectionCopy.id = result["id"];
           setState(() {
@@ -1241,11 +1242,12 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
           });
 
           Navigator.pop<bool>(context, true);
-          Scaffold.of(context).showSnackBar(successSnackBar);
+          if (context != null)
+            Scaffold.of(context).showSnackBar(successSnackBar);
         }
       } catch (e) {
         Navigator.pop<bool>(context, false);
-        Scaffold.of(context).showSnackBar(errorSnackBar());
+        if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
       }
     }
   }
@@ -1284,7 +1286,8 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
 
         if (hasErorr) {
           Navigator.pop<bool>(context, false);
-          Scaffold.of(context).showSnackBar(errorSnackBar());
+          if (context != null)
+            Scaffold.of(context).showSnackBar(errorSnackBar());
         } else {
           if (inspectionItem.id == null) {
             inspectionItem.id = result["id"];
@@ -1311,11 +1314,12 @@ class _InspectionPlanScreen extends State<InspectionPlanScreen> {
           }
 
           Navigator.pop<bool>(context, true);
-          Scaffold.of(context).showSnackBar(successSnackBar);
+          if (context != null)
+            Scaffold.of(context).showSnackBar(successSnackBar);
         }
       } catch (e) {
         Navigator.pop<bool>(context, false);
-        Scaffold.of(context).showSnackBar(errorSnackBar());
+        if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
       }
     }
   }

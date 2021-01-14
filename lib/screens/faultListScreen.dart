@@ -329,15 +329,17 @@ class _FaultListScreen extends State<FaultListScreen> {
         hasErorr = result["code"] < 0;
 
         if (hasErorr) {
-          Scaffold.of(context).showSnackBar(
-              errorSnackBar(text: 'Произошла ошибка при удалении'));
+          if (context != null)
+            Scaffold.of(context).showSnackBar(
+                errorSnackBar(text: 'Произошла ошибка при удалении'));
           return;
         }
         _items.remove(deletedFault);
         setState(() {});
       } catch (e) {
-        Scaffold.of(context)
-            .showSnackBar(errorSnackBar(text: 'Произошла ошибка при удалении'));
+        if (context != null)
+          Scaffold.of(context).showSnackBar(
+              errorSnackBar(text: 'Произошла ошибка при удалении'));
       }
     }
   }

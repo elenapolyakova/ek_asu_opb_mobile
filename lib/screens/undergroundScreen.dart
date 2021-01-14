@@ -96,7 +96,6 @@ class _UndergroundScreen extends State<UndergroundScreen> {
       2: FlexColumnWidth(1),
       3: FlexColumnWidth(2),
       4: FlexColumnWidth(1)
-
     };
 
     List<TableRow> tableRows = [];
@@ -120,7 +119,6 @@ class _UndergroundScreen extends State<UndergroundScreen> {
                             fontSize: 16,
                             color: Theme.of(context).buttonColor),
                       ))),
-             
             ])),
         Container(
           padding: EdgeInsets.symmetric(vertical: 10),
@@ -135,7 +133,7 @@ class _UndergroundScreen extends State<UndergroundScreen> {
             )),
         EditDigitField(
           text: null,
-       
+
           value:
               values[row["rowIndex"]]?.toString()?.replaceAll('.', ',') ?? '',
           onSaved: (value) => {
@@ -145,10 +143,9 @@ class _UndergroundScreen extends State<UndergroundScreen> {
             })
           },
           context: context,
-         
+
           readOnly: row["readOnly"] ?? false,
 
-         
           backgroundColor: row["readOnly"] == true
               ? Theme.of(context).primaryColorLight
               : null,
@@ -156,36 +153,37 @@ class _UndergroundScreen extends State<UndergroundScreen> {
           margin: 3,
           borderColor: Theme.of(context).primaryColorDark,
         ),
-         (row["showToolTip"] == true) ?
-                MyToolTip(
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                            color: Theme.of(context).primaryColor, width: 0),
-                        color: Theme.of(context).primaryColor,
-                      ),
+        (row["showToolTip"] == true)
+            ? MyToolTip(
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: Theme.of(context).primaryColor, width: 0),
+                    color: Theme.of(context).primaryColor,
+                  ),
 
-                      height: 35,
-                      width: 235,
-                      // alignment: Alignment.center,
-                      padding: EdgeInsets.all(5),
-                      child: Row(
-                         crossAxisAlignment: CrossAxisAlignment.baseline,
-                        children: [
-                          Text('ВР = '),
-                          UnderlineIndex('З', 'гр'),
-                          Text(' + '),
-                          UnderlineIndex('Ущ', '1'),
-                          Text(' + '),
-                          UnderlineIndex('Уб', '1'),
-                          Text(' + '),
-                          UnderlineIndex('Ущ', '2'),
-                          Text(' + '),
-                          UnderlineIndex('Уб', '2'),
-                        ],
-                      ),
-                    ),
-                    bgColor: Theme.of(context).primaryColor) : Text(''),
+                  height: 35,
+                  width: 235,
+                  // alignment: Alignment.center,
+                  padding: EdgeInsets.all(5),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    children: [
+                      Text('ВР = '),
+                      UnderlineIndex('З', 'гр'),
+                      Text(' + '),
+                      UnderlineIndex('Ущ', '1'),
+                      Text(' + '),
+                      UnderlineIndex('Уб', '1'),
+                      Text(' + '),
+                      UnderlineIndex('Ущ', '2'),
+                      Text(' + '),
+                      UnderlineIndex('Уб', '2'),
+                    ],
+                  ),
+                ),
+                bgColor: Theme.of(context).primaryColor)
+            : Text(''),
       ]);
       tableRows.add(tableRow);
     });
@@ -210,19 +208,19 @@ class _UndergroundScreen extends State<UndergroundScreen> {
     double damageAmount = values.last;
     Fault fault = await FaultController.selectById(widget.faultId);
     fault.damageAmount = damageAmount;
-    try{
-     result = await FaultController.update(fault, [], []);
-       hasErorr = result["code"] < 0;
+    try {
+      result = await FaultController.update(fault, [], []);
+      hasErorr = result["code"] < 0;
 
       if (hasErorr) {
         // Navigator.pop<bool>(context, false);
-        Scaffold.of(context).showSnackBar(errorSnackBar());
+        if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
       } else {
-         Scaffold.of(context).showSnackBar(successSnackBar);
+        if (context != null) Scaffold.of(context).showSnackBar(successSnackBar);
       }
     } catch (e) {
       //Navigator.pop<bool>(context, false);
-      Scaffold.of(context).showSnackBar(errorSnackBar());
+      if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
     }
   }
 
@@ -236,7 +234,8 @@ class _UndergroundScreen extends State<UndergroundScreen> {
         child: showLoading
             ? Text("")
             : Container(
-                padding: EdgeInsets.only(top: 10, bottom: 10, left: 50, right: 30),
+                padding:
+                    EdgeInsets.only(top: 10, bottom: 10, left: 50, right: 30),
                 child: Column(children: [
                   Container(
                       alignment: Alignment.topLeft,

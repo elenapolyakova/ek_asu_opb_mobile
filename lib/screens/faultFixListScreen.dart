@@ -137,15 +137,17 @@ class _FaultFixListScreen extends State<FaultFixListScreen> {
         hasErorr = result["code"] < 0;
 
         if (hasErorr) {
-          Scaffold.of(context).showSnackBar(
-              errorSnackBar(text: 'Произошла ошибка при удалении'));
+          if (context != null)
+            Scaffold.of(context).showSnackBar(
+                errorSnackBar(text: 'Произошла ошибка при удалении'));
           return;
         }
         _items.remove(deletedFaultFix);
         setState(() {});
       } catch (e) {
-        Scaffold.of(context)
-            .showSnackBar(errorSnackBar(text: 'Произошла ошибка при удалении'));
+        if (context != null)
+          Scaffold.of(context).showSnackBar(
+              errorSnackBar(text: 'Произошла ошибка при удалении'));
       }
     }
   }

@@ -33,7 +33,7 @@ class _CheckListManagerScreen extends State<CheckListManagerScreen> {
   String _selectedPage = '';
 
   _CheckListManagerScreen(this.checkPlanItemId, this._isSyncData) {
-    print('$_isSyncData====================');
+
     //checkPlanItemId = parCheckPlanItemId;
     //Manager.manager.checkPlanItemId = parCheckPlanItemId;
   }

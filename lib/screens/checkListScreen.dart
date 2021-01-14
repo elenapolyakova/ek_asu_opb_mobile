@@ -164,6 +164,7 @@ class _CheckListScreen extends State<CheckListScreen> {
 
       if (hasErorr) {
         Navigator.pop<bool>(context, false);
+         if (context != null)
         Scaffold.of(context)
             .showSnackBar(errorSnackBar(text: result["message"]));
       } else {
@@ -173,10 +174,12 @@ class _CheckListScreen extends State<CheckListScreen> {
         });
 
         Navigator.pop<bool>(context, true);
+         if (context != null)
         Scaffold.of(context).showSnackBar(successSnackBar);
       }
     } catch (e) {
       Navigator.pop<bool>(context, false);
+       if (context != null)
       Scaffold.of(context).showSnackBar(errorSnackBar());
     }
   }

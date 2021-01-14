@@ -202,19 +202,19 @@ class _SoilScreen extends State<SoilScreen> {
     double damageAmount = values.last;
     Fault fault = await FaultController.selectById(widget.faultId);
     fault.damageAmount = damageAmount;
-    try{
-     result = await FaultController.update(fault, [], []);
-       hasErorr = result["code"] < 0;
+    try {
+      result = await FaultController.update(fault, [], []);
+      hasErorr = result["code"] < 0;
 
       if (hasErorr) {
         // Navigator.pop<bool>(context, false);
-        Scaffold.of(context).showSnackBar(errorSnackBar());
+        if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
       } else {
-         Scaffold.of(context).showSnackBar(successSnackBar);
+        if (context != null) Scaffold.of(context).showSnackBar(successSnackBar);
       }
     } catch (e) {
       //Navigator.pop<bool>(context, false);
-      Scaffold.of(context).showSnackBar(errorSnackBar());
+      if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
     }
   }
 
