@@ -9,7 +9,7 @@ Map<String, Object> _config = {
   /*"ServiceRootUrl": "http://ekasuopb.svrw.oao.rzd:8069",
   "addressForPing": "ekasuopb.svrw.oao.rzd",
   "db": "ek_asu_opb2",*/
-  "MapAddr": "http://ekasuopb.svrw.oao.rzd",
+  "MapAddr": "http://ekasuopb.svrw.oao.rzd:8080",
 
   /*РЖД - test*/
   /* 
