@@ -23,7 +23,6 @@ class FaultScreen extends StatefulWidget {
   Function(Map<String, String>, dynamic arg) push;
   Map<String, String> Function() pop;
   GlobalKey key;
- 
 
   @override
   FaultScreen(
@@ -615,9 +614,7 @@ class _FaultScreen extends State<FaultScreen> {
       if (hasErorr) {
         // Navigator.pop<bool>(context, false);
 
-      
-        if (context != null)
-          Scaffold.of(context).showSnackBar(errorSnackBar());
+        if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
       } else {
         if ([-1, null].contains(_fault.id)) {
           _fault.id = result["id"];
@@ -628,13 +625,11 @@ class _FaultScreen extends State<FaultScreen> {
         setState(() {});
 
         // Navigator.pop<bool>(context, true);
-         if (context != null)
-          Scaffold.of(context).showSnackBar(successSnackBar);
+        if (context != null) Scaffold.of(context).showSnackBar(successSnackBar);
       }
     } catch (e) {
       //Navigator.pop<bool>(context, false);
-       if (context != null)
-        Scaffold.of(context).showSnackBar(errorSnackBar());
+      if (context != null) Scaffold.of(context).showSnackBar(errorSnackBar());
     }
     // widget.pop();
   }
@@ -676,8 +671,8 @@ class _FaultScreen extends State<FaultScreen> {
         setState(() {});
       } catch (e) {
         if (context != null)
-        Scaffold.of(context)
-            .showSnackBar(errorSnackBar(text: 'Произошла ошибка при удалении'));
+          Scaffold.of(context).showSnackBar(
+              errorSnackBar(text: 'Произошла ошибка при удалении'));
       }
     }
   }
@@ -687,6 +682,7 @@ class _FaultScreen extends State<FaultScreen> {
   }
 
   Future<void> faultDamageClicked(int faultId) async {
+    if ([null, -1].contains(faultId)) return;
     return widget.push({
       "pathTo": 'faultDamage',
       "pathFrom": 'fault',
@@ -808,7 +804,7 @@ class _FaultScreen extends State<FaultScreen> {
                                             CrossAxisAlignment.end,
                                         children: [
                                           Expanded(
-                                              flex:3,
+                                              flex: 3,
                                               child: Column(
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
@@ -884,33 +880,44 @@ class _FaultScreen extends State<FaultScreen> {
                                                       margin: EdgeInsets.only(
                                                           top: 5, bottom: 35),
                                                       child: EditTextField(
-                                                        backgroundColor: Theme.of(context).primaryColorLight,
-                                                        text:
-                                                            'Размер вреда, руб',
-                                                        value:
-                                                            _fault.damageAmount != null
-                                                                ? _fault.damageAmount
-                                                                    .toString().replaceAll('.', ',')
-                                                                : '',
-                                                        readOnly: true,
-                                                        context: context,
-                                                        borderColor: Theme.of(
-                                                                context)
-                                                            .primaryColorDark,
-                                                        height: 40,
-                                                        margin: 0,
-                                                        onTap: () => faultDamageClicked(_fault.id)
-                                                      ),
+                                                          backgroundColor:
+                                                           _fault.id != null ?
+                                                              Theme.of(context)
+                                                                  .primaryColorLight:
+                                                                  Theme.of(context)
+                                                                  .shadowColor,
+                                                          text:
+                                                              'Размер вреда, руб',
+                                                          value: _fault
+                                                                      .damageAmount !=
+                                                                  null
+                                                              ? _fault
+                                                                  .damageAmount
+                                                                  .toString()
+                                                                  .replaceAll(
+                                                                      '.', ',')
+                                                              : '',
+                                                          readOnly: true,
+                                                          context: context,
+                                                          borderColor: Theme.of(
+                                                                  context)
+                                                              .primaryColorDark,
+                                                          height: 40,
+                                                          margin: 0,
+                                                          onTap: () =>
+                                                              faultDamageClicked(
+                                                                  _fault.id)),
                                                     ),
                                                     Container(
                                                         alignment: Alignment
                                                             .bottomCenter,
-                                                        padding: EdgeInsets.only(bottom: 5),
+                                                        padding:
+                                                            EdgeInsets.only(
+                                                                bottom: 5),
                                                         // EdgeInsets.only(top: 20),
                                                         child: new Container(
                                                           width: 150,
                                                           height: 40.0,
-                                                          
                                                           decoration:
                                                               new BoxDecoration(
                                                             borderRadius:
