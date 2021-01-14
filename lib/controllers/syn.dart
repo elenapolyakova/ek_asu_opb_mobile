@@ -488,7 +488,10 @@ class SynController extends Controllers {
         //   print("${record[el]} does not exist. Waiting 1 second...");
         //   await Future.delayed(Duration(seconds: 1));
         // }
-        record[el] = fileToBase64(record[el]);
+        if (record[el] == null)
+          record[el] = null;
+        else
+          record[el] = fileToBase64(record[el]);
       });
     }
     print("Uploading $record");
