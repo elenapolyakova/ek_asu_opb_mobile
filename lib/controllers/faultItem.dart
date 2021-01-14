@@ -145,18 +145,21 @@ class FaultItemController extends Controllers {
       'parent_id',
       'write_date',
     ];
-    List domain = [];
+    List<List<dynamic>> domain = [];
     if (clean) {
       domain += [
         ['parent_id', 'in', parentIds]
       ];
       await DBProvider.db.deleteAll(_tableName);
     } else {
-      domain += [
-            ['parent2_id', '=', null],
-            ['parent3_id', '=', null],
-          ] +
-          await getLastSyncDateDomain(_tableName, excludeActive: true);
+      List<List<dynamic>> parentDomain = [
+        ['parent2_id', '=', null],
+        ['parent3_id', '=', null],
+      ];
+      domain += parentDomain +
+          (await getLastSyncDateDomain(_tableName, excludeActive: true))
+              .map((e) => e as List)
+              .toList();
     }
     List json;
     List<int> ids = [];
