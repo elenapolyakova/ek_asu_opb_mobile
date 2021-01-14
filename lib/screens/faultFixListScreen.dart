@@ -29,8 +29,8 @@ class _FaultFixListScreen extends State<FaultFixListScreen> {
   var _tapPosition;
 
   List<Map<String, dynamic>> faultFixListHeader = [
-    {'text': 'Дата устранения', 'flex': 2.0},
-    {'text': 'Описание устранения', 'flex': 9.0},
+    {'text': 'Дата устранения', 'flex': 2},
+    {'text': 'Описание устранения', 'flex': 9},
     {'text': 'Проверено', 'flex': 1},
   ];
 
@@ -133,8 +133,8 @@ class _FaultFixListScreen extends State<FaultFixListScreen> {
       bool hasErorr = false;
       Map<String, dynamic> result;
       try {
-         result = await FaultFixController.delete(faultFixId);
-         hasErorr = result["code"] < 0;
+        result = await FaultFixController.delete(faultFixId);
+        hasErorr = result["code"] < 0;
 
         if (hasErorr) {
           Scaffold.of(context).showSnackBar(
@@ -150,74 +150,112 @@ class _FaultFixListScreen extends State<FaultFixListScreen> {
     }
   }
 
-  Widget generateFaultFixTable(BuildContext context,
+  List<Widget> generateFaultFixTable(BuildContext context,
       List<Map<String, dynamic>> headers, List<FaultFix> rows) {
     int i = 0;
-    Map<int, TableColumnWidth> columnWidths = Map.fromIterable(headers,
+    Map<int, int> columnWidths = Map.fromIterable(headers,
         key: (item) => i++,
-        value: (item) =>
-            FlexColumnWidth(double.parse(item['flex'].toString())));
+        value: (item) => int.parse(item['flex'].toString()));
 
-    TableRow headerTableRow = TableRow(
-        decoration: BoxDecoration(color: Theme.of(context).primaryColor),
-        children: List.generate(
-            headers.length,
-            (index) => Column(
-                  children: [
-                    Padding(
-                        padding: EdgeInsets.all(10.0),
-                        child: Text(
-                          headers[index]["text"],
-                          textAlign: TextAlign.center,
-                        )),
-                  ],
-                )));
-    List<TableRow> tableRows = [headerTableRow];
+    List<Widget> result = [];
+
+    Widget headerTableRow = Container(
+        color: Theme.of(context).primaryColor,
+        child: IntrinsicHeight(
+            child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: List.generate(
+                    headers.length,
+                    (index) => Expanded(
+                        flex: columnWidths[index],
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                                right: BorderSide(
+                                  color: Colors.black,
+                                ),
+                                top: BorderSide(
+                                  color: Colors.black,
+                                ),
+                                bottom: BorderSide(
+                                  color: Colors.black,
+                                ),
+                                left: BorderSide(
+                                    style: index == 0
+                                        ? BorderStyle.solid
+                                        : BorderStyle.none,
+                                    color: Colors.black)),
+                          ),
+                          child: Padding(
+                              padding: EdgeInsets.all(10.0),
+                              child: Text(
+                                headers[index]["text"],
+                                softWrap: true,
+                                textAlign: TextAlign.center,
+                              )),
+                        ))))));
+
+    result.add(headerTableRow);
+
     int rowIndex = 0;
     rows.forEach((row) {
       rowIndex++;
-      TableRow tableRow = TableRow(
-          decoration: BoxDecoration(
-              color: (rowIndex % 2 == 0
-                  ? Theme.of(context).shadowColor
-                  : Colors.white)),
-          children: [
-            getRowCell(dateDMY(row.date), row.id, 0,
-                textAlign: TextAlign.center),
-            getRowCell(row.desc, row.id, 1),
-            getRowCell((row.is_finished == true).toString(), row.id, 2,
-                textAlign: TextAlign.center),
-          ]);
-      tableRows.add(tableRow);
+      Widget tableRow = Container(
+          color: (rowIndex % 2 == 0
+              ? Theme.of(context).shadowColor
+              : Colors.white),
+          child: IntrinsicHeight(
+              child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                getRowCell(dateDMY(row.date), row.id, 0,
+                    textAlign: TextAlign.center, flex: columnWidths[0]),
+                getRowCell(row.desc, row.id, 1, flex: columnWidths[1]),
+                getRowCell((row.is_finished == true).toString(), row.id, 2,
+                    textAlign: TextAlign.center, flex: columnWidths[2]),
+              ])));
+      result.add(tableRow);
     });
 
-    return Table(
-        border: TableBorder.all(),
-        columnWidths: columnWidths,
-        children: tableRows);
+    return result;
   }
 
   Widget getRowCell(String text, int faultFixId, int index,
-      {TextAlign textAlign = TextAlign.left}) {
+      {TextAlign textAlign = TextAlign.left, int flex = 1}) {
     Widget cell = Container(
-      padding: EdgeInsets.all(index != 2 ? 10.0 : 0.0),
-      child: (index != 2)
-          ? Text(
-              text ?? '',
-              textAlign: textAlign,
-            )
-          : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              MyCheckbox(text == 'true', '',  (val) {},
-                  color: Theme.of(context).primaryColorLight)
-            ]),
-    );
+        decoration: BoxDecoration(
+          border: Border(
+              right: BorderSide(
+                color: Colors.black,
+              ),
+              bottom: BorderSide(
+                color: Colors.black,
+              ),
+              left: BorderSide(
+                  style: index == 0 ? BorderStyle.solid : BorderStyle.none,
+                  color: Colors.black)),
+        ),
+        child: Container(
+          padding: EdgeInsets.all(index != 2 ? 10.0 : 0.0),
+          child: (index != 2)
+              ? Text(
+                  text ?? '',
+                  textAlign: textAlign,
+                )
+              : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  MyCheckbox(text == 'true', '', (val) {},
+                      color: Theme.of(context).primaryColorLight)
+                ]),
+        ));
 
-    return GestureDetector(
-        onTapDown: _storePosition,
-        onLongPress: () {
-          _showCustomMenu(faultFixId, index);
-        },
-        child: cell);
+    return Expanded(
+        flex: flex,
+        child: GestureDetector(
+            onTapDown: _storePosition,
+            onLongPress: () {
+              _showCustomMenu(faultFixId, index);
+            },
+            child: cell));
   }
 
   @override
@@ -277,9 +315,9 @@ class _FaultFixListScreen extends State<FaultFixListScreen> {
                         top: 10,
                       ),
                       children: [
-                    Column(children: [
-                      generateFaultFixTable(context, faultFixListHeader, _items)
-                    ])
+                    Column(
+                        children: generateFaultFixTable(
+                            context, faultFixListHeader, _items))
                   ]))
             ]));
   }

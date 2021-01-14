@@ -96,8 +96,8 @@ class _CommissionScreen extends State<CommissionScreen> {
   bool _show = true;
 
   List<Map<String, dynamic>> groupHeader = [
-    {'text': 'Наименование группы', 'flex': 2.0},
-    {'text': 'Участники', 'flex': 5.0},
+    {'text': 'Наименование группы', 'flex': 2},
+    {'text': 'Участники', 'flex': 5},
   ];
 
   List<Map<String, dynamic>> choices = [
@@ -260,69 +260,108 @@ class _CommissionScreen extends State<CommissionScreen> {
     }
   }
 
-  Widget generateTableData(BuildContext context,
+  List<Widget> generateTableData(BuildContext context,
       List<Map<String, dynamic>> headers, List<MyGroup> rows) {
     int i = 0;
-    Map<int, TableColumnWidth> columnWidths = Map.fromIterable(headers,
+    Map<int, int> columnWidths = Map.fromIterable(headers,
         key: (item) => i++,
-        value: (item) =>
-            FlexColumnWidth(double.parse(item['flex'].toString())));
+        value: (item) => int.parse(item['flex'].toString()));
 
-    TableRow headerTableRow = TableRow(
-        decoration: BoxDecoration(color: Theme.of(context).primaryColor),
-        children: List.generate(
-            headers.length,
-            (index) => Column(
-                  children: [
-                    Padding(
-                        padding: EdgeInsets.all(10.0),
-                        child: Text(
-                          headers[index]["text"],
-                          textAlign: TextAlign.center,
-                        )),
-                  ],
-                )));
-    List<TableRow> tableRows = [headerTableRow];
+    List<Widget> result = [];
+
+    Widget headerTableRow = Container(
+        color: Theme.of(context).primaryColor,
+        child: IntrinsicHeight(
+            child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: List.generate(
+                    headers.length,
+                    (index) => Expanded(
+                        flex: columnWidths[index],
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                                right: BorderSide(
+                                  color: Colors.black,
+                                ),
+                                top: BorderSide(
+                                  color: Colors.black,
+                                ),
+                                bottom: BorderSide(
+                                  color: Colors.black,
+                                ),
+                                left: BorderSide(
+                                    style: index == 0
+                                        ? BorderStyle.solid
+                                        : BorderStyle.none,
+                                    color: Colors.black)),
+                          ),
+                          child: Padding(
+                              padding: EdgeInsets.all(10.0),
+                              child: Text(
+                                headers[index]["text"],
+                                softWrap: true,
+                                textAlign: TextAlign.center,
+                              )),
+                        ))))));
+
+    result.add(headerTableRow);
+
     int rowIndex = 0;
     rows.forEach((row) {
       rowIndex++;
       if (!row.group.isMain) {
-        TableRow tableRow = TableRow(
-            decoration: BoxDecoration(
-                color: (rowIndex % 2 == 0
-                    ? Theme.of(context).shadowColor
-                    : Colors.white)),
-            children: [
-              getRowCell(row.group.groupNum, row.group.id, 0),
-              getRowCell(getMemberName(row.members, row.group.isMain),
-                  row.group.id, 1),
-            ]);
-        tableRows.add(tableRow);
+        Widget tableRow = Container(
+            color: (rowIndex % 2 == 0
+                ? Theme.of(context).shadowColor
+                : Colors.white),
+            child: IntrinsicHeight(
+                child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                  getRowCell(row.group.groupNum, row.group.id, 0,
+                      flex: columnWidths[0]),
+                  getRowCell(getMemberName(row.members, row.group.isMain),
+                      row.group.id, 1,
+                      flex: columnWidths[1]),
+                ])));
+        result.add(tableRow);
       }
     });
 
-    return Table(
-        border: TableBorder.all(),
-        columnWidths: columnWidths,
-        children: tableRows);
+    return result;
   }
 
   Widget getRowCell(String text, int groupId, int index,
-      {TextAlign textAlign = TextAlign.left}) {
+      {TextAlign textAlign = TextAlign.left, int flex = 1}) {
     Widget cell = Container(
-      padding: EdgeInsets.all(10.0),
-      child: Text(
-        text ?? "",
-        textAlign: textAlign,
-      ),
-    );
+        decoration: BoxDecoration(
+          border: Border(
+              right: BorderSide(
+                color: Colors.black,
+              ),
+              bottom: BorderSide(
+                color: Colors.black,
+              ),
+              left: BorderSide(
+                  style: index == 0 ? BorderStyle.solid : BorderStyle.none,
+                  color: Colors.black)),
+        ),
+        child: Padding(
+            padding: EdgeInsets.all(10.0),
+            child: Text(
+              text ?? "",
+              textAlign: textAlign,
+            )));
 
-    return GestureDetector(
-        onTapDown: _storePosition,
-        onLongPress: () {
-          _showCustomMenu(groupId);
-        },
-        child: cell);
+    return Expanded(
+        flex: flex,
+        child: GestureDetector(
+            onTapDown: _storePosition,
+            onLongPress: () {
+              _showCustomMenu(groupId);
+            },
+            child: cell));
   }
 
   String getMemberName(List<Member> members, bool isCommission) {
@@ -486,7 +525,6 @@ class _CommissionScreen extends State<CommissionScreen> {
         (available) => available.user.id == selectedAvailibleUserId,
         orElse: () => null);
     if (member != null) {
-     
       _groupList.add(member);
       _availableList.remove(member);
       selectedAvailibleUserId =
@@ -654,7 +692,8 @@ class _CommissionScreen extends State<CommissionScreen> {
       _commision.members.forEach((member) {
         if (!_groupList
             .any((groupMember) => groupMember.user.id == member.user.id))
-          _availableList.add(new Member(member.user, depName: member.depName, roleId: member.roleId));
+          _availableList.add(new Member(member.user,
+              depName: member.depName, roleId: member.roleId));
       });
 
       selectedAvailibleUserId =
@@ -1404,9 +1443,9 @@ class _CommissionScreen extends State<CommissionScreen> {
                               padding: const EdgeInsets.all(16),
                               children: [
                             if (_commision.group.id != null)
-                              Column(children: [
-                                generateTableData(context, groupHeader, _groups)
-                              ])
+                              Column(
+                                  children: generateTableData(
+                                      context, groupHeader, _groups))
                           ])),
                     ]))));
   }

@@ -74,13 +74,13 @@ class _PlanScreen extends State<PlanScreen> {
   List<Map<String, dynamic>> planItemHeader = [
     {
       'text': 'Наименование проверяемого филиала, территории железной дороги',
-      'flex': 3.0
+      'flex': 3
     },
-    {'text': 'Подразделения, подлежащие проверке', 'flex': 2.0},
-    {'text': 'Вид проверки', 'flex': 2.0},
-    {'text': 'Срок проведения  проверки', 'flex': 2.0},
-    {'text': 'Ответственные за организацию и проведение проверки', 'flex': 2.0},
-    {'text': 'Результаты проведенной проверки', 'flex': 2.0}
+    {'text': 'Подразделения, подлежащие проверке', 'flex': 2},
+    {'text': 'Вид проверки', 'flex': 2},
+    {'text': 'Срок проведения  проверки', 'flex': 2},
+    {'text': 'Ответственные за организацию и проведение проверки', 'flex': 2},
+    {'text': 'Результаты проведенной проверки', 'flex': 2}
   ];
 
   /*List<PlanItem> _planItems = <PlanItem>[
@@ -264,10 +264,12 @@ class _PlanScreen extends State<PlanScreen> {
                               padding: const EdgeInsets.all(16),
                               children: [
                             if (_plan.id != null)
-                              Column(children: [
-                                generateTableData(
-                                    context, planItemHeader, planItems)
-                              ])
+                              
+
+                              Column(
+                                children: generateTableData(
+                                    context, planItemHeader, planItems),
+                              ),
                           ])),
                       /* Container(
                       child: MyButton(
@@ -277,78 +279,128 @@ class _PlanScreen extends State<PlanScreen> {
                     ]))));
   }
 
-  Widget generateTableData(BuildContext context,
+  List<Widget> generateTableData(BuildContext context,
       List<Map<String, dynamic>> headers, List<PlanItem> rows) {
     int i = 0;
-    Map<int, TableColumnWidth> columnWidths = Map.fromIterable(headers,
-        key: (item) => i++,
-        value: (item) =>
-            FlexColumnWidth(double.parse(item['flex'].toString())));
 
-    TableRow headerTableRow = TableRow(
-        decoration: BoxDecoration(color: Theme.of(context).primaryColor),
-        children: List.generate(
-            headers.length,
-            (index) => Column(
-                  children: [
-                    Padding(
-                        padding: EdgeInsets.all(10.0),
-                        child: Text(
-                          headers[index]["text"],
-                          textAlign: TextAlign.center,
-                        )),
-                  ],
-                )));
-    List<TableRow> tableRows = [headerTableRow];
+    Map<int, int> columnWidths = Map.fromIterable(headers,
+        key: (item) => i++,
+        value: (item) => int.parse(item['flex'].toString()));
+    List<Widget> result = [];
+
+    Widget headerTableRow = Container(
+        color: Theme.of(context).primaryColor,
+        child: IntrinsicHeight(
+            child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: List.generate(
+                    headers.length,
+                    (index) => Expanded(
+                        flex: columnWidths[index],
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                                right: BorderSide(
+                                  color: Colors.black,
+                                ),
+                                top: BorderSide(
+                                  color: Colors.black,
+                                ),
+                                bottom: BorderSide(
+                                  color: Colors.black,
+                                ),
+                                left: BorderSide(
+                                    style: index == 0
+                                        ? BorderStyle.solid
+                                        : BorderStyle.none,
+                                    color: Colors.black)),
+                          ),
+                          child: Padding(
+                              padding: EdgeInsets.all(10.0),
+                              child: Text(
+                                headers[index]["text"],
+                                softWrap: true,
+                                textAlign: TextAlign.center,
+                              )),
+                        ))))));
+
+    result.add(headerTableRow);
+
     int rowIndex = 0;
     rows.forEach((row) {
       rowIndex++;
-      TableRow tableRow = TableRow(
-          decoration: BoxDecoration(
-              color: (rowIndex % 2 == 0
-                  ? Theme.of(context).shadowColor
-                  : Colors.white)),
-          children: [
-            getRowCell(row.name, row.id, 0),
-            getRowCell(row.departmentTxt, row.id, 1),
-            getRowCell(
-                row.checkTypeDisplay.toString() == 'null'
-                    ? ''
-                    : row.checkTypeDisplay,
-                row.id,
-                2),
-            getRowCell(
-                row.periodDisplay.toString() == 'null' ? '' : row.periodDisplay,
-                row.id,
-                3),
-            getRowCell(row.responsible, row.id, 4),
-            getRowCell(row.checkResult, row.id, 5),
-          ]);
-      tableRows.add(tableRow);
+      Widget tableRow = Container(
+          color: (rowIndex % 2 == 0
+              ? Theme.of(context).shadowColor
+              : Colors.white),
+          child: IntrinsicHeight(
+              child:
+              Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                getRowCell(row.name, row.id, 0, flex: columnWidths[0]),
+                getRowCell(row.departmentTxt, row.id, 1,
+                    flex: columnWidths[1]),
+                getRowCell(
+                    row.checkTypeDisplay.toString() == 'null'
+                        ? ''
+                        : row.checkTypeDisplay,
+                    row.id,
+                    2,
+                    flex: columnWidths[2]),
+                getRowCell(
+                    row.periodDisplay.toString() == 'null'
+                        ? ''
+                        : row.periodDisplay,
+                    row.id,
+                    3,
+                    flex: columnWidths[3]),
+                getRowCell(row.responsible, row.id, 4, flex: columnWidths[4]),
+                getRowCell(row.checkResult, row.id, 5, flex: columnWidths[5]),
+              ])));
+      result.add(tableRow);
     });
 
-    return Table(
+    return /*Table(
         border: TableBorder.all(),
         columnWidths: columnWidths,
-        children: tableRows);
+        children: tableRows)*/
+        result;
   }
 
-  Widget getRowCell(String text, int planItemId, int index,
-      {TextAlign textAlign = TextAlign.left}) {
-    Widget cell = Container(
-      padding: EdgeInsets.all(10.0),
-      child: Text(
-        text ?? "",
-        textAlign: textAlign,
-      ),
-    );
+ 
 
-    return GestureDetector(
-        onTapDown: _storePosition,
-        onLongPress: () {
-          _showCustomMenu(planItemId, index);
-        },
-        child: cell);
+  Widget getRowCell(String text, int planItemId, int index,
+      {TextAlign textAlign = TextAlign.left, int flex = 1}) {
+    Widget cell = Container(
+        decoration: BoxDecoration(
+          border: Border(
+              right: BorderSide(
+                color: Colors.black,
+              ),
+              bottom: BorderSide(
+                color: Colors.black,
+              ),
+              left: BorderSide(
+                  style: index == 0 ? BorderStyle.solid : BorderStyle.none,
+                  color: Colors.black)),
+        ),
+        child: Padding(
+            padding: EdgeInsets.all(10.0),
+            child: Text(
+              text ?? "",
+              textAlign: textAlign,
+            )));
+
+    return Expanded(
+        flex: flex,
+        child: GestureDetector(
+            onTapDown: _storePosition,
+            onLongPress: () {
+              _showCustomMenu(planItemId, index);
+            },
+            child: cell));
+    // cell;
   }
 
   List<PopupMenuEntry<Object>> getMenu(BuildContext context) {

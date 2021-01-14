@@ -55,13 +55,13 @@ class _FaultListScreen extends State<FaultListScreen> {
   final formFaultKey = new GlobalKey<FormState>();
 
   List<Map<String, dynamic>> faultListHeader = [
-    {'text': 'Описание нарушения', 'flex': 5.0},
-    {'text': 'Плановая дата устранения', 'flex': 2.0},
-    {'text': 'Факт. дата устранения', 'flex': 2.0},
-    {'text': 'Штраф в денежном выражении, руб.', 'flex': 3.0},
-    {'text': 'Размер вреда, руб.', 'flex': 2.0},
-    {'text': 'Описание штрафа', 'flex': 6.0},
-    {'text': 'Статья КОАП', 'flex': 2.0},
+    {'text': 'Описание нарушения', 'flex': 5},
+    {'text': 'Плановая дата устранения', 'flex': 2},
+    {'text': 'Факт. дата устранения', 'flex': 2},
+    {'text': 'Штраф в денежном выражении, руб.', 'flex': 3},
+    {'text': 'Размер вреда, руб.', 'flex': 2},
+    {'text': 'Описание штрафа', 'flex': 6},
+    {'text': 'Статья КОАП', 'flex': 2},
   ];
 
   List<Map<String, dynamic>> choices = [
@@ -145,76 +145,120 @@ class _FaultListScreen extends State<FaultListScreen> {
       }
   }
 
-  Widget generateFaultTable(BuildContext context,
+  List<Widget> generateFaultTable(BuildContext context,
       List<Map<String, dynamic>> headers, List<MyFault> rows) {
     int i = 0;
-    Map<int, TableColumnWidth> columnWidths = Map.fromIterable(headers,
+    Map<int, int> columnWidths = Map.fromIterable(headers,
         key: (item) => i++,
-        value: (item) =>
-            FlexColumnWidth(double.parse(item['flex'].toString())));
+        value: (item) => int.parse(item['flex'].toString()));
 
-    TableRow headerTableRow = TableRow(
-        decoration: BoxDecoration(color: Theme.of(context).primaryColor),
-        children: List.generate(
-            headers.length,
-            (index) => Column(
-                  children: [
-                    Padding(
-                        padding: EdgeInsets.all(10.0),
-                        child: Text(
-                          headers[index]["text"],
-                          textAlign: TextAlign.center,
-                        )),
-                  ],
-                )));
-    List<TableRow> tableRows = [headerTableRow];
+    List<Widget> result = [];
+
+    Widget headerTableRow = Container(
+        color: Theme.of(context).primaryColor,
+        child: IntrinsicHeight(
+            child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: List.generate(
+                    headers.length,
+                    (index) => Expanded(
+                        flex: columnWidths[index],
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                                right: BorderSide(
+                                  color: Colors.black,
+                                ),
+                                top: BorderSide(
+                                  color: Colors.black,
+                                ),
+                                bottom: BorderSide(
+                                  color: Colors.black,
+                                ),
+                                left: BorderSide(
+                                    style: index == 0
+                                        ? BorderStyle.solid
+                                        : BorderStyle.none,
+                                    color: Colors.black)),
+                          ),
+                          child: Padding(
+                              padding: EdgeInsets.all(10.0),
+                              child: Text(
+                                headers[index]["text"],
+                                softWrap: true,
+                                textAlign: TextAlign.center,
+                              )),
+                        ))))));
+
+    result.add(headerTableRow);
+
     int rowIndex = 0;
     rows.forEach((fault) {
       Fault row = fault.fault;
       rowIndex++;
-      TableRow tableRow = TableRow(
-          decoration: BoxDecoration(
-              color: (rowIndex % 2 == 0
-                  ? Theme.of(context).shadowColor
-                  : Colors.white)),
-          children: [
-            getRowCell(row.desc, row.id, 0),
-            getRowCell(dateDMY(row.plan_fix_date), row.id, 1,
-                textAlign: TextAlign.center),
-            getRowCell(dateDMY(fault.fixDate), row.id, 2,
-                textAlign: TextAlign.center),
-            getRowCell(row.fine != null ? row.fine.toString() : '', row.id, 3,
-                textAlign: TextAlign.center),
-            getRowCell(row.damageAmount != null ? row.damageAmount.toString().replaceAll('.', ',') : '', row.id, 4,
-                textAlign: TextAlign.center),
-            getRowCell(row.fine_desc, row.id, 5),
-            getRowCell(fault.fineName, row.id, 6),
-          ]);
-      tableRows.add(tableRow);
+      Widget tableRow = Container(
+          color: (rowIndex % 2 == 0
+              ? Theme.of(context).shadowColor
+              : Colors.white),
+          child: IntrinsicHeight(
+              child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                getRowCell(row.desc, row.id, 0, flex: columnWidths[0]),
+                getRowCell(dateDMY(row.plan_fix_date), row.id, 1,
+                    textAlign: TextAlign.center, flex: columnWidths[1]),
+                getRowCell(dateDMY(fault.fixDate), row.id, 2,
+                    textAlign: TextAlign.center, flex: columnWidths[2]),
+                getRowCell(
+                    row.fine != null ? row.fine.toString() : '', row.id, 3,
+                    textAlign: TextAlign.center, flex: columnWidths[3]),
+                getRowCell(
+                    row.damageAmount != null
+                        ? row.damageAmount.toString().replaceAll('.', ',')
+                        : '',
+                    row.id,
+                    4,
+                    textAlign: TextAlign.center,
+                    flex: columnWidths[4]),
+                getRowCell(row.fine_desc, row.id, 5, flex: columnWidths[5]),
+                getRowCell(fault.fineName, row.id, 6, flex: columnWidths[6]),
+              ])));
+      result.add(tableRow);
     });
 
-    return Table(
-        border: TableBorder.all(),
-        columnWidths: columnWidths,
-        children: tableRows);
+    return result;
   }
 
   Widget getRowCell(String text, int faultId, int index,
-      {TextAlign textAlign = TextAlign.left}) {
+      {TextAlign textAlign = TextAlign.left, int flex = 1}) {
     Widget cell = Container(
-      padding: EdgeInsets.all(10.0),
-      child: Text(
-        text ?? '',
-        textAlign: textAlign,
-      ),
-    );
+        decoration: BoxDecoration(
+          border: Border(
+              right: BorderSide(
+                color: Colors.black,
+              ),
+              bottom: BorderSide(
+                color: Colors.black,
+              ),
+              left: BorderSide(
+                  style: index == 0 ? BorderStyle.solid : BorderStyle.none,
+                  color: Colors.black)),
+        ),
+        child: Padding(
+            padding: EdgeInsets.all(10.0),
+            child: Text(
+              text ?? "",
+              textAlign: textAlign,
+            )));
 
-    return GestureDetector(
-        onTapDown: _storePosition,
-        onLongPress: () {
-          _showCustomMenu(faultId, index);
-        },
-        child: cell);
+    return Expanded(
+        flex: flex,
+        child: GestureDetector(
+            onTapDown: _storePosition,
+            onLongPress: () {
+              _showCustomMenu(faultId, index);
+            },
+            child: cell));
   }
 
   void _storePosition(TapDownDetails details) {
@@ -392,9 +436,9 @@ class _FaultListScreen extends State<FaultListScreen> {
                             top: 10,
                           ),
                           children: [
-                        Column(children: [
-                          generateFaultTable(context, faultListHeader, _items)
-                        ])
+                        Column(
+                            children: generateFaultTable(
+                                context, faultListHeader, _items))
                       ]))
                 ]))
             : Padding(
@@ -425,10 +469,9 @@ class _FaultListScreen extends State<FaultListScreen> {
                                 top: 10,
                               ),
                               children: [
-                            Column(children: [
-                              generateFaultTable(
-                                  context, faultListHeader, _items)
-                            ])
+                            Column(
+                                children: generateFaultTable(
+                                    context, faultListHeader, _items))
                           ]))
                     ]));
   }

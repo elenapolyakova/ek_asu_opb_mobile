@@ -71,12 +71,6 @@ class _HomeScreen extends State<HomeScreen> {
     //WidgetsFlutterBinding.ensureInitialized();
   }
 
-/*  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-  }*/
-
   Future<void> initialize() async {
     arguments = ModalRoute.of(context).settings.arguments;
 
@@ -243,6 +237,13 @@ class _HomeScreen extends State<HomeScreen> {
     }
   }
 
+  Future<bool> reloadParam() async {
+    await loadData();
+    setState(() {});
+
+    return true;
+  }
+
   Future<bool> loadData() async {
     _year = await auth.getYear();
     _railway_id = await auth.getRailway();
@@ -388,11 +389,15 @@ class _HomeScreen extends State<HomeScreen> {
                                     if (isUserCbt())
                                       MyTile('План ЦБТ', () {
                                         Navigator.pushNamed(context, '/plan',
-                                            arguments: {'type': 'cbt'});
+                                                arguments: {'type': 'cbt'})
+                                            .then((value) async =>
+                                                await reloadParam());
                                       }, width: width),
                                     MyTile('План НЦОП', () {
                                       Navigator.pushNamed(context, '/plan',
-                                          arguments: {'type': 'ncop'});
+                                              arguments: {'type': 'ncop'})
+                                          .then((value) async =>
+                                              await reloadParam());
                                     }, width: width),
                                     MyTile(
                                         'План корректирующих действий', () {},

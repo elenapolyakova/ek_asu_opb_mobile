@@ -43,6 +43,7 @@ void LogOut(BuildContext context) async {
   // await _storage.delete(key: 'lastDateUpdate');
   String sessionString = await _storage.read(key: 'session');
   if (sessionString != null) _storage.write(key: "session", value: null);
+  context = context ?? MyApp.navKey.currentState.overlay.context;
   // print(sessionString);
   context = context ??
       //(MyApp.navKey).currentContext; 
