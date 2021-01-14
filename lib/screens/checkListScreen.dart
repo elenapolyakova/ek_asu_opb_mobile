@@ -201,7 +201,7 @@ class _CheckListScreen extends State<CheckListScreen> {
   }
 
   List<Widget> generateTableData(BuildContext context,
-      List<Map<String, dynamic>> headers, List<CheckListWork> rows) {
+      List<Map<String, dynamic>> headers, List<CheckList> rows) {
     int i = 0;
     Map<int, int> columnWidths = Map.fromIterable(headers,
         key: (item) => i++,
@@ -261,7 +261,7 @@ class _CheckListScreen extends State<CheckListScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                   getRowCell(row.name, row.id, 0, flex: columnWidths[0]),
-                  getRowCell(CheckListWork.typeSelection[row.type], row.id, 1,
+                  getRowCell(CheckList.typeSelection[row.type], row.id, 1,
                       flex: columnWidths[1]),
                 ])));
         result.add(tableRow);
