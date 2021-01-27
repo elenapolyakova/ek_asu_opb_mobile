@@ -2859,3 +2859,133 @@ class MyTile extends StatelessWidget {
             ])));
   }
 }
+
+class MyDropDownList extends StatefulWidget {
+  String text;
+  String tailText;
+  dynamic initialValue;
+  Function(dynamic) onTap;
+  List<dynamic> selectionList;
+  double height;
+  double width;
+  bool showTypeSelection;
+
+  bool disabled;
+
+  MyDropDownList(this.selectionList, this.onTap,
+      {this.text,
+      this.disabled = false,
+      this.height,
+      this.width = 200,
+      this.tailText,
+      this.initialValue,
+      this.showTypeSelection = false});
+
+  @override
+  State<MyDropDownList> createState() => _MyDropDownList();
+}
+
+class _MyDropDownList extends State<MyDropDownList> {
+  String selectName;
+
+  @override
+  Widget build(BuildContext context) {
+    TextStyle style = TextStyle(
+        color: Theme.of(context).primaryColorDark,
+        fontSize: 18,
+        backgroundColor: Theme.of(context).primaryColorLight);
+    TextStyle styleWhite = TextStyle(
+        color: Theme.of(context).primaryColorDark,
+        fontSize: 18,
+        backgroundColor: Colors.white // Theme.of(context).primaryColorLight
+        );
+    String defaultName = widget.initialValue != null
+        ? widget.initialValue["name"]
+        : ((widget.selectionList != null && widget.selectionList.length > 0)
+            ? widget.selectionList[0]["name"]
+            : '');
+    return Container(
+        width: widget.width,
+        child: Stack(children: [
+          GestureDetector(
+              onTap: () => setState(() {
+                    widget.showTypeSelection = !widget.showTypeSelection;
+                  }),
+              child: Container(
+                  margin: EdgeInsets.symmetric(horizontal: 0),
+                  child: Row(children: <Widget>[
+                    Expanded(
+                        child: RichText(
+                      text: TextSpan(
+                          text: (widget.text ?? '') + ' ',
+                          style: TextStyle(
+                              color: Theme.of(context).primaryColorDark,
+                              fontSize: 16),
+                          children: [
+                            TextSpan(
+                                text: (selectName ?? defaultName) +
+                                    '' +
+                                    (widget.tailText ?? ""),
+                                style: style),
+                          ]),
+                      softWrap: true,
+                    )),
+                    IconButton(
+                      iconSize: 35,
+                      padding: EdgeInsets.all(0),
+                      icon: widget.showTypeSelection == true
+                          ? Icon(Icons.expand_less)
+                          : Icon(Icons.expand_more), //Icons.logout),
+                      color: Theme.of(context).primaryColorDark,
+                      onPressed: () => setState(() {
+                        widget.showTypeSelection = !widget.showTypeSelection;
+                      }),
+                    ),
+                  ]))),
+          //  if (showTypeSelection)
+          AnimatedSwitcher(
+              // curve: Curves.easeOut,
+              //  opacity: showTypeSelection ? 1 : 0,
+              duration: Duration(milliseconds: 300),
+              child: widget.showTypeSelection
+                  ? Container(
+                      margin: EdgeInsets.only(top: 35),
+                      height:
+                          widget.height ?? widget.selectionList.length * 30.0,
+                      key: UniqueKey(),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(12.0)),
+                        // border: Border.all(
+                        //     color: Theme.of(context).primaryColorDark,
+                        //     width: 1),
+                        color: Colors.white,
+                      ), //Theme.of(context).primaryColorLight),
+                      child: ListView(
+                        children: List.generate(
+                            widget.selectionList.length,
+                            (index) => GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      selectName = widget.selectionList[index]
+                                              ["name"]
+                                          .toString();
+                                      widget.showTypeSelection = false;
+                                    });
+                                    widget.onTap(
+                                        widget.selectionList[index]["id"]);
+                                  },
+                                  child: Container(
+                                      margin: EdgeInsets.symmetric(
+                                          horizontal: 15, vertical: 4),
+                                      child: Text(
+                                          widget.selectionList[index]["name"],
+                                          style: styleWhite)),
+                                )),
+                      ))
+                  : Container(
+                      child: Text(''),
+                      height: 0,
+                    ))
+        ]));
+  }
+}

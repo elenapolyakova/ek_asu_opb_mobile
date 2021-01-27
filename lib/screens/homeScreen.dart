@@ -1,18 +1,18 @@
+import 'dart:math';
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:ek_asu_opb_mobile/utils/authenticate.dart' as auth;
 import 'package:ek_asu_opb_mobile/models/models.dart';
 import 'package:ek_asu_opb_mobile/src/exchangeData.dart' as exchange;
 import 'package:ek_asu_opb_mobile/utils/network.dart';
 import 'package:ek_asu_opb_mobile/components/components.dart';
-import 'package:ek_asu_opb_mobile/screens/screens.dart' as screens;
 import 'package:ek_asu_opb_mobile/utils/config.dart' as config;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:ek_asu_opb_mobile/controllers/syn.dart';
 import 'package:flutter/services.dart';
 import 'package:ek_asu_opb_mobile/utils/dictionary.dart';
+import 'package:charts_flutter/flutter.dart' as charts;
 
 final _storage = FlutterSecureStorage();
 
@@ -38,16 +38,28 @@ class _HomeScreen extends State<HomeScreen> {
   int _year;
   int _railway_id;
   int _checkPlanId;
+  List<charts.Series<FaultFine, String>> _data = [];
 
+  //параметры для работы с системой
   List<Map<String, dynamic>> yearList;
   List<Map<String, dynamic>> railwayList;
+  //параметры для графика
+  List<Map<String, dynamic>> typeChartList;
+  List<Map<String, dynamic>> railwayChartList;
+  List<Map<String, dynamic>> yearChartList;
+  //выбранные параметры графика
+  dynamic _typeChartId;
+  dynamic _railwayChartId;
+  dynamic _yearChart;
+
+  bool showTypeSelection = false;
 
   final _sizeTextWhite = const TextStyle(fontSize: 20.0, color: Colors.white);
   final _sizeTextBlack =
       const TextStyle(fontSize: 20.0, color: Color(0xFF252A0E));
 
   var pinFormKey = new GlobalKey<FormState>();
-  String _pin;
+  String _pin = '';
 
   Map<String, dynamic> screenList = {};
   bool isSyncData = false;
@@ -88,6 +100,7 @@ class _HomeScreen extends State<HomeScreen> {
           await showPasswordDialog(setState);
         if (arguments != null && arguments['load']) await fistLoadData();
         await loadData();
+        await loadChart();
 
         hideLoading();
         setState(() {});
@@ -249,8 +262,18 @@ class _HomeScreen extends State<HomeScreen> {
     _railway_id = await auth.getRailway();
     _checkPlanId = await auth.getCheckPlanId();
 
-    yearList = getYearList(_year);
+    yearList = getYearList(DateTime.now().year);
     railwayList = await getRailwayList();
+    typeChartList = [
+      {'id': 1, 'name': 'Количество нарушений'},
+      {'id': 2, 'name': 'Сумма штрафов'}
+    ];
+    railwayChartList = await getRailwayForChart();
+    yearChartList = getYearForChart(DateTime.now().year);
+
+    _typeChartId = typeChartList[0]["id"];
+    _railwayChartId = railwayChartList[0]["id"];
+    _yearChart = yearChartList[0]["id"];
 
     return true;
   }
@@ -284,9 +307,62 @@ class _HomeScreen extends State<HomeScreen> {
     return (_userInfo.f_user_role_txt == config.getItem('cbtRole'));
   }
 
+  Future<bool> loadChart() async {
+    _typeChartId;
+    _railwayChartId;
+    _yearChart;
+
+    final data = _railwayChartId == -1
+        ? railwayChartList
+            .where((railway) => railway["id"] != -1)
+            .toList()
+            .map((e) => new FaultFine(
+                e["name"],
+                _typeChartId == 1
+                    ? new Random().nextInt(100)
+                    : (new Random().nextDouble() * 1000).roundToDouble()/10))
+            .toList()
+        : getMonthList()
+            .map((e) => new FaultFine(
+                e["short_name"],
+                _typeChartId == 1
+                    ? new Random().nextInt(100)
+                    : (new Random().nextDouble() * 1000).roundToDouble()/10))
+            .toList();
+
+    setState(() {
+      _data = [
+        new charts.Series<FaultFine, String>(
+            id: 'faultFine',
+            colorFn: (_, i) =>
+                SimpleBarChart.fromColor(Color(0xFFADB439)), //colors[i],
+            domainFn: (FaultFine fine, _) => fine.name,
+            measureFn: (FaultFine fine, _) => fine.value,
+            data: data,
+            labelAccessorFn: (FaultFine fine, _) =>
+                '${fine.value.toString().replaceAll('.', ',')} '), //₽
+      ];
+    });
+    return true;
+  }
+
+  Future<void> parChanged(int oldValue, int newValue) async {
+    if (oldValue != newValue) {
+      setState(() {
+        newValue = oldValue;
+      });
+      await loadChart();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     double width = 400;
+
+    TextStyle style = TextStyle(
+        color: Theme.of(context).primaryColorDark,
+        fontSize: 16,
+        fontWeight: FontWeight.bold);
 
     /*setState(() {
       arguments = ModalRoute.of(context).settings.arguments;
@@ -310,130 +386,270 @@ class _HomeScreen extends State<HomeScreen> {
                     parentScreen: 'homeScreen',
                     stop: widget.stop,
                     syncTask: syncTask)),
-            body: Container(
-                padding: EdgeInsets.only(left: 40, top: 10),
-                //color: Colors.white,
-                child: Column(children: [
-                  Expanded(
-                      child: Row(
-                    children: [
-                      Container(
-                          width: width,
-                          child: Column(
-                            // mainAxisAlignment:
-                            //     MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Container(
-                                  height: 70,
-                                  width: width,
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 1,
-                                        child: MyDropdown(
-                                          text: 'Год',
-                                          width: 300,
-                                          dropdownValue: _year.toString(),
-                                          items: yearList,
-                                          onChange: (value) async {
-                                            setState(() {
-                                              _year = int.parse(value);
-
-                                              // reloadPlan();
-                                            });
-                                            await auth.setYear(_year);
-                                          },
-                                          parentContext: context,
-                                        ),
-                                      ),
-                                      (isUserCbt())
-                                          ? Expanded(
-                                              flex: 3,
-                                              child: Container(
-                                                padding:
-                                                    EdgeInsets.only(left: 10),
-                                                child: MyDropdown(
-                                                  text: 'Дорога',
-                                                  width: 300,
-
-                                                  dropdownValue: _railway_id !=
-                                                          null
-                                                      ? _railway_id.toString()
-                                                      : null, //"0",
-                                                  items: railwayList,
-                                                  onChange: (value) async {
-                                                    setState(() {
-                                                      _railway_id =
-                                                          int.parse(value);
-
-                                                      //  reloadPlan();
-                                                    });
-                                                    await auth.setRailway(
-                                                        _railway_id);
-                                                  },
-                                                  parentContext: context,
-                                                ),
-                                              ),
-                                            )
-                                          : Expanded(
-                                              child: Text(''),
-                                            ),
-                                    ],
-                                  )),
-                              Expanded(
-                                  child: Container(
-                                height:
-                                    MediaQuery.of(context).size.height - 100,
-                                child: ListView(
-                                  children: [
-                                    if (isUserCbt())
-                                      MyTile('План ЦБТ', () {
-                                        Navigator.pushNamed(context, '/plan',
-                                                arguments: {'type': 'cbt'})
-                                            .then((value) async =>
-                                                await reloadParam());
-                                      }, width: width),
-                                    MyTile('План НЦОП', () {
-                                      Navigator.pushNamed(context, '/plan',
-                                              arguments: {'type': 'ncop'})
-                                          .then((value) async =>
-                                              await reloadParam());
-                                    }, width: width),
-                                    MyTile(
-                                        'План корректирующих действий', () {},
-                                        width: width, disabled: true),
-                                    MyTile('Внеплановые проверки', () {},
-                                        width: width, disabled: true),
-                                    MyTile(
-                                      'Текущая проверка',
-                                      () {
-                                        Navigator.pushNamed(
-                                            context, '/checkItem');
-                                      },
-                                      width: width,
-                                      disabled: _checkPlanId == null,
-                                    ),
-                                  ],
-                                ),
-                              ))
-                            ],
-                          )),
+            body: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () => setState(() {
+                      showTypeSelection = false;
+                    }),
+                child: Container(
+                    padding: EdgeInsets.only(left: 40, top: 10),
+                    //color: Colors.white,
+                    child: Column(children: [
                       Expanded(
-                          child: Container(
-                              child: Image(
+                        child: Row(children: [
+                          Container(
+                              width: width,
+                              child: Column(
+                                // mainAxisAlignment:
+                                //     MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Container(
+                                      height: 70,
+                                      width: width,
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 1,
+                                            child: MyDropdown(
+                                              text: 'Год',
+                                              width: 300,
+                                              dropdownValue: _year.toString(),
+                                              items: yearList,
+                                              onChange: (value) async {
+                                                setState(() {
+                                                  _year = int.parse(value);
+
+                                                  // reloadPlan();
+                                                });
+                                                await auth.setYear(_year);
+                                              },
+                                              parentContext: context,
+                                            ),
+                                          ),
+                                          (isUserCbt())
+                                              ? Expanded(
+                                                  flex: 3,
+                                                  child: Container(
+                                                    padding: EdgeInsets.only(
+                                                        left: 10),
+                                                    child: MyDropdown(
+                                                      text: 'Дорога',
+                                                      width: 300,
+
+                                                      dropdownValue:
+                                                          _railway_id != null
+                                                              ? _railway_id
+                                                                  .toString()
+                                                              : null, //"0",
+                                                      items: railwayList,
+                                                      onChange: (value) async {
+                                                        setState(() {
+                                                          _railway_id =
+                                                              int.parse(value);
+
+                                                          //  reloadPlan();
+                                                        });
+                                                        await auth.setRailway(
+                                                            _railway_id);
+                                                      },
+                                                      parentContext: context,
+                                                    ),
+                                                  ),
+                                                )
+                                              : Expanded(
+                                                  child: Text(''),
+                                                ),
+                                        ],
+                                      )),
+                                  Expanded(
+                                      child: Container(
+                                    height: MediaQuery.of(context).size.height -
+                                        100,
+                                    child: ListView(
+                                      children: [
+                                        if (isUserCbt())
+                                          MyTile('План ЦБТ', () {
+                                            Navigator.pushNamed(
+                                                    context, '/plan',
+                                                    arguments: {'type': 'cbt'})
+                                                .then((value) async =>
+                                                    await reloadParam());
+                                          }, width: width),
+                                        MyTile('План НЦОП', () {
+                                          Navigator.pushNamed(context, '/plan',
+                                                  arguments: {'type': 'ncop'})
+                                              .then((value) async =>
+                                                  await reloadParam());
+                                        }, width: width),
+                                        MyTile('План корректирующих действий',
+                                            () {},
+                                            width: width, disabled: true),
+                                        MyTile('Внеплановые проверки', () {},
+                                            width: width, disabled: true),
+                                        MyTile(
+                                          'Текущая проверка',
+                                          () {
+                                            Navigator.pushNamed(
+                                                context, '/checkItem');
+                                          },
+                                          width: width,
+                                          disabled: _checkPlanId == null,
+                                        ),
+                                      ],
+                                    ),
+                                  ))
+                                ],
+                              )),
+                          Expanded(
+
+                              // MyDropDownList([{'name' : '2021'}, {'name' : '2020'}, {'name' : '2019'},
+                              //  ],(index)=>print(index), text: 'за '), height: 200,),
+
+                              child: Container(
+                                  margin: EdgeInsets.all(25),
+                                  child: Stack(children: [
+                                    //  Container(child:
+
+                                    Column(
+                                      children: [
+                                        Expanded(
+                                            child: Container(
+                                                margin: EdgeInsets.only(
+                                                    bottom: 20, top: 50),
+                                                padding: EdgeInsets.fromLTRB(
+                                                    5, 5, 5, 10),
+                                                decoration: new BoxDecoration(
+                                                    border: Border.all(
+                                                        color: Theme.of(context)
+                                                            .primaryColorDark,
+                                                        width: 2),
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                            Radius.circular(
+                                                                10))),
+                                                child:
+                                                    /*Image(
                                   image: AssetImage("assets/images/tree_1.png"),
-                                  fit: BoxFit.fitHeight)))
-                    ],
-                  )),
-                  Container(
-                      height: 20,
-                      //width: double.infinity,
-                      color: (errorText != "")
-                          ? Color(0xAAE57373)
-                          : Color(0x00E57373),
-                      child: Text('$errorText',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Color(0xFF252A0E))))
-                ])));
+                                  fit: BoxFit.fitHeight)*/
+                                                    SimpleBarChart(_data)))
+                                      ],
+                                      //)
+                                    ),
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          margin: EdgeInsets.only(right: 15),
+                                          child: MyDropDownList(typeChartList,
+                                              (id) async {
+                                            if (_typeChartId != id) {
+                                              setState(() {
+                                                _typeChartId = id;
+                                              });
+                                              await loadChart();
+                                            }
+                                          },
+                                              width: 255,
+                                              showTypeSelection:
+                                                  showTypeSelection),
+                                        ),
+                                        Container(
+                                          margin: EdgeInsets.only(right: 15),
+                                          child: MyDropDownList(
+                                              railwayChartList, (id) async {
+                                            if (_railwayChartId != id) {
+                                              setState(() {
+                                                _railwayChartId = id;
+                                              });
+                                              await loadChart();
+                                            }
+                                          },
+                                              text: 'по ',
+                                              showTypeSelection:
+                                                  showTypeSelection),
+                                          width: 220,
+                                        ),
+                                        MyDropDownList(yearChartList,
+                                            (year) async {
+                                          if (_yearChart != year) {
+                                            setState(() {
+                                              _yearChart = year;
+                                            });
+                                            await loadChart();
+                                          }
+                                        },
+                                            width: 155,
+                                            text: 'за',
+                                            tailText: ' год',
+                                            showTypeSelection:
+                                                showTypeSelection),
+                                        Container(
+                                            padding: EdgeInsets.only(top: 15),
+                                            child: Text(
+                                              _typeChartId == 1
+                                                  ? ', ед.'
+                                                  : ', тыс. рублей',
+                                              style: style,
+                                            ))
+                                      ],
+                                    )
+                                  ])))
+                        ]),
+                      ),
+                      Container(
+                          height: 20,
+                          //width: double.infinity,
+                          color: (errorText != "")
+                              ? Color(0xAAE57373)
+                              : Color(0x00E57373),
+                          child: Text('$errorText',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Color(0xFF252A0E))))
+                    ]))));
   }
+}
+
+class SimpleBarChart extends StatelessWidget {
+  final List<charts.Series> seriesList;
+  final bool animate;
+  static final List<charts.Color> colors = [
+    charts.MaterialPalette.red.shadeDefault,
+    charts.MaterialPalette.deepOrange.shadeDefault,
+    charts.MaterialPalette.green.shadeDefault,
+    charts.MaterialPalette.blue.shadeDefault
+  ];
+
+  static charts.Color fromColor(Color color) {
+    return charts.Color(
+        r: color.red, g: color.green, b: color.blue, a: color.alpha);
+  }
+
+  SimpleBarChart(this.seriesList, {this.animate});
+
+  @override
+  Widget build(BuildContext context) {
+    return new charts.BarChart(
+      seriesList,
+      animate: animate,
+      // Set a bar label decorator.
+      // Example configuring different styles for inside/outside:
+      //       barRendererDecorator: new charts.BarLabelDecorator(
+      //          insideLabelStyleSpec: new charts.TextStyleSpec(...),
+      //          outsideLabelStyleSpec: new charts.TextStyleSpec(...)),
+      barRendererDecorator: new charts.BarLabelDecorator<String>(),
+      domainAxis: charts.OrdinalAxisSpec( 
+          renderSpec: charts.SmallTickRendererSpec(
+        labelRotation: 30,
+      )),
+    );
+  }
+}
+
+/// Sample ordinal data type.
+class FaultFine {
+  final String name;
+  final dynamic value;
+
+  FaultFine(this.name, this.value);
 }
